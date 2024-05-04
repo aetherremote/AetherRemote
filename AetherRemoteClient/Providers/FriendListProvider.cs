@@ -1,6 +1,6 @@
 using AetherRemoteClient.Domain;
+using AetherRemoteClient.Domain.Saves;
 using Dalamud.Plugin;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,7 +10,6 @@ public class FriendListProvider(DalamudPluginInterface pluginInterface)
 {
     private const string FileName = "friends.json";
     private readonly SaveFile<FriendListSave> saveSystem = new(pluginInterface.ConfigDirectory.FullName, FileName);
-
     private readonly List<Friend> devFriends =
     [
         new Friend("Demo1"),
@@ -58,10 +57,12 @@ public class FriendListProvider(DalamudPluginInterface pluginInterface)
         return true;
     }
 
-    [Serializable]
-    private class FriendListSave
+    /// <summary>
+    /// Replaces the current friend list
+    /// </summary>
+    public void ReplaceFriendList(List<Friend> newFriendList)
     {
-        public string Version { get; set; } = "1.0.0.0";
-        public List<Friend> Friends { get; set; } = [];
+        FriendList.Clear();
+        FriendList.AddRange(newFriendList);
     }
 }

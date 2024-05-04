@@ -1,6 +1,6 @@
 using AetherRemoteClient.Domain;
+using AetherRemoteClient.Domain.Saves;
 using Dalamud.Plugin;
-using System;
 
 namespace AetherRemoteClient.Providers;
 
@@ -24,11 +24,5 @@ public class SecretProvider(DalamudPluginInterface pluginInterface)
     public void Save()
     {
         saveSystem.Save();
-    }
-
-    [Serializable]
-    private class SecretSave
-    {
-        public string Secret { get; set; } = string.Empty;
     }
 }

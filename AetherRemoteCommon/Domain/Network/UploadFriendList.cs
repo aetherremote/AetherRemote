@@ -15,7 +15,7 @@ public struct UploadFriendListRequest
 
     public override readonly string ToString()
     {
-        var sb = new AetherRemoteStringBuilder("DownloadFriendListRequest");
+        var sb = new AetherRemoteStringBuilder("UploadFriendListRequest");
         sb.AddVariable("Secret", Secret);
         sb.AddVariable("FriendList", FriendList);
         return sb.ToString();
@@ -35,7 +35,7 @@ public struct UploadFriendListResponse
 
     public override readonly string ToString()
     {
-        var sb = new AetherRemoteStringBuilder("DownloadFriendListRequest");
+        var sb = new AetherRemoteStringBuilder("UploadFriendListResponse");
         sb.AddVariable("Success", Success);
         sb.AddVariable("Message", Message);
         return sb.ToString();

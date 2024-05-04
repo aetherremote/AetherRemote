@@ -133,7 +133,12 @@ public class ControlTab(
     {
         if (currentFriend == null)
         {
-            SharedUserInterfaces.BigTextCentered("Select a friend to begin");
+            SharedUserInterfaces.PushBigFont();
+            ImGui.SetCursorPosY((ImGui.GetWindowHeight() / 2) - ImGui.GetFontSize());
+            SharedUserInterfaces.TextCentered("Select Friend");
+            SharedUserInterfaces.PopBigFont();
+
+            SharedUserInterfaces.TextCentered("Start by selecting a friend from the left");
             return;
         }
 

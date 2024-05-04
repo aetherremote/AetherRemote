@@ -169,10 +169,6 @@ public class DashboardTab : ITab
 
         var commonFriendList = FriendTranslator.DomainFriendListToCommon(friendListProvider.FriendList);
         var hash = await AetherRemoteHash.ComputeFriendListHash(commonFriendList);
-        var syncResult = await networkProvider.Sync(secretInputText, hash);
-        if (syncResult.Success)
-        {
-            logger.Info("Success");
-        }
+        await networkProvider.Sync(secretInputText, hash);
     }
 }

@@ -83,45 +83,79 @@ public class FriendsTab(FriendListProvider friendListProvider, NetworkProvider n
 
         if (ImGui.BeginTabItem("Friends"))
         {
-            ImGui.SetNextItemWidth(MainWindow.FriendListSize.X);
-            if (ImGui.InputTextWithHint("##SearchFriendListInputText", "Search", ref friendCodeSearchInputText, Constants.FriendNicknameCharLimit))
-                friendSearchFilter.UpdateSearchTerm(friendCodeSearchInputText);
-
-            // Save the cursor at the bottom of the search input text before calling ImGui.SameLine for use later
-            var bottomOfSearchInputText = ImGui.GetCursorPosY();
-
-            ImGui.SameLine();
-
-            // Draw the settings area beside the search bar using the remaining space
-            if (ImGui.BeginChild("FriendSettingsArea", Vector2.Zero, true))
+            if (networkProvider.ShouldPromptSync())
             {
-                DrawFriendSetting();
-                ImGui.EndChild();
+                if (ImGui.BeginChild("DesyncArea", Vector2.Zero, true))
+                {
+                    SharedUserInterfaces.PushBigFont();
+                    ImGui.SetCursorPosY((ImGui.GetWindowHeight() / 2) - (ImGui.GetFontSize() * 2));
+                    SharedUserInterfaces.TextCentered("Friend List Desync!");
+                    SharedUserInterfaces.PopBigFont();
+                    SharedUserInterfaces.TextCentered("You will need to decide which friends list should be used");
+
+                    ImGui.Dummy(new Vector2(0, ImGui.GetFontSize() * 2));
+
+                    var choiceButtonSize = new Vector2(120, 0);
+                    ImGui.SetCursorPosX((ImGui.GetWindowWidth() / 2) - (((choiceButtonSize.X * 3) + (ImGui.GetStyle().FramePadding.X * 4)) / 2));
+
+                    // TODO: Indicate (at most) the number of friends in each set above button
+                    if (ImGui.Button("Use Local", choiceButtonSize))
+                        SyncToServer();
+
+                    ImGui.SameLine();
+
+                    // TODO: Indicate (at most) the number of friends in each set above button
+                    if (ImGui.Button("Use Server", choiceButtonSize))
+                        SyncFromServer();
+
+                    ImGui.SameLine();
+
+                    // TODO: Indicate that this may cause problems
+                    if (ImGui.Button("Ignore", choiceButtonSize))
+                        networkProvider.OverrideSync();
+
+                    ImGui.EndChild();
+                }
             }
-
-            // Set the cursor back and begin drawing add friend input text & button
-            ImGui.SetCursorPosY(bottomOfSearchInputText);
-
-            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
-
-            // By setting the Y value as negative, the window will be that many pixels up from the bottom
-            if (ImGui.BeginChild("FriendListArea", new Vector2(MainWindow.FriendListSize.X, -1 * footerHeight), true))
+            else
             {
-                DrawFriendList();
-                ImGui.EndChild();
-            }
+                // Draw the settings area beside the search bar using the remaining space
+                ImGui.SetNextItemWidth(MainWindow.FriendListSize.X);
+                if (ImGui.InputTextWithHint("##SearchFriendListInputText", "Search", ref friendCodeSearchInputText, Constants.FriendNicknameCharLimit))
+                    friendSearchFilter.UpdateSearchTerm(friendCodeSearchInputText);
 
-            ImGui.PopStyleVar();
+                // Save the cursor at the bottom of the search input text before calling ImGui.SameLine for use later
+                var bottomOfSearchInputText = ImGui.GetCursorPosY();
 
-            ImGui.SetNextItemWidth(MainWindow.FriendListSize.X);
-            if (ImGui.InputTextWithHint("##FriendCodeInputText", "Friend Code", ref friendCodeAddFriendInputText, Constants.FriendCodeCharLimit, ImGuiInputTextFlags.EnterReturnsTrue))
-            {
-                AddFriendInInputText();
-            }
+                ImGui.SameLine();
 
-            if (ImGui.Button("Add Friend", MainWindow.FriendListSize))
-            {
-                AddFriendInInputText();
+                // Draw the settings area beside the search bar using the remaining space
+                if (ImGui.BeginChild("FriendSettingsArea", Vector2.Zero, true))
+                {
+                    DrawFriendSetting();
+                    ImGui.EndChild();
+                }
+
+                // Set the cursor back and begin drawing add friend input text & button
+                ImGui.SetCursorPosY(bottomOfSearchInputText);
+
+                ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
+
+                // By setting the Y value as negative, the window will be that many pixels up from the bottom
+                if (ImGui.BeginChild("FriendListArea", new Vector2(MainWindow.FriendListSize.X, -1 * footerHeight), true))
+                {
+                    DrawFriendList();
+                    ImGui.EndChild();
+                }
+
+                ImGui.PopStyleVar();
+
+                ImGui.SetNextItemWidth(MainWindow.FriendListSize.X);
+                if (ImGui.InputTextWithHint("##FriendCodeInputText", "Friend Code", ref friendCodeAddFriendInputText, Constants.FriendCodeCharLimit, ImGuiInputTextFlags.EnterReturnsTrue))
+                    AddFriendInInputText();
+
+                if (ImGui.Button("Add Friend", MainWindow.FriendListSize))
+                    AddFriendInInputText();
             }
 
             ImGui.EndTabItem();
@@ -129,27 +163,40 @@ public class FriendsTab(FriendListProvider friendListProvider, NetworkProvider n
 
         DeleteFriendsStep();
     }
+
+    private async void SyncToServer()
+    {
+        await networkProvider.UploadFriendList(secretProvider.Secret, friendListProvider.FriendList);
+    }
+
+    private async void SyncFromServer()
+    {
+        var friendListFromServer = await networkProvider.DownloadFriendList(secretProvider.Secret);
+        if (friendListFromServer.Success)
+        {
+            friendListProvider.ReplaceFriendList(friendListFromServer.Friends);
+            friendListProvider.Save();
+        }
+    }
     
     private void DrawFriendList()
     {
-        if (ImGui.BeginTable("FriendListTable", 1, FriendListTableFlags))
+        if (ImGui.BeginTable("FriendListTable", 1, FriendListTableFlags) == false)
+            return;
+
+        foreach (var friend in friendListProvider.FriendList)
         {
-            foreach(var friend in friendListProvider.FriendList)
-            {
-                ImGui.TableNextRow();
-                ImGui.TableSetColumnIndex(0);
+            ImGui.TableNextRow();
+            ImGui.TableSetColumnIndex(0);
 
-                SharedUserInterfaces.Icon(FontAwesomeIcon.User);
-                ImGui.SameLine();
+            SharedUserInterfaces.Icon(FontAwesomeIcon.User);
+            ImGui.SameLine();
 
-                if (ImGui.Selectable($"{friend.NoteOrFriendCode}", friendBeingEditted == friend, ImGuiSelectableFlags.SpanAllColumns))
-                {
-                    EditFriend(friend);
-                }
-            }
-
-            ImGui.EndTable();
+            if (ImGui.Selectable($"{friend.NoteOrFriendCode}", friendBeingEditted == friend, ImGuiSelectableFlags.SpanAllColumns))
+                EditFriend(friend);
         }
+
+        ImGui.EndTable();
     }
 
     private void DrawFriendSetting()
@@ -175,16 +222,10 @@ public class FriendsTab(FriendListProvider friendListProvider, NetworkProvider n
             ImGui.SetCursorPosX(deleteButtonPosition.X);
             ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 100f);
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Trash, RoundButtonSize) && friendBeingEditted != null)
-            {
                 friendsToDelete.Add(friendBeingEditted);
-            }
+
             ImGui.PopStyleVar();
-            if (ImGui.IsItemHovered())
-            {
-                ImGui.BeginTooltip();
-                ImGui.Text("Delete Friend");
-                ImGui.EndTooltip();
-            }
+            SharedUserInterfaces.Tooltip("Delete Friend");
 
             ImGui.Separator();
 
@@ -194,12 +235,7 @@ public class FriendsTab(FriendListProvider friendListProvider, NetworkProvider n
             ImGui.InputTextWithHint("Note##EditingFriendCode", "Note", ref friendNote, Constants.FriendCodeCharLimit);
             ImGui.SameLine();
             SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
-            if (ImGui.IsItemHovered())
-            {
-                ImGui.BeginTooltip();
-                ImGui.Text("A note or 'nickname' to more easily identify a friend");
-                ImGui.EndTooltip();
-            }
+            SharedUserInterfaces.Tooltip("A note or 'nickname' to more easily identify a friend");
 
             ImGui.Separator();
             SharedUserInterfaces.TextCentered("General Permissions");
@@ -207,12 +243,7 @@ public class FriendsTab(FriendListProvider friendListProvider, NetworkProvider n
             ImGui.Checkbox("Allow force speak", ref allowSpeak);
             ImGui.SameLine();
             SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
-            if (ImGui.IsItemHovered())
-            {
-                ImGui.BeginTooltip();
-                ImGui.Text("Allow friend to force you to say things in chat");
-                ImGui.EndTooltip();
-            }
+            SharedUserInterfaces.Tooltip("Allow friend to force you to say things in chat");
 
             ImGui.SameLine();
             ImGui.SetCursorPosX(ImGui.GetWindowSize().X - (ImGui.GetStyle().WindowPadding.X * 2) - (SmallButtonSize.X * 2));
@@ -220,24 +251,14 @@ public class FriendsTab(FriendListProvider friendListProvider, NetworkProvider n
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Check, SmallButtonSize))
                 SetAllSpeakPermissions(true);
 
-            if (ImGui.IsItemHovered())
-            {
-                ImGui.BeginTooltip();
-                ImGui.Text("Allow All");
-                ImGui.EndTooltip();
-            }
+            SharedUserInterfaces.Tooltip("Allow All");
 
             ImGui.SameLine();
 
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Ban, SmallButtonSize))
                 SetAllSpeakPermissions(false);
 
-            if (ImGui.IsItemHovered())
-            {
-                ImGui.BeginTooltip();
-                ImGui.Text("Disallow All");
-                ImGui.EndTooltip();
-            }
+            SharedUserInterfaces.Tooltip("Disallow All");
 
             ImGui.Indent();
             if (allowSpeak == false) ImGui.BeginDisabled();
@@ -261,12 +282,7 @@ public class FriendsTab(FriendListProvider friendListProvider, NetworkProvider n
             ImGui.Checkbox("Allow force emote", ref allowEmote);
             ImGui.SameLine();
             SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
-            if (ImGui.IsItemHovered())
-            {
-                ImGui.BeginTooltip();
-                ImGui.Text("Allow friend to force you to perform emotes");
-                ImGui.EndTooltip();
-            }
+            SharedUserInterfaces.Tooltip("Allow friend to force you to perform emotes");
 
             ImGui.Separator();
             SharedUserInterfaces.TextCentered("Glamourer Permissions");
@@ -274,36 +290,20 @@ public class FriendsTab(FriendListProvider friendListProvider, NetworkProvider n
             ImGui.Checkbox("Allow change appearance", ref allowChangeAppearance);
             ImGui.SameLine();
             SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
-            if (ImGui.IsItemHovered())
-            {
-                ImGui.BeginTooltip();
-                ImGui.Text("Allow friend to change your character's appearance using glamourer");
-                ImGui.EndTooltip();
-            }
+            SharedUserInterfaces.Tooltip("Allow friend to change your character's appearance using glamourer");
 
             ImGui.Checkbox("Allow change equipment", ref allowChangeEquipment);
             ImGui.SameLine();
             SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
-            if (ImGui.IsItemHovered())
-            {
-                ImGui.BeginTooltip();
-                ImGui.Text("Allow friend to change your character's equipment using glamourer");
-                ImGui.EndTooltip();
-            }
+            SharedUserInterfaces.Tooltip("Allow friend to change your character's equipment using glamourer");
 
             var saveButtonPosition = ImGui.GetWindowSize() - ImGui.GetStyle().WindowPadding - RoundButtonSize;
             ImGui.SetCursorPos(saveButtonPosition);
             ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 100f);
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Save, RoundButtonSize) && friendBeingEditted != null)
-            {
                 SaveFriend();
-            }
-            if (ImGui.IsItemHovered())
-            {
-                ImGui.BeginTooltip();
-                ImGui.Text("Save Friend");
-                ImGui.EndTooltip();
-            }
+
+            SharedUserInterfaces.Tooltip("Save Friend");
 
             if (PendingChanges())
             {

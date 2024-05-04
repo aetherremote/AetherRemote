@@ -5,22 +5,22 @@ using System;
 namespace AetherRemoteClient.Domain;
 
 [Serializable]
-public class Friend(string id, string? note = null, FriendPermissions? permissions = null)
+public class Friend
 {
-    /// <summary>
+    /// <summary> 
     /// Id of the friend (UserId)
     /// </summary>
-    public string FriendCode = id;
+    public string FriendCode { get; set; }
 
     /// <summary>
     /// A name set by the client to identify a friend more easily
     /// </summary>
-    public string? Note = note;
+    public string? Note { get; set; }
 
     /// <summary>
     /// Friend preferences
     /// </summary>
-    public FriendPermissions Permissions = permissions ?? new();
+    public FriendPermissions Permissions { get; set; }
 
     /// <summary>
     /// Returns a friend's given note, or their id
@@ -32,6 +32,13 @@ public class Friend(string id, string? note = null, FriendPermissions? permissio
     /// </summary>
     [NonSerialized]
     public bool Online = false;
+
+    public Friend(string friendCode, string? note = null, FriendPermissions? permissions = null)
+    {
+        FriendCode = friendCode;
+        Note = note;
+        Permissions = permissions ?? new();
+    }
 
     public override string ToString()
     {

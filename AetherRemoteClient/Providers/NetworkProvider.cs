@@ -53,6 +53,10 @@ public class NetworkProvider : IDisposable
     // Data
     public string? FriendCode { get; private set; } = null;
 
+    // Sync
+    public bool SyncPending { get; private set; } = false;
+    public bool SyncOverride { get; private set; } = false;
+
     public NetworkProvider(IPluginLog logger)
     {
         this.logger = logger;
@@ -148,6 +152,10 @@ public class NetworkProvider : IDisposable
 
         var request = new SyncRequest(secret, friendListHash);
         var response = await InvokeCommand<SyncRequest, SyncResponse>(Constants.ApiSync, request);
+
+        if (response.HashesMatch == false)
+            SyncPending = true;
+
         return new AsyncResult(response.HashesMatch, response.Message);
     }
 
@@ -159,7 +167,8 @@ public class NetworkProvider : IDisposable
         var convertedFriendList = FriendTranslator.DomainFriendListToCommon(friendList);
         var request = new UploadFriendListRequest(secret, convertedFriendList);
         var response = await InvokeCommand<UploadFriendListRequest, UploadFriendListResponse>(Constants.ApiUploadFriendList, request);
-        if (response.Success == false) { /* Some kind of retry? */ }
+        if (response.Success)
+            SyncPending = false;
 
         return new AsyncResult(response.Success, response.Message);
     }
@@ -171,8 +180,22 @@ public class NetworkProvider : IDisposable
 
         var request = new DownloadFriendListRequest(secret);
         var response = await InvokeCommand<DownloadFriendListRequest, DownloadFriendListResponse>(Constants.ApiDownloadFriendList, request);
-        var friendList = response.Success ? FriendTranslator.CommonFriendListToDomain(response.FriendList) : [];
+        var friendList = FriendTranslator.CommonFriendListToDomain(response.FriendList);
+
+        if (response.Success)
+            SyncPending = false;
+
         return new DownloadFriendListResult(response.Success, response.Message, friendList);
+    }
+
+    public bool ShouldPromptSync()
+    {
+        return SyncPending && (SyncOverride == false);
+    }
+
+    public void OverrideSync()
+    {
+        SyncOverride = true;
     }
     #endregion
 

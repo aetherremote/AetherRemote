@@ -1,12 +1,12 @@
 using System;
 using System.IO;
 using System.Text.Json;
-using System.Threading.Tasks;
 
 namespace AetherRemoteClient.Domain;
 
 public class SaveFile<T>
 {
+    private static readonly JsonSerializerOptions SerializationOptions = new() { WriteIndented = true };
     private string filePath { get; init; }
 
     public T Get => save;
@@ -43,22 +43,15 @@ public class SaveFile<T>
                 Save();
             }
         }
-
+        
         return loaded;
     }
 
-    public void Save()
-    {
-        Task.Run(SaveAsync);
-    }
-
-    private readonly JsonSerializerOptions serializationOptions = new() { WriteIndented = true };
-
-    public async Task SaveAsync()
+    public async void Save()
     {
         try
         {
-            await File.WriteAllTextAsync(filePath, JsonSerializer.Serialize(save, serializationOptions));
+            await File.WriteAllTextAsync(filePath, JsonSerializer.Serialize(save, SerializationOptions));
         }
         catch { }
     }
