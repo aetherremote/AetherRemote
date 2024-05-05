@@ -26,5 +26,6 @@ app.UseAuthorization();
 
 app.MapRazorPages();
 app.MapHub<MainHub>("/mainHub");
+app.MapHub<AdminHub>("/adminHub");
 
 app.Run();

@@ -10,20 +10,22 @@ using AetherRemoteServer.Domain;
 using Microsoft.AspNetCore.SignalR;
 using System.Text;
 
+// Typealias
+using FriendCode = string;
+
 namespace AetherRemoteServer.Services;
 
 public class NetworkService
 {
-    // Mapping FriendCode -> UserData
-    private readonly Dictionary<string, UserData> registeredUsers = new();
-    private readonly StorageService storageService = new();
+    private readonly Dictionary<FriendCode, UserData> registeredUsers = [];
+    private readonly DatabaseProvider database = new();
 
     private static readonly bool EnableVerboseLogging = true;
 
     public ResultWithMessage Login(string connectionId, string secret)
     {
         // Validate Secret
-        var userData = storageService.TryGetUserData(secret);
+        var userData = database.TryGetUserDataBySecret(secret);
         if (userData == null)
             return new ResultWithMessage(false, "Invalid Secret");
 
@@ -53,7 +55,7 @@ public class NetworkService
         if (userData == null)
             return new ResultWithMessage(false, "Requester not logged in");
 
-        var hash = await AetherRemoteHash.ComputeFriendListHash(userData.Friends);
+        var hash = await AetherRemoteHash.ComputeFriendListHash(userData.FriendList);
         return new ResultWithMessage(hash.SequenceEqual(friendListHash));
     }
 
@@ -63,7 +65,7 @@ public class NetworkService
         if (userData == null)
             return new ResultWithFriends(false, "Requester not logged in");
 
-        return new ResultWithFriends(true, "", userData.Friends);
+        return new ResultWithFriends(true, "", userData.FriendList);
     }
 
     public ResultWithMessage UpdateFriendList(string secret,  List<Friend> friendList)
@@ -72,7 +74,7 @@ public class NetworkService
         if (userData == null)
             return new ResultWithMessage(false, "Requester not logged in");
 
-        userData.Friends = friendList;
+        userData.FriendList = friendList;
         return new ResultWithMessage(true);
     }
 
@@ -82,17 +84,17 @@ public class NetworkService
         if (userData == null)
             return new ResultWithMessage(false, "Requester not logged in");
 
-        var index = userData.Friends.FindIndex(fr => fr.FriendCode == friend.FriendCode);
+        var index = userData.FriendList.FindIndex(fr => fr.FriendCode == friend.FriendCode);
         if (index < 0)
         {
-            userData.Friends.Add(friend); // Create
+            userData.FriendList.Add(friend); // Create
         }
         else
         {
-            userData.Friends[index] = friend; // Update
+            userData.FriendList[index] = friend; // Update
         }
 
-        storageService.SaveUserData();
+        // storageService.SaveUserData();
 
         // TODO: Return Friend Online Status
         return new ResultWithMessage(true);
@@ -105,17 +107,17 @@ public class NetworkService
             return new ResultWithMessage(false, "Requester not logged in");
 
         var result = new ResultWithMessage(true);
-        var index = userData.Friends.FindIndex(friend => friend.FriendCode == friendCode);
+        var index = userData.FriendList.FindIndex(friend => friend.FriendCode == friendCode);
         if (index < 0)
         {
             result.Message = "Friend not found";
         }
         else
         {
-            userData.Friends.RemoveAt(index);
+            userData.FriendList.RemoveAt(index);
         }
 
-        storageService.SaveUserData();
+        // storageService.SaveUserData();
 
         return result;
     }
@@ -243,7 +245,7 @@ public class NetworkService
     // TODO: Technically this function has a blind spot, in that you cannot determine if it was an invalid secret, or the user simply isn't online
     private UserData? RetrieveOnlineUserBySecret(string secret)
     {
-        var userData = storageService.TryGetUserData(secret);
+        var userData = database.TryGetUserDataBySecret(secret);
         if (userData == null)
             return null;
 
