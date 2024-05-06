@@ -138,7 +138,7 @@ public class NetworkProvider : IDisposable
     {
         if (Plugin.DeveloperMode)
             return new AsyncResult(true, "DeveloperMode Enabled");
-        
+
         var request = new CreateOrUpdateFriendRequest(secret, friend.Convert());
         var response = await InvokeCommand<CreateOrUpdateFriendRequest, CreateOrUpdateFriendResponse>(Constants.ApiCreateOrUpdateFriend, request);
         return new AsyncResult(response.Success, response.Message);

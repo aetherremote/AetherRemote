@@ -23,7 +23,7 @@ public class DatabaseProvider : IDisposable
         db = new SqliteConnection(ConnectionConfiguration);
         db.Open();
 
-        DumpTable();
+        // DumpTable();
 
         // MakeTable();
     }
@@ -78,9 +78,10 @@ public class DatabaseProvider : IDisposable
 
     public UserData? TryGetUserDataByFriendCode(string friendCode)
     {
+        Console.WriteLine("Searching for friend code " + friendCode);
         var command = db.CreateCommand();
         command.CommandText = $"SELECT * FROM {TableName} WHERE FriendCode = {FriendCodeParam}";
-        command.Parameters.AddWithValue(SecretParam, friendCode);
+        command.Parameters.AddWithValue(FriendCodeParam, friendCode);
 
         return TryGetUserData(command);
     }
@@ -103,6 +104,7 @@ public class DatabaseProvider : IDisposable
                 }
 
                 userData = new UserData { Secret = _secret, FriendCode = _friendCode, FriendList = _friendList };
+                break;
             }
         }
         catch(Exception ex)

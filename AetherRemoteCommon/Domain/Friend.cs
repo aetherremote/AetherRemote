@@ -8,24 +8,21 @@ public class Friend
     /// <summary>
     /// Id of the friend (UserId)
     /// </summary>
-    public string FriendCode;
+    public string FriendCode { get; set; }
 
     /// <summary>
     /// A name set by the client to identify a friend more easily
     /// </summary>
     /// 
-    public string? Note;
+    public string? Note { get; set; }
 
     /// <summary>
     /// Friend preferences
     /// </summary>
-    public FriendPermissions Permissions;
+    public FriendPermissions Permissions { get; set; }
 
-    /// <summary>
-    /// 
-    /// </summary>
     [NonSerialized]
-    public bool Online;
+    public bool Online = false;
 
     public Friend()
     {

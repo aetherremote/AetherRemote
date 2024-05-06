@@ -289,15 +289,24 @@ public class FriendsTab : ITab
 
         var findFriendResult = networkProvider.FriendList?.FindFriend(friendCodeAddFriendInputText);
         if (findFriendResult != null) // Grumble.. I hate using != but grammatically nothing else makes readable sense..
+        {
+            friendCodeAddFriendInputText = "";
+            logger.Warning($"[AetherRemote] Error adding friend: Already friends");
             return;
+        }
 
         var networkAddResult = await networkProvider.CreateOrUpdateFriend(configuration.Secret, friendCodeAddFriendInputText);
         if (networkAddResult.Success == false)
+        {
+            friendCodeAddFriendInputText = "";
+            logger.Warning ($"[AetherRemote] Error adding friend: {networkAddResult.Message}");
             return;
+        }
 
         var localAddResult = networkProvider.FriendList?.CreateAndAddFriend(friendCodeAddFriendInputText) ?? false;
         if (localAddResult == false)
         {
+            friendCodeAddFriendInputText = "";
             logger.Error("[AetherRemote] Error adding friend. Desync has occurred.");
             return;
         }

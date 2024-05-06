@@ -58,11 +58,6 @@ public class Friend
     /// <returns></returns>
     public CommonFriend Convert()
     {
-        return new()
-        {
-            FriendCode = FriendCode,
-            Note = Note,
-            Permissions = Permissions
-        };
+        return new(FriendCode, Note, Permissions);
     }
 }

@@ -65,6 +65,10 @@ public class NetworkService
         if (userData == null)
             return new ResultWithMessage(false, "Requester not logged in");
 
+        var validFriend = database.TryGetUserDataByFriendCode(friend.FriendCode);
+        if (validFriend == null)
+            return new ResultWithMessage(false, "Not a real friend code");
+
         var index = userData.FriendList.FindIndex(fr => fr.FriendCode == friend.FriendCode);
         if (index < 0)
         {
@@ -74,8 +78,6 @@ public class NetworkService
         {
             userData.FriendList[index] = friend; // Update
         }
-
-        // storageService.SaveUserData();
 
         // TODO: Return Friend Online Status
         return new ResultWithMessage(true);

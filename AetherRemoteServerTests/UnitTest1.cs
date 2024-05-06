@@ -58,7 +58,7 @@ public class Tests
     [Test]
     public async Task TestCreateOrUpdateFriend()
     {
-        var request = new CreateOrUpdateFriendRequest(ValidSecret, new Friend());
+        var request = new CreateOrUpdateFriendRequest(ValidSecret, new Friend(""));
         var response = await connection.InvokeAsync<CreateOrUpdateFriendResponse>(Constants.ApiCreateOrUpdateFriend, request);
         Assert.That(response.Success, Is.True);
     }
