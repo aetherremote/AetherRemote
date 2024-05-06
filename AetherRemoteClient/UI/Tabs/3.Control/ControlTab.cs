@@ -63,6 +63,7 @@ public class ControlTab : ITab
     public ControlTab(Configuration configuration, GlamourerAccessor glamourerAccessor, EmoteProvider emoteProvider, NetworkProvider networkProvider, 
         IClientState clientState, IPluginLog logger, ITargetManager targetManager)
     {
+        this.configuration = configuration;
         this.glamourerAccessor = glamourerAccessor;
         this.emoteProvider = emoteProvider;
         this.networkProvider = networkProvider;
@@ -381,7 +382,7 @@ public class ControlTab : ITab
 
     private async Task ProcessEmoteCommand()
     {
-        if (currentFriend == null || message.Length <= 0)
+        if (currentFriend == null || emote.Length <= 0)
             return;
 
         var validEmote = emoteProvider.Emotes.Contains(emote);
@@ -406,7 +407,7 @@ public class ControlTab : ITab
 
     private async Task ProcessBecomeCommand()
     {
-        if (currentFriend == null || message.Length <= 0 || glamourerData.Length == 0)
+        if (currentFriend == null || glamourerData.Length == 0)
             return;
 
         var glamourerApplyType = GlamourerAccessor.ConvertBoolsToApplyType(applyCustomization, applyEquipment);

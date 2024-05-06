@@ -78,7 +78,6 @@ public class DatabaseProvider : IDisposable
 
     public UserData? TryGetUserDataByFriendCode(string friendCode)
     {
-        Console.WriteLine("Searching for friend code " + friendCode);
         var command = db.CreateCommand();
         command.CommandText = $"SELECT * FROM {TableName} WHERE FriendCode = {FriendCodeParam}";
         command.Parameters.AddWithValue(FriendCodeParam, friendCode);
