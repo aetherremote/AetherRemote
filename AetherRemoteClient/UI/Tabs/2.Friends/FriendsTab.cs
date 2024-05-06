@@ -303,7 +303,7 @@ public class FriendsTab : ITab
             return;
         }
 
-        var localAddResult = networkProvider.FriendList?.CreateAndAddFriend(friendCodeAddFriendInputText) ?? false;
+        var localAddResult = networkProvider.FriendList?.CreateAndAddFriend(friendCodeAddFriendInputText, networkAddResult.Online) ?? false;
         if (localAddResult == false)
         {
             friendCodeAddFriendInputText = "";

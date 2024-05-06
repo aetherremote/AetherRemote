@@ -26,7 +26,7 @@ public class MainHub : Hub
     public CreateOrUpdateFriendResponse CreateOrUpdateFriend(CreateOrUpdateFriendRequest request)
     {
         var result = NetworkService.CreateOrUpdateFriend(request.Secret, request.Friend);
-        return new CreateOrUpdateFriendResponse(result.Success, result.Message);
+        return new CreateOrUpdateFriendResponse(result.Success, result.Message, result.Online);
     }
 
     [HubMethodName(Constants.ApiDeleteFriend)]

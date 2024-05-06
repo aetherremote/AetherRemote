@@ -112,8 +112,8 @@ public class DashboardTab : ITab
 
         ImGui.PopStyleColor();
 
-        SharedUserInterfaces.Tooltip("Copy to Clipboard");
         SharedUserInterfaces.PopBigFont();
+        SharedUserInterfaces.Tooltip("Copy to Clipboard");
     }
 
     private void DrawDisconnectedMenu(ServerConnectionState state)

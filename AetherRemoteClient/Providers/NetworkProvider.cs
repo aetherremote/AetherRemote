@@ -127,21 +127,21 @@ public class NetworkProvider : IDisposable
 
     #region === Friend List ===
     // TODO: Add new domain object for AsyncResult to include Online Status as well
-    public async Task<AsyncResult> CreateOrUpdateFriend(string secret, string friendCode)
+    public async Task<ResultWithOnlineStatus> CreateOrUpdateFriend(string secret, string friendCode)
     {
         var friend = new Friend(friendCode);
         return await CreateOrUpdateFriend(secret, friend);
     }
 
     // TODO: Add new domain object for AsyncResult to include Online Status as well
-    public async Task<AsyncResult> CreateOrUpdateFriend(string secret, Friend friend)
+    public async Task<ResultWithOnlineStatus> CreateOrUpdateFriend(string secret, Friend friend)
     {
         if (Plugin.DeveloperMode)
-            return new AsyncResult(true, "DeveloperMode Enabled");
+            return new ResultWithOnlineStatus(true, "DeveloperMode Enabled");
 
         var request = new CreateOrUpdateFriendRequest(secret, friend.Convert());
         var response = await InvokeCommand<CreateOrUpdateFriendRequest, CreateOrUpdateFriendResponse>(Constants.ApiCreateOrUpdateFriend, request);
-        return new AsyncResult(response.Success, response.Message);
+        return new ResultWithOnlineStatus(response.Success, response.Message);
     }
 
     public async Task<AsyncResult> DeleteFriend(string secret, string friendCode)

@@ -19,12 +19,12 @@ public class FriendList
     /// </summary>
     /// <param name="friendCode"></param>
     /// <returns>Friend created</returns>
-    public bool CreateAndAddFriend(string friendCode)
+    public bool CreateAndAddFriend(string friendCode, bool online = false)
     {
         var exists = Friends.Any(existingFriend => existingFriend.FriendCode == friendCode);
         if (exists == false)
         {
-            Friends.Add(new Friend(friendCode));
+            Friends.Add(new Friend(friendCode) { Online = online });
             return true;
         }
 

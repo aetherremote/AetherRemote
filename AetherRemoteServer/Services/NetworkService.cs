@@ -59,15 +59,15 @@ public class NetworkService
         return new ResultWithFriends(true, "", userData.FriendList);
     }
 
-    public ResultWithMessage CreateOrUpdateFriend(string secret, Friend friend)
+    public ResultWithOnlineStatus CreateOrUpdateFriend(string secret, Friend friend)
     {
         var userData = RetrieveOnlineUserBySecret(secret);
         if (userData == null)
-            return new ResultWithMessage(false, "Requester not logged in");
+            return new ResultWithOnlineStatus(false, "Requester not logged in");
 
         var validFriend = database.TryGetUserDataByFriendCode(friend.FriendCode);
         if (validFriend == null)
-            return new ResultWithMessage(false, "Not a real friend code");
+            return new ResultWithOnlineStatus(false, "Not a real friend code");
 
         var index = userData.FriendList.FindIndex(fr => fr.FriendCode == friend.FriendCode);
         if (index < 0)
@@ -79,8 +79,7 @@ public class NetworkService
             userData.FriendList[index] = friend; // Update
         }
 
-        // TODO: Return Friend Online Status
-        return new ResultWithMessage(true);
+        return new ResultWithOnlineStatus(true, "", registeredUsers.ContainsKey(friend.FriendCode));
     }
 
     public ResultWithMessage DeleteFriend(string secret, string friendCode)
