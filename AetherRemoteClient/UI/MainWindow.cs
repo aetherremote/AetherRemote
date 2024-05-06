@@ -37,10 +37,8 @@ public class MainWindow : Window
     public MainWindow(
         Configuration configuration,
         EmoteProvider emoteProvider,
-        FriendListProvider friendListProvider,
         GlamourerAccessor glamourerAccessor,
         NetworkProvider networkProvider,
-        SecretProvider secretProvider,
         IClientState clientState,
         IPluginLog logger,
         ITargetManager targetManager
@@ -54,11 +52,11 @@ public class MainWindow : Window
 
         this.networkProvider = networkProvider;
 
-        dashboardTab = new DashboardTab(configuration, friendListProvider, networkProvider, secretProvider, logger);
-        friendsTab = new FriendsTab(friendListProvider, networkProvider, secretProvider, logger);
+        dashboardTab = new DashboardTab(configuration, networkProvider, logger);
+        friendsTab = new FriendsTab(configuration, networkProvider, logger);
         logsTab = new LogsTab();
         settingsTab = new SettingsTab(configuration);
-        controlTab = new ControlTab(glamourerAccessor, emoteProvider, friendListProvider, networkProvider, secretProvider, clientState, logger, targetManager);
+        controlTab = new ControlTab(configuration, glamourerAccessor, emoteProvider, networkProvider, clientState, logger, targetManager);
         massControlTab = new MassControlTab();
     }
 

@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace AetherRemoteClient.UI.Tabs.Friends;
 
-public class FriendsTab(FriendListProvider friendListProvider, NetworkProvider networkProvider, SecretProvider secretProvider, IPluginLog logger) : ITab
+public class FriendsTab : ITab
 {
     // Constants
     private const ImGuiTableFlags FriendListTableFlags = ImGuiTableFlags.Borders;
@@ -20,10 +20,18 @@ public class FriendsTab(FriendListProvider friendListProvider, NetworkProvider n
     private static readonly Vector2 SmallButtonSize = new(24, 0);
 
     // Dependencies
-    private readonly FriendListProvider friendListProvider = friendListProvider;
-    private readonly NetworkProvider networkProvider = networkProvider;
-    private readonly SecretProvider secretProvider = secretProvider;
-    private readonly IPluginLog logger = logger;
+    private readonly Configuration configuration;
+    private readonly NetworkProvider networkProvider;
+    private readonly IPluginLog logger;
+
+    public FriendsTab(Configuration configuration, NetworkProvider networkProvider, IPluginLog logger)
+    {
+        this.configuration = configuration;
+        this.networkProvider = networkProvider;
+        this.logger = logger;
+
+        friendSearchFilter = new(networkProvider.FriendList?.Friends ?? [], FilterFriend);
+    }
 
     /// <summary>
     /// The string being referenced by the friend code input text
@@ -48,7 +56,7 @@ public class FriendsTab(FriendListProvider friendListProvider, NetworkProvider n
     /// <summary>
     /// Threaded filter for searching your friend list
     /// </summary>
-    private readonly ListFilter<Friend> friendSearchFilter = new(friendListProvider.FriendList, FilterFriend);
+    private readonly ListFilter<Friend> friendSearchFilter;
 
     // Friend being edit's note
     private string friendNote = string.Empty;
@@ -83,100 +91,47 @@ public class FriendsTab(FriendListProvider friendListProvider, NetworkProvider n
 
         if (ImGui.BeginTabItem("Friends"))
         {
-            if (networkProvider.ShouldPromptSync())
+            // Draw the settings area beside the search bar using the remaining space
+            ImGui.SetNextItemWidth(MainWindow.FriendListSize.X);
+            if (ImGui.InputTextWithHint("##SearchFriendListInputText", "Search", ref friendCodeSearchInputText, Constants.FriendNicknameCharLimit))
+                friendSearchFilter.UpdateSearchTerm(friendCodeSearchInputText);
+
+            // Save the cursor at the bottom of the search input text before calling ImGui.SameLine for use later
+            var bottomOfSearchInputText = ImGui.GetCursorPosY();
+
+            ImGui.SameLine();
+
+            // Draw the settings area beside the search bar using the remaining space
+            if (ImGui.BeginChild("FriendSettingsArea", Vector2.Zero, true))
             {
-                if (ImGui.BeginChild("DesyncArea", Vector2.Zero, true))
-                {
-                    SharedUserInterfaces.PushBigFont();
-                    ImGui.SetCursorPosY((ImGui.GetWindowHeight() / 2) - (ImGui.GetFontSize() * 2));
-                    SharedUserInterfaces.TextCentered("Friend List Desync!");
-                    SharedUserInterfaces.PopBigFont();
-                    SharedUserInterfaces.TextCentered("You will need to decide which friends list should be used");
-
-                    ImGui.Dummy(new Vector2(0, ImGui.GetFontSize() * 2));
-
-                    var choiceButtonSize = new Vector2(120, 0);
-                    ImGui.SetCursorPosX((ImGui.GetWindowWidth() / 2) - (((choiceButtonSize.X * 3) + (ImGui.GetStyle().FramePadding.X * 4)) / 2));
-
-                    // TODO: Indicate (at most) the number of friends in each set above button
-                    if (ImGui.Button("Use Local", choiceButtonSize))
-                        SyncToServer();
-
-                    ImGui.SameLine();
-
-                    // TODO: Indicate (at most) the number of friends in each set above button
-                    if (ImGui.Button("Use Server", choiceButtonSize))
-                        SyncFromServer();
-
-                    ImGui.SameLine();
-
-                    // TODO: Indicate that this may cause problems
-                    if (ImGui.Button("Ignore", choiceButtonSize))
-                        networkProvider.OverrideSync();
-
-                    ImGui.EndChild();
-                }
-            }
-            else
-            {
-                // Draw the settings area beside the search bar using the remaining space
-                ImGui.SetNextItemWidth(MainWindow.FriendListSize.X);
-                if (ImGui.InputTextWithHint("##SearchFriendListInputText", "Search", ref friendCodeSearchInputText, Constants.FriendNicknameCharLimit))
-                    friendSearchFilter.UpdateSearchTerm(friendCodeSearchInputText);
-
-                // Save the cursor at the bottom of the search input text before calling ImGui.SameLine for use later
-                var bottomOfSearchInputText = ImGui.GetCursorPosY();
-
-                ImGui.SameLine();
-
-                // Draw the settings area beside the search bar using the remaining space
-                if (ImGui.BeginChild("FriendSettingsArea", Vector2.Zero, true))
-                {
-                    DrawFriendSetting();
-                    ImGui.EndChild();
-                }
-
-                // Set the cursor back and begin drawing add friend input text & button
-                ImGui.SetCursorPosY(bottomOfSearchInputText);
-
-                ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
-
-                // By setting the Y value as negative, the window will be that many pixels up from the bottom
-                if (ImGui.BeginChild("FriendListArea", new Vector2(MainWindow.FriendListSize.X, -1 * footerHeight), true))
-                {
-                    DrawFriendList();
-                    ImGui.EndChild();
-                }
-
-                ImGui.PopStyleVar();
-
-                ImGui.SetNextItemWidth(MainWindow.FriendListSize.X);
-                if (ImGui.InputTextWithHint("##FriendCodeInputText", "Friend Code", ref friendCodeAddFriendInputText, Constants.FriendCodeCharLimit, ImGuiInputTextFlags.EnterReturnsTrue))
-                    AddFriendInInputText();
-
-                if (ImGui.Button("Add Friend", MainWindow.FriendListSize))
-                    AddFriendInInputText();
+                DrawFriendSetting();
+                ImGui.EndChild();
             }
 
+            // Set the cursor back and begin drawing add friend input text & button
+            ImGui.SetCursorPosY(bottomOfSearchInputText);
+
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
+
+            // By setting the Y value as negative, the window will be that many pixels up from the bottom
+            if (ImGui.BeginChild("FriendListArea", new Vector2(MainWindow.FriendListSize.X, -1 * footerHeight), true))
+            {
+                DrawFriendList();
+                ImGui.EndChild();
+            }
+
+            ImGui.PopStyleVar();
+
+            ImGui.SetNextItemWidth(MainWindow.FriendListSize.X);
+            if (ImGui.InputTextWithHint("##FriendCodeInputText", "Friend Code", ref friendCodeAddFriendInputText, Constants.FriendCodeCharLimit, ImGuiInputTextFlags.EnterReturnsTrue))
+                AddFriendInInputText();
+
+            if (ImGui.Button("Add Friend", MainWindow.FriendListSize))
+                AddFriendInInputText();
             ImGui.EndTabItem();
         }
 
         DeleteFriendsStep();
-    }
-
-    private async void SyncToServer()
-    {
-        await networkProvider.UploadFriendList(secretProvider.Secret, friendListProvider.FriendList);
-    }
-
-    private async void SyncFromServer()
-    {
-        var friendListFromServer = await networkProvider.DownloadFriendList(secretProvider.Secret);
-        if (friendListFromServer.Success)
-        {
-            friendListProvider.ReplaceFriendList(friendListFromServer.Friends);
-            friendListProvider.Save();
-        }
     }
     
     private void DrawFriendList()
@@ -184,7 +139,7 @@ public class FriendsTab(FriendListProvider friendListProvider, NetworkProvider n
         if (ImGui.BeginTable("FriendListTable", 1, FriendListTableFlags) == false)
             return;
 
-        foreach (var friend in friendListProvider.FriendList)
+        foreach (var friend in networkProvider.FriendList?.Friends ?? [])
         {
             ImGui.TableNextRow();
             ImGui.TableSetColumnIndex(0);
@@ -321,27 +276,34 @@ public class FriendsTab(FriendListProvider friendListProvider, NetworkProvider n
             return;
 
         foreach(var friendToDelete in friendsToDelete)
-        {
-            friendListProvider.RemoveFriend(friendToDelete.FriendCode);
-        }
+            networkProvider.FriendList?.RemoveFriend(friendToDelete.FriendCode);
 
         friendBeingEditted = null;
         friendsToDelete.Clear();
-        friendListProvider.Save();
     }
 
-    private void AddFriendInInputText()
+    private async void AddFriendInInputText()
     {
         if (friendCodeAddFriendInputText.Length <= 0)
             return;
 
-        var addFriendResult = friendListProvider.AddFriend(friendCodeAddFriendInputText);
-        if (addFriendResult == null)
+        var findFriendResult = networkProvider.FriendList?.FindFriend(friendCodeAddFriendInputText);
+        if (findFriendResult != null) // Grumble.. I hate using != but grammatically nothing else makes readable sense..
             return;
+
+        var networkAddResult = await networkProvider.CreateOrUpdateFriend(configuration.Secret, friendCodeAddFriendInputText);
+        if (networkAddResult.Success == false)
+            return;
+
+        var localAddResult = networkProvider.FriendList?.CreateAndAddFriend(friendCodeAddFriendInputText) ?? false;
+        if (localAddResult == false)
+        {
+            logger.Error("[AetherRemote] Error adding friend. Desync has occurred.");
+            return;
+        }
         
         // Clear textbox
         friendCodeAddFriendInputText = "";
-        Task.Run(() => networkProvider.CreateOrUpdateFriend(secretProvider.Secret, addFriendResult));
     }
 
     private void EditFriend(Friend friend)
@@ -385,8 +347,6 @@ public class FriendsTab(FriendListProvider friendListProvider, NetworkProvider n
         friendBeingEditted.Permissions.AllowLinkshell = allowLinkshell;
         friendBeingEditted.Permissions.AllowCrossworldLinkshell = allowCrossworldLinkshell;
         friendBeingEditted.Permissions.AllowPvPTeam = allowPvPTeam;
-
-        friendListProvider.Save();
     }
 
     private void SetAllSpeakPermissions(bool enabled)

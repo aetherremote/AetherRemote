@@ -2,6 +2,8 @@ using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.CommonFriendPermissions;
 using System;
 
+using CommonFriend = AetherRemoteCommon.Domain.CommonFriend.Friend;
+
 namespace AetherRemoteClient.Domain;
 
 [Serializable]
@@ -48,5 +50,19 @@ public class Friend
         sb.AddVariable("Permissions", Permissions);
         sb.AddVariable("Online", Online);
         return sb.ToString();
+    }
+
+    /// <summary>
+    /// Converts Friend to CommonFriend
+    /// </summary>
+    /// <returns></returns>
+    public CommonFriend Convert()
+    {
+        return new()
+        {
+            FriendCode = FriendCode,
+            Note = Note,
+            Permissions = Permissions
+        };
     }
 }

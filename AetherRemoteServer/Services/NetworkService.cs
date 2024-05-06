@@ -10,33 +10,34 @@ using AetherRemoteServer.Domain;
 using Microsoft.AspNetCore.SignalR;
 using System.Text;
 
-// Typealias
-using FriendCode = string;
-
 namespace AetherRemoteServer.Services;
 
 public class NetworkService
 {
-    private readonly Dictionary<FriendCode, UserData> registeredUsers = [];
+    // FriendCode -> UserData
+    private readonly Dictionary<string, UserData> registeredUsers = [];
     private readonly DatabaseProvider database = new();
 
     private static readonly bool EnableVerboseLogging = true;
 
-    public ResultWithMessage Login(string connectionId, string secret)
+    public ResultWithLogin Login(string connectionId, string secret)
     {
         // Validate Secret
         var userData = database.TryGetUserDataBySecret(secret);
         if (userData == null)
-            return new ResultWithMessage(false, "Invalid Secret");
+            return new ResultWithLogin(false, "Invalid Secret");
 
         // Register FriendCode -> UserData
         if (registeredUsers.ContainsKey(userData.FriendCode))
-            return new ResultWithMessage(false, "Already Registered");
+            return new ResultWithLogin(false, "Already Registered");
 
         userData.ConnectionId = connectionId;
         registeredUsers.Add(userData.FriendCode, userData);
 
-        return new ResultWithMessage(true, "Success", userData.FriendCode);
+        foreach(var friend in userData.FriendList)
+            friend.Online = registeredUsers[friend.FriendCode] != null;
+
+        return new ResultWithLogin(true, "", userData.FriendCode, userData.FriendList);
     }
 
     public ResultWithMessage Logout(string connectionId)
@@ -49,16 +50,6 @@ public class NetworkService
         return new ResultWithMessage(true);
     }
 
-    public async Task<ResultWithMessage> Sync(string secret, byte[] friendListHash)
-    {
-        var userData = RetrieveOnlineUserBySecret(secret);
-        if (userData == null)
-            return new ResultWithMessage(false, "Requester not logged in");
-
-        var hash = await AetherRemoteHash.ComputeFriendListHash(userData.FriendList);
-        return new ResultWithMessage(hash.SequenceEqual(friendListHash));
-    }
-
     public ResultWithFriends FetchFriendList(string secret)
     {
         var userData = RetrieveOnlineUserBySecret(secret);
@@ -66,16 +57,6 @@ public class NetworkService
             return new ResultWithFriends(false, "Requester not logged in");
 
         return new ResultWithFriends(true, "", userData.FriendList);
-    }
-
-    public ResultWithMessage UpdateFriendList(string secret,  List<Friend> friendList)
-    {
-        var userData = RetrieveOnlineUserBySecret(secret);
-        if (userData == null)
-            return new ResultWithMessage(false, "Requester not logged in");
-
-        userData.FriendList = friendList;
-        return new ResultWithMessage(true);
     }
 
     public ResultWithMessage CreateOrUpdateFriend(string secret, Friend friend)

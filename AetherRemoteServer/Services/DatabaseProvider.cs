@@ -23,7 +23,30 @@ public class DatabaseProvider : IDisposable
         db = new SqliteConnection(ConnectionConfiguration);
         db.Open();
 
+        DumpTable();
+
         // MakeTable();
+    }
+
+    private void DumpTable()
+    {
+        var command = db.CreateCommand();
+        command.CommandText = $"SELECT * FROM {TableName}";
+
+        using var reader = command.ExecuteReader();
+        while (reader.Read())
+        {
+            var _secret = reader.GetString(0);
+            var _friendCode = reader.GetString(1);
+
+            List<Friend> _friendList = [];
+            if (reader.IsDBNull(2) == false)
+            {
+                _friendList = JsonSerializer.Deserialize<List<Friend>>(reader.GetString(2)) ?? [];
+            }
+
+            Console.WriteLine($"Secret: {_secret} FriendCode: {_friendCode} FriendList: {string.Join(",", _friendList)}");
+        }
     }
 
     private void MakeTable()

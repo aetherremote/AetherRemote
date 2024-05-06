@@ -25,7 +25,7 @@ public class AdminHub : Hub
     public UserData? Fetch(string secret)
     {
         var db = new DatabaseProvider();
-        var userData = db.TryGetUserData(secret);
+        var userData = db.TryGetUserDataBySecret(secret);
         db.Dispose();
         return userData;
     }

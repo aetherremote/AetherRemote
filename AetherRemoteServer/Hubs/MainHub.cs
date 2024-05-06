@@ -2,12 +2,9 @@ using AetherRemoteCommon;
 using AetherRemoteCommon.Domain.Network.Become;
 using AetherRemoteCommon.Domain.Network.CreateOrUpdateFriend;
 using AetherRemoteCommon.Domain.Network.DeleteFriend;
-using AetherRemoteCommon.Domain.Network.DownloadFriendList;
 using AetherRemoteCommon.Domain.Network.Emote;
 using AetherRemoteCommon.Domain.Network.Login;
 using AetherRemoteCommon.Domain.Network.Speak;
-using AetherRemoteCommon.Domain.Network.Sync;
-using AetherRemoteCommon.Domain.Network.UploadFriendList;
 using AetherRemoteServer.Services;
 using Microsoft.AspNetCore.SignalR;
 
@@ -22,28 +19,7 @@ public class MainHub : Hub
     {
         var connectionId = Context.ConnectionId;
         var result = NetworkService.Login(connectionId, request.Secret);
-        return new LoginResponse(result.Success, result.Message, result.Extra);
-    }
-
-    [HubMethodName(Constants.ApiSync)]
-    public async Task<SyncResponse> Sync(SyncRequest request)
-    {
-        var result = await NetworkService.Sync(request.Secret, request.FriendListHash);
-        return new SyncResponse(result.Success, result.Message);
-    }
-
-    [HubMethodName(Constants.ApiDownloadFriendList)]
-    public DownloadFriendListResponse DownloadFriendList(DownloadFriendListRequest request)
-    {
-        var result = NetworkService.FetchFriendList(request.Secret);
-        return new DownloadFriendListResponse(result.Success, result.Message, result.FriendList);
-    }
-
-    [HubMethodName(Constants.ApiUploadFriendList)]
-    public UploadFriendListResponse UploadFriendList(UploadFriendListRequest request)
-    {
-        var result = NetworkService.UpdateFriendList(request.Secret, request.FriendList);
-        return new UploadFriendListResponse(result.Success, result.Message);
+        return new LoginResponse(result.Success, result.Message, result.FriendCode, result.FriendList);
     }
 
     [HubMethodName(Constants.ApiCreateOrUpdateFriend)]

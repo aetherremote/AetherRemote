@@ -1,20 +1,17 @@
 using AetherRemoteClient.Domain;
-using AetherRemoteClient.Domain.Translators;
 using AetherRemoteClient.Providers;
-using AetherRemoteCommon.Domain;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using Dalamud.Plugin.Services;
 using ImGuiNET;
 using System.Numerics;
+
 namespace AetherRemoteClient.UI.Tabs.Dashboard;
 
 public class DashboardTab : ITab
 {
     private readonly Configuration configuration;
-    private readonly FriendListProvider friendListProvider;
     private readonly NetworkProvider networkProvider;
-    private readonly SecretProvider secretProvider;
     private readonly IPluginLog logger;
     
     private static readonly int LoginElementsWidth = 200;
@@ -22,15 +19,13 @@ public class DashboardTab : ITab
 
     private string secretInputText;
 
-    public DashboardTab(Configuration configuration, FriendListProvider friendListProvider, NetworkProvider networkProvider, SecretProvider secretProvider, IPluginLog logger)
+    public DashboardTab(Configuration configuration, NetworkProvider networkProvider, IPluginLog logger)
     {
         this.configuration = configuration;
-        this.friendListProvider = friendListProvider;
         this.networkProvider = networkProvider;
-        this.secretProvider = secretProvider;
         this.logger = logger;
 
-        secretInputText = secretProvider.Secret;
+        secretInputText = configuration.Secret;
 
         if (configuration.AutoConnect)
             Login();
@@ -152,8 +147,8 @@ public class DashboardTab : ITab
 
         if (shouldLogin)
         {
-            secretProvider.Secret = secretInputText;
-            secretProvider.Save();
+            configuration.Secret = secretInputText;
+            configuration.Save();
             Login();
         }
 
@@ -163,12 +158,8 @@ public class DashboardTab : ITab
 
     private async void Login()
     {
-        var connectResult = await networkProvider.Connect(secretProvider.Secret);
+        var connectResult = await networkProvider.Connect(configuration.Secret);
         if (connectResult.Success == false)
             return;
-
-        var commonFriendList = FriendTranslator.DomainFriendListToCommon(friendListProvider.FriendList);
-        var hash = await AetherRemoteHash.ComputeFriendListHash(commonFriendList);
-        await networkProvider.Sync(secretInputText, hash);
     }
 }

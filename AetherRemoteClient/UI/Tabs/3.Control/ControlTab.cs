@@ -16,15 +16,7 @@ namespace AetherRemoteClient.UI.Tabs.Control;
 
 // TODO: Add brief timeout values to prevent spam sending + give visual feedback
 
-public class ControlTab(
-    GlamourerAccessor glamourerAccessor,
-    EmoteProvider emoteProvider,
-    FriendListProvider friendListProvider,
-    NetworkProvider networkProvider,
-    SecretProvider secretProvider,
-    IClientState clientState,
-    IPluginLog logger,
-    ITargetManager targetManager) : ITab
+public class ControlTab : ITab
 {
     // Constants
     private const ImGuiTableFlags FriendListTableFlags = ImGuiTableFlags.Borders;
@@ -36,18 +28,17 @@ public class ControlTab(
     private static readonly int TransformButtonWidth = 80;
 
     // Dependencies
-    private readonly GlamourerAccessor glamourerAccessor = glamourerAccessor;
-    private readonly EmoteProvider emoteProvider = emoteProvider;
-    private readonly FriendListProvider friendListProvider = friendListProvider;
-    private readonly NetworkProvider networkProvider = networkProvider;
-    private readonly SecretProvider secretProvider = secretProvider;
-    private readonly IClientState clientState = clientState;
-    private readonly IPluginLog logger = logger;
-    private readonly ITargetManager targetManager = targetManager;
+    private readonly Configuration configuration;
+    private readonly GlamourerAccessor glamourerAccessor;
+    private readonly EmoteProvider emoteProvider;
+    private readonly NetworkProvider networkProvider;
+    private readonly IClientState clientState;
+    private readonly IPluginLog logger;
+    private readonly ITargetManager targetManager;
 
     // Variables - Friend List
     private string searchInputText = "";
-    private readonly ListFilter<Friend> friendListSearchFilter = new(friendListProvider.FriendList, (friend, searchTerm) => { return friend.NoteOrFriendCode.Contains(searchTerm); });
+    private readonly ListFilter<Friend> friendListSearchFilter;
 
     // Variables
 
@@ -62,12 +53,26 @@ public class ControlTab(
 
     // Variables - Emote
     private string emote = "";
-    private readonly ListFilter<string> emoteSearchFilter = new(emoteProvider.Emotes, (emote, searchTerm) => { return emote.Contains(searchTerm); });
+    private readonly ListFilter<string> emoteSearchFilter;
 
     // Variables - Glamourer
     private string glamourerData = "";
     private bool applyCustomization = true;
     private bool applyEquipment = true;
+
+    public ControlTab(Configuration configuration, GlamourerAccessor glamourerAccessor, EmoteProvider emoteProvider, NetworkProvider networkProvider, 
+        IClientState clientState, IPluginLog logger, ITargetManager targetManager)
+    {
+        this.glamourerAccessor = glamourerAccessor;
+        this.emoteProvider = emoteProvider;
+        this.networkProvider = networkProvider;
+        this.clientState = clientState;
+        this.logger = logger;
+        this.targetManager = targetManager;
+
+        friendListSearchFilter = new(networkProvider.FriendList?.Friends ?? [], (friend, searchTerm) => { return friend.NoteOrFriendCode.Contains(searchTerm); });
+        emoteSearchFilter = new(emoteProvider.Emotes, (emote, searchTerm) => { return emote.Contains(searchTerm); });
+    }
 
     public void Draw()
     {
@@ -110,7 +115,7 @@ public class ControlTab(
     {
         if (ImGui.BeginTable("FriendListTable", 1, FriendListTableFlags))
         {
-            foreach (var friend in friendListProvider.FriendList)
+            foreach (var friend in networkProvider.FriendList?.Friends ?? [])
             {
                 ImGui.TableNextRow();
                 ImGui.TableSetColumnIndex(0);
@@ -358,7 +363,7 @@ public class ControlTab(
                 extra = tellTarget;
         }
 
-        var secret = secretProvider.Secret;
+        var secret = configuration.Secret;
         var result = await networkProvider.Speak(secret, [currentFriend], message, chatMode, extra);
         if (result.Success)
         {
@@ -383,7 +388,7 @@ public class ControlTab(
         if (validEmote == false)
             return;
 
-        var secret = secretProvider.Secret;
+        var secret = configuration.Secret;
         var result = await networkProvider.Emote(secret, [currentFriend], emote);
         if (result.Success)
         {
@@ -406,7 +411,7 @@ public class ControlTab(
 
         var glamourerApplyType = GlamourerAccessor.ConvertBoolsToApplyType(applyCustomization, applyEquipment);
 
-        var secret = secretProvider.Secret;
+        var secret = configuration.Secret;
         var result = await networkProvider.Become(secret, [currentFriend], glamourerData, glamourerApplyType);
         if (result.Success)
         {

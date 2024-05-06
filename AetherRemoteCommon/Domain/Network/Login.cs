@@ -1,3 +1,5 @@
+using AetherRemoteCommon.Domain.CommonFriend;
+
 namespace AetherRemoteCommon.Domain.Network.Login;
 
 public struct LoginRequest
@@ -22,12 +24,14 @@ public struct LoginResponse
     public bool Success { get; set; }
     public string Message { get; set; }
     public string FriendCode { get; set; }
+    public List<Friend> FriendList { get; set; }
 
-    public LoginResponse(bool success, string message, string friendCode)
+    public LoginResponse(bool success, string message, string friendCode, List<Friend>? friendList = null)
     {
         Success = success;
         Message = message;
         FriendCode = friendCode;
+        FriendList = friendList ?? new();
     }
 
     public override readonly string ToString()
@@ -36,6 +40,7 @@ public struct LoginResponse
         sb.AddVariable("Success", Success);
         sb.AddVariable("Message", Message);
         sb.AddVariable("FriendCode", FriendCode);
+        sb.AddVariable("FriendList", FriendList);
         return sb.ToString();
     }
 }

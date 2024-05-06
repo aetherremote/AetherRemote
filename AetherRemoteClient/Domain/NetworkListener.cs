@@ -18,7 +18,7 @@ public class NetworkListener
 {
     private readonly ActionQueueProvider actionQueueProvider;
     private readonly EmoteProvider emoteProvider;
-    private readonly FriendListProvider friendListProvider;
+    private readonly NetworkProvider networkProvider;
     private readonly IPluginLog logger;
 
     /// <summary>
@@ -27,13 +27,12 @@ public class NetworkListener
     public NetworkListener(
         ActionQueueProvider actionQueueProvider,
         EmoteProvider emoteProvider,
-        FriendListProvider friendListProvider,
         NetworkProvider networkProvider, 
         IPluginLog logger)
     {
         this.actionQueueProvider = actionQueueProvider;
-        this.friendListProvider = friendListProvider;
         this.emoteProvider = emoteProvider;
+        this.networkProvider = networkProvider;
         this.logger = logger;
 
         networkProvider.Connection.On(Constants.ApiBecome, (BecomeExecute execute) => { HandleBecome(execute); });
@@ -43,7 +42,7 @@ public class NetworkListener
 
     public void HandleBecome(BecomeExecute execute)
     {
-        var validFriend = friendListProvider.FriendList.FirstOrDefault(friend => friend.FriendCode == execute.SenderFriendCode);
+        var validFriend = networkProvider.FriendList?.FindFriend(execute.SenderFriendCode);
         if (validFriend == null)
         {
             var message = $"Filtered out \'Become\' command from {execute.SenderFriendCode} who is not on your friend list";
@@ -64,7 +63,7 @@ public class NetworkListener
 
     public void HandleEmote(EmoteExecute execute)
     {
-        var validFriend = friendListProvider.FriendList.FirstOrDefault(friend => friend.FriendCode == execute.SenderFriendCode);
+        var validFriend = networkProvider.FriendList?.FindFriend(execute.SenderFriendCode);
         if (validFriend == null)
         {
             var message = $"Filtered out \'Emote\' command from {execute.SenderFriendCode} who is not on your friend list";
@@ -93,7 +92,7 @@ public class NetworkListener
 
     public void HandleSpeak(SpeakExecute execute)
     {
-        var validFriend = friendListProvider.FriendList.FirstOrDefault(friend => friend.FriendCode == execute.SenderFriendCode);
+        var validFriend = networkProvider.FriendList?.FindFriend(execute.SenderFriendCode);
         if (validFriend == null)
         {
             var message = $"Filtered out \'Speak\' command from {execute.SenderFriendCode} who is not on your friend list";

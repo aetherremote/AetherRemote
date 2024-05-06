@@ -1,17 +1,13 @@
 using AetherRemoteClient.Domain;
-using AetherRemoteClient.Domain.Translators;
 using AetherRemoteCommon;
 using AetherRemoteCommon.Domain.CommonChatMode;
 using AetherRemoteCommon.Domain.CommonGlamourerApplyType;
 using AetherRemoteCommon.Domain.Network.Become;
 using AetherRemoteCommon.Domain.Network.CreateOrUpdateFriend;
 using AetherRemoteCommon.Domain.Network.DeleteFriend;
-using AetherRemoteCommon.Domain.Network.DownloadFriendList;
 using AetherRemoteCommon.Domain.Network.Emote;
 using AetherRemoteCommon.Domain.Network.Login;
 using AetherRemoteCommon.Domain.Network.Speak;
-using AetherRemoteCommon.Domain.Network.Sync;
-using AetherRemoteCommon.Domain.Network.UploadFriendList;
 using Dalamud.Plugin.Services;
 using Microsoft.AspNetCore.SignalR.Client;
 using System;
@@ -34,28 +30,11 @@ public class NetworkProvider : IDisposable
     public readonly HubConnection Connection = new HubConnectionBuilder().WithUrl(ConnectionUrl).Build();
 
     // State
-    private ServerConnectionState connectionState = ServerConnectionState.Disconnected;
-    public ServerConnectionState ConnectionState
-    {
-        get
-        {
-            return connectionState;
-        }
-        set
-        {
-            if (Plugin.DeveloperMode == false)
-                return;
-
-            connectionState = value; 
-        }
-    }
+    public ServerConnectionState ConnectionState = ServerConnectionState.Disconnected;
 
     // Data
     public string? FriendCode { get; private set; } = null;
-
-    // Sync
-    public bool SyncPending { get; private set; } = false;
-    public bool SyncOverride { get; private set; } = false;
+    public FriendList? FriendList { get; private set; } = null;
 
     public NetworkProvider(IPluginLog logger)
     {
@@ -74,24 +53,24 @@ public class NetworkProvider : IDisposable
         if (Connection.State != HubConnectionState.Disconnected)
             return new AsyncResult(false, "Pending connection in progress");
 
-        connectionState = ServerConnectionState.Connecting;
+        ConnectionState = ServerConnectionState.Connecting;
 
         var connectionResult = await ConnectToServer();
         if (connectionResult.Success == false)
         {
-            connectionState = ServerConnectionState.Disconnected;
+            ConnectionState = ServerConnectionState.Disconnected;
             return connectionResult;
         }
 
         var loginResult = await LoginToServer(secret);
         if (loginResult.Success == false)
         {
-            connectionState = ServerConnectionState.Disconnected;
+            ConnectionState = ServerConnectionState.Disconnected;
             await Task.Run(() => Connection.StopAsync());
             return loginResult;
         }
 
-        connectionState = ServerConnectionState.Connected;
+        ConnectionState = ServerConnectionState.Connected;
         return new AsyncResult(true);
     }
 
@@ -123,7 +102,10 @@ public class NetworkProvider : IDisposable
             var request = new LoginRequest(secret);
             var response = await InvokeCommand<LoginRequest, LoginResponse>(Constants.ApiLogin, request);
             if (response.Success)
+            {
                 FriendCode = response.FriendCode;
+                FriendList = new(response.FriendList);
+            }
 
             return new AsyncResult(response.Success, response.Message);
         }
@@ -138,76 +120,26 @@ public class NetworkProvider : IDisposable
         if (Plugin.DeveloperMode == false)
             await Connection.StopAsync();
 
-        connectionState = ServerConnectionState.Disconnected;
+        ConnectionState = ServerConnectionState.Disconnected;
         FriendCode = null;
-    }
-
-    #endregion
-
-    #region === Sync ===
-    public async Task<AsyncResult> Sync(string secret, byte[] friendListHash)
-    {
-        if (Plugin.DeveloperMode)
-            return new AsyncResult(true, "DeveloperMode Enabled");
-
-        var request = new SyncRequest(secret, friendListHash);
-        var response = await InvokeCommand<SyncRequest, SyncResponse>(Constants.ApiSync, request);
-
-        if (response.HashesMatch == false)
-            SyncPending = true;
-
-        return new AsyncResult(response.HashesMatch, response.Message);
-    }
-
-    public async Task<AsyncResult> UploadFriendList(string secret, List<Friend> friendList)
-    {
-        if (Plugin.DeveloperMode)
-            return new AsyncResult(true, "DeveloperMode Enabled");
-
-        var convertedFriendList = FriendTranslator.DomainFriendListToCommon(friendList);
-        var request = new UploadFriendListRequest(secret, convertedFriendList);
-        var response = await InvokeCommand<UploadFriendListRequest, UploadFriendListResponse>(Constants.ApiUploadFriendList, request);
-        if (response.Success)
-            SyncPending = false;
-
-        return new AsyncResult(response.Success, response.Message);
-    }
-
-    public async Task<DownloadFriendListResult> DownloadFriendList(string secret)
-    {
-        if (Plugin.DeveloperMode)
-            return new DownloadFriendListResult(true, "DeveloperMode Enabled", []);
-
-        var request = new DownloadFriendListRequest(secret);
-        var response = await InvokeCommand<DownloadFriendListRequest, DownloadFriendListResponse>(Constants.ApiDownloadFriendList, request);
-        var friendList = FriendTranslator.CommonFriendListToDomain(response.FriendList);
-
-        if (response.Success)
-            SyncPending = false;
-
-        return new DownloadFriendListResult(response.Success, response.Message, friendList);
-    }
-
-    public bool ShouldPromptSync()
-    {
-        return SyncPending && (SyncOverride == false);
-    }
-
-    public void OverrideSync()
-    {
-        SyncOverride = true;
     }
     #endregion
 
     #region === Friend List ===
     // TODO: Add new domain object for AsyncResult to include Online Status as well
-    public async Task<AsyncResult> CreateOrUpdateFriend(string secret, Friend friendToCreateOrUpdate)
+    public async Task<AsyncResult> CreateOrUpdateFriend(string secret, string friendCode)
+    {
+        var friend = new Friend(friendCode);
+        return await CreateOrUpdateFriend(secret, friend);
+    }
+
+    // TODO: Add new domain object for AsyncResult to include Online Status as well
+    public async Task<AsyncResult> CreateOrUpdateFriend(string secret, Friend friend)
     {
         if (Plugin.DeveloperMode)
             return new AsyncResult(true, "DeveloperMode Enabled");
         
-        var friend = FriendTranslator.DomainToCommon(friendToCreateOrUpdate);
-        var request = new CreateOrUpdateFriendRequest(secret, friend);
+        var request = new CreateOrUpdateFriendRequest(secret, friend.Convert());
         var response = await InvokeCommand<CreateOrUpdateFriendRequest, CreateOrUpdateFriendResponse>(Constants.ApiCreateOrUpdateFriend, request);
         return new AsyncResult(response.Success, response.Message);
     }
@@ -276,16 +208,16 @@ public class NetworkProvider : IDisposable
 
     private async Task Closed(Exception? exception)
     {
-        await Task.Run(() => { connectionState = ServerConnectionState.Disconnected; });
+        await Task.Run(() => { ConnectionState = ServerConnectionState.Disconnected; });
     }
 
     private async Task Reconnecting(Exception? exception)
     {
-        await Task.Run(() => { connectionState = ServerConnectionState.Reconnecting; });
+        await Task.Run(() => { ConnectionState = ServerConnectionState.Reconnecting; });
     }
 
     private async Task Reconnected(string? arg)
     {
-        await Task.Run(() => { connectionState = ServerConnectionState.Connected; });
+        await Task.Run(() => { ConnectionState = ServerConnectionState.Connected; });
     }
 }

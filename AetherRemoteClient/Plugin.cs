@@ -47,9 +47,7 @@ public sealed class Plugin : IDalamudPlugin
     // Providers
     private ActionQueueProvider actionQueueProvider { get; init; }
     private EmoteProvider emoteProvider { get; init; }
-    private FriendListProvider friendListProvider { get; init; }
     private NetworkProvider networkProvider { get; init; }
-    private SecretProvider secretProvider { get; init; }
 
     // Listener
     private NetworkListener networkListener { get; init; }
@@ -89,16 +87,14 @@ public sealed class Plugin : IDalamudPlugin
         // Providers
         actionQueueProvider = new ActionQueueProvider(chat, glamourerAccessor, clientState, logger);
         emoteProvider = new EmoteProvider(dataManager);
-        friendListProvider = new FriendListProvider(pluginInterface);
         networkProvider = new NetworkProvider(logger);
-        secretProvider = new SecretProvider(pluginInterface);
 
         // Network Listener
-        networkListener = new NetworkListener(actionQueueProvider, emoteProvider, friendListProvider, networkProvider, logger);
+        networkListener = new NetworkListener(actionQueueProvider, emoteProvider, networkProvider, logger);
 
         // Windows
-        mainWindow = new MainWindow(configuration, emoteProvider, friendListProvider, glamourerAccessor, 
-            networkProvider, secretProvider, clientState, logger, targetManager);
+        mainWindow = new MainWindow(configuration, emoteProvider, glamourerAccessor, 
+            networkProvider, clientState, logger, targetManager);
 
         windowSystem.AddWindow(mainWindow);
 

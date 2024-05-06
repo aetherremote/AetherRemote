@@ -16,6 +16,6 @@ public class ResultWithFriends
     {
         Success = success;
         Message = message;
-        FriendList = friendList ?? new();
+        FriendList = friendList ?? [];
     }
 }
