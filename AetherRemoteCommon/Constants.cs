@@ -47,4 +47,5 @@ public static class Constants
     public const string ApiBecome = "Become";
     public const string ApiEmote = "Emote";
     public const string ApiSpeak = "Speak";
+    public const string ApiOnlineStatus = "OnlineStatus";
 }

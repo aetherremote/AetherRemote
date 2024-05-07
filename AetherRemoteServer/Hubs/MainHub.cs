@@ -18,7 +18,7 @@ public class MainHub : Hub
     public LoginResponse Login(LoginRequest request)
     {
         var connectionId = Context.ConnectionId;
-        var result = NetworkService.Login(connectionId, request.Secret);
+        var result = NetworkService.Login(connectionId, request.Secret, Clients);
         return new LoginResponse(result.Success, result.Message, result.FriendCode, result.FriendList);
     }
 
@@ -60,7 +60,7 @@ public class MainHub : Hub
     public override Task OnDisconnectedAsync(Exception? exception)
     {
         // Clean up the disconnected client
-        NetworkService.Logout(Context.ConnectionId);
+        NetworkService.Logout(Context.ConnectionId, Clients);
         return base.OnDisconnectedAsync(exception);
     }
 }

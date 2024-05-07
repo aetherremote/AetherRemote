@@ -1,6 +1,7 @@
 using AetherRemoteClient.Providers;
 using AetherRemoteCommon;
 using AetherRemoteCommon.Domain;
+using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Become;
 using AetherRemoteCommon.Domain.Network.Emote;
 using AetherRemoteCommon.Domain.Network.Speak;
@@ -35,9 +36,19 @@ public class NetworkListener
         this.networkProvider = networkProvider;
         this.logger = logger;
 
+        networkProvider.Connection.On(Constants.ApiOnlineStatus, (OnlineStatusExecute execute) => { SetOnlineStatus(execute); });
         networkProvider.Connection.On(Constants.ApiBecome, (BecomeExecute execute) => { HandleBecome(execute); });
         networkProvider.Connection.On(Constants.ApiEmote, (EmoteExecute execute) => { HandleEmote(execute); });
         networkProvider.Connection.On(Constants.ApiSpeak, (SpeakExecute execute) => { HandleSpeak(execute); });
+    }
+
+    public void SetOnlineStatus(OnlineStatusExecute execute)
+    {
+        var friend = networkProvider.FriendList?.FindFriend(execute.FriendCode);
+        if (friend == null)
+            return;
+
+        friend.Online = execute.Online;
     }
 
     public void HandleBecome(BecomeExecute execute)

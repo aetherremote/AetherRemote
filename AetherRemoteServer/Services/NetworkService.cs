@@ -3,6 +3,7 @@ using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.CommonChatMode;
 using AetherRemoteCommon.Domain.CommonFriend;
 using AetherRemoteCommon.Domain.CommonGlamourerApplyType;
+using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Become;
 using AetherRemoteCommon.Domain.Network.Emote;
 using AetherRemoteCommon.Domain.Network.Speak;
@@ -20,7 +21,7 @@ public class NetworkService
 
     private static readonly bool EnableVerboseLogging = true;
 
-    public ResultWithLogin Login(string connectionId, string secret)
+    public ResultWithLogin Login(string connectionId, string secret, IHubCallerClients clients)
     {
         // Validate Secret
         var userData = database.TryGetUserDataBySecret(secret);
@@ -34,19 +35,50 @@ public class NetworkService
         userData.ConnectionId = connectionId;
         registeredUsers.Add(userData.FriendCode, userData);
 
+        // Get online status of friends
         foreach(var friend in userData.FriendList)
-            friend.Online = registeredUsers[friend.FriendCode] != null;
+        {
+            // Check if your friend is online
+            var friendUserData = registeredUsers[friend.FriendCode];
+            if (friendUserData == null)
+                continue;
+
+            // Mark friend as online
+            friend.Online = true;
+
+            if (friendUserData.ConnectionId == null)
+                continue; // This should never be the case
+
+            // Send a message to that friend that you are online
+            var request = new OnlineStatusExecute(userData.FriendCode, true);
+            clients.Client(friendUserData.ConnectionId).SendAsync(Constants.ApiOnlineStatus, request);
+        }
 
         return new ResultWithLogin(true, "", userData.FriendCode, userData.FriendList);
     }
 
-    public ResultWithMessage Logout(string connectionId)
+    public ResultWithMessage Logout(string connectionId, IHubCallerClients clients)
     {
-        var user = registeredUsers.FirstOrDefault(user => user.Value.ConnectionId == connectionId).Value;
-        if (user == null)
+        var userData = registeredUsers.FirstOrDefault(user => user.Value.ConnectionId == connectionId).Value;
+        if (userData == null)
             return new ResultWithMessage(true, $"ConnectionId {connectionId} may have already been terminated");
 
-        registeredUsers.Remove(user.FriendCode);
+        foreach(var friend in userData.FriendList)
+        {
+            // Check if friend is online
+            var friendUserData = registeredUsers[friend.FriendCode];
+            if (friendUserData == null)
+                continue;
+
+            if (friendUserData.ConnectionId == null)
+                continue; // This should never be the case
+
+            // Send a message to that friend that you are offline
+            var request = new OnlineStatusExecute(userData.FriendCode, false);
+            clients.Client(friendUserData.ConnectionId).SendAsync(Constants.ApiOnlineStatus, request);
+        }
+
+        registeredUsers.Remove(userData.FriendCode);
         return new ResultWithMessage(true);
     }
 
@@ -98,8 +130,6 @@ public class NetworkService
         {
             userData.FriendList.RemoveAt(index);
         }
-
-        // storageService.SaveUserData();
 
         return result;
     }
