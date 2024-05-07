@@ -311,7 +311,6 @@ public class SessionsTab(
                 if (ImGui.InputTextWithHint("##AddFriendPopupSearchBar", "Search", ref friendSearchString, Constants.FriendCodeCharLimit, ImGuiInputTextFlags.None))
                 { }//friendSearchFilter.UpdateSearchTerm(friendSearchString);
 
-                var removeFromIndex = -1;
                 /*
                 for(var i = 0; i < friendSearchFilter.List.Count; i++)
                 {

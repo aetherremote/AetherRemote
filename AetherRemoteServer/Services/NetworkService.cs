@@ -9,17 +9,15 @@ using AetherRemoteCommon.Domain.Network.Emote;
 using AetherRemoteCommon.Domain.Network.Speak;
 using AetherRemoteServer.Domain;
 using Microsoft.AspNetCore.SignalR;
-using System.Text;
 
 namespace AetherRemoteServer.Services;
 
 public class NetworkService
 {
     // FriendCode -> UserData
-    private readonly Dictionary<string, UserData> registeredUsers = [];
+    // private readonly Dictionary<string, OnlineClient> onlineClients = [];
     private readonly DatabaseProvider database = new();
-
-    private static readonly bool EnableVerboseLogging = true;
+    private readonly ConnectedClientsManager connectedClientsManager = new();
 
     public ResultWithLogin Login(string connectionId, string secret, IHubCallerClients clients)
     {
@@ -28,147 +26,138 @@ public class NetworkService
         if (userData == null)
             return new ResultWithLogin(false, "Invalid Secret");
 
-        // Register FriendCode -> UserData
-        if (registeredUsers.ContainsKey(userData.FriendCode))
+        // Registration Status
+        if (connectedClientsManager.IsFriendCodeRegistered(userData.FriendCode))
             return new ResultWithLogin(false, "Already Registered");
 
-        userData.ConnectionId = connectionId;
-        registeredUsers.Add(userData.FriendCode, userData);
+        // Create Client
+        var client = connectedClientsManager.CreateClient(connectionId, userData);
 
-        // Get online status of friends
-        foreach(var friend in userData.FriendList)
+        // Process Friend List
+        foreach(var friend in client.Data.FriendList)
         {
-            // Check if your friend is online
-            var friendUserData = registeredUsers[friend.FriendCode];
-            if (friendUserData == null)
+            // Check if friend is online
+            var friendClient = connectedClientsManager.GetConnectedClient(client.Data.FriendCode);
+            if (friendClient == null)
                 continue;
 
-            // Mark friend as online
+            // Set friend online status to true
             friend.Online = true;
 
-            if (friendUserData.ConnectionId == null)
-                continue; // This should never be the case
-
             // Send a message to that friend that you are online
-            var request = new OnlineStatusExecute(userData.FriendCode, true);
-            clients.Client(friendUserData.ConnectionId).SendAsync(Constants.ApiOnlineStatus, request);
+            SendOnlineStatus(client, friendClient, true, clients);
         }
 
-        return new ResultWithLogin(true, "", userData.FriendCode, userData.FriendList);
+        return new ResultWithLogin(true, "", client.Data.FriendCode, client.Data.FriendList);
     }
 
     public ResultWithMessage Logout(string connectionId, IHubCallerClients clients)
     {
-        var userData = registeredUsers.FirstOrDefault(user => user.Value.ConnectionId == connectionId).Value;
-        if (userData == null)
+        // Retrieve disconnected client's connected client (which is silly!!!)
+        var client = connectedClientsManager.GetConnectedClientByConnectionId(connectionId);
+        if (client == null)
             return new ResultWithMessage(true, $"ConnectionId {connectionId} may have already been terminated");
 
-        foreach(var friend in userData.FriendList)
+        foreach(var friend in client.Data.FriendList)
         {
             // Check if friend is online
-            var friendUserData = registeredUsers[friend.FriendCode];
-            if (friendUserData == null)
+            var friendClient = connectedClientsManager.GetConnectedClient(friend.FriendCode);
+            if (friendClient == null)
                 continue;
 
-            if (friendUserData.ConnectionId == null)
-                continue; // This should never be the case
-
             // Send a message to that friend that you are offline
-            var request = new OnlineStatusExecute(userData.FriendCode, false);
-            clients.Client(friendUserData.ConnectionId).SendAsync(Constants.ApiOnlineStatus, request);
+            SendOnlineStatus(client, friendClient, false, clients);
         }
 
-        registeredUsers.Remove(userData.FriendCode);
+        connectedClientsManager.RemoveConnectedClient(client.Data.FriendCode);
         return new ResultWithMessage(true);
     }
 
     public ResultWithFriends FetchFriendList(string secret)
     {
-        var userData = RetrieveOnlineUserBySecret(secret);
-        if (userData == null)
-            return new ResultWithFriends(false, "Requester not logged in");
+        // Validate Online
+        var client = connectedClientsManager.GetConnectedClientBySecret(secret);
+        if (client == null)
+            return new ResultWithFriends(false, "Not Logged In");
 
-        return new ResultWithFriends(true, "", userData.FriendList);
+        return new ResultWithFriends(true, "", client.Data.FriendList);
     }
 
-    public ResultWithOnlineStatus CreateOrUpdateFriend(string secret, Friend friend)
+    public ResultWithOnlineStatus CreateOrUpdateFriend(string secret, Friend friendToCreateOrUpdate)
     {
-        var userData = RetrieveOnlineUserBySecret(secret);
-        if (userData == null)
-            return new ResultWithOnlineStatus(false, "Requester not logged in");
+        // Validate Online
+        var client = connectedClientsManager.GetConnectedClientBySecret(secret);
+        if (client == null)
+            return new ResultWithOnlineStatus(false, "Not Logged In");
 
-        var validFriend = database.TryGetUserDataByFriendCode(friend.FriendCode);
-        if (validFriend == null)
-            return new ResultWithOnlineStatus(false, "Not a real friend code");
+        // Validate FriendCode to Create or Update
+        var friendUserData = database.TryGetUserDataByFriendCode(friendToCreateOrUpdate.FriendCode);
+        if (friendUserData == null)
+            return new ResultWithOnlineStatus(false, "Invalid Friend Code");
 
-        var index = userData.FriendList.FindIndex(fr => fr.FriendCode == friend.FriendCode);
-        if (index < 0)
-        {
-            userData.FriendList.Add(friend); // Create
-        }
-        else
-        {
-            userData.FriendList[index] = friend; // Update
-        }
+        // Create or Update
+        var friendIndex = client.Data.FriendList.FindIndex(friend => friend.FriendCode == friendToCreateOrUpdate.FriendCode);
+        if (friendIndex < 0) { client.Data.FriendList.Add(friendToCreateOrUpdate); }
+        else { client.Data.FriendList[friendIndex] = friendToCreateOrUpdate; }
 
-        return new ResultWithOnlineStatus(true, "", registeredUsers.ContainsKey(friend.FriendCode));
+        // Reflect changes in database
+        database.CreateOrUpdateUserData(client.Data);
+
+        return new ResultWithOnlineStatus(true, "", connectedClientsManager.IsFriendCodeRegistered(friendToCreateOrUpdate.FriendCode));
     }
 
-    public ResultWithMessage DeleteFriend(string secret, string friendCode)
+    public ResultWithMessage DeleteFriend(string secret, string friendCodeToDelete)
     {
-        var userData = RetrieveOnlineUserBySecret(secret);
-        if (userData == null)
-            return new ResultWithMessage(false, "Requester not logged in");
+        // Validate Online
+        var client = connectedClientsManager.GetConnectedClientBySecret(secret);
+        if (client == null)
+            return new ResultWithMessage(false, "Not Logged In");
 
+        // Create return result
         var result = new ResultWithMessage(true);
-        var index = userData.FriendList.FindIndex(friend => friend.FriendCode == friendCode);
-        if (index < 0)
-        {
-            result.Message = "Friend not found";
-        }
-        else
-        {
-            userData.FriendList.RemoveAt(index);
-        }
+
+        // Preform potential removals
+        var numberOfRemovedFriends = client.Data.FriendList.RemoveAll(friend => friend.FriendCode == friendCodeToDelete);
+        if (numberOfRemovedFriends == 0)
+            result.Message = "No Operation";
+
+        // Reflect changes in database
+        database.CreateOrUpdateUserData(client.Data);
 
         return result;
     }
 
     public ResultWithMessage Become(string secret, List<string> targetFriendCodes, GlamourerApplyType apply, string data, IHubCallerClients clients)
     {
-        Log("Become", $"Got new request from {secret}");
-        var userData = RetrieveOnlineUserBySecret(secret);
-        if (userData == null)
-        {
-            Log("Become", $"Requester {secret} not logged in");
-            return new ResultWithMessage(false, "Requester not logged in");
-        }
+        // Validate Online
+        var client = connectedClientsManager.GetConnectedClientBySecret(secret);
+        if (client == null)
+            return new ResultWithMessage(false, "Not Logged In");
 
+        // Iterate over all target friends
         foreach (var targetFriendCode in targetFriendCodes)
         {
-            Log("Become", $"Processing Emote command for target friend code {targetFriendCode}");
-            if (registeredUsers.TryGetValue(targetFriendCode, out var targetUser) == false)
-            {
-                Log("Become", $"Friend code {targetFriendCode} is offline, skipping");
+            // Check if friend is online
+            var targetClient = connectedClientsManager.GetConnectedClient(targetFriendCode);
+            if (targetClient == null)
                 continue;
-            }
 
-            if (targetUser.ConnectionId == null)
-            {
-                Log("Become", $"Friend code {targetFriendCode} does not have a connection id set????");
+            /* TODO: Temporarily disabled due to processing concerns
+            // Check if target is friends with sender
+            if (targetFriendCodeClient.Data.FriendList.Any(friend => friend.FriendCode == client.Data.FriendCode) == false)
                 continue;
-            }
+            */
 
             try
             {
-                Log("Become", $"Sending command to {targetFriendCode}...");
-                var request = new BecomeExecute(userData.FriendCode, data, apply);
-                clients.Client(targetUser.ConnectionId).SendAsync(Constants.ApiBecome, request);
-                Log("Become", $"Sent command to {targetFriendCode}!");
+                // Try Send Become Command
+                var request = new BecomeExecute(client.Data.FriendCode, data, apply);
+                clients.Client(targetClient.ConnectionId).SendAsync(Constants.ApiBecome, request);
             }
-            catch (Exception ex)
+            catch(Exception ex)
             {
-                Log("Become", $"Error sending command to {targetFriendCode}! Error was {ex.Message}");
+                // TODO: Decide if surfacing the friend codes who failed to send to the client is helpful
+                Console.WriteLine($"Error sending become command to {targetFriendCode}! Error was {ex.Message}");
             }
         }
 
@@ -177,39 +166,35 @@ public class NetworkService
 
     public ResultWithMessage Emote(string secret, List<string> targetFriendCodes, string emote, IHubCallerClients clients)
     {
-        Log("Emote", $"Got new request from {secret}");
-        var userData = RetrieveOnlineUserBySecret(secret);
-        if (userData == null)
-        {
-            Log("Emote", $"Requester {secret} not logged in");
-            return new ResultWithMessage(false, "Requester not logged in");
-        }
-            
+        // Validate Online
+        var client = connectedClientsManager.GetConnectedClientBySecret(secret);
+        if (client == null)
+            return new ResultWithMessage(false, "Not Logged In");
+
+        // Iterate over all target friends
         foreach (var targetFriendCode in targetFriendCodes)
         {
-            Log("Emote", $"Processing Emote command for target friend code {targetFriendCode}");
-            if (registeredUsers.TryGetValue(targetFriendCode, out var targetUser) == false)
-            {
-                Log("Emote", $"Friend code {targetFriendCode} is offline, skipping");
+            // Check if friend is online
+            var targetClient = connectedClientsManager.GetConnectedClient(targetFriendCode);
+            if (targetClient == null)
                 continue;
-            }
-                
-            if (targetUser.ConnectionId == null)
-            {
-                Log("Emote", $"Friend code {targetFriendCode} does not have a connection id set????");
+
+            /* TODO: Temporarily disabled due to processing concerns
+            // Check if target is friends with sender
+            if (targetFriendCodeClient.Data.FriendList.Any(friend => friend.FriendCode == client.Data.FriendCode) == false)
                 continue;
-            }
+            */
 
             try
             {
-                Log("Emote", $"Sending command to {targetFriendCode}...");
-                var request = new EmoteExecute(userData.FriendCode, emote);
-                clients.Client(targetUser.ConnectionId).SendAsync(Constants.ApiEmote, request);
-                Log("Emote", $"Sent command to {targetFriendCode}!");
+                // Try Send Emote Command
+                var request = new EmoteExecute(client.Data.FriendCode, emote);
+                clients.Client(targetClient.ConnectionId).SendAsync(Constants.ApiEmote, request);
             }
             catch (Exception ex)
             {
-                Log("Emote", $"Error sending command to {targetFriendCode}! Error was {ex.Message}");
+                // TODO: Decide if surfacing the friend codes who failed to send to the client is helpful
+                Console.WriteLine($"Error sending emote command to {targetFriendCode}! Error was {ex.Message}");
             }
         }
 
@@ -218,65 +203,57 @@ public class NetworkService
 
     public ResultWithMessage Speak(string secret, List<string> targetFriendCodes, string message, ChatMode chatMode, string? extra, IHubCallerClients clients)
     {
-        Log("Speak", $"Got new request from {secret}");
-        var userData = RetrieveOnlineUserBySecret(secret);
-        if (userData == null)
-        {
-            Log("Speak", $"Requester {secret} not logged in");
-            return new ResultWithMessage(false, "Requester not logged in");
-        }
+        // Validate Online
+        var client = connectedClientsManager.GetConnectedClientBySecret(secret);
+        if (client == null)
+            return new ResultWithMessage(false, "Not Logged In");
 
+        // Iterate over all target friends
         foreach (var targetFriendCode in targetFriendCodes)
         {
-            Log("Speak", $"Processing Emote command for target friend code {targetFriendCode}");
-            if (registeredUsers.TryGetValue(targetFriendCode, out var targetUser) == false)
-            {
-                Log("Speak", $"Friend code {targetFriendCode} is offline, skipping");
+            // Check if friend is online
+            var targetClient = connectedClientsManager.GetConnectedClient(targetFriendCode);
+            if (targetClient == null)
                 continue;
-            }
 
-            if (targetUser.ConnectionId == null)
-            {
-                Log("Speak", $"Friend code {targetFriendCode} does not have a connection id set????");
+            /* TODO: Temporarily disabled due to processing concerns
+            // Check if target is friends with sender
+            if (targetFriendCodeClient.Data.FriendList.Any(friend => friend.FriendCode == client.Data.FriendCode) == false)
                 continue;
-            }
+            */
 
             try
             {
-                Log("Speak", $"Sending command to {targetFriendCode}...");
-                var request = new SpeakExecute(userData.FriendCode, message, chatMode, extra);
-                clients.Client(targetUser.ConnectionId).SendAsync(Constants.ApiSpeak, request);
-                Log("Speak", $"Sent command to {targetFriendCode}!");
+                // Try Send Speak Command
+                var request = new SpeakExecute(client.Data.FriendCode, message, chatMode, extra);
+                clients.Client(targetClient.ConnectionId).SendAsync(Constants.ApiSpeak, request);
             }
-            catch (Exception) { }
+            catch (Exception ex)
+            {
+                // TODO: Decide if surfacing the friend codes who failed to send to the client is helpful
+                Console.WriteLine($"Error sending speak command to {targetFriendCode}! Error was {ex.Message}");
+            }
         }
 
         return new ResultWithMessage(true);
     }
 
-    // TODO: Technically this function has a blind spot, in that you cannot determine if it was an invalid secret, or the user simply isn't online
-    private UserData? RetrieveOnlineUserBySecret(string secret)
+    /// <summary>
+    /// Attempts to send a message to connected client indicating online status
+    /// </summary>
+    /// <param name="senderClient"></param>
+    /// <param name="receptientClient"></param>
+    /// <param name="hubCallerClients"></param>
+    private static void SendOnlineStatus(ConnectedClient senderClient, ConnectedClient receptientClient, bool online, IHubCallerClients hubCallerClients)
     {
-        var userData = database.TryGetUserDataBySecret(secret);
-        if (userData == null)
-            return null;
-
-        if (registeredUsers.TryGetValue(userData.FriendCode, out var registeredUser) == false)
-            return null;
-
-        return registeredUser;
-    }
-
-    private static void Log(string method, string message)
-    {
-        if (EnableVerboseLogging == false)
-            return;
-
-        var sb = new StringBuilder();
-        sb.Append('[');
-        sb.Append(method);
-        sb.Append("] ");
-        sb.Append(message);
-        Console.WriteLine(sb.ToString());
+        try
+        {
+            var request = new OnlineStatusExecute(senderClient.Data.FriendCode, online);
+            hubCallerClients.Client(receptientClient.ConnectionId).SendAsync(Constants.ApiOnlineStatus, request);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error sending online status to {receptientClient.Data.FriendCode}! Exception was: {ex.Message}");
+        }
     }
 }

@@ -10,9 +10,6 @@ public class UserData
     public string FriendCode { get; set; } = string.Empty;
     public List<Friend> FriendList { get; set; } = [];
 
-    [NonSerialized]
-    public string? ConnectionId = null;
-
     public override string ToString()
     {
         var sb = new AetherRemoteStringBuilder("UserData");
