@@ -258,7 +258,7 @@ public class FriendsTab : ITab
             ImGui.SetCursorPos(saveButtonPosition);
             ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 100f);
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Save, RoundButtonSize) && friendBeingEditted != null)
-                SaveFriend();
+                ProcessSaveFriend();
 
             SharedUserInterfaces.Tooltip("Save Friend");
 
@@ -341,12 +341,33 @@ public class FriendsTab : ITab
         allowPvPTeam = friend.Permissions.AllowPvPTeam;
     }
 
-    // TODO: Sync to Server
-    private void SaveFriend()
+    private async void ProcessSaveFriend()
     {
         if (friendBeingEditted == null)
             return;
+        
+        // TODO: Needless to say this needs improvement..
+        var converted = friendBeingEditted.Convert();
+        converted.Note = friendNote == string.Empty ? null : friendNote;
+        converted.Permissions.AllowEmote = allowEmote;
+        converted.Permissions.AllowSpeak = allowSpeak;
+        converted.Permissions.AllowChangeAppearance = allowChangeAppearance;
+        converted.Permissions.AllowChangeEquipment = allowChangeEquipment;
+        converted.Permissions.AllowSay = allowSay;
+        converted.Permissions.AllowYell = allowYell;
+        converted.Permissions.AllowShout = allowShout;
+        converted.Permissions.AllowTell = allowTell;
+        converted.Permissions.AllowParty = allowParty;
+        converted.Permissions.AllowAlliance = allowAlliance;
+        converted.Permissions.AllowFreeCompany = allowFreeCompany;
+        converted.Permissions.AllowLinkshell = allowLinkshell;
+        converted.Permissions.AllowCrossworldLinkshell = allowCrossworldLinkshell;
+        converted.Permissions.AllowPvPTeam = allowPvPTeam;
 
+        var result = await networkProvider.CreateOrUpdateFriend(configuration.Secret, converted);
+        if (result.Success == false)
+            return;
+        
         friendBeingEditted.Note = friendNote == string.Empty ? null : friendNote;
         friendBeingEditted.Permissions.AllowEmote = allowEmote;
         friendBeingEditted.Permissions.AllowSpeak = allowSpeak;
@@ -399,7 +420,7 @@ public class FriendsTab : ITab
 
         if (friendBeingEditted.Permissions.AllowSpeak != allowSpeak) return true;
         if (friendBeingEditted.Permissions.AllowSay != allowSay) return true;
-        if (friendBeingEditted.Permissions.AllowYell != allowTell) return true;
+        if (friendBeingEditted.Permissions.AllowYell != allowYell) return true;
         if (friendBeingEditted.Permissions.AllowShout != allowShout) return true;
         if (friendBeingEditted.Permissions.AllowTell != allowTell) return true;
         if (friendBeingEditted.Permissions.AllowParty != allowParty) return true;

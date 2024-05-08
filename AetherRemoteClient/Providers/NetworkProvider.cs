@@ -16,6 +16,8 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
+using CommonFriend = AetherRemoteCommon.Domain.CommonFriend.Friend;
+
 namespace AetherRemoteClient.Providers;
 
 public class NetworkProvider : IDisposable
@@ -130,16 +132,16 @@ public class NetworkProvider : IDisposable
     public async Task<ResultWithOnlineStatus> CreateOrUpdateFriend(string secret, string friendCode)
     {
         var friend = new Friend(friendCode);
-        return await CreateOrUpdateFriend(secret, friend);
+        return await CreateOrUpdateFriend(secret, friend.Convert());
     }
 
     // TODO: Add new domain object for AsyncResult to include Online Status as well
-    public async Task<ResultWithOnlineStatus> CreateOrUpdateFriend(string secret, Friend friend)
+    public async Task<ResultWithOnlineStatus> CreateOrUpdateFriend(string secret, CommonFriend friend)
     {
         if (Plugin.DeveloperMode)
             return new ResultWithOnlineStatus(true, "DeveloperMode Enabled");
 
-        var request = new CreateOrUpdateFriendRequest(secret, friend.Convert());
+        var request = new CreateOrUpdateFriendRequest(secret, friend);
         var response = await InvokeCommand<CreateOrUpdateFriendRequest, CreateOrUpdateFriendResponse>(Constants.ApiCreateOrUpdateFriend, request);
         return new ResultWithOnlineStatus(response.Success, response.Message);
     }
