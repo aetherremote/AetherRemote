@@ -35,15 +35,9 @@ public class FriendList
     /// Removes a friend from the friend list
     /// </summary>
     /// <param name="friendCode"></param>
-    /// <returns>Success</returns>
-    public bool RemoveFriend(string friendCode)
+    public void RemoveFriend(string friendCode)
     {
-        var index = Friends.FindIndex(friend => friend.FriendCode == friendCode);
-        if (index < 0)
-            return false;
-
-        Friends.RemoveAt(index);
-        return true;
+        Friends.RemoveAll(friend => friend.FriendCode == friendCode);
     }
 
     /// <summary>

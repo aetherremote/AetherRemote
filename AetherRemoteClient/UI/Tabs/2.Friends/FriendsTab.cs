@@ -6,9 +6,7 @@ using Dalamud.Interface.Colors;
 using Dalamud.Plugin.Services;
 using ImGuiNET;
 using System;
-using System.Collections.Generic;
 using System.Numerics;
-using System.Threading.Tasks;
 
 namespace AetherRemoteClient.UI.Tabs.Friends;
 
@@ -49,14 +47,14 @@ public class FriendsTab : ITab
     private Friend? friendBeingEditted = null;
 
     /// <summary>
-    /// A list of friends to be deleted at the end of the draw event
-    /// </summary>
-    private readonly List<Friend> friendsToDelete = [];
-
-    /// <summary>
     /// Threaded filter for searching your friend list
     /// </summary>
     private readonly ListFilter<Friend> friendSearchFilter;
+
+    /// <summary>
+    /// Should the currently editted friend be deleted
+    /// </summary>
+    private bool shouldDeleteFriend = false;
 
     // Friend being edit's note
     private string friendNote = string.Empty;
@@ -83,6 +81,9 @@ public class FriendsTab : ITab
 
     public void Draw()
     {
+        // Set deletion status each frame
+        shouldDeleteFriend = false;
+
         // Grab a reference to the style
         var style = ImGui.GetStyle();
 
@@ -124,14 +125,15 @@ public class FriendsTab : ITab
 
             ImGui.SetNextItemWidth(MainWindow.FriendListSize.X);
             if (ImGui.InputTextWithHint("##FriendCodeInputText", "Friend Code", ref friendCodeAddFriendInputText, Constants.FriendCodeCharLimit, ImGuiInputTextFlags.EnterReturnsTrue))
-                AddFriendInInputText();
+                ProcessAddFriend();
 
             if (ImGui.Button("Add Friend", MainWindow.FriendListSize))
-                AddFriendInInputText();
+                ProcessAddFriend();
+
             ImGui.EndTabItem();
         }
 
-        DeleteFriendsStep();
+        ProcessDeleteFriend();
     }
     
     private void DrawFriendList()
@@ -177,7 +179,7 @@ public class FriendsTab : ITab
             ImGui.SetCursorPosX(deleteButtonPosition.X);
             ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 100f);
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Trash, RoundButtonSize) && friendBeingEditted != null)
-                friendsToDelete.Add(friendBeingEditted);
+                shouldDeleteFriend = true;
 
             ImGui.PopStyleVar();
             SharedUserInterfaces.Tooltip("Delete Friend");
@@ -270,19 +272,7 @@ public class FriendsTab : ITab
         }
     }
 
-    private void DeleteFriendsStep()
-    {
-        if (friendsToDelete.Count <= 0)
-            return;
-
-        foreach(var friendToDelete in friendsToDelete)
-            networkProvider.FriendList?.RemoveFriend(friendToDelete.FriendCode);
-
-        friendBeingEditted = null;
-        friendsToDelete.Clear();
-    }
-
-    private async void AddFriendInInputText()
+    private async void ProcessAddFriend()
     {
         if (friendCodeAddFriendInputText.Length <= 0)
             return;
@@ -315,6 +305,21 @@ public class FriendsTab : ITab
         friendCodeAddFriendInputText = "";
     }
 
+    private async void ProcessDeleteFriend()
+    {
+        if (shouldDeleteFriend == false) return;
+        if (friendBeingEditted == null) return;
+        if (networkProvider.FriendList == null) return;
+
+        var serverDeleteResult = await networkProvider.DeleteFriend(configuration.Secret, friendBeingEditted.FriendCode);
+        if (serverDeleteResult.Success == false)
+            return;
+
+        networkProvider.FriendList.RemoveFriend(friendBeingEditted.FriendCode);
+
+        friendBeingEditted = null;
+    }
+
     private void EditFriend(Friend friend)
     {
         friendBeingEditted = friend;
@@ -336,6 +341,7 @@ public class FriendsTab : ITab
         allowPvPTeam = friend.Permissions.AllowPvPTeam;
     }
 
+    // TODO: Sync to Server
     private void SaveFriend()
     {
         if (friendBeingEditted == null)
@@ -360,10 +366,8 @@ public class FriendsTab : ITab
 
     private void SetAllSpeakPermissions(bool enabled)
     {
-        allowSpeak = enabled;
-        allowSay = enabled;
-        allowYell = enabled;
-        allowShout = enabled;
+        allowSpeak = enabled; allowSay = enabled;
+        allowYell = enabled; allowShout = enabled;
         allowTell = enabled;
         allowParty = enabled;
         allowAlliance = enabled;
