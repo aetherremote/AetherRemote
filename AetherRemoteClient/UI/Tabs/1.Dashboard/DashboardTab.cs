@@ -102,7 +102,7 @@ public class DashboardTab : ITab
         ImGui.SetCursorPosY(windowPadding.Y);
         SharedUserInterfaces.TextCentered("My Friend Code");
 
-        var friendCode = Plugin.DeveloperMode ? "Dev Mode" : networkProvider.FriendCode ?? "null";
+        var friendCode = networkProvider.FriendCode ?? "null";
         var friendCodeSize = ImGui.CalcTextSize(friendCode);
         
         ImGui.SetCursorPosX((width / 2) - (friendCodeSize.X / 2));

@@ -17,8 +17,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 
-using CommonFriend = AetherRemoteCommon.Domain.CommonFriend.Friend;
-
 namespace AetherRemoteClient.Providers;
 
 public class NetworkProvider : IDisposable
@@ -45,6 +43,25 @@ public class NetworkProvider : IDisposable
         Connection.Closed += Closed;
         Connection.Reconnecting += Reconnecting;
         Connection.Reconnected += Reconnected;
+
+        if (Plugin.DeveloperMode)
+        {
+            FriendCode = "DevMode";
+
+            var newGuy = new Friend("OnlineFriend8");
+            newGuy.Online = true;
+
+            FriendList = new FriendList([
+                new("OnlineFriend1") { Online = true },
+                new("OnlineFriend2") { Online = false },
+                new("OnlineFriend3") { Online = false },
+                new("OnlineFriend4") { Online = true },
+                new("OnlineFriend5") { Online = false },
+                new("OnlineFriend6") { Online = true },
+                new("OnlineFriend7") { Online = true }]);
+
+            logger.Info(string.Join(",", FriendList.Friends));
+        }
     }
 
     #region === Connect ===
@@ -129,15 +146,13 @@ public class NetworkProvider : IDisposable
     #endregion
 
     #region === Friend List ===
-    // TODO: Add new domain object for AsyncResult to include Online Status as well
     public async Task<ResultWithOnlineStatus> CreateOrUpdateFriend(string secret, string friendCode)
     {
         var friend = new Friend(friendCode);
         return await CreateOrUpdateFriend(secret, friend);
     }
 
-    // TODO: Add new domain object for AsyncResult to include Online Status as well
-    public async Task<ResultWithOnlineStatus> CreateOrUpdateFriend(string secret, CommonFriend friend)
+    public async Task<ResultWithOnlineStatus> CreateOrUpdateFriend(string secret, Friend friend)
     {
         if (Plugin.DeveloperMode)
             return new ResultWithOnlineStatus(true, "DeveloperMode Enabled");

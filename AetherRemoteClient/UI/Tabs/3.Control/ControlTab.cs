@@ -10,6 +10,7 @@ using Dalamud.Interface.Colors;
 using Dalamud.Plugin.Services;
 using ImGuiNET;
 using System;
+using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
 
@@ -117,14 +118,19 @@ public class ControlTab : ITab
     {
         if (ImGui.BeginTable("FriendListTable", 1, FriendListTableFlags))
         {
-            foreach (var friend in networkProvider.FriendList?.Friends ?? [])
+            var friendList = networkProvider.FriendList?.Friends.FindAll(friend => friend.Online == true) ?? [];
+            foreach (var friend in friendList)
             {
                 ImGui.TableNextRow();
                 ImGui.TableSetColumnIndex(0);
 
+                // Draw Icon
+                ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.ParsedGreen);
                 SharedUserInterfaces.Icon(FontAwesomeIcon.User);
                 ImGui.SameLine();
+                ImGui.PopStyleColor();
 
+                // Draw Selectable Text
                 if (ImGui.Selectable($"{friend.NoteOrFriendCode}", (currentFriend == friend), ImGuiSelectableFlags.SpanAllColumns))
                 {
                     if (lockCurrentFriend == false)
@@ -138,6 +144,7 @@ public class ControlTab : ITab
 
     private void DrawControlPanel()
     {
+        // No friend selected
         if (currentFriend == null)
         {
             SharedUserInterfaces.PushBigFont();
@@ -146,6 +153,22 @@ public class ControlTab : ITab
             SharedUserInterfaces.PopBigFont();
 
             SharedUserInterfaces.TextCentered("Start by selecting a friend from the left");
+            return;
+        }
+
+        // If the friend you are controlling goes offline
+        if (currentFriend.Online == false)
+        {
+            ReleaseCurrentFriend();
+            return;
+        }
+
+        // TODO: This check is costly, maybe FriendTab emits an event we can subscribe to?
+        // If the friend you are controlling is no longer on your local friend list
+        if (networkProvider.FriendList?.FindFriend(currentFriend.FriendCode) == null)
+        {
+            currentFriend = null;
+            lockCurrentFriend = false;
             return;
         }
 
@@ -462,5 +485,11 @@ public class ControlTab : ITab
         offset.Y = 0;
         offset.X *= 0.5f;
         return offset;
+    }
+
+    private void ReleaseCurrentFriend()
+    {
+        currentFriend = null;
+        lockCurrentFriend = false;
     }
 }

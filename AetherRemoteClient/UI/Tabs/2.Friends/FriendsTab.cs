@@ -7,6 +7,7 @@ using Dalamud.Interface.Colors;
 using Dalamud.Plugin.Services;
 using ImGuiNET;
 using System;
+using System.Linq;
 using System.Numerics;
 
 namespace AetherRemoteClient.UI.Tabs.Friends;
@@ -17,6 +18,8 @@ public class FriendsTab : ITab
     private const ImGuiTableFlags FriendListTableFlags = ImGuiTableFlags.Borders;
     private static readonly Vector2 RoundButtonSize = new(40, 40);
     private static readonly Vector2 SmallButtonSize = new(24, 0);
+    private static readonly Vector4 IconOnlineColor = ImGuiColors.ParsedGreen;
+    private static readonly Vector4 IconOfflineColor = ImGuiColors.DPSRed;
 
     // Dependencies
     private readonly Configuration configuration;
@@ -136,22 +139,32 @@ public class FriendsTab : ITab
 
         ProcessDeleteFriend();
     }
-    
+
     private void DrawFriendList()
     {
+        var friendList = networkProvider.FriendList?.Friends.OrderBy(friend => friend.Online == false).ToList() ?? [];
+
         if (ImGui.BeginTable("FriendListTable", 1, FriendListTableFlags) == false)
             return;
 
-        foreach (var friend in networkProvider.FriendList?.Friends ?? [])
+        foreach (var friend in friendList)
         {
             ImGui.TableNextRow();
             ImGui.TableSetColumnIndex(0);
 
+            var onlineStatus = friend.Online;
+
+            // Draw Icon
+            ImGui.PushStyleColor(ImGuiCol.Text, onlineStatus ? IconOnlineColor : IconOfflineColor);
             SharedUserInterfaces.Icon(FontAwesomeIcon.User);
+            ImGui.PopStyleColor();
             ImGui.SameLine();
 
+            // Draw Selectable Text
+            if (onlineStatus == false) ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.DalamudGrey);
             if (ImGui.Selectable($"{friend.NoteOrFriendCode}", friendBeingEditted == friend, ImGuiSelectableFlags.SpanAllColumns))
                 EditFriend(friend);
+            if (onlineStatus == false) ImGui.PopStyleColor();
         }
 
         ImGui.EndTable();

@@ -10,7 +10,7 @@ public class FriendList
 
     public FriendList(List<Friend> friends)
     {
-        Friends = friends.Select(friend => new Friend(friend.FriendCode, friend.Note, friend.Permissions)).ToList();
+        Friends = friends;
     }
 
     /// <summary>
