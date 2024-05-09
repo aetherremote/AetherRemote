@@ -1,4 +1,5 @@
 using AetherRemoteClient.Providers;
+using AetherRemoteCommon.Domain.CommonFriend;
 using System.Collections.Generic;
 
 namespace AetherRemoteClient.Domain;

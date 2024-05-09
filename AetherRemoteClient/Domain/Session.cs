@@ -1,3 +1,4 @@
+using AetherRemoteCommon.Domain.CommonFriend;
 using Dalamud.Interface;
 using System.Collections.Generic;
 using System.Linq;

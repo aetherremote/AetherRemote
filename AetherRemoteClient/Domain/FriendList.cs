@@ -1,7 +1,6 @@
+using AetherRemoteCommon.Domain.CommonFriend;
 using System.Collections.Generic;
 using System.Linq;
-
-using CommonFriend = AetherRemoteCommon.Domain.CommonFriend.Friend;
 
 namespace AetherRemoteClient.Domain;
 
@@ -9,7 +8,7 @@ public class FriendList
 {
     public readonly List<Friend> Friends;
 
-    public FriendList(List<CommonFriend> friends)
+    public FriendList(List<Friend> friends)
     {
         Friends = friends.Select(friend => new Friend(friend.FriendCode, friend.Note, friend.Permissions)).ToList();
     }
@@ -38,15 +37,6 @@ public class FriendList
     public void RemoveFriend(string friendCode)
     {
         Friends.RemoveAll(friend => friend.FriendCode == friendCode);
-    }
-
-    /// <summary>
-    /// Converts Friend List into Common Friend List
-    /// </summary>
-    /// <returns></returns>
-    public List<CommonFriend> Convert()
-    {
-        return Friends.Select(friend => friend.Convert()).ToList();
     }
 
     /// <summary>

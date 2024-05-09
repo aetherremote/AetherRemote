@@ -9,11 +9,10 @@ using System.Threading.Tasks;
 
 namespace AetherRemoteClient.UI.Experimental.Tabs.Sessions.Emote;
 
-public class SessionTabEmoteSection(NetworkProvider networkProvider, SecretProvider secretProvider, EmoteProvider emoteProvider)
+public class SessionTabEmoteSection(NetworkProvider networkProvider, EmoteProvider emoteProvider)
 {
     // Injected
     private readonly NetworkProvider networkProvider = networkProvider;
-    private readonly SecretProvider secretProvider = secretProvider;
     private readonly EmoteProvider emoteProvider = emoteProvider;
 
     // Local
@@ -60,7 +59,7 @@ public class SessionTabEmoteSection(NetworkProvider networkProvider, SecretProvi
         if (validEmote == false)
             return;
 
-        var secret = secretProvider.Secret;
+        var secret = ""; // secretProvider.Secret;
         var targets = currentSession.TargetFriends;
         var result = await networkProvider.Emote(secret, targets, emote);
         if (result.Success)

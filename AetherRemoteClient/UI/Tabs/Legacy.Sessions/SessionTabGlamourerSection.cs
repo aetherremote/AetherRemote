@@ -14,11 +14,10 @@ using System.Threading.Tasks;
 
 namespace AetherRemoteClient.UI.Experimental.Tabs.Sessions.Glamourer;
 
-public class SessionTabGlamourerSection(NetworkProvider networkProvider, SecretProvider secretProvider, GlamourerAccessor glamourerAccessor,
+public class SessionTabGlamourerSection(NetworkProvider networkProvider, GlamourerAccessor glamourerAccessor,
     IPluginLog logger, ITargetManager targetManager)
 {
     private readonly NetworkProvider networkProvider = networkProvider;
-    private readonly SecretProvider secretProvider = secretProvider;
     private readonly GlamourerAccessor glamourerAccessor = glamourerAccessor;
     private readonly IPluginLog logger = logger;
     private readonly ITargetManager targetManager = targetManager;
@@ -100,7 +99,7 @@ public class SessionTabGlamourerSection(NetworkProvider networkProvider, SecretP
 
         var glamourerApplyType = GlamourerAccessor.ConvertBoolsToApplyType(applyCustomization, applyEquipment);
 
-        var secret = secretProvider.Secret;
+        var secret = ""; // secretProvider.Secret;
         var targets = currentSession.TargetFriends;
         var result = await networkProvider.Become(secret, targets, glamourerData, glamourerApplyType);
         if (result.Success)

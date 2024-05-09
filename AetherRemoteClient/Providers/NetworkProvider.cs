@@ -1,6 +1,7 @@
 using AetherRemoteClient.Domain;
 using AetherRemoteCommon;
 using AetherRemoteCommon.Domain.CommonChatMode;
+using AetherRemoteCommon.Domain.CommonFriend;
 using AetherRemoteCommon.Domain.CommonGlamourerApplyType;
 using AetherRemoteCommon.Domain.Network.Become;
 using AetherRemoteCommon.Domain.Network.CreateOrUpdateFriend;
@@ -132,7 +133,7 @@ public class NetworkProvider : IDisposable
     public async Task<ResultWithOnlineStatus> CreateOrUpdateFriend(string secret, string friendCode)
     {
         var friend = new Friend(friendCode);
-        return await CreateOrUpdateFriend(secret, friend.Convert());
+        return await CreateOrUpdateFriend(secret, friend);
     }
 
     // TODO: Add new domain object for AsyncResult to include Online Status as well

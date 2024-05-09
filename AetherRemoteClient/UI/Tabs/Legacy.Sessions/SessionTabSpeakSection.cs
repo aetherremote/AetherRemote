@@ -11,14 +11,13 @@ using System.Threading.Tasks;
 
 namespace AetherRemoteClient.UI.Experimental.Tabs.Sessions.Speak;
 
-public class SessionTabSpeakSection(NetworkProvider networkProvider, SecretProvider secretProvider)
+public class SessionTabSpeakSection(NetworkProvider networkProvider)
 {
     // Const
     private static readonly int LinkshellSelectorWidth = 42;
 
     // Injected
     private readonly NetworkProvider networkProvider = networkProvider;
-    private readonly SecretProvider secretProvider = secretProvider;
 
     // Local
     private ChatMode chatMode = ChatMode.Say;
@@ -118,7 +117,7 @@ public class SessionTabSpeakSection(NetworkProvider networkProvider, SecretProvi
                 extra = tellTarget;
         }
 
-        var secret = secretProvider.Secret;
+        var secret = "";// secretProvider.Secret;
         var targets = currentSession.TargetFriends;
         var result = await networkProvider.Speak(secret, targets, message, chatMode, extra);
         if (result.Success)

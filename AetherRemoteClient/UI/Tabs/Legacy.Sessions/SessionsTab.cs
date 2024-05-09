@@ -6,6 +6,7 @@ using AetherRemoteClient.UI.Experimental.Tabs.Sessions.Glamourer;
 using AetherRemoteClient.UI.Experimental.Tabs.Sessions.Speak;
 using AetherRemoteClient.UI.Tabs;
 using AetherRemoteCommon;
+using AetherRemoteCommon.Domain.CommonFriend;
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.Interface;
 using Dalamud.Plugin.Services;
@@ -20,9 +21,7 @@ namespace AetherRemoteClient.UI.Experimental.Tabs.Sessions;
 public class SessionsTab(
     GlamourerAccessor glamourerAccessor,
     EmoteProvider emoteProvider,
-    FriendListProvider friendListProvider,
     NetworkProvider networkProvider,
-    SecretProvider secretProvider,
     IPluginLog logger,
     ITargetManager targetManager) : ITab
 {
@@ -44,9 +43,9 @@ public class SessionsTab(
     /// </summary>
     private static Vector2 PopupWindowSize = new(200, 300);
 
-    private readonly SessionTabSpeakSection speakSection = new(networkProvider, secretProvider);
-    private readonly SessionTabEmoteSection emoteSection = new(networkProvider, secretProvider, emoteProvider);
-    private readonly SessionTabGlamourerSection glamourerSection = new(networkProvider, secretProvider, glamourerAccessor, logger, targetManager);
+    // private readonly SessionTabSpeakSection speakSection = new(networkProvider, secretProvider);
+    // private readonly SessionTabEmoteSection emoteSection = new(networkProvider, secretProvider, emoteProvider);
+    //private readonly SessionTabGlamourerSection glamourerSection = new(networkProvider, secretProvider, glamourerAccessor, logger, targetManager);
 
     // Add Friend to Session Popup
     private string friendSearchString = "";
@@ -82,10 +81,10 @@ public class SessionsTab(
 
     private void SetSession(Session newSession)
     {
-        currentSession = newSession;
-        speakSection.SetSession(newSession);
-        emoteSection.SetSession(newSession);
-        glamourerSection.SetSession(newSession);
+        //currentSession = newSession;
+        //speakSection.SetSession(newSession);
+        //emoteSection.SetSession(newSession);
+        //glamourerSection.SetSession(newSession);
     }
 
     private void DrawSessionList()
@@ -211,9 +210,9 @@ public class SessionsTab(
                 ImGui.EndTooltip();
             }
 
-            speakSection.DrawSpeakSection();
-            emoteSection.DrawEmoteSection();
-            glamourerSection.DrawGlamourerSection();
+            // speakSection.DrawSpeakSection();
+            // emoteSection.DrawEmoteSection();
+            // glamourerSection.DrawGlamourerSection();
 
             ImGui.EndChild();
         }
@@ -271,7 +270,7 @@ public class SessionsTab(
         if (currentSession == null)
             return;
 
-        var result = new List<Friend>();
+        /*var result = new List<Friend>();
         foreach(var friend in friendListProvider.FriendList)
         {
             var containedInTargetFriends = currentSession.TargetFriends.Any(targetFriend => targetFriend.FriendCode == friend.FriendCode);
@@ -279,7 +278,8 @@ public class SessionsTab(
                 result.Add(friend);
         }
 
-        //friendSearchFilter = new(result, FilterFriend);
+        friendSearchFilter = new(result, FilterFriend);
+        */
     }
 
     private static bool FilterFriend(Friend friend, string term)

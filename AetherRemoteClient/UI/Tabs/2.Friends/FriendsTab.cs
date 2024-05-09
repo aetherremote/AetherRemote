@@ -1,6 +1,7 @@
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Providers;
 using AetherRemoteCommon;
+using AetherRemoteCommon.Domain.CommonFriend;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using Dalamud.Plugin.Services;
@@ -345,9 +346,9 @@ public class FriendsTab : ITab
     {
         if (friendBeingEditted == null)
             return;
-        
+
         // TODO: Needless to say this needs improvement..
-        var converted = friendBeingEditted.Convert();
+        var converted = friendBeingEditted.Copy();
         converted.Note = friendNote == string.Empty ? null : friendNote;
         converted.Permissions.AllowEmote = allowEmote;
         converted.Permissions.AllowSpeak = allowSpeak;
