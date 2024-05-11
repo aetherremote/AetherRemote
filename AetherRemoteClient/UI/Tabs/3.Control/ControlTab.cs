@@ -10,7 +10,7 @@ using Dalamud.Interface.Colors;
 using Dalamud.Plugin.Services;
 using ImGuiNET;
 using System;
-using System.Linq;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
 
@@ -21,8 +21,9 @@ namespace AetherRemoteClient.UI.Tabs.Control;
 public class ControlTab : ITab
 {
     // Constants
-    private const ImGuiTableFlags FriendListTableFlags = ImGuiTableFlags.Borders;
     private const int LinkshellSelectorWidth = 42;
+    private static readonly Vector4 IconOnlineColor = ImGuiColors.ParsedGreen;
+    private static readonly Vector4 IconOfflineColor = ImGuiColors.DPSRed;
 
     private static readonly Vector2 QuestionIconOffset = CalcQuestionButtonOffset();
     private static readonly Vector2 LockButtonSize = new(40, 40);
@@ -40,7 +41,7 @@ public class ControlTab : ITab
 
     // Variables - Friend List
     private string searchInputText = "";
-    private readonly ListFilter<Friend> friendListSearchFilter;
+    private readonly FriendListFilter friendSearchFilter;
 
     // Variables
 
@@ -73,7 +74,7 @@ public class ControlTab : ITab
         this.logger = logger;
         this.targetManager = targetManager;
 
-        friendListSearchFilter = new(networkProvider.FriendList?.Friends ?? [], (friend, searchTerm) => { return friend.NoteOrFriendCode.Contains(searchTerm); });
+        friendSearchFilter = new(networkProvider, (friend, searchTerm) => { return friend.NoteOrFriendCode.Contains(searchTerm); });
         emoteSearchFilter = new(emoteProvider.Emotes, (emote, searchTerm) => { return emote.Contains(searchTerm); });
     }
 
@@ -84,7 +85,7 @@ public class ControlTab : ITab
             ImGui.SetNextItemWidth(MainWindow.FriendListSize.X);
             if (ImGui.InputTextWithHint("##SearchFriendListInputText", "Search", ref searchInputText, Constants.FriendNicknameCharLimit))
             {
-                friendListSearchFilter.UpdateSearchTerm(searchInputText);
+                friendSearchFilter.UpdateSearchTerm(searchInputText);
             }
             
             // Save the cursor at the bottom of the search input text before calling ImGui.SameLine for use later
@@ -102,7 +103,7 @@ public class ControlTab : ITab
             // Set the cursor back and begin drawing add friend input text & button
             ImGui.SetCursorPosY(bottomOfSearchInputText);
 
-            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, Vector2.Zero);
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(0, 2));
             if (ImGui.BeginChild("FriendListArea", new Vector2(150, 0), true))
             {
                 DrawFriendList();
@@ -116,30 +117,37 @@ public class ControlTab : ITab
 
     private void DrawFriendList()
     {
-        if (ImGui.BeginTable("FriendListTable", 1, FriendListTableFlags))
+        var onlineFriends = new List<Friend>();
+        foreach (var friend in networkProvider.FriendList?.Friends ?? [])
         {
-            var friendList = networkProvider.FriendList?.Friends.FindAll(friend => friend.Online == true) ?? [];
-            foreach (var friend in friendList)
-            {
-                ImGui.TableNextRow();
-                ImGui.TableSetColumnIndex(0);
-
-                // Draw Icon
-                ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.ParsedGreen);
-                SharedUserInterfaces.Icon(FontAwesomeIcon.User);
-                ImGui.SameLine();
-                ImGui.PopStyleColor();
-
-                // Draw Selectable Text
-                if (ImGui.Selectable($"{friend.NoteOrFriendCode}", (currentFriend == friend), ImGuiSelectableFlags.SpanAllColumns))
-                {
-                    if (lockCurrentFriend == false)
-                        currentFriend = friend;
-                }
-            }
-
-            ImGui.EndTable();
+            if (friend.Online) onlineFriends.Add(friend);
         }
+
+        if (ImGui.TreeNodeEx($"Online ({onlineFriends.Count})", ImGuiTreeNodeFlags.DefaultOpen))
+        {
+            foreach (var friend in onlineFriends)
+                DrawSelectableFriend(friend);
+
+            ImGui.TreePop();
+        }
+    }
+
+    private void DrawSelectableFriend(Friend friend)
+    {
+        var onlineStatus = friend.Online;
+        ImGui.SetCursorPosX(8 + ImGui.GetFontSize() + (ImGui.GetStyle().FramePadding.X * 2));
+
+        // Draw Selectable Text
+        if (onlineStatus == false) ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.DalamudGrey);
+        if (ImGui.Selectable($"{friend.NoteOrFriendCode}", currentFriend == friend, ImGuiSelectableFlags.SpanAllColumns))
+            currentFriend = friend;
+        if (onlineStatus == false) ImGui.PopStyleColor();
+
+        // Draw Icon
+        ImGui.SameLine(8);
+        ImGui.PushStyleColor(ImGuiCol.Text, onlineStatus ? IconOnlineColor : IconOfflineColor);
+        SharedUserInterfaces.Icon(FontAwesomeIcon.User);
+        ImGui.PopStyleColor();
     }
 
     private void DrawControlPanel()

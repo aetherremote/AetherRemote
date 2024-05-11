@@ -59,8 +59,6 @@ public class NetworkProvider : IDisposable
                 new("OnlineFriend5") { Online = false },
                 new("OnlineFriend6") { Online = true },
                 new("OnlineFriend7") { Online = true }]);
-
-            logger.Info(string.Join(",", FriendList.Friends));
         }
     }
 
