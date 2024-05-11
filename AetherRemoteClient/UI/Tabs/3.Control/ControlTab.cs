@@ -1,6 +1,8 @@
 using AetherRemoteClient.Accessors.Glamourer;
 using AetherRemoteClient.Domain;
+using AetherRemoteClient.Domain.Events;
 using AetherRemoteClient.Providers;
+using AetherRemoteClient.UI.Tabs.Friends;
 using AetherRemoteCommon;
 using AetherRemoteCommon.Domain.CommonChatMode;
 using AetherRemoteCommon.Domain.CommonFriend;
@@ -75,6 +77,8 @@ public class ControlTab : ITab
 
         friendSearchFilter = new(networkProvider, (friend, searchTerm) => { return friend.NoteOrFriendCode.Contains(searchTerm); });
         emoteSearchFilter = new(emoteProvider.Emotes, (emote, searchTerm) => { return emote.Contains(searchTerm); });
+
+        FriendsTab.OnFriendDeleted += FriendDeleted;
     }
 
     public void Draw()
@@ -118,9 +122,7 @@ public class ControlTab : ITab
     {
         var onlineFriends = new List<Friend>();
         foreach (var friend in networkProvider.FriendList?.Friends ?? [])
-        {
             if (friend.Online) onlineFriends.Add(friend);
-        }
 
         if (ImGui.TreeNodeEx($"Online ({onlineFriends.Count})", ImGuiTreeNodeFlags.DefaultOpen))
         {
@@ -139,7 +141,8 @@ public class ControlTab : ITab
         // Draw Selectable Text
         if (onlineStatus == false) ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.DalamudGrey);
         if (ImGui.Selectable($"{friend.NoteOrFriendCode}", currentFriend == friend, ImGuiSelectableFlags.SpanAllColumns))
-            currentFriend = friend;
+            currentFriend = lockCurrentFriend ? currentFriend : friend;
+
         if (onlineStatus == false) ImGui.PopStyleColor();
 
         // Draw Icon
@@ -170,24 +173,14 @@ public class ControlTab : ITab
             return;
         }
 
-        // TODO: This check is costly, maybe FriendTab emits an event we can subscribe to?
-        // If the friend you are controlling is no longer on your local friend list
-        if (networkProvider.FriendList?.FindFriend(currentFriend.FriendCode) == null)
-        {
-            currentFriend = null;
-            lockCurrentFriend = false;
-            return;
-        }
-
         SharedUserInterfaces.BigTextCentered(currentFriend.NoteOrFriendCode, ImGuiColors.ParsedOrange);
 
         ImGui.SameLine();
         ImGui.SetCursorPosX(ImGui.GetWindowWidth() - LockButtonSize.X - ImGui.GetStyle().WindowPadding.X);
         var lockIcon = lockCurrentFriend ? FontAwesomeIcon.Lock : FontAwesomeIcon.LockOpen;
         if (SharedUserInterfaces.IconButton(lockIcon, LockButtonSize))
-        {
             lockCurrentFriend = !lockCurrentFriend;
-        }
+
         SharedUserInterfaces.Tooltip(lockCurrentFriend ? "Click to unlock current friend" : "Click to lock current friend");
 
         DrawSpeakModule();
@@ -512,5 +505,11 @@ public class ControlTab : ITab
     {
         currentFriend = null;
         lockCurrentFriend = false;
+    }
+
+    private void FriendDeleted(object? sender, FriendDeletedEventArgs e)
+    {
+        if (currentFriend?.FriendCode == e.FriendCode)
+            ReleaseCurrentFriend();
     }
 }

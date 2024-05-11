@@ -1,4 +1,5 @@
 using AetherRemoteClient.Domain;
+using AetherRemoteClient.Domain.Events;
 using AetherRemoteClient.Providers;
 using AetherRemoteCommon;
 using AetherRemoteCommon.Domain.CommonFriend;
@@ -24,6 +25,9 @@ public class FriendsTab : ITab
     private readonly Configuration configuration;
     private readonly NetworkProvider networkProvider;
     private readonly IPluginLog logger;
+
+    // Events
+    public static event EventHandler<FriendDeletedEventArgs>? OnFriendDeleted;
 
     public FriendsTab(Configuration configuration, NetworkProvider networkProvider, IPluginLog logger)
     {
@@ -339,12 +343,15 @@ public class FriendsTab : ITab
         if (friendBeingEditted == null) return;
         if (networkProvider.FriendList == null) return;
 
-        var serverDeleteResult = await networkProvider.DeleteFriend(configuration.Secret, friendBeingEditted.FriendCode);
+        var friendCode = friendBeingEditted.FriendCode;
+        var serverDeleteResult = await networkProvider.DeleteFriend(configuration.Secret, friendCode);
         if (serverDeleteResult.Success == false)
             return;
 
-        networkProvider.FriendList.RemoveFriend(friendBeingEditted.FriendCode);
-
+        // Invoke Event
+        OnFriendDeleted?.Invoke(this, new(friendCode));
+        
+        networkProvider.FriendList.RemoveFriend(friendCode);
         friendBeingEditted = null;
     }
 
