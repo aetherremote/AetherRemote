@@ -54,20 +54,20 @@ public class Friend
     public Friend Copy()
     {
         var permissions = new FriendPermissions();
-        permissions.AllowSpeak = Permissions.AllowSpeak;
-        permissions.AllowEmote = Permissions.AllowEmote;
-        permissions.AllowChangeAppearance = Permissions.AllowChangeAppearance;
-        permissions.AllowChangeEquipment = Permissions.AllowChangeEquipment;
-        permissions.AllowSay = Permissions.AllowSay;
-        permissions.AllowYell = Permissions.AllowYell;
-        permissions.AllowShout = Permissions.AllowShout;
-        permissions.AllowTell = Permissions.AllowTell;
-        permissions.AllowParty = Permissions.AllowParty;
-        permissions.AllowAlliance = Permissions.AllowAlliance;
-        permissions.AllowFreeCompany = Permissions.AllowFreeCompany;
-        permissions.AllowLinkshell = Permissions.AllowLinkshell;
-        permissions.AllowCrossworldLinkshell = Permissions.AllowCrossworldLinkshell;
-        permissions.AllowPvPTeam = Permissions.AllowPvPTeam;
+        permissions.Speak = Permissions.Speak;
+        permissions.Emote = Permissions.Emote;
+        permissions.ChangeAppearance = Permissions.ChangeAppearance;
+        permissions.ChangeEquipment = Permissions.ChangeEquipment;
+        permissions.Say = Permissions.Say;
+        permissions.Yell = Permissions.Yell;
+        permissions.Shout = Permissions.Shout;
+        permissions.Tell = Permissions.Tell;
+        permissions.Party = Permissions.Party;
+        permissions.Alliance = Permissions.Alliance;
+        permissions.FreeCompany = Permissions.FreeCompany;
+        permissions.Linkshell = Permissions.Linkshell;
+        permissions.CrossworldLinkshell = Permissions.CrossworldLinkshell;
+        permissions.PvPTeam = Permissions.PvPTeam;
 
         var copy = new Friend();
         copy.FriendCode = FriendCode;

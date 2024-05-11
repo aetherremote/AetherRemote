@@ -360,20 +360,20 @@ public class FriendsTab : ITab
         friendBeingEditted = friend;
 
         friendNote = friend.Note ?? string.Empty;
-        allowSpeak = friend.Permissions.AllowSpeak;
-        allowEmote = friend.Permissions.AllowEmote;
-        allowChangeAppearance = friend.Permissions.AllowChangeAppearance;
-        allowChangeEquipment = friend.Permissions.AllowChangeEquipment;
-        allowSay = friend.Permissions.AllowSay;
-        allowYell = friend.Permissions.AllowYell;
-        allowShout = friend.Permissions.AllowShout;
-        allowTell = friend.Permissions.AllowTell;
-        allowParty = friend.Permissions.AllowParty;
-        allowAlliance = friend.Permissions.AllowAlliance;
-        allowFreeCompany = friend.Permissions.AllowFreeCompany;
-        allowLinkshell = friend.Permissions.AllowLinkshell;
-        allowCrossworldLinkshell = friend.Permissions.AllowCrossworldLinkshell;
-        allowPvPTeam = friend.Permissions.AllowPvPTeam;
+        allowSpeak = friend.Permissions.Speak;
+        allowEmote = friend.Permissions.Emote;
+        allowChangeAppearance = friend.Permissions.ChangeAppearance;
+        allowChangeEquipment = friend.Permissions.ChangeEquipment;
+        allowSay = friend.Permissions.Say;
+        allowYell = friend.Permissions.Yell;
+        allowShout = friend.Permissions.Shout;
+        allowTell = friend.Permissions.Tell;
+        allowParty = friend.Permissions.Party;
+        allowAlliance = friend.Permissions.Alliance;
+        allowFreeCompany = friend.Permissions.FreeCompany;
+        allowLinkshell = friend.Permissions.Linkshell;
+        allowCrossworldLinkshell = friend.Permissions.CrossworldLinkshell;
+        allowPvPTeam = friend.Permissions.PvPTeam;
     }
 
     private async void ProcessSaveFriend()
@@ -381,43 +381,20 @@ public class FriendsTab : ITab
         if (friendBeingEditted == null)
             return;
 
-        // TODO: Needless to say this needs improvement..
         var converted = friendBeingEditted.Copy();
         converted.Note = friendNote == string.Empty ? null : friendNote;
-        converted.Permissions.AllowEmote = allowEmote;
-        converted.Permissions.AllowSpeak = allowSpeak;
-        converted.Permissions.AllowChangeAppearance = allowChangeAppearance;
-        converted.Permissions.AllowChangeEquipment = allowChangeEquipment;
-        converted.Permissions.AllowSay = allowSay;
-        converted.Permissions.AllowYell = allowYell;
-        converted.Permissions.AllowShout = allowShout;
-        converted.Permissions.AllowTell = allowTell;
-        converted.Permissions.AllowParty = allowParty;
-        converted.Permissions.AllowAlliance = allowAlliance;
-        converted.Permissions.AllowFreeCompany = allowFreeCompany;
-        converted.Permissions.AllowLinkshell = allowLinkshell;
-        converted.Permissions.AllowCrossworldLinkshell = allowCrossworldLinkshell;
-        converted.Permissions.AllowPvPTeam = allowPvPTeam;
+        converted.Permissions.SetAll(allowEmote, allowSpeak, allowChangeAppearance, allowChangeEquipment, allowSay,
+            allowYell, allowShout, allowTell, allowParty, allowAlliance,
+            allowFreeCompany, allowLinkshell, allowCrossworldLinkshell, allowPvPTeam);
 
         var result = await networkProvider.CreateOrUpdateFriend(configuration.Secret, converted);
         if (result.Success == false)
             return;
         
         friendBeingEditted.Note = friendNote == string.Empty ? null : friendNote;
-        friendBeingEditted.Permissions.AllowEmote = allowEmote;
-        friendBeingEditted.Permissions.AllowSpeak = allowSpeak;
-        friendBeingEditted.Permissions.AllowChangeAppearance = allowChangeAppearance;
-        friendBeingEditted.Permissions.AllowChangeEquipment = allowChangeEquipment;
-        friendBeingEditted.Permissions.AllowSay = allowSay;
-        friendBeingEditted.Permissions.AllowYell = allowYell;
-        friendBeingEditted.Permissions.AllowShout = allowShout;
-        friendBeingEditted.Permissions.AllowTell = allowTell;
-        friendBeingEditted.Permissions.AllowParty = allowParty;
-        friendBeingEditted.Permissions.AllowAlliance = allowAlliance;
-        friendBeingEditted.Permissions.AllowFreeCompany = allowFreeCompany;
-        friendBeingEditted.Permissions.AllowLinkshell = allowLinkshell;
-        friendBeingEditted.Permissions.AllowCrossworldLinkshell = allowCrossworldLinkshell;
-        friendBeingEditted.Permissions.AllowPvPTeam = allowPvPTeam;
+        friendBeingEditted.Permissions.SetAll(allowEmote, allowSpeak, allowChangeAppearance, allowChangeEquipment, 
+            allowSay, allowYell, allowShout, allowTell, allowParty, allowAlliance,
+            allowFreeCompany, allowLinkshell, allowCrossworldLinkshell, allowPvPTeam);
     }
 
     private void SetAllSpeakPermissions(bool enabled)
@@ -453,20 +430,20 @@ public class FriendsTab : ITab
                 return true;
         }
 
-        if (friendBeingEditted.Permissions.AllowSpeak != allowSpeak) return true;
-        if (friendBeingEditted.Permissions.AllowSay != allowSay) return true;
-        if (friendBeingEditted.Permissions.AllowYell != allowYell) return true;
-        if (friendBeingEditted.Permissions.AllowShout != allowShout) return true;
-        if (friendBeingEditted.Permissions.AllowTell != allowTell) return true;
-        if (friendBeingEditted.Permissions.AllowParty != allowParty) return true;
-        if (friendBeingEditted.Permissions.AllowAlliance != allowAlliance) return true;
-        if (friendBeingEditted.Permissions.AllowFreeCompany != allowFreeCompany) return true;
-        if (friendBeingEditted.Permissions.AllowPvPTeam != allowPvPTeam) return true;
-        if (friendBeingEditted.Permissions.AllowLinkshell != allowLinkshell) return true;
-        if (friendBeingEditted.Permissions.AllowCrossworldLinkshell != allowCrossworldLinkshell) return true;
-        if (friendBeingEditted.Permissions.AllowEmote != allowEmote) return true;
-        if (friendBeingEditted.Permissions.AllowChangeAppearance != allowChangeAppearance) return true;
-        if (friendBeingEditted.Permissions.AllowChangeEquipment != allowChangeEquipment) return true;
+        if (friendBeingEditted.Permissions.Speak != allowSpeak) return true;
+        if (friendBeingEditted.Permissions.Say != allowSay) return true;
+        if (friendBeingEditted.Permissions.Yell != allowYell) return true;
+        if (friendBeingEditted.Permissions.Shout != allowShout) return true;
+        if (friendBeingEditted.Permissions.Tell != allowTell) return true;
+        if (friendBeingEditted.Permissions.Party != allowParty) return true;
+        if (friendBeingEditted.Permissions.Alliance != allowAlliance) return true;
+        if (friendBeingEditted.Permissions.FreeCompany != allowFreeCompany) return true;
+        if (friendBeingEditted.Permissions.PvPTeam != allowPvPTeam) return true;
+        if (friendBeingEditted.Permissions.Linkshell != allowLinkshell) return true;
+        if (friendBeingEditted.Permissions.CrossworldLinkshell != allowCrossworldLinkshell) return true;
+        if (friendBeingEditted.Permissions.Emote != allowEmote) return true;
+        if (friendBeingEditted.Permissions.ChangeAppearance != allowChangeAppearance) return true;
+        if (friendBeingEditted.Permissions.ChangeEquipment != allowChangeEquipment) return true;
 
         return false;
     }

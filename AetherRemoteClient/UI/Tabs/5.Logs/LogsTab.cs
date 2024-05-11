@@ -18,7 +18,7 @@ public class LogsTab : ITab
         {
             var width = (ImGui.GetStyle().WindowPadding.X * 2) + ImGui.GetFontSize();
             ImGui.SetNextItemWidth(-width);
-            // TODO: Update to a constant
+
             if (ImGui.InputTextWithHint("##SearchLog", "Search", ref searchLogTerm, 128))
                 logSearchFilter.UpdateSearchTerm(searchLogTerm);
 

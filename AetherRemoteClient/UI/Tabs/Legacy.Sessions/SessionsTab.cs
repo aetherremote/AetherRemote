@@ -241,7 +241,6 @@ public class SessionsTab(
 
                         if (ImGui.Selectable($"{friend.NoteOrFriendCode}", false, ImGuiSelectableFlags.SpanAllColumns))
                         {
-                            // TODO: Validate if this is correct
                             // currentSession.TargetFriends.Remove(friend);
                         }
                         if (ImGui.IsItemHovered())

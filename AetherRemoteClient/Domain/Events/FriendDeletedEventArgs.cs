@@ -1,4 +1,3 @@
-using AetherRemoteCommon.Domain.CommonFriend;
 using System;
 
 namespace AetherRemoteClient.Domain.Events;

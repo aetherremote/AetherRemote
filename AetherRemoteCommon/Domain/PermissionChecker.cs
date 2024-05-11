@@ -10,36 +10,36 @@ public static class PermissionChecker
     {
         return applyType switch
         {
-            GlamourerApplyType.Customization => permissions.AllowChangeAppearance,
-            GlamourerApplyType.Equipment => permissions.AllowChangeEquipment,
-            GlamourerApplyType.CustomizationAndEquipment => permissions.AllowChangeAppearance || permissions.AllowChangeAppearance,
+            GlamourerApplyType.Customization => permissions.ChangeAppearance,
+            GlamourerApplyType.Equipment => permissions.ChangeEquipment,
+            GlamourerApplyType.CustomizationAndEquipment => permissions.ChangeAppearance || permissions.ChangeAppearance,
             _ => false,
         };
     }
 
     public static bool HasSpeakPermission(ChatMode chatMode, FriendPermissions permissions)
     {
-        if (permissions.AllowSpeak == false)
+        if (permissions.Speak == false)
             return false;
 
         return chatMode switch
         {
-            ChatMode.Alliance => permissions.AllowAlliance,
-            ChatMode.CrossworldLinkshell => permissions.AllowCrossworldLinkshell,
-            ChatMode.FreeCompany => permissions.AllowFreeCompany,
-            ChatMode.Linkshell => permissions.AllowLinkshell,
-            ChatMode.Party => permissions.AllowParty,
-            ChatMode.PvPTeam => permissions.AllowPvPTeam,
-            ChatMode.Say => permissions.AllowSay,
-            ChatMode.Shout => permissions.AllowShout,
-            ChatMode.Tell => permissions.AllowTell,
-            ChatMode.Yell => permissions.AllowYell,
+            ChatMode.Alliance => permissions.Alliance,
+            ChatMode.CrossworldLinkshell => permissions.CrossworldLinkshell,
+            ChatMode.FreeCompany => permissions.FreeCompany,
+            ChatMode.Linkshell => permissions.Linkshell,
+            ChatMode.Party => permissions.Party,
+            ChatMode.PvPTeam => permissions.PvPTeam,
+            ChatMode.Say => permissions.Say,
+            ChatMode.Shout => permissions.Shout,
+            ChatMode.Tell => permissions.Tell,
+            ChatMode.Yell => permissions.Yell,
             _ => false,
         };
     }
 
     public static bool HasEmotePermission(FriendPermissions permissions)
     {
-        return permissions.AllowEmote;
+        return permissions.Emote;
     }
 }
