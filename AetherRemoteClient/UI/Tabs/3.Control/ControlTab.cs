@@ -15,21 +15,20 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
+using System.Timers;
 
 namespace AetherRemoteClient.UI.Tabs.Control;
-
-// TODO: Add brief timeout values to prevent spam sending + give visual feedback
 
 public class ControlTab : ITab
 {
     // Constants
     private static readonly Vector4 IconOnlineColor = ImGuiColors.ParsedGreen;
     private static readonly Vector4 IconOfflineColor = ImGuiColors.DPSRed;
-
     private static readonly Vector2 QuestionIconOffset = CalcQuestionButtonOffset();
     private static readonly Vector2 LockButtonSize = new(40, 40);
     private static readonly int SendButtonWidth = 40;
     private static readonly int TransformButtonWidth = 80;
+    private static readonly int LockoutDuration = 2500;
 
     // Dependencies
     private readonly Configuration configuration;
@@ -40,14 +39,17 @@ public class ControlTab : ITab
     private readonly IPluginLog logger;
     private readonly ITargetManager targetManager;
 
+    // Variables
+    private bool lockCurrentFriend = false;
+    private Friend? currentFriend = null;
+
+    // Variables - Spam Prevention
+    private bool lockoutActive = false;
+    private readonly Timer commandLockoutTimer;
+
     // Variables - Friend List
     private string searchInputText = "";
     private readonly FriendListFilter friendSearchFilter;
-
-    // Variables
-
-    private bool lockCurrentFriend = false;
-    private Friend? currentFriend = null;
 
     // Variables - Speak
     private ChatMode chatMode = ChatMode.Say;
@@ -78,6 +80,9 @@ public class ControlTab : ITab
         friendSearchFilter = new(networkProvider, (friend, searchTerm) => { return friend.NoteOrFriendCode.Contains(searchTerm); });
         emoteSearchFilter = new(emoteProvider.Emotes, (emote, searchTerm) => { return emote.Contains(searchTerm); });
 
+        commandLockoutTimer = new(LockoutDuration);
+        commandLockoutTimer.Elapsed += ReleaseLockout;
+
         FriendsTab.OnFriendDeleted += FriendDeleted;
     }
 
@@ -87,10 +92,8 @@ public class ControlTab : ITab
         {
             ImGui.SetNextItemWidth(MainWindow.FriendListSize.X);
             if (ImGui.InputTextWithHint("##SearchFriendListInputText", "Search", ref searchInputText, Constants.FriendNicknameCharLimit))
-            {
                 friendSearchFilter.UpdateSearchTerm(searchInputText);
-            }
-            
+
             // Save the cursor at the bottom of the search input text before calling ImGui.SameLine for use later
             var bottomOfSearchInputText = ImGui.GetCursorPosY();
 
@@ -208,26 +211,15 @@ public class ControlTab : ITab
         SharedUserInterfaces.MediumText(chatMode.ToCondensedString());
 
         if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Comment))
-        {
             ImGui.OpenPopup("ChatModeSelector");
-        }
 
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.BeginTooltip();
-            ImGui.Text("Change chat channel");
-            ImGui.EndTooltip();
-        }
+        SharedUserInterfaces.Tooltip("Change chat channel");
 
         if (ImGui.BeginPopup("ChatModeSelector"))
         {
             foreach (ChatMode mode in Enum.GetValues(typeof(ChatMode)))
-            {
                 if (ImGui.Selectable(mode.ToCondensedString(), mode == chatMode))
-                {
                     chatMode = mode;
-                }
-            }
 
             ImGui.EndPopup();
         }
@@ -240,8 +232,11 @@ public class ControlTab : ITab
 
         ImGui.SameLine();
 
+        var lockout = lockoutActive;
+        if (lockout) ImGui.BeginDisabled();
         if (ImGui.Button("Send", new Vector2(SendButtonWidth, 0)))
             shouldProcessSpeakCommand = true;
+        if (lockout) ImGui.EndDisabled();
 
         if (chatMode == ChatMode.Tell)
         {
@@ -297,7 +292,11 @@ public class ControlTab : ITab
             }
         }
 
-        if (shouldProcessSpeakCommand) { _ = ProcessSpeakCommand(); }
+        if (shouldProcessSpeakCommand && lockoutActive == false)
+        {
+            Lockout();
+            _ = ProcessSpeakCommand();
+        }
     }
 
     public void DrawEmoteModule()
@@ -318,12 +317,17 @@ public class ControlTab : ITab
         
         ImGui.SameLine();
 
+        var lockout = lockoutActive;
+        if (lockout) ImGui.BeginDisabled();
         if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Play))
-        {
             shouldProcessEmoteCommand = true;
-        }
+        ImGui.EndDisabled();
 
-        if (shouldProcessEmoteCommand) { _ = ProcessEmoteCommand(); }
+        if (shouldProcessEmoteCommand && lockoutActive == false)
+        {
+            Lockout();
+            _ = ProcessEmoteCommand();
+        }
     }
 
     public void DrawGlamourerModule()
@@ -370,8 +374,11 @@ public class ControlTab : ITab
 
         ImGui.SameLine();
 
+        var lockout = lockoutActive;
+        if (lockout) ImGui.BeginDisabled();
         if (ImGui.Button("Transform", new Vector2(TransformButtonWidth, 0)))
             shouldProcessBecomeCommand = true;
+        if (lockout) ImGui.EndDisabled();
 
         ImGui.Spacing();
 
@@ -380,7 +387,11 @@ public class ControlTab : ITab
         ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 45);
         ImGui.Checkbox("Change Equipment", ref applyEquipment);
 
-        if (shouldProcessBecomeCommand) { _ = ProcessBecomeCommand(); }
+        if (shouldProcessBecomeCommand && lockoutActive == false)
+        {
+            Lockout();
+            _ = ProcessBecomeCommand();
+        }
 
         if (glamourerInstalled == false)
             ImGui.EndDisabled();
@@ -511,5 +522,18 @@ public class ControlTab : ITab
     {
         if (currentFriend?.FriendCode == e.FriendCode)
             ReleaseCurrentFriend();
+    }
+
+    private void Lockout()
+    {
+        commandLockoutTimer.Stop();
+        commandLockoutTimer.Start();
+
+        lockoutActive = true;
+    }
+
+    private void ReleaseLockout(object? sender, ElapsedEventArgs e)
+    {
+        lockoutActive = false;
     }
 }
