@@ -21,7 +21,6 @@ namespace AetherRemoteClient.UI.Tabs.Control;
 public class ControlTab : ITab
 {
     // Constants
-    private const int LinkshellSelectorWidth = 42;
     private static readonly Vector4 IconOnlineColor = ImGuiColors.ParsedGreen;
     private static readonly Vector4 IconOfflineColor = ImGuiColors.DPSRed;
 
@@ -50,7 +49,7 @@ public class ControlTab : ITab
 
     // Variables - Speak
     private ChatMode chatMode = ChatMode.Say;
-    private int shellNumber = 1;
+    private int linkshellNumber = 1;
     private string tellTarget = "";
     private string message = "";
 
@@ -93,8 +92,8 @@ public class ControlTab : ITab
 
             ImGui.SameLine();
 
-            // Draw the settings area beside the search bar using the remaining space
-            if (ImGui.BeginChild("FriendSettingsArea", Vector2.Zero, true))
+            // Draw the control panel area beside the search bar using the remaining space
+            if (ImGui.BeginChild("ControlPanelArea", Vector2.Zero, true))
             {
                 DrawControlPanel();
                 ImGui.EndChild();
@@ -189,12 +188,7 @@ public class ControlTab : ITab
         {
             lockCurrentFriend = !lockCurrentFriend;
         }
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.BeginTooltip();
-            ImGui.Text(lockCurrentFriend ? "Click to unlock current friend" : "Click to lock current friend");
-            ImGui.EndTooltip();
-        }
+        SharedUserInterfaces.Tooltip(lockCurrentFriend ? "Click to unlock current friend" : "Click to lock current friend");
 
         DrawSpeakModule();
 
@@ -207,25 +201,18 @@ public class ControlTab : ITab
 
     private void DrawSpeakModule()
     {
+        var style = ImGui.GetStyle();
         var shouldProcessSpeakCommand = false;
 
         SharedUserInterfaces.MediumTextCentered("Speak", null, QuestionIconOffset);
         ImGui.SameLine();
         ImGui.AlignTextToFramePadding();
         SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.BeginTooltip();
-            ImGui.Text("Force selected friend to send a message in specified chat.\nSome channels will require additional input.");
-            ImGui.EndTooltip();
-        }
+        SharedUserInterfaces.Tooltip("Force selected friend to send a message in specified channel.");
 
         SharedUserInterfaces.MediumText("Channel:", ImGuiColors.ParsedOrange);
         ImGui.SameLine();
         SharedUserInterfaces.MediumText(chatMode.ToCondensedString());
-
-        // TODO: Make input for LS/CWLS
-        // TODO: Make input for Tell
 
         if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Comment))
         {
@@ -254,7 +241,7 @@ public class ControlTab : ITab
 
         ImGui.SameLine();
 
-        ImGui.SetNextItemWidth(-1 * (SendButtonWidth + ImGui.GetStyle().WindowPadding.X));
+        ImGui.SetNextItemWidth(-1 * (SendButtonWidth + style.WindowPadding.X));
         if (ImGui.InputTextWithHint("###MessageInputBox", "Message", ref message, 500, ImGuiInputTextFlags.EnterReturnsTrue))
             shouldProcessSpeakCommand = true;
 
@@ -262,6 +249,60 @@ public class ControlTab : ITab
 
         if (ImGui.Button("Send", new Vector2(SendButtonWidth, 0)))
             shouldProcessSpeakCommand = true;
+
+        if (chatMode == ChatMode.Tell)
+        {
+            if (SharedUserInterfaces.IconButton(FontAwesomeIcon.User))
+                tellTarget = clientState.LocalPlayer?.Name.ToString() ?? tellTarget;
+
+            SharedUserInterfaces.Tooltip("Copy my name");
+            ImGui.SameLine();
+
+            if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Crosshairs))
+                tellTarget = targetManager.Target?.Name.ToString() ?? tellTarget;
+
+            SharedUserInterfaces.Tooltip("Copy my target's name");
+            ImGui.SameLine();
+
+            if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Broom))
+                tellTarget = "";
+
+            SharedUserInterfaces.Tooltip("Clear the tell target input field");
+
+            ImGui.SameLine();
+
+            ImGui.SetNextItemWidth(ImGui.GetWindowWidth() / 2);
+            ImGui.InputTextWithHint("##TellTargetInput", "Tell Target", ref tellTarget, Constants.PlayerNameCharLimit);
+        }
+        else if (chatMode == ChatMode.Linkshell || chatMode == ChatMode.CrossworldLinkshell)
+        {
+            ImGui.SetCursorPosX((style.WindowPadding.X * 2) + (style.FramePadding.X * 2) + ImGui.GetFontSize());
+
+            ImGui.SetNextItemWidth(50);
+            if (ImGui.BeginCombo("Linkshell Number", linkshellNumber.ToString()))
+            {
+                for(var i = 1; i < 9; i++)
+                {
+                    var selected = i == linkshellNumber;
+                    if (ImGui.Selectable(i.ToString(), selected))
+                        linkshellNumber = i;
+                    if (selected)
+                        ImGui.SetItemDefaultFocus();
+                }
+
+                ImGui.EndCombo();
+            }
+
+            ImGui.SameLine();
+            SharedUserInterfaces.Icon(FontAwesomeIcon.ExclamationCircle);
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.BeginTooltip();
+                SharedUserInterfaces.TextCentered("Caution!");
+                ImGui.Text("Which number a linkshell corresponds with may differ from person to person.");
+                ImGui.EndTooltip();
+            }
+        }
 
         if (shouldProcessSpeakCommand) { _ = ProcessSpeakCommand(); }
     }
@@ -274,12 +315,7 @@ public class ControlTab : ITab
         ImGui.SameLine();
         ImGui.AlignTextToFramePadding();
         SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.BeginTooltip();
-            ImGui.Text("Force selected friend to preform an emote.");
-            ImGui.EndTooltip();
-        }
+        SharedUserInterfaces.Tooltip("Force selected friend to preform an emote.");
 
         SharedUserInterfaces.MediumText("Emote", ImGuiColors.ParsedOrange);
 
@@ -321,51 +357,28 @@ public class ControlTab : ITab
         if (SharedUserInterfaces.IconButton(FontAwesomeIcon.User))
             CopyMyGlamourerData();
 
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.BeginTooltip();
-            ImGui.Text("Copies your glamourer data into the input");
-            ImGui.EndTooltip();
-        }
-
+        SharedUserInterfaces.Tooltip("Copy my glamourer data");
         ImGui.SameLine();
 
         if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Crosshairs))
             CopyTargetGlamourerData();
 
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.BeginTooltip();
-            ImGui.Text("Copies your target's glamourer data into the input");
-            ImGui.EndTooltip();
-        }
-
+        SharedUserInterfaces.Tooltip("Copy my taregt's glamourer data");
         ImGui.SameLine();
 
         if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Broom))
-        {
             glamourerData = "";
-        }
 
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.BeginTooltip();
-            ImGui.Text("Clear glamourer data");
-            ImGui.EndTooltip();
-        }
+        SharedUserInterfaces.Tooltip("Clear glamourer data input field");
 
         ImGui.SetNextItemWidth(-1 * (TransformButtonWidth + ImGui.GetStyle().WindowPadding.X));
         if (ImGui.InputTextWithHint("###GlamourerDataInput", "Enter glamourer data", ref glamourerData, Constants.GlamourerDataCharLimit, ImGuiInputTextFlags.EnterReturnsTrue))
-        {
             shouldProcessBecomeCommand = true;
-        }
 
         ImGui.SameLine();
 
         if (ImGui.Button("Transform", new Vector2(TransformButtonWidth, 0)))
-        {
             shouldProcessBecomeCommand = true;
-        }
 
         ImGui.Spacing();
 
@@ -388,7 +401,7 @@ public class ControlTab : ITab
         string? extra = null;
         if (chatMode == ChatMode.Linkshell || chatMode == ChatMode.CrossworldLinkshell)
         {
-            extra = shellNumber.ToString();
+            extra = linkshellNumber.ToString();
         }
         else if (chatMode == ChatMode.Tell)
         {
