@@ -351,6 +351,20 @@ public class ControlTab : ITab
         if (glamourerInstalled == false)
             ImGui.BeginDisabled();
 
+        ImGui.SetNextItemWidth(-1 * (TransformButtonWidth + ImGui.GetStyle().WindowPadding.X));
+        if (ImGui.InputTextWithHint("###GlamourerDataInput", "Enter glamourer data", ref glamourerData, Constants.GlamourerDataCharLimit, ImGuiInputTextFlags.EnterReturnsTrue))
+            shouldProcessBecomeCommand = true;
+
+        ImGui.SameLine();
+
+        var lockout = lockoutActive;
+        if (lockout) ImGui.BeginDisabled();
+        if (ImGui.Button("Transform", new Vector2(TransformButtonWidth, 0)))
+            shouldProcessBecomeCommand = true;
+        if (lockout) ImGui.EndDisabled();
+
+        ImGui.Spacing();
+
         if (SharedUserInterfaces.IconButton(FontAwesomeIcon.User))
             CopyMyGlamourerData();
 
@@ -368,24 +382,15 @@ public class ControlTab : ITab
 
         SharedUserInterfaces.Tooltip("Clear glamourer data input field");
 
-        ImGui.SetNextItemWidth(-1 * (TransformButtonWidth + ImGui.GetStyle().WindowPadding.X));
-        if (ImGui.InputTextWithHint("###GlamourerDataInput", "Enter glamourer data", ref glamourerData, Constants.GlamourerDataCharLimit, ImGuiInputTextFlags.EnterReturnsTrue))
-            shouldProcessBecomeCommand = true;
-
         ImGui.SameLine();
 
-        var lockout = lockoutActive;
-        if (lockout) ImGui.BeginDisabled();
-        if (ImGui.Button("Transform", new Vector2(TransformButtonWidth, 0)))
-            shouldProcessBecomeCommand = true;
-        if (lockout) ImGui.EndDisabled();
+        var a = ImGui.CalcTextSize("Appearance").X;
+        var b = ImGui.CalcTextSize("Equipment").X;
+        ImGui.SetCursorPosX(ImGui.GetWindowWidth() - a - b - (ImGui.GetFontSize() * 2) - (ImGui.GetStyle().WindowPadding.X * 4) - ImGui.GetStyle().FramePadding.X);
 
-        ImGui.Spacing();
-
-        ImGui.Checkbox("Change Appearance", ref applyCustomization);
+        ImGui.Checkbox("Appearance", ref applyCustomization);
         ImGui.SameLine();
-        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 45);
-        ImGui.Checkbox("Change Equipment", ref applyEquipment);
+        ImGui.Checkbox("Equipment", ref applyEquipment);
 
         if (shouldProcessBecomeCommand && lockoutActive == false)
         {

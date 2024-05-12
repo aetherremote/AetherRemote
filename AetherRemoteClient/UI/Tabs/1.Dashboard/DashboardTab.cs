@@ -27,7 +27,7 @@ public class DashboardTab : ITab
 
         secretInputText = configuration.Secret;
 
-        if (configuration.AutoConnect)
+        if (configuration.AutoLogin)
             Login();
     }
 
@@ -136,7 +136,7 @@ public class DashboardTab : ITab
             shouldLogin = true;
 
         ImGui.SetCursorPosX(x);
-        if (ImGui.Checkbox("Auto Sign In", ref configuration.AutoConnect))
+        if (ImGui.Checkbox("Auto Login", ref configuration.AutoLogin))
             configuration.Save();
 
         ImGui.SameLine();

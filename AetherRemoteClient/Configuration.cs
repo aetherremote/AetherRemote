@@ -20,7 +20,7 @@ public class Configuration : IPluginConfiguration
     /// <summary>
     /// Should the plugin automatically log the player in
     /// </summary>
-    public bool AutoConnect = true;
+    public bool AutoLogin = true;
 
     [NonSerialized]
     private DalamudPluginInterface? pluginInterface;

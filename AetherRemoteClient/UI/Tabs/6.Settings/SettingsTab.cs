@@ -16,7 +16,7 @@ public class SettingsTab(Configuration configuration) : ITab
             {
                 SharedUserInterfaces.MediumText("General Settings");
 
-                ImGui.Checkbox("Auto Connect", ref configuration.AutoConnect);
+                ImGui.Checkbox("Auto Login", ref configuration.AutoLogin);
                 if (ImGui.IsItemHovered())
                 {
                     ImGui.BeginTooltip();
