@@ -4,6 +4,7 @@ using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using Dalamud.Plugin.Services;
 using ImGuiNET;
+using System;
 using System.Numerics;
 
 namespace AetherRemoteClient.UI.Tabs.Dashboard;
@@ -162,4 +163,6 @@ public class DashboardTab : ITab
         if (connectResult.Success == false)
             return;
     }
+
+    public void Dispose() { GC.SuppressFinalize(this); }
 }

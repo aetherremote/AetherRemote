@@ -544,4 +544,13 @@ public class ControlTab : ITab
     {
         lockoutActive = false;
     }
+
+    public void Dispose()
+    {
+        friendSearchFilter.Dispose();
+        emoteSearchFilter.Dispose();
+        commandLockoutTimer.Dispose();
+        FriendsTab.OnFriendDeleted -= FriendDeleted;
+        GC.SuppressFinalize(this);
+    }
 }

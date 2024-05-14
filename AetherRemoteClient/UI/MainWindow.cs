@@ -11,11 +11,12 @@ using Dalamud.Game.ClientState.Objects;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
 using ImGuiNET;
+using System;
 using System.Numerics;
 
 namespace AetherRemoteClient.UI;
 
-public class MainWindow : Window
+public class MainWindow : Window, IDisposable
 {
     // Constants
     private const ImGuiWindowFlags MainWindowFlags = ImGuiWindowFlags.None;
@@ -76,5 +77,16 @@ public class MainWindow : Window
 
             ImGui.EndTabBar();
         }
+    }
+
+    public void Dispose()
+    {
+        dashboardTab.Dispose();
+        friendsTab.Dispose();
+        logsTab.Dispose();
+        settingsTab.Dispose();
+        controlTab.Dispose();
+        massControlTab.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

@@ -459,4 +459,10 @@ public class FriendsTab : ITab
 
         return friend.Note.Contains(searchTerm, StringComparison.OrdinalIgnoreCase);
     }
+
+    public void Dispose()
+    {
+        friendSearchFilter.Dispose();
+        GC.SuppressFinalize(this);
+    }
 }

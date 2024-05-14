@@ -30,7 +30,7 @@ public sealed class Plugin : IDalamudPlugin
     /// <summary>
     /// Internal plugin version
     /// </summary>
-    public static readonly string Version = "1.0.2.0";
+    public static readonly string Version = "1.0.3.0";
     
     // Injected
     private DalamudPluginInterface pluginInterface { get; init; }
@@ -116,6 +116,7 @@ public sealed class Plugin : IDalamudPlugin
 
         networkProvider.Dispose();
 
+        mainWindow.Dispose();
         windowSystem.RemoveAllWindows();
         commandManager.RemoveHandler(CommandName);
 

@@ -1,6 +1,7 @@
 using AetherRemoteClient.Domain;
 using Dalamud.Interface.Colors;
 using ImGuiNET;
+using System;
 using System.Numerics;
 
 namespace AetherRemoteClient.UI.Tabs.MassControl;
@@ -27,4 +28,6 @@ public class MassControlTab : ITab
             ImGui.EndTabItem();
         }
     }
+
+    public void Dispose() { GC.SuppressFinalize(this); }
 }

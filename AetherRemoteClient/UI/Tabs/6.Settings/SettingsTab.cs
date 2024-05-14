@@ -1,5 +1,6 @@
 using AetherRemoteClient.Domain;
 using ImGuiNET;
+using System;
 using System.Numerics;
 
 namespace AetherRemoteClient.UI.Tabs.Settings;
@@ -30,4 +31,6 @@ public class SettingsTab(Configuration configuration) : ITab
             ImGui.EndTabItem();
         }
     }
+
+    public void Dispose() { GC.SuppressFinalize(this); }
 }
