@@ -424,14 +424,15 @@ public class ControlTab : ITab
         {
             var log = AetherRemoteLogging.FormatSpeakLog(currentFriend.NoteOrFriendCode, chatMode, message, extra);
             AetherRemoteLogging.Log("Me", log, DateTime.Now, LogType.Sent);
-
-            // Reset message
-            message = "";
         }
         else
         {
-            /* TODO */
+            var log = $"Failed to make ${currentFriend.NoteOrFriendCode} speak.";
+            AetherRemoteLogging.Log("Me", log, DateTime.Now, LogType.Error);
         }
+
+        // Reset message
+        message = "";
     }
 
     private async Task ProcessEmoteCommand()
@@ -449,14 +450,15 @@ public class ControlTab : ITab
         {
             var log = AetherRemoteLogging.FormatEmoteLog(currentFriend.NoteOrFriendCode, emote);
             AetherRemoteLogging.Log("Me", log, DateTime.Now, LogType.Sent);
-
-            // Reset emote
-            emote = "";
         }
         else
         {
-            /* TODO */
+            var log = $"Failed to make ${currentFriend.NoteOrFriendCode} emote.";
+            AetherRemoteLogging.Log("Me", log, DateTime.Now, LogType.Error);
         }
+
+        // Reset emote
+        emote = "";
     }
 
     private async Task ProcessBecomeCommand()
@@ -473,14 +475,15 @@ public class ControlTab : ITab
             var applyType = GlamourerAccessor.ConvertBoolsToApplyType(applyCustomization, applyEquipment);
             var log = AetherRemoteLogging.FormatBecomeLog(currentFriend.NoteOrFriendCode, applyType, glamourerData);
             AetherRemoteLogging.Log("Me", log, DateTime.Now, LogType.Sent);
-
-            // Reset glamourer data
-            glamourerData = "";
         }
         else
         {
-            /* TODO */
+            var log = $"Failed to transform ${currentFriend.NoteOrFriendCode}.";
+            AetherRemoteLogging.Log("Me", log, DateTime.Now, LogType.Error);
         }
+
+        // Reset glamourer data
+        glamourerData = "";
     }
 
     private void CopyMyGlamourerData()

@@ -23,4 +23,9 @@ public class ConnectedClient
         ConnectionId = connectionId;
         Data = data;
     }
+
+    public bool IsFriendsWith(ConnectedClient client)
+    {
+        return Data.FriendList.Any(friend => friend.FriendCode == client.Data.FriendCode);
+    }
 }

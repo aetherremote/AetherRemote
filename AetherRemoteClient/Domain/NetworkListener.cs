@@ -119,10 +119,6 @@ public class NetworkListener
             return;
         }
 
-        // TODO: The idea that someone could go 'rogue' and make you say offensive language
-        // is something that has been on my mind. Ideally, a toggleable 'safe mode' should
-        // be implemented where undesired language can be filtered out.
-
         actionQueueProvider.EnqueueSpeakAction(execute.SenderFriendCode, execute.Message, execute.ChatMode, execute.Extra);
     } 
 }

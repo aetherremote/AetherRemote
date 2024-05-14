@@ -14,8 +14,6 @@ namespace AetherRemoteServer.Services;
 
 public class NetworkService
 {
-    // FriendCode -> UserData
-    // private readonly Dictionary<string, OnlineClient> onlineClients = [];
     private readonly DatabaseProvider database = new();
     private readonly ConnectedClientsManager connectedClientsManager = new();
 
@@ -134,6 +132,10 @@ public class NetworkService
         if (client == null)
             return new ResultWithMessage(false, "Not Logged In");
 
+        // Temporarily Mass Control Block
+        if (targetFriendCodes.Count != 1)
+            return new ResultWithMessage(false, "Mass Control not supported");
+
         // Iterate over all target friends
         foreach (var targetFriendCode in targetFriendCodes)
         {
@@ -142,11 +144,9 @@ public class NetworkService
             if (targetClient == null)
                 continue;
 
-            /* TODO: Temporarily disabled due to processing concerns
             // Check if target is friends with sender
-            if (targetFriendCodeClient.Data.FriendList.Any(friend => friend.FriendCode == client.Data.FriendCode) == false)
+            if (targetClient.IsFriendsWith(client) == false)
                 continue;
-            */
 
             try
             {
@@ -156,7 +156,6 @@ public class NetworkService
             }
             catch(Exception ex)
             {
-                // TODO: Decide if surfacing the friend codes who failed to send to the client is helpful
                 Console.WriteLine($"Error sending become command to {targetFriendCode}! Error was {ex.Message}");
             }
         }
@@ -171,6 +170,10 @@ public class NetworkService
         if (client == null)
             return new ResultWithMessage(false, "Not Logged In");
 
+        // Temporarily Mass Control Block
+        if (targetFriendCodes.Count != 1)
+            return new ResultWithMessage(false, "Mass Control not supported");
+
         // Iterate over all target friends
         foreach (var targetFriendCode in targetFriendCodes)
         {
@@ -179,11 +182,9 @@ public class NetworkService
             if (targetClient == null)
                 continue;
 
-            /* TODO: Temporarily disabled due to processing concerns
             // Check if target is friends with sender
-            if (targetFriendCodeClient.Data.FriendList.Any(friend => friend.FriendCode == client.Data.FriendCode) == false)
+            if (targetClient.IsFriendsWith(client) == false)
                 continue;
-            */
 
             try
             {
@@ -193,7 +194,6 @@ public class NetworkService
             }
             catch (Exception ex)
             {
-                // TODO: Decide if surfacing the friend codes who failed to send to the client is helpful
                 Console.WriteLine($"Error sending emote command to {targetFriendCode}! Error was {ex.Message}");
             }
         }
@@ -208,6 +208,10 @@ public class NetworkService
         if (client == null)
             return new ResultWithMessage(false, "Not Logged In");
 
+        // Temporarily Mass Control Block
+        if (targetFriendCodes.Count != 1)
+            return new ResultWithMessage(false, "Mass Control not supported");
+
         // Iterate over all target friends
         foreach (var targetFriendCode in targetFriendCodes)
         {
@@ -216,11 +220,9 @@ public class NetworkService
             if (targetClient == null)
                 continue;
 
-            /* TODO: Temporarily disabled due to processing concerns
             // Check if target is friends with sender
-            if (targetFriendCodeClient.Data.FriendList.Any(friend => friend.FriendCode == client.Data.FriendCode) == false)
+            if (targetClient.IsFriendsWith(client) == false)
                 continue;
-            */
 
             try
             {
@@ -230,7 +232,6 @@ public class NetworkService
             }
             catch (Exception ex)
             {
-                // TODO: Decide if surfacing the friend codes who failed to send to the client is helpful
                 Console.WriteLine($"Error sending speak command to {targetFriendCode}! Error was {ex.Message}");
             }
         }
