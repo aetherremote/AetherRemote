@@ -333,4 +333,9 @@ public class SessionsTab(
             ImGui.EndPopup();
         }
     }
+
+    public void Dispose()
+    {
+        throw new NotImplementedException();
+    }
 }

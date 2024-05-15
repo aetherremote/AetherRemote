@@ -14,6 +14,8 @@ namespace AetherRemoteServer.Services;
 
 public class NetworkService
 {
+    private const int SecondsRequiredBetweenCommands = 2;
+
     private readonly DatabaseProvider database = new();
     private readonly ConnectedClientsManager connectedClientsManager = new();
 
@@ -132,6 +134,10 @@ public class NetworkService
         if (client == null)
             return new ResultWithMessage(false, "Not Logged In");
 
+        // Check if spamming
+        if (IsClientSpamming(client))
+            return new ResultWithMessage(false, "Spam");
+
         // Temporarily Mass Control Block
         if (targetFriendCodes.Count != 1)
             return new ResultWithMessage(false, "Mass Control not supported");
@@ -160,6 +166,7 @@ public class NetworkService
             }
         }
 
+        client.LastCommandTimestamp = DateTime.UtcNow;
         return new ResultWithMessage(true);
     }
 
@@ -169,6 +176,10 @@ public class NetworkService
         var client = connectedClientsManager.GetConnectedClientBySecret(secret);
         if (client == null)
             return new ResultWithMessage(false, "Not Logged In");
+
+        // Check if spamming
+        if (IsClientSpamming(client))
+            return new ResultWithMessage(false, "Spam");
 
         // Temporarily Mass Control Block
         if (targetFriendCodes.Count != 1)
@@ -198,6 +209,7 @@ public class NetworkService
             }
         }
 
+        client.LastCommandTimestamp = DateTime.UtcNow;
         return new ResultWithMessage(true);
     }
 
@@ -207,6 +219,10 @@ public class NetworkService
         var client = connectedClientsManager.GetConnectedClientBySecret(secret);
         if (client == null)
             return new ResultWithMessage(false, "Not Logged In");
+
+        // Check if spamming
+        if (IsClientSpamming(client))
+            return new ResultWithMessage(false, "Spam");
 
         // Temporarily Mass Control Block
         if (targetFriendCodes.Count != 1)
@@ -236,6 +252,7 @@ public class NetworkService
             }
         }
 
+        client.LastCommandTimestamp = DateTime.UtcNow;
         return new ResultWithMessage(true);
     }
 
@@ -256,5 +273,10 @@ public class NetworkService
         {
             Console.WriteLine($"Error sending online status to {receptientClient.Data.FriendCode}! Exception was: {ex.Message}");
         }
+    }
+
+    private static bool IsClientSpamming(ConnectedClient client)
+    {
+        return (client.LastCommandTimestamp - DateTime.UtcNow).TotalSeconds < SecondsRequiredBetweenCommands;
     }
 }

@@ -16,6 +16,11 @@ public class ConnectedClient
     public UserData Data { get; set; }
 
     /// <summary>
+    /// The last time this client sent a command
+    /// </summary>
+    public DateTime LastCommandTimestamp { get; set; } = DateTime.UtcNow;
+
+    /// <summary>
     /// Represents a client that is connected and logged into the server
     /// </summary>
     public ConnectedClient(string connectionId, UserData data)
