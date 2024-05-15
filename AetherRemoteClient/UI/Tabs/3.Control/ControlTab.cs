@@ -9,6 +9,7 @@ using AetherRemoteCommon.Domain.CommonFriend;
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
+using Dalamud.Logging;
 using Dalamud.Plugin.Services;
 using ImGuiNET;
 using System;
@@ -24,11 +25,11 @@ public class ControlTab : ITab
     // Constants
     private static readonly Vector4 IconOnlineColor = ImGuiColors.ParsedGreen;
     private static readonly Vector4 IconOfflineColor = ImGuiColors.DPSRed;
-    private static readonly Vector2 QuestionIconOffset = CalcQuestionButtonOffset();
     private static readonly Vector2 LockButtonSize = new(40, 40);
     private static readonly int SendButtonWidth = 40;
     private static readonly int TransformButtonWidth = 80;
     private static readonly int LockoutDuration = 2500;
+    private readonly Vector2 questionIconOffset;
 
     // Dependencies
     private readonly Configuration configuration;
@@ -84,6 +85,8 @@ public class ControlTab : ITab
         commandLockoutTimer.Elapsed += ReleaseLockout;
 
         FriendsTab.OnFriendDeleted += FriendDeleted;
+
+        questionIconOffset = CalcQuestionButtonOffset();
     }
 
     public void Draw()
@@ -200,7 +203,7 @@ public class ControlTab : ITab
         var style = ImGui.GetStyle();
         var shouldProcessSpeakCommand = false;
 
-        SharedUserInterfaces.MediumTextCentered("Speak", null, QuestionIconOffset);
+        SharedUserInterfaces.MediumTextCentered("Speak", null, questionIconOffset);
         ImGui.SameLine();
         ImGui.AlignTextToFramePadding();
         SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
@@ -303,7 +306,7 @@ public class ControlTab : ITab
     {
         var shouldProcessEmoteCommand = false;
 
-        SharedUserInterfaces.MediumTextCentered("Emote", null, QuestionIconOffset);
+        SharedUserInterfaces.MediumTextCentered("Emote", null, questionIconOffset);
         ImGui.SameLine();
         ImGui.AlignTextToFramePadding();
         SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
@@ -335,7 +338,7 @@ public class ControlTab : ITab
         var shouldProcessBecomeCommand = false;
         var glamourerInstalled = glamourerAccessor.IsGlamourerInstalled;
 
-        SharedUserInterfaces.MediumTextCentered("Transformation", null, QuestionIconOffset);
+        SharedUserInterfaces.MediumTextCentered("Transformation", null, questionIconOffset);
         ImGui.SameLine();
         ImGui.AlignTextToFramePadding();
         SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);

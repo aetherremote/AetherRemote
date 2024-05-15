@@ -4,7 +4,7 @@ using AetherRemoteServer.Services;
 namespace AetherRemoteServer.Domain;
 
 /// <summary>
-/// Used to give <see cref="NetworkService.FetchFriendList"/> a strongly typed return object
+/// Used to give <see cref="NetworkProvider.FetchFriendList"/> a strongly typed return object
 /// </summary>
 public class ResultWithFriends
 {

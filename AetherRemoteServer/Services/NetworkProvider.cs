@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace AetherRemoteServer.Services;
 
-public class NetworkService
+public class NetworkProvider
 {
     private const int SecondsRequiredBetweenCommands = 2;
 

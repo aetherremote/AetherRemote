@@ -12,7 +12,7 @@ namespace AetherRemoteServer.Hubs;
 
 public class MainHub : Hub
 {
-    public static readonly NetworkService NetworkService = new();
+    public static readonly NetworkProvider NetworkService = new();
 
     [HubMethodName(Constants.ApiLogin)]
     public LoginResponse Login(LoginRequest request)
