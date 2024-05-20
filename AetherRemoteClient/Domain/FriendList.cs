@@ -4,14 +4,9 @@ using System.Linq;
 
 namespace AetherRemoteClient.Domain;
 
-public class FriendList
+public class FriendList(List<Friend> friends)
 {
-    public readonly List<Friend> Friends;
-
-    public FriendList(List<Friend> friends)
-    {
-        Friends = friends;
-    }
+    public readonly List<Friend> Friends = friends;
 
     /// <summary>
     /// Creates a <see cref="Friend"/> and adds them to the friend list

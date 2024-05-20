@@ -5,7 +5,6 @@ using AetherRemoteClient.UI.Tabs.Control;
 using AetherRemoteClient.UI.Tabs.Dashboard;
 using AetherRemoteClient.UI.Tabs.Friends;
 using AetherRemoteClient.UI.Tabs.Logs;
-using AetherRemoteClient.UI.Tabs.MassControl;
 using AetherRemoteClient.UI.Tabs.Settings;
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.Interface.Windowing;
@@ -33,7 +32,6 @@ public class MainWindow : Window, IDisposable
     private readonly LogsTab logsTab;
     private readonly SettingsTab settingsTab;
     private readonly ControlTab controlTab;
-    private readonly MassControlTab massControlTab;
 
     public MainWindow(
         Configuration configuration,
@@ -58,7 +56,6 @@ public class MainWindow : Window, IDisposable
         logsTab = new LogsTab();
         settingsTab = new SettingsTab(configuration);
         controlTab = new ControlTab(configuration, glamourerAccessor, emoteProvider, networkProvider, clientState, logger, targetManager);
-        massControlTab = new MassControlTab();
     }
 
     public override void Draw()
@@ -70,7 +67,6 @@ public class MainWindow : Window, IDisposable
             {
                 friendsTab.Draw();
                 controlTab.Draw();
-                massControlTab.Draw();
                 logsTab.Draw();
             }
             settingsTab.Draw();
@@ -86,7 +82,6 @@ public class MainWindow : Window, IDisposable
         logsTab.Dispose();
         settingsTab.Dispose();
         controlTab.Dispose();
-        massControlTab.Dispose();
         GC.SuppressFinalize(this);
     }
 }

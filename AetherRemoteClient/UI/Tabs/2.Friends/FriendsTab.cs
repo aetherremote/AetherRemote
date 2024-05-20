@@ -349,7 +349,7 @@ public class FriendsTab : ITab
             return;
 
         // Invoke Event
-        OnFriendDeleted?.Invoke(this, new(friendCode));
+        OnFriendDeleted?.Invoke(this, new(friendBeingEditted));
         
         networkProvider.FriendList.RemoveFriend(friendCode);
         friendBeingEditted = null;

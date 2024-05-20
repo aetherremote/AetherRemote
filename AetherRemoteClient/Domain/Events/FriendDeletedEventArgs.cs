@@ -1,11 +1,12 @@
+using AetherRemoteCommon.Domain.CommonFriend;
 using System;
 
 namespace AetherRemoteClient.Domain.Events;
 
-public class FriendDeletedEventArgs(string friendCode) : EventArgs 
+public class FriendDeletedEventArgs(Friend friend) : EventArgs 
 {
     /// <summary>
-    /// The friend code of the deleted friend.
+    /// The friend who was deleted
     /// </summary>
-    public string FriendCode = friendCode;
+    public Friend Friend = friend;
 }
