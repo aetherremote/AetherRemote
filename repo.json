@@ -3,7 +3,7 @@
     "Author": "Mora",
     "Name": "Aether Remote",
     "InternalName": "AetherRemoteClient",
-    "AssemblyVersion": "1.0.1",
+    "AssemblyVersion": "1.1.36.0",
     "Description": "Control other player's speech, emotes, and appearance.",
     "ApplicableVersion": "any",
     "RepoUrl": "https://github.com/aetherremote/AetherRemote",
