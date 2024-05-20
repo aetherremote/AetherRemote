@@ -20,7 +20,7 @@ public sealed class Plugin : IDalamudPlugin
     /// Disables interacting with the server in any way, and returns mocked successes and the line when
     /// the server is invoked.
     /// </summary>
-    public static readonly bool DeveloperMode = true;
+    public static readonly bool DeveloperMode = false;
 
     /// <summary>
     /// Internal plugin stage
@@ -30,7 +30,7 @@ public sealed class Plugin : IDalamudPlugin
     /// <summary>
     /// Internal plugin version
     /// </summary>
-    public static readonly string Version = "1.1.36.0";
+    public static readonly string Version = "1.1.36.1";
     
     // Injected
     private DalamudPluginInterface pluginInterface { get; init; }
