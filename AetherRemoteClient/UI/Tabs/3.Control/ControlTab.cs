@@ -69,11 +69,47 @@ public class ControlTab : ITab
         var style = ImGui.GetStyle();
 
         // The height of the footer containing the friend code input text and the add friend button
-        var deselectButtonHeight = (ImGui.CalcTextSize(DeselectAllButtonText).Y + (style.FramePadding.Y * 2) + style.ItemSpacing.Y) * 2;
+        var deselectButtonHeight = (ImGui.CalcTextSize(DeselectAllButtonText).Y + (style.FramePadding.Y * 2) + style.ItemSpacing.Y);
 
-        // TODO: Can remove this if placing selection mode at the bottom
-        var y = ImGui.GetCursorPosY();
+        // Store Y coord at the top of the screen
+        var windowTopPosY = ImGui.GetCursorPosY();
 
+        // Selection Mode
+        ImGui.AlignTextToFramePadding();
+        ImGui.BeginGroup();
+        SharedUserInterfaces.Icon(FontAwesomeIcon.User);
+
+        ImGui.SameLine();
+
+        // Single Mode Selection
+        var selectMode = controlTargetManager.Mode == ControlTargetManager.SelectionMode.Single ? 0 : 1;
+        if (ImGui.RadioButton("##SelectModeSingle", ref selectMode, 0))
+            controlTargetManager.UpdateSelectionMode(ControlTargetManager.SelectionMode.Single);
+
+        ImGui.EndGroup();
+        SharedUserInterfaces.Tooltip("Single Selection Mode");
+
+        ImGui.SameLine();
+
+        var text = selectMode == 0 ? "Single" : "Multi";
+        ImGui.SetCursorPosX(style.WindowPadding.X + (MainWindow.FriendListSize.X / 2) - (ImGui.CalcTextSize(text).X / 2) - (style.FramePadding.X / 2));
+
+        ImGui.Text($"{text}");
+
+        ImGui.SameLine(MainWindow.FriendListSize.X - style.WindowPadding.X - style.FramePadding.X - (ImGui.GetFontSize() * 2));
+
+        // Multi Mode Selection
+        ImGui.BeginGroup();
+        if (ImGui.RadioButton("##SelectModeMultiple", ref selectMode, 1))
+            controlTargetManager.UpdateSelectionMode(ControlTargetManager.SelectionMode.Multiple);
+
+        ImGui.SameLine();
+        SharedUserInterfaces.Icon(FontAwesomeIcon.Users);
+
+        ImGui.EndGroup();
+        SharedUserInterfaces.Tooltip("Multi Selection Mode");
+
+        // Setup friend search
         ImGui.SetNextItemWidth(MainWindow.FriendListSize.X);
         if (ImGui.InputTextWithHint("##SearchFriendListInputText", "Search", ref searchInputText, Constants.FriendNicknameCharLimit))
             friendSearchFilter.UpdateSearchTerm(searchInputText);
@@ -81,8 +117,9 @@ public class ControlTab : ITab
         // Save the cursor at the bottom of the search input text before calling ImGui.SameLine for use later
         var bottomOfSearchInputText = ImGui.GetCursorPosY();
 
+        // Reset cursor back to top of screen
         ImGui.SameLine();
-        ImGui.SetCursorPosY(y);
+        ImGui.SetCursorPosY(windowTopPosY);
 
         // Draw the control panel area beside the search bar using the remaining space
         if (ImGui.BeginChild("ControlPanelArea", Vector2.Zero, true))
@@ -102,19 +139,6 @@ public class ControlTab : ITab
             ImGui.EndChild();
         }
         ImGui.PopStyleVar();
-
-        // TODO: Polish
-        var t = true;
-        var g = false;
-        // Selection Mode
-        ImGui.AlignTextToFramePadding();
-        SharedUserInterfaces.Icon(FontAwesomeIcon.User);
-        ImGui.SameLine();
-        ImGui.Checkbox("##UhOh", ref t);
-        ImGui.SameLine(MainWindow.FriendListSize.X - style.WindowPadding.X - style.FramePadding.X - (ImGui.GetFontSize() * 2));
-        ImGui.Checkbox("##SUper", ref g);
-        ImGui.SameLine();
-        SharedUserInterfaces.Icon(FontAwesomeIcon.Users);
 
         if (ImGui.Button(DeselectAllButtonText, MainWindow.FriendListSize))
             controlTargetManager.DeselectAll();

@@ -332,6 +332,7 @@ public class FriendsTab : ITab
         ImGui.PopStyleColor();
     }
 
+    // TODO: Update logs to publish to the logs tab
     private async void ProcessAddFriend()
     {
         // If no text

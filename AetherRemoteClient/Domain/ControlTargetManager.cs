@@ -26,9 +26,27 @@ public class ControlTargetManager
     public readonly int MaximumTargetsForInGameOperations = 3;
 
     /// <summary>
+    /// How the controller target manager should handle selecting friends
+    /// </summary>
+    public SelectionMode Mode { get; private set; } = SelectionMode.Single;
+
+    /// <summary>
     /// If the minimum required number of targets have been met
     /// </summary>
     public bool MinimumTargetsMet => Targets.Count >= MinimumTargetsRequired;
+
+    /// <summary>
+    /// Update Selection Mode
+    /// </summary>
+    public void UpdateSelectionMode(SelectionMode Mode)
+    {
+        this.Mode = Mode;
+        if (Mode == SelectionMode.Single)
+        {
+            if (Targets.Count > 1)
+                Targets.RemoveRange(1, Targets.Count - 1);
+        }
+    }
 
     /// <summary>
     /// Returns if a friend is selected
@@ -43,11 +61,19 @@ public class ControlTargetManager
     /// </summary>
     public void ToggleSelected(Friend friend)
     {
-        var index = Targets.FindIndex(target => target.FriendCode == friend.FriendCode);
-        if (index < 0)
+        if (Mode == SelectionMode.Single)
+        {
+            Targets.Clear();
             Targets.Add(friend);
+        }
         else
-            Targets.RemoveAt(index);
+        {
+            var index = Targets.FindIndex(target => target.FriendCode == friend.FriendCode);
+            if (index < 0)
+                Targets.Add(friend);
+            else
+                Targets.RemoveAt(index);
+        }
     }
 
     /// <summary>
@@ -64,5 +90,11 @@ public class ControlTargetManager
     public void DeselectAll()
     {
         Targets.Clear();
+    }
+
+    public enum SelectionMode
+    {
+        Single,
+        Multiple
     }
 }
