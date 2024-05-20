@@ -111,7 +111,7 @@ public class ControlTab : ITab
         SharedUserInterfaces.Icon(FontAwesomeIcon.User);
         ImGui.SameLine();
         ImGui.Checkbox("##UhOh", ref t);
-        ImGui.SameLine(MainWindow.FriendListSize.X - style.WindowPadding.X - style.FramePadding.X - ImGui.GetFontSize() * 2);
+        ImGui.SameLine(MainWindow.FriendListSize.X - style.WindowPadding.X - style.FramePadding.X - (ImGui.GetFontSize() * 2));
         ImGui.Checkbox("##SUper", ref g);
         ImGui.SameLine();
         SharedUserInterfaces.Icon(FontAwesomeIcon.Users);

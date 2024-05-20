@@ -10,7 +10,6 @@ using ImGuiNET;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using System.Reflection.Metadata.Ecma335;
 using System.Timers;
 
 namespace AetherRemoteClient.UI.Tabs.Friends;
@@ -38,7 +37,7 @@ public class FriendsTab : ITab
         this.logger = logger;
 
         friendSearchFilter = new(networkProvider, FilterFriend);
-        addFriendTimer.Elapsed += ResetAddFriendState;
+        showAddFriendStateTimer.Elapsed += ResetAddFriendState;
     }
 
     /// <summary>
@@ -70,14 +69,12 @@ public class FriendsTab : ITab
     private string friendNote = string.Empty;
 
     /// <summary>
-    /// State of adding friend, not adding friend, and success/failure
+    /// Represents the state of progress for adding a friend.
     /// </summary>
     private AddFriendState addFriendState = AddFriendState.NotAttempting;
 
-    /// <summary>
-    /// Timer for adding friend events
-    /// </summary>
-    private readonly Timer addFriendTimer = new Timer(2000);
+    // Timer to be used in the UI to display the state of progress for adding a friend
+    private readonly Timer showAddFriendStateTimer = new(2000);
 
     // Permissions - Speak
     private bool allowSpeak = false;
@@ -143,7 +140,6 @@ public class FriendsTab : ITab
 
             ImGui.PopStyleVar();
 
-            // Display either input field for friend code or message regarding state of adding friend if that is happening
             if(addFriendState == AddFriendState.NotAttempting)
             {
                 ImGui.SetNextItemWidth(MainWindow.FriendListSize.X);
@@ -160,11 +156,10 @@ public class FriendsTab : ITab
                     AddFriendState.Failure => ImGuiColors.DPSRed,
                     _ => ImGuiColors.DalamudWhite
                 };
-                var framePaddingY = style.FramePadding.Y;
-                var x = (MainWindow.FriendListSize.X / 2) - (ImGui.CalcTextSize(message).X / 2) + style.WindowPadding.X;
-                ImGui.SetCursorPos(new Vector2(x, ImGui.GetCursorPosY() + framePaddingY));
+                ImGui.SetCursorPosX((MainWindow.FriendListSize.X / 2) - (ImGui.CalcTextSize(message).X / 2) + style.WindowPadding.X);
+                ImGui.SetCursorPosY(ImGui.GetCursorPosY() + style.FramePadding.Y);
                 ImGui.TextColored(color, message);
-                ImGui.SetCursorPosY(ImGui.GetCursorPosY() + framePaddingY);
+                ImGui.SetCursorPosY(ImGui.GetCursorPosY() + style.FramePadding.Y);
             }
 
             if (ImGui.Button("Add Friend", MainWindow.FriendListSize))
@@ -339,45 +334,47 @@ public class FriendsTab : ITab
 
     private async void ProcessAddFriend()
     {
+        // If no text
         if (friendCodeAddFriendInputText.Length <= 0)
             return;
 
+        // Save & clear input text
+        var friendCode = friendCodeAddFriendInputText;
+        friendCodeAddFriendInputText = "";
+
+        // Update the state of adding a friend
         addFriendState = AddFriendState.Attempting;
 
-        var findFriendResult = networkProvider.FriendList?.FindFriend(friendCodeAddFriendInputText);
+        var findFriendResult = networkProvider.FriendList?.FindFriend(friendCode);
         if (findFriendResult != null) // Grumble.. I hate using != but grammatically nothing else makes readable sense..
         {
-            friendCodeAddFriendInputText = "";
             logger.Warning($"[AetherRemote] Error adding friend: Already friends");
             addFriendState = AddFriendState.Failure;
-            addFriendTimer.Start();
+            StartAddFriendTimer();
             return;
         }
 
-        var networkAddResult = await networkProvider.CreateOrUpdateFriend(configuration.Secret, friendCodeAddFriendInputText);
+        var networkAddResult = await networkProvider.CreateOrUpdateFriend(configuration.Secret, friendCode);
         if (networkAddResult.Success == false)
         {
-            friendCodeAddFriendInputText = "";
             logger.Warning ($"[AetherRemote] Error adding friend: {networkAddResult.Message}");
             addFriendState = AddFriendState.Failure;
-            addFriendTimer.Start();
+            StartAddFriendTimer();
             return;
         }
 
-        var localAddResult = networkProvider.FriendList?.CreateAndAddFriend(friendCodeAddFriendInputText, networkAddResult.Online) ?? false;
+        var localAddResult = networkProvider.FriendList?.CreateAndAddFriend(friendCode, networkAddResult.Online) ?? false;
         if (localAddResult == false)
         {
-            friendCodeAddFriendInputText = "";
             logger.Error("[AetherRemote] Error adding friend. Desync has occurred.");
             addFriendState = AddFriendState.Failure;
-            addFriendTimer.Start();
+            StartAddFriendTimer();
             return;
         }
 
+        // Mark success
         addFriendState = AddFriendState.Successful;
-        addFriendTimer.Start();
-        // Clear textbox
-        friendCodeAddFriendInputText = "";
+        StartAddFriendTimer();
     }
 
     private async void ProcessDeleteFriend()
@@ -502,16 +499,31 @@ public class FriendsTab : ITab
 
         return friend.Note.Contains(searchTerm, StringComparison.OrdinalIgnoreCase);
     }
+
+    private void StartAddFriendTimer()
+    {
+        showAddFriendStateTimer.Stop();
+        showAddFriendStateTimer.Start();
+    }
+
     private void ResetAddFriendState(object? sender, ElapsedEventArgs e)
     {
         addFriendState = AddFriendState.NotAttempting;
-
     }
+
     public void Dispose()
     {
+        showAddFriendStateTimer.Elapsed -= ResetAddFriendState;
+        showAddFriendStateTimer.Dispose();
         friendSearchFilter.Dispose();
-        addFriendTimer.Elapsed -= ResetAddFriendState;
-        addFriendTimer.Dispose();
         GC.SuppressFinalize(this);
+    }
+
+    private enum AddFriendState
+    {
+        NotAttempting,
+        Attempting,
+        Successful,
+        Failure
     }
 }
