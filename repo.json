@@ -16,12 +16,12 @@
     ],
     "DalamudApiLevel": 9,
     "LoadPriority": 0,
-    "IconUrl": "https://i.imgur.com/4ZdWnU5.jpeg",
+    "IconUrl": "https://raw.githubusercontent.com/aetherremote/AetherRemote/Alpha1.1.36.0/Images/icon.jpg",
     "Punchline": "Controlling all of the world!",
     "IsHide": "False",
     "IsTestingExclusive": "False",
-    "DownloadLinkInstall": "https://github.com/aetherremote/AetherRemote/releases/download/Alpha1.0.1.7/latest.zip",
-    "DownloadLinkTesting": "https://github.com/aetherremote/AetherRemote/releases/download/Alpha1.0.1.7/latest.zip",
-    "DownloadLinkUpdate": "https://github.com/aetherremote/AetherRemote/releases/download/Alpha1.0.1.7/latest.zip"
+    "DownloadLinkInstall": "https://github.com/aetherremote/AetherRemote/releases/download/Alpha1.1.36.0/latest.zip",
+    "DownloadLinkTesting": "https://github.com/aetherremote/AetherRemote/releases/download/Alpha1.1.36.0/latest.zip",
+    "DownloadLinkUpdate": "https://github.com/aetherremote/AetherRemote/releases/download/Alpha1.1.36.0/latest.zip"
   }
 ]
