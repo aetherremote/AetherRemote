@@ -3,20 +3,20 @@ namespace AetherRemoteCommon.Domain.CommonFriendPermissions;
 [Serializable]
 public class FriendPermissions
 {
-    public bool Speak = false;
-    public bool Emote = false;
-    public bool ChangeAppearance = false;
-    public bool ChangeEquipment = false;
-    public bool Say = false;
-    public bool Yell = false;
-    public bool Shout = false;
-    public bool Tell = false;
-    public bool Party = false;
-    public bool Alliance = false;
-    public bool FreeCompany = false;
-    public bool Linkshell = false;
-    public bool CrossworldLinkshell = false;
-    public bool PvPTeam = false;
+    public bool Speak { get; set; } = false;
+    public bool Emote { get; set; } = false;
+    public bool ChangeAppearance { get; set; } = false;
+    public bool ChangeEquipment { get; set; } = false;
+    public bool Say { get; set; } = false;
+    public bool Yell { get; set; } = false;
+    public bool Shout { get; set; } = false;
+    public bool Tell { get; set; } = false;
+    public bool Party { get; set; } = false;
+    public bool Alliance { get; set; } = false;
+    public bool FreeCompany { get; set; } = false;
+    public bool Linkshell { get; set; } = false;
+    public bool CrossworldLinkshell { get; set; } = false;
+    public bool PvPTeam { get; set; } = false;
 
     public void SetAll(bool allowEmote, bool allowSpeak, bool allowChangeAppearance, bool allowChangeEquipment, bool allowSay, bool allowYell, bool allowShout,
         bool allowTell, bool allowParty, bool allowAlliance, bool allowFreeCompany, bool allowLinkshell, bool allowCrossworldLinkshell, bool allowPvPTeam)

@@ -129,7 +129,7 @@ public class GlamourerModule : IAetherRemoteModule
 
     private async Task ProcessBecomeCommand()
     {
-        if (controlTargetManager.Targets.Count < 2 || glamourerData.Length == 0)
+        if (controlTargetManager.MinimumTargetsMet == false || glamourerData.Length == 0)
             return;
 
         var glamourerApplyType = GlamourerAccessor.ConvertBoolsToApplyType(applyCustomization, applyEquipment);

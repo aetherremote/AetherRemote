@@ -33,10 +33,11 @@ public class EmoteModule : IAetherRemoteModule
         this.configuration = configuration;
         this.emoteProvider = emoteProvider;
         this.networkProvider = networkProvider;
-
         this.logger = logger;
+
         this.controlTargetManager = controlTargetManager;
         this.commandLockoutTimer = commandLockoutTimer;
+        this.commandLockoutTimer.Elapsed += EndLockout;
 
         emoteSearchFilter = new(emoteProvider.Emotes, (emote, searchTerm) => { return emote.Contains(searchTerm); });
     }
@@ -78,7 +79,7 @@ public class EmoteModule : IAetherRemoteModule
 
     private async Task ProcessEmoteCommand()
     {
-        if (controlTargetManager.Targets.Count < 2 || emote.Length <= 0)
+        if (controlTargetManager.MinimumTargetsMet == false || emote.Length <= 0)
             return;
 
         var validEmote = emoteProvider.Emotes.Contains(emote);

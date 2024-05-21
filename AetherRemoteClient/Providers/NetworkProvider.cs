@@ -157,7 +157,7 @@ public class NetworkProvider : IDisposable
 
         var request = new CreateOrUpdateFriendRequest(secret, friend);
         var response = await InvokeCommand<CreateOrUpdateFriendRequest, CreateOrUpdateFriendResponse>(Constants.ApiCreateOrUpdateFriend, request);
-        return new ResultWithOnlineStatus(response.Success, response.Message);
+        return new ResultWithOnlineStatus(response.Success, response.Message, response.Online);
     }
 
     public async Task<AsyncResult> DeleteFriend(string secret, string friendCode)

@@ -12,30 +12,10 @@ public class LogsTab : ITab
     private readonly ListFilter<LogEntry> logSearchFilter = new(AetherRemoteLogging.Logs, FilterLogEntry);
     private string searchLogTerm = string.Empty;
 
-    /// <summary>
-    /// Number of unseen erros.
-    /// </summary>
-    private int unseenErrors = 0;
-
-    public LogsTab()
-    {
-        AetherRemoteLogging.OnErrorLogged += OnErrorLogged;
-    }
-
-    private void OnErrorLogged(object? sender, EventArgs e)
-    {
-        unseenErrors++;
-    }
-
     public void Draw()
     {
-        // Display number of unseen errors in the tab name
-        var tab = unseenErrors > 0 ? $"Logs ({unseenErrors})" : "Logs";
-        if (ImGui.BeginTabItem(tab))
+        if (ImGui.BeginTabItem("Logs"))
         {
-            // Reset errors once we tab in
-            unseenErrors = 0;
-
             var width = (ImGui.GetStyle().WindowPadding.X * 2) + ImGui.GetFontSize();
             ImGui.SetNextItemWidth(-width);
 
@@ -114,7 +94,6 @@ public class LogsTab : ITab
     public void Dispose()
     {
         logSearchFilter.Dispose();
-        AetherRemoteLogging.OnErrorLogged -= OnErrorLogged;
         GC.SuppressFinalize(this);
     }
 }

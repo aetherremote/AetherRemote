@@ -28,8 +28,7 @@ public class Friend
     /// <summary>
     /// Online status of a friend
     /// </summary>
-    [NonSerialized]
-    public bool Online = false;
+    public bool Online { get; set; } = false;
 
     public Friend()
     {

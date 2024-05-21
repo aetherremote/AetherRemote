@@ -159,7 +159,7 @@ public class SpeakModule : IAetherRemoteModule
 
     private async Task ProcessSpeakCommand()
     {
-        if (controlTargetManager.Targets.Count < controlTargetManager.MinimumTargetsRequired || message.Length <= 0)
+        if (controlTargetManager.MinimumTargetsMet == false || message.Length <= 0)
             return;
 
         string? extra = null;

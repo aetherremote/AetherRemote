@@ -39,7 +39,8 @@ public class ConnectedClientsManager
     /// <returns><see cref="ConnectedClient"/> or null if not found.</returns>
     public ConnectedClient? GetConnectedClient(string friendCode)
     {
-        return connectedClients[friendCode];
+        connectedClients.TryGetValue(friendCode, out var client);
+        return client;
     }
 
     /// <summary>

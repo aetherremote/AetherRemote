@@ -18,7 +18,9 @@ public class FriendList(List<Friend> friends)
         var exists = Friends.Any(existingFriend => existingFriend.FriendCode == friendCode);
         if (exists == false)
         {
-            Friends.Add(new Friend(friendCode) { Online = online });
+            var newFriend = new Friend(friendCode);
+            newFriend.Online = online;
+            Friends.Add(newFriend);
             return true;
         }
 

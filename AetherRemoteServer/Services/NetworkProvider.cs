@@ -37,9 +37,12 @@ public class NetworkProvider
         foreach(var friend in client.Data.FriendList)
         {
             // Check if friend is online
-            var friendClient = connectedClientsManager.GetConnectedClient(client.Data.FriendCode);
+            var friendClient = connectedClientsManager.GetConnectedClient(friend.FriendCode);
             if (friendClient == null)
+            {
+                friend.Online = false;
                 continue;
+            }
 
             // Set friend online status to true
             friend.Online = true;
@@ -97,8 +100,10 @@ public class NetworkProvider
 
         // Create or Update
         var friendIndex = client.Data.FriendList.FindIndex(friend => friend.FriendCode == friendToCreateOrUpdate.FriendCode);
-        if (friendIndex < 0) { client.Data.FriendList.Add(friendToCreateOrUpdate); }
-        else { client.Data.FriendList[friendIndex] = friendToCreateOrUpdate; }
+        if (friendIndex < 0)
+            client.Data.FriendList.Add(friendToCreateOrUpdate);
+        else
+            client.Data.FriendList[friendIndex] = friendToCreateOrUpdate;
 
         // Reflect changes in database
         database.CreateOrUpdateUserData(client.Data);
@@ -277,6 +282,6 @@ public class NetworkProvider
 
     private static bool IsClientSpamming(ConnectedClient client)
     {
-        return (client.LastCommandTimestamp - DateTime.UtcNow).TotalSeconds < SecondsRequiredBetweenCommands;
+        return (DateTime.UtcNow - client.LastCommandTimestamp).TotalSeconds < SecondsRequiredBetweenCommands;
     }
 }
