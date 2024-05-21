@@ -99,6 +99,7 @@ public class EmoteModule : IAetherRemoteModule
 
         // Reset emote
         emote = "";
+        emoteSearchFilter.UpdateSearchTerm("");
     }
 
     private void BeginLockout()

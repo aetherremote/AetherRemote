@@ -91,7 +91,7 @@ public static class AetherRemoteLogging
     }
 }
 
-public struct LogEntry(string sender, string message, DateTime timestamp, LogType type)
+public class LogEntry(string sender, string message, DateTime timestamp, LogType type)
 {
     public string Sender = sender;
     public string Message = message;
