@@ -68,9 +68,9 @@ public class EmoteModule : IAetherRemoteModule
         if (lockout) ImGui.BeginDisabled();
         if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Play))
             shouldProcessEmoteCommand = true;
-        ImGui.EndDisabled();
+        if (lockout) ImGui.EndDisabled();
 
-        if (shouldProcessEmoteCommand && lockoutActive == false)
+        if (shouldProcessEmoteCommand && lockout == false)
         {
             BeginLockout();
             _ = ProcessEmoteCommand();

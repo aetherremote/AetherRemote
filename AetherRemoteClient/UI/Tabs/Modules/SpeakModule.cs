@@ -150,7 +150,7 @@ public class SpeakModule : IAetherRemoteModule
             }
         }
 
-        if (shouldProcessSpeakCommand && lockoutActive == false)
+        if (shouldProcessSpeakCommand && lockout == false)
         {
             BeginLockout();
             _ = ProcessSpeakCommand();

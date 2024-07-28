@@ -22,7 +22,7 @@ public class GlamourerAccessor : IDisposable
     private readonly CancellationTokenSource source = new();
     private readonly TimeSpan checkGlamourerApiInterval = TimeSpan.FromSeconds(15);
 
-    public GlamourerAccessor(IPluginLog logger, DalamudPluginInterface pluginInterface)
+    public GlamourerAccessor(IPluginLog logger, IDalamudPluginInterface pluginInterface)
     {
         this.logger = logger;
 

@@ -20,7 +20,7 @@ public sealed class Plugin : IDalamudPlugin
     /// Disables interacting with the server in any way, and returns mocked successes and the line when
     /// the server is invoked.
     /// </summary>
-    public static readonly bool DeveloperMode = false;
+    public static readonly bool DeveloperMode = true;
 
     /// <summary>
     /// Internal plugin stage
@@ -33,13 +33,13 @@ public sealed class Plugin : IDalamudPlugin
     public static readonly string Version = "1.1.36.1";
     
     // Injected
-    private DalamudPluginInterface pluginInterface { get; init; }
+    private IDalamudPluginInterface pluginInterface { get; init; }
     private ICommandManager commandManager { get; init; }
 
     // Instantiated
     private Configuration configuration { get; init; }
     private SharedUserInterfaces sharedUserInterfaces { get; init; }
-    private Chat chat { get; init; }
+    private Chat? chat { get; init; }
 
     // Accessors
     private GlamourerAccessor glamourerAccessor { get; init; }
@@ -57,7 +57,7 @@ public sealed class Plugin : IDalamudPlugin
     private MainWindow mainWindow { get; init; }
 
     public Plugin(
-        DalamudPluginInterface pluginInterface,
+        IDalamudPluginInterface pluginInterface,
         ICommandManager commandManager,
         IAddonLifecycle addonLifecycle,
         ITargetManager targetManager,
@@ -79,7 +79,8 @@ public sealed class Plugin : IDalamudPlugin
         sharedUserInterfaces = new SharedUserInterfaces(logger, pluginInterface);
 
         // Used to send messages to the server
-        chat = new XivCommonBase(pluginInterface).Functions.Chat;
+        // Temporarily disabled until xivcommons is updated
+        chat = null; // new XivCommonBase(pluginInterface).Functions.Chat;
 
         // Accessors
         glamourerAccessor = new GlamourerAccessor(logger, pluginInterface);

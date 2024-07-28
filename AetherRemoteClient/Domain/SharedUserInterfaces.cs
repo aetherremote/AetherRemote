@@ -22,7 +22,7 @@ public class SharedUserInterfaces
 
     private static readonly ImGuiWindowFlags ComboWithFilterFlags = PopupWindowFlags | ImGuiWindowFlags.ChildWindow;
 
-    private readonly DalamudPluginInterface pluginInterface;
+    private readonly IDalamudPluginInterface pluginInterface;
     private readonly IPluginLog logger;
 
     private static IFontHandle? BigFont;
@@ -33,7 +33,7 @@ public class SharedUserInterfaces
     private static bool MediumFontBuilt = false;
     private const int MediumFontSize = 24;
 
-    public SharedUserInterfaces(IPluginLog logger, DalamudPluginInterface pluginInterface)
+    public SharedUserInterfaces(IPluginLog logger, IDalamudPluginInterface pluginInterface)
     {
         this.pluginInterface = pluginInterface;
         this.logger = logger;

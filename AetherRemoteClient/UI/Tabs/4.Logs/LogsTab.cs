@@ -33,32 +33,26 @@ public class LogsTab : ITab
 
             if (ImGui.BeginChild("LogArea", Vector2.Zero, true))
             {
-                for (var i = logSearchFilter.List.Count - 1; i > 0; i--)
+                for (var i = logSearchFilter.List.Count - 1; i >= 0; i--)
                 {
                     var log = logSearchFilter.List[i];
+                    ImGui.TextUnformatted($"[{log.Timestamp.ToShortTimeString()}]");
+                    ImGui.SameLine();
                     switch (log.Type)
                     {
                         case LogType.Sent:
-                            ImGui.TextUnformatted($"[{log.Timestamp.ToShortTimeString()}]");
-                            ImGui.SameLine();
                             ImGui.TextColored(ImGuiColors.HealerGreen, "Sent");
                             break;
 
                         case LogType.Recieved:
-                            ImGui.TextUnformatted($"[{log.Timestamp.ToShortTimeString()}]");
-                            ImGui.SameLine();
                             ImGui.TextColored(ImGuiColors.TankBlue, "Recieved");
                             break;
 
                         case LogType.Info:
-                            ImGui.TextUnformatted($"[{log.Timestamp.ToShortTimeString()}]");
-                            ImGui.SameLine();
                             ImGui.TextUnformatted("Info");
                             break;
 
                         case LogType.Error:
-                            ImGui.TextUnformatted($"[{log.Timestamp.ToShortTimeString()}]");
-                            ImGui.SameLine();
                             ImGui.TextColored(ImGuiColors.DalamudRed, "Error");
                             break;
                     }

@@ -25,6 +25,13 @@ public class Tests
         connection.StartAsync().Wait();
     }
 
+    [TearDown]
+    public void Teardown()
+    {
+        serverExe.Dispose();
+        connection.DisposeAsync();
+    }
+
     [Test]
     public void TestConnection()
     {

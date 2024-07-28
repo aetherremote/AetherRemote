@@ -117,7 +117,7 @@ public class GlamourerModule : IAetherRemoteModule
         ImGui.SameLine();
         ImGui.Checkbox("Equipment", ref applyEquipment);
 
-        if (shouldProcessBecomeCommand && lockoutActive == false)
+        if (shouldProcessBecomeCommand && lockout == false)
         {
             BeginLockout();
             _ = ProcessBecomeCommand();

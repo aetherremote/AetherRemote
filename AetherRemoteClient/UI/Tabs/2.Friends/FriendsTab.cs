@@ -189,7 +189,7 @@ public class FriendsTab : ITab
             ImGui.TreePop();
         }
 
-        if (ImGui.TreeNodeEx($"Offline ({offlineFriends.Count})"))
+        if (ImGui.TreeNodeEx($"Offline ({offlineFriends.Count})", ImGuiTreeNodeFlags.DefaultOpen))
         {
             foreach (var friend in offlineFriends)
                 DrawSelectableFriend(friend);
