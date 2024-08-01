@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AetherRemoteServerTests", "
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AetherRemoteCommon", "AetherRemoteCommon\AetherRemoteCommon.csproj", "{D53DD637-ED93-4127-8D2F-5D86C0AD6320}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AetherRemoteInterface", "AetherRemoteInterface\AetherRemoteInterface.csproj", "{FEF5F0E3-87E3-4230-AB8E-0A76AA8BEE48}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AetherRemoteInterface", "AetherRemoteInterface\AetherRemoteInterface.csproj", "{FEF5F0E3-87E3-4230-AB8E-0A76AA8BEE48}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -149,7 +149,7 @@ public class ControlTab : ITab
     private void DrawFriendList()
     {
         var onlineFriends = new List<Friend>();
-        foreach (var friend in networkProvider.FriendList?.Friends ?? [])
+        foreach (var friend in friendSearchFilter.List)
             if (friend.Online) onlineFriends.Add(friend);
 
         if (ImGui.TreeNodeEx($"Online ({onlineFriends.Count})", ImGuiTreeNodeFlags.DefaultOpen))

@@ -24,7 +24,6 @@
     <PackageReference Include="Glamourer.Api" Version="2.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="9.0.0-preview.6.24328.4" />
     <PackageReference Include="NUnit" Version="4.1.0" />
-    <PackageReference Include="XivCommon" Version="9.0.0" />
   </ItemGroup>
 
   <ItemGroup>

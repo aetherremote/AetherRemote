@@ -25,7 +25,7 @@ public class NetworkProvider : IDisposable
     private readonly IPluginLog logger;
 
     // Endpoint
-    private const string ConnectionUrl = "http://75.73.3.71:25565/mainHub";
+    private const string ConnectionUrl = "http://75.72.17.196:25565/mainHub";
 
     // Network
     public readonly HubConnection Connection = new HubConnectionBuilder().WithUrl(ConnectionUrl).Build();

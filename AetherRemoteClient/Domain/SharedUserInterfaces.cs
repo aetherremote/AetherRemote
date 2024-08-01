@@ -56,6 +56,23 @@ public class SharedUserInterfaces
     }
 
     /// <summary>
+    /// Draws a tool tip for the last hovered ImGui component
+    /// </summary>
+    /// <param name="tip"></param>
+    public static void Tooltip(string[] tips)
+    {
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.BeginTooltip();
+            foreach (var tip in tips)
+            {
+                ImGui.Text(tip);
+            }
+            ImGui.EndTooltip();
+        }
+    }
+
+    /// <summary>
     /// Draws a <see cref="FontAwesomeIcon"/>
     /// </summary>
     public static void Icon(FontAwesomeIcon icon, Vector4? color = null)

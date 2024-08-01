@@ -6,7 +6,6 @@ using Dalamud.Plugin.Services;
 using System;
 using System.Collections.Concurrent;
 using System.Text;
-using XivCommon.Functions;
 
 namespace AetherRemoteClient.Providers;
 

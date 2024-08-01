@@ -2,13 +2,12 @@ using AetherRemoteClient.Accessors.Glamourer;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Providers;
 using AetherRemoteClient.UI;
+using Dalamud.Game;
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.Game.Command;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
-using XivCommon;
-using XivCommon.Functions;
 
 namespace AetherRemoteClient;
 
@@ -20,7 +19,7 @@ public sealed class Plugin : IDalamudPlugin
     /// Disables interacting with the server in any way, and returns mocked successes and the line when
     /// the server is invoked.
     /// </summary>
-    public static readonly bool DeveloperMode = true;
+    public static readonly bool DeveloperMode = false;
 
     /// <summary>
     /// Internal plugin stage
@@ -30,7 +29,7 @@ public sealed class Plugin : IDalamudPlugin
     /// <summary>
     /// Internal plugin version
     /// </summary>
-    public static readonly string Version = "1.1.36.1";
+    public static readonly string Version = "1.2.0.0";
     
     // Injected
     private IDalamudPluginInterface pluginInterface { get; init; }
@@ -64,8 +63,7 @@ public sealed class Plugin : IDalamudPlugin
         IClientState clientState,
         IDataManager dataManager,
         IPluginLog logger,
-        IChatGui chatGUI,
-        IObjectTable objectTable)
+        ISigScanner sigScanner)
     {
         this.commandManager = commandManager;
         this.pluginInterface = pluginInterface;
@@ -79,8 +77,7 @@ public sealed class Plugin : IDalamudPlugin
         sharedUserInterfaces = new SharedUserInterfaces(logger, pluginInterface);
 
         // Used to send messages to the server
-        // Temporarily disabled until xivcommons is updated
-        chat = null; // new XivCommonBase(pluginInterface).Functions.Chat;
+        chat = new Chat(sigScanner);
 
         // Accessors
         glamourerAccessor = new GlamourerAccessor(logger, pluginInterface);

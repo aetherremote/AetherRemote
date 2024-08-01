@@ -63,7 +63,11 @@ public class SpeakModule : IAetherRemoteModule
         ImGui.SameLine();
         ImGui.AlignTextToFramePadding();
         SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
-        SharedUserInterfaces.Tooltip("Force target friends to send a message in specified channel.");
+        SharedUserInterfaces.Tooltip
+            ([
+                "Warning! This will actually send messages to the server!", 
+                "Force target friends to send a message in specified channel."
+            ]);
 
         SharedUserInterfaces.MediumText("Channel:", ImGuiColors.ParsedOrange);
         ImGui.SameLine();

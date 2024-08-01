@@ -30,12 +30,6 @@
         "resolved": "4.1.0",
         "contentHash": "MT/DpAhjtiytzhTgTqIhBuWx4y26PKfDepYUHUM+5uv4TsryHC2jwFo5e6NhWkApCm/G6kZ80dRjdJFuAxq3rg=="
       },
-      "XivCommon": {
-        "type": "Direct",
-        "requested": "[9.0.0, )",
-        "resolved": "9.0.0",
-        "contentHash": "avaBp3FmSCi/PiQhntCeBDYOHejdyTWmFtz4pRBVQQ8vHkmRx+YTk1la9dkYBMlXxRXKckEdH1iI1Fu61JlE7w=="
-      },
       "Microsoft.AspNetCore.Connections.Abstractions": {
         "type": "Transitive",
         "resolved": "9.0.0-preview.6.24328.4",
@@ -187,6 +181,9 @@
         "contentHash": "ehqeMfs19sS1bzM3Ig/a/W5IXlMH6aH9jtTmQ194IKCRg2MAflohuRrxZx/oEd1wryLZyDclQxoJNO2Be+UrXg=="
       },
       "aetherremotecommon": {
+        "type": "Project"
+      },
+      "xivcommon": {
         "type": "Project"
       }
     }
