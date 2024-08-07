@@ -43,10 +43,12 @@ public class ControlTab : ITab
     private readonly GlamourerModule glamourerModule;
     private readonly SpeakModule speakModule;
 
-    public ControlTab(Configuration configuration, GlamourerAccessor glamourerAccessor, EmoteProvider emoteProvider, NetworkProvider networkProvider,
-        AetherRemoteLogger logger, ClientDataManager clientDataManager, IClientState clientState, ITargetManager targetManager)
+    public ControlTab(
+        AetherRemoteLogger logger, ClientDataManager clientDataManager, Configuration configuration,
+        EmoteProvider emoteProvider, GlamourerAccessor glamourerAccessor, NetworkProvider networkProvider,
+        IClientState clientState, ITargetManager targetManager)
     {
-        friendSearchFilter = new(clientDataManager.FriendList.Friends, (friend, searchTerm) => { return friend.NoteOrFriendCode.Contains(searchTerm); });
+        friendSearchFilter = new(clientDataManager.FriendList.Friends, FilterFriend);
 
         emoteModule = new EmoteModule(configuration, emoteProvider, networkProvider, logger, controlTargetManager, commandLockoutTimer);
         glamourerModule = new GlamourerModule(configuration, glamourerAccessor, networkProvider, logger, clientState, targetManager, controlTargetManager, commandLockoutTimer);
@@ -210,6 +212,18 @@ public class ControlTab : ITab
     private void FriendDeleted(object? sender, FriendDeletedEventArgs e)
     {
         controlTargetManager.Deselect(e.Friend);
+    }
+
+    private static bool FilterFriend(Friend friend, string searchTerm)
+    {
+        var foundFriendCode = friend.FriendCode.Contains(searchTerm, StringComparison.OrdinalIgnoreCase);
+        if (foundFriendCode)
+            return true;
+
+        if (friend.Note == null)
+            return false;
+
+        return friend.Note.Contains(searchTerm, StringComparison.OrdinalIgnoreCase);
     }
 
     public void Dispose()

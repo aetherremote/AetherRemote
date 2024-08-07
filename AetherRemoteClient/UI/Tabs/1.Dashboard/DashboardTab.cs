@@ -3,7 +3,6 @@ using AetherRemoteClient.Domain.Logger;
 using AetherRemoteClient.Providers;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
-using Dalamud.Plugin.Services;
 using ImGuiNET;
 using System;
 using System.Numerics;
@@ -12,22 +11,23 @@ namespace AetherRemoteClient.UI.Tabs.Dashboard;
 
 public class DashboardTab : ITab
 {
-    private readonly Configuration configuration;
-    private readonly NetworkProvider networkProvider;
     private readonly AetherRemoteLogger logger;
     private readonly ClientDataManager clientDataManager;
+    private readonly Configuration configuration;
+    private readonly NetworkProvider networkProvider;
     
     private static readonly int LoginElementsWidth = 200;
     private static readonly int LoginButtonWidth = 50;
 
     private string secretInputText;
 
-    public DashboardTab(Configuration configuration, NetworkProvider networkProvider, AetherRemoteLogger logger, ClientDataManager clientDataManager)
+    public DashboardTab(AetherRemoteLogger logger, ClientDataManager clientDataManager,
+        Configuration configuration, NetworkProvider networkProvider)
     {
-        this.configuration = configuration;
-        this.networkProvider = networkProvider;
         this.logger = logger;
         this.clientDataManager = clientDataManager;
+        this.configuration = configuration;
+        this.networkProvider = networkProvider;
 
         secretInputText = configuration.Secret;
 

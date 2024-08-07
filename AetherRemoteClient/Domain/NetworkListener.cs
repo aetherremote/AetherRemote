@@ -7,7 +7,6 @@ using AetherRemoteCommon.Domain.Network.Become;
 using AetherRemoteCommon.Domain.Network.Emote;
 using AetherRemoteCommon.Domain.Network.Speak;
 using Microsoft.AspNetCore.SignalR.Client;
-using System;
 using System.Linq;
 
 namespace AetherRemoteClient.Domain;
@@ -28,10 +27,11 @@ public class NetworkListener
     /// </summary>
     public NetworkListener(
         ActionQueueProvider actionQueueProvider,
-        EmoteProvider emoteProvider,
-        NetworkProvider networkProvider, 
         AetherRemoteLogger logger,
-        ClientDataManager clientDataManager)
+        ClientDataManager clientDataManager,
+        EmoteProvider emoteProvider,
+        NetworkProvider networkProvider
+        )
     {
         this.actionQueueProvider = actionQueueProvider;
         this.emoteProvider = emoteProvider;

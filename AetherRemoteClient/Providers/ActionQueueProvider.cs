@@ -12,11 +12,17 @@ namespace AetherRemoteClient.Providers;
 /// <summary>
 /// Queues actions on the main XIV thread.
 /// </summary>
-public class ActionQueueProvider(Chat chat, GlamourerAccessor glamourerAccessor, AetherRemoteLogger logger, IClientState clientState)
+public class ActionQueueProvider
 {
     // Data
-    private readonly ChatActionQueue chatActionQueue = new(logger, clientState, chat);
-    private readonly GlamourerActionQueue glamourerActionQueue = new(logger, clientState, glamourerAccessor);
+    private readonly ChatActionQueue chatActionQueue;
+    private readonly GlamourerActionQueue glamourerActionQueue;
+
+    public ActionQueueProvider(AetherRemoteLogger logger, Chat chat, GlamourerAccessor glamourerAccessor, IClientState clientState)
+    {
+        chatActionQueue = new(logger, chat, clientState);
+        glamourerActionQueue = new(logger, glamourerAccessor, clientState);
+    }
 
     public void Update()
     {
@@ -42,7 +48,7 @@ public class ActionQueueProvider(Chat chat, GlamourerAccessor glamourerAccessor,
         chatActionQueue.EnqueueAction(action);
     }
 
-    private class ChatActionQueue(AetherRemoteLogger logger, IClientState clientState, Chat chat) : ActionQueue<IChatAction>(logger, clientState)
+    private class ChatActionQueue(AetherRemoteLogger logger, Chat chat, IClientState clientState) : ActionQueue<IChatAction>(logger, clientState)
     {
         private readonly IClientState clientState = clientState;
         private readonly Chat chat = chat;
@@ -58,7 +64,7 @@ public class ActionQueueProvider(Chat chat, GlamourerAccessor glamourerAccessor,
         }
     }
 
-    private class GlamourerActionQueue(AetherRemoteLogger logger, IClientState clientState, GlamourerAccessor glamourerAccessor) : ActionQueue<BecomeAction>(logger, clientState)
+    private class GlamourerActionQueue(AetherRemoteLogger logger, GlamourerAccessor glamourerAccessor, IClientState clientState) : ActionQueue<BecomeAction>(logger, clientState)
     {
         private readonly IClientState clientState = clientState;
         private readonly GlamourerAccessor glamourerAccessor = glamourerAccessor;

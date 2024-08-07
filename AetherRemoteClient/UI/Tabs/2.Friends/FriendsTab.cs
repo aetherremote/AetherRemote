@@ -6,7 +6,6 @@ using AetherRemoteCommon;
 using AetherRemoteCommon.Domain.CommonFriend;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
-using Dalamud.Plugin.Services;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
@@ -24,20 +23,21 @@ public class FriendsTab : ITab
     private static readonly Vector4 IconOfflineColor = ImGuiColors.DPSRed;
 
     // Dependencies
-    private readonly Configuration configuration;
-    private readonly NetworkProvider networkProvider;
     private readonly AetherRemoteLogger logger;
     private readonly ClientDataManager clientDataManager;
+    private readonly Configuration configuration;
+    private readonly NetworkProvider networkProvider;
 
     // Events
     public static event EventHandler<FriendDeletedEventArgs>? OnFriendDeleted;
 
-    public FriendsTab(Configuration configuration, NetworkProvider networkProvider, AetherRemoteLogger logger, ClientDataManager clientDataManager)
+    public FriendsTab(AetherRemoteLogger logger, ClientDataManager clientDataManager, 
+        Configuration configuration, NetworkProvider networkProvider)
     {
-        this.configuration = configuration;
-        this.networkProvider = networkProvider;
         this.logger = logger;
         this.clientDataManager = clientDataManager;
+        this.configuration = configuration;
+        this.networkProvider = networkProvider;
 
         friendSearchFilter = new(clientDataManager.FriendList.Friends, FilterFriend);
         showAddFriendStateTimer.Elapsed += ResetAddFriendState;
