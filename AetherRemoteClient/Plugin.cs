@@ -1,5 +1,6 @@
 using AetherRemoteClient.Accessors.Glamourer;
 using AetherRemoteClient.Domain;
+using AetherRemoteClient.Domain.Logger;
 using AetherRemoteClient.Providers;
 using AetherRemoteClient.UI;
 using Dalamud.Game;
@@ -19,7 +20,7 @@ public sealed class Plugin : IDalamudPlugin
     /// Disables interacting with the server in any way, and returns mocked successes and the line when
     /// the server is invoked.
     /// </summary>
-    public static readonly bool DeveloperMode = false;
+    public static readonly bool DeveloperMode = true;
 
     /// <summary>
     /// Internal plugin stage
@@ -38,7 +39,8 @@ public sealed class Plugin : IDalamudPlugin
     // Instantiated
     private Configuration configuration { get; init; }
     private SharedUserInterfaces sharedUserInterfaces { get; init; }
-    private Chat? chat { get; init; }
+    private Chat chat { get; init; }
+    private AetherRemoteLogger aetherRemoteLogger { get; init; }
 
     // Accessors
     private GlamourerAccessor glamourerAccessor { get; init; }
@@ -79,20 +81,23 @@ public sealed class Plugin : IDalamudPlugin
         // Used to send messages to the server
         chat = new Chat(sigScanner);
 
+        // Logging wrapper
+        aetherRemoteLogger = new AetherRemoteLogger(logger);
+
         // Accessors
-        glamourerAccessor = new GlamourerAccessor(logger, pluginInterface);
+        glamourerAccessor = new GlamourerAccessor(aetherRemoteLogger, pluginInterface);
 
         // Providers
-        actionQueueProvider = new ActionQueueProvider(chat, glamourerAccessor, clientState, logger);
+        actionQueueProvider = new ActionQueueProvider(chat, glamourerAccessor, aetherRemoteLogger, clientState);
         emoteProvider = new EmoteProvider(dataManager);
-        networkProvider = new NetworkProvider(logger);
+        networkProvider = new NetworkProvider(aetherRemoteLogger);
 
         // Network Listener
-        networkListener = new NetworkListener(actionQueueProvider, emoteProvider, networkProvider, logger);
+        networkListener = new NetworkListener(actionQueueProvider, emoteProvider, networkProvider, aetherRemoteLogger);
 
         // Windows
         mainWindow = new MainWindow(configuration, emoteProvider, glamourerAccessor, 
-            networkProvider, clientState, logger, targetManager);
+            networkProvider, aetherRemoteLogger, clientState, targetManager);
 
         windowSystem.AddWindow(mainWindow);
 

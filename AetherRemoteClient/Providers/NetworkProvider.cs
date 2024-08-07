@@ -1,4 +1,5 @@
 using AetherRemoteClient.Domain;
+using AetherRemoteClient.Domain.Logger;
 using AetherRemoteCommon;
 using AetherRemoteCommon.Domain.CommonChatMode;
 using AetherRemoteCommon.Domain.CommonFriend;
@@ -9,7 +10,6 @@ using AetherRemoteCommon.Domain.Network.DeleteFriend;
 using AetherRemoteCommon.Domain.Network.Emote;
 using AetherRemoteCommon.Domain.Network.Login;
 using AetherRemoteCommon.Domain.Network.Speak;
-using Dalamud.Plugin.Services;
 using Microsoft.AspNetCore.SignalR.Client;
 using System;
 using System.Collections.Generic;
@@ -22,7 +22,7 @@ namespace AetherRemoteClient.Providers;
 public class NetworkProvider : IDisposable
 {
     // Inject
-    private readonly IPluginLog logger;
+    private readonly AetherRemoteLogger logger;
 
     // Endpoint
     private const string ConnectionUrl = "http://75.72.17.196:25565/mainHub";
@@ -37,7 +37,7 @@ public class NetworkProvider : IDisposable
     public string? FriendCode { get; private set; } = null;
     public FriendList? FriendList { get; private set; } = null;
 
-    public NetworkProvider(IPluginLog logger)
+    public NetworkProvider(AetherRemoteLogger logger)
     {
         this.logger = logger;
         Connection.Closed += Closed;
@@ -208,9 +208,9 @@ public class NetworkProvider : IDisposable
 
     private async Task<U> InvokeCommand<T, U>(string commandName, T request)
     {
-        logger.Info($"[{commandName}] Request: {request}");
+        logger.Information($"[{commandName}] Request: {request}");
         var response = await Connection.InvokeAsync<U>(commandName, request);
-        logger.Info($"[{commandName}] Response: {response}");
+        logger.Information($"[{commandName}] Response: {response}");
         return response;
     }
 

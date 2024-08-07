@@ -1,5 +1,6 @@
 using AetherRemoteClient.Accessors.Glamourer;
 using AetherRemoteClient.Domain;
+using AetherRemoteClient.Domain.Logger;
 using AetherRemoteClient.Providers;
 using AetherRemoteCommon;
 using Dalamud.Game.ClientState.Objects;
@@ -23,8 +24,8 @@ public class GlamourerModule : IAetherRemoteModule
     private readonly Configuration configuration;
     private readonly GlamourerAccessor glamourerAccessor;
     private readonly NetworkProvider networkProvider;
+    private readonly AetherRemoteLogger logger;
     private readonly IClientState clientState;
-    private readonly IPluginLog logger;
     private readonly ITargetManager targetManager;
 
     // Variables - Glamourer
@@ -37,13 +38,13 @@ public class GlamourerModule : IAetherRemoteModule
     private bool lockoutActive = false;
 
     public GlamourerModule(Configuration configuration, GlamourerAccessor glamourerAccessor, NetworkProvider networkProvider,
-        IClientState clientState, IPluginLog logger, ITargetManager targetManager, ControlTargetManager controlTargetManager, Timer commandLockoutTimer)
+        AetherRemoteLogger logger, IClientState clientState, ITargetManager targetManager, ControlTargetManager controlTargetManager, Timer commandLockoutTimer)
     {
         this.configuration = configuration;
         this.glamourerAccessor = glamourerAccessor;
         this.networkProvider = networkProvider;
-        this.clientState = clientState;
         this.logger = logger;
+        this.clientState = clientState;
         this.targetManager = targetManager;
 
         this.controlTargetManager = controlTargetManager;

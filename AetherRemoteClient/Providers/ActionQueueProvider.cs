@@ -1,5 +1,5 @@
 using AetherRemoteClient.Accessors.Glamourer;
-using AetherRemoteClient.Domain;
+using AetherRemoteClient.Domain.Logger;
 using AetherRemoteCommon.Domain.CommonChatMode;
 using AetherRemoteCommon.Domain.CommonGlamourerApplyType;
 using Dalamud.Plugin.Services;
@@ -12,7 +12,7 @@ namespace AetherRemoteClient.Providers;
 /// <summary>
 /// Queues actions on the main XIV thread.
 /// </summary>
-public class ActionQueueProvider(Chat? chat, GlamourerAccessor glamourerAccessor, IClientState clientState, IPluginLog logger)
+public class ActionQueueProvider(Chat chat, GlamourerAccessor glamourerAccessor, AetherRemoteLogger logger, IClientState clientState)
 {
     // Data
     private readonly ChatActionQueue chatActionQueue = new(logger, clientState, chat);
@@ -42,17 +42,14 @@ public class ActionQueueProvider(Chat? chat, GlamourerAccessor glamourerAccessor
         chatActionQueue.EnqueueAction(action);
     }
 
-    private class ChatActionQueue(IPluginLog logger, IClientState clientState, Chat? chat) : ActionQueue<IChatAction>(logger, clientState)
+    private class ChatActionQueue(AetherRemoteLogger logger, IClientState clientState, Chat chat) : ActionQueue<IChatAction>(logger, clientState)
     {
         private readonly IClientState clientState = clientState;
-        private readonly Chat? chat = chat;
+        private readonly Chat chat = chat;
 
         protected override void Process(IChatAction action)
         {
             if (clientState.LocalPlayer == null)
-                return;
-
-            if (chat == null)
                 return;
 
             chat.SendMessage(action.Build());
@@ -61,7 +58,7 @@ public class ActionQueueProvider(Chat? chat, GlamourerAccessor glamourerAccessor
         }
     }
 
-    private class GlamourerActionQueue(IPluginLog logger, IClientState clientState, GlamourerAccessor glamourerAccessor) : ActionQueue<BecomeAction>(logger, clientState)
+    private class GlamourerActionQueue(AetherRemoteLogger logger, IClientState clientState, GlamourerAccessor glamourerAccessor) : ActionQueue<BecomeAction>(logger, clientState)
     {
         private readonly IClientState clientState = clientState;
         private readonly GlamourerAccessor glamourerAccessor = glamourerAccessor;
@@ -79,14 +76,14 @@ public class ActionQueueProvider(Chat? chat, GlamourerAccessor glamourerAccessor
         }
     }
 
-    private abstract class ActionQueue<T>(IPluginLog logger, IClientState clientState)
+    private abstract class ActionQueue<T>(AetherRemoteLogger logger, IClientState clientState)
     {
         protected virtual int MinProcessTime { get; set; } = 6000;
         protected virtual int MaxProcessTime { get; set; } = 10000;
 
-        private readonly IPluginLog logger = logger;
         private readonly IClientState clientState = clientState;
 
+        private readonly AetherRemoteLogger logger = logger;
         private readonly ConcurrentQueue<T> queue = new();
         private readonly Random random = new();
 
@@ -153,7 +150,7 @@ public class ActionQueueProvider(Chat? chat, GlamourerAccessor glamourerAccessor
             sb.Append(Emote);
             sb.Append(" emote.");
 
-            AetherRemoteLogging.Log(Sender, sb.ToString(), DateTime.Now, LogType.Recieved);
+            // TODO: Actually log properly
         }
     }
 
@@ -185,7 +182,7 @@ public class ActionQueueProvider(Chat? chat, GlamourerAccessor glamourerAccessor
             sb.Append(Data);
             sb.Append("].");
 
-            AetherRemoteLogging.Log(Sender, sb.ToString(), DateTime.Now, LogType.Recieved);
+            // TODO: Actually log properly
         }
     }
 
@@ -244,8 +241,8 @@ public class ActionQueueProvider(Chat? chat, GlamourerAccessor glamourerAccessor
                 }
                 sb.Append('.');
             }
-            
-            AetherRemoteLogging.Log(Sender, sb.ToString(), DateTime.Now, LogType.Recieved);
+
+            // TODO: Actually log properly
         }
     }
 

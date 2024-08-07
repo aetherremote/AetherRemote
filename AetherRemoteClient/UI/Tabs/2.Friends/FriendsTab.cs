@@ -1,5 +1,6 @@
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Events;
+using AetherRemoteClient.Domain.Logger;
 using AetherRemoteClient.Providers;
 using AetherRemoteCommon;
 using AetherRemoteCommon.Domain.CommonFriend;
@@ -25,12 +26,12 @@ public class FriendsTab : ITab
     // Dependencies
     private readonly Configuration configuration;
     private readonly NetworkProvider networkProvider;
-    private readonly IPluginLog logger;
+    private readonly AetherRemoteLogger logger;
 
     // Events
     public static event EventHandler<FriendDeletedEventArgs>? OnFriendDeleted;
 
-    public FriendsTab(Configuration configuration, NetworkProvider networkProvider, IPluginLog logger)
+    public FriendsTab(Configuration configuration, NetworkProvider networkProvider, AetherRemoteLogger logger)
     {
         this.configuration = configuration;
         this.networkProvider = networkProvider;

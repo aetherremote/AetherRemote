@@ -1,3 +1,4 @@
+using AetherRemoteClient.Domain.Logger;
 using AetherRemoteCommon.Domain.CommonGlamourerApplyType;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Ipc;
@@ -10,7 +11,7 @@ namespace AetherRemoteClient.Accessors.Glamourer;
 
 public class GlamourerAccessor : IDisposable
 {
-    private readonly IPluginLog logger;
+    private readonly AetherRemoteLogger logger;
     private readonly ICallGateSubscriber<(int, int)> glamourerApiVersions;
     private readonly ICallGateSubscriber<string, string?> glamourerGetAllCustomization;
     private readonly ICallGateSubscriber<string, string, object> glamourerApplyAll;
@@ -22,7 +23,7 @@ public class GlamourerAccessor : IDisposable
     private readonly CancellationTokenSource source = new();
     private readonly TimeSpan checkGlamourerApiInterval = TimeSpan.FromSeconds(15);
 
-    public GlamourerAccessor(IPluginLog logger, IDalamudPluginInterface pluginInterface)
+    public GlamourerAccessor(AetherRemoteLogger logger, IDalamudPluginInterface pluginInterface)
     {
         this.logger = logger;
 

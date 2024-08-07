@@ -1,8 +1,8 @@
 using AetherRemoteClient.Domain;
+using AetherRemoteClient.Domain.Logger;
 using AetherRemoteClient.Providers;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
-using Dalamud.Plugin.Services;
 using ImGuiNET;
 using System;
 using System.Numerics;
@@ -17,7 +17,7 @@ public class EmoteModule : IAetherRemoteModule
     private readonly Configuration configuration;
     private readonly EmoteProvider emoteProvider;
     private readonly NetworkProvider networkProvider;
-    private readonly IPluginLog logger;
+    private readonly AetherRemoteLogger logger;
 
     // Variables - Emote
     private string emote = "";
@@ -28,7 +28,7 @@ public class EmoteModule : IAetherRemoteModule
     private bool lockoutActive = false;
 
     public EmoteModule(Configuration configuration, EmoteProvider emoteProvider, NetworkProvider networkProvider, 
-        IPluginLog logger, ControlTargetManager controlTargetManager, Timer commandLockoutTimer)
+        AetherRemoteLogger logger, ControlTargetManager controlTargetManager, Timer commandLockoutTimer)
     {
         this.configuration = configuration;
         this.emoteProvider = emoteProvider;

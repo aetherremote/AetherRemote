@@ -1,4 +1,5 @@
 using AetherRemoteClient.Domain;
+using AetherRemoteClient.Domain.Logger;
 using AetherRemoteClient.Providers;
 using AetherRemoteCommon;
 using AetherRemoteCommon.Domain.CommonChatMode;
@@ -22,8 +23,8 @@ public class SpeakModule : IAetherRemoteModule
     // Dependencies
     private readonly Configuration configuration;
     private readonly NetworkProvider networkProvider;
+    private readonly AetherRemoteLogger logger;
     private readonly IClientState clientState;
-    private readonly IPluginLog logger;
     private readonly ITargetManager targetManager;
 
     // Variables - Speak
@@ -36,13 +37,13 @@ public class SpeakModule : IAetherRemoteModule
     private readonly Timer commandLockoutTimer;
     private bool lockoutActive = false;
 
-    public SpeakModule(Configuration configuration, NetworkProvider networkProvider, IClientState clientState, 
-        IPluginLog logger, ITargetManager targetManager, ControlTargetManager controlTargetManager, Timer commandLockoutTimer)
+    public SpeakModule(Configuration configuration, NetworkProvider networkProvider, AetherRemoteLogger logger,
+        IClientState clientState, ITargetManager targetManager, ControlTargetManager controlTargetManager, Timer commandLockoutTimer)
     {
         this.configuration = configuration;
         this.networkProvider = networkProvider;
-        this.clientState = clientState;
         this.logger = logger;
+        this.clientState = clientState;
         this.targetManager = targetManager;
 
         this.controlTargetManager = controlTargetManager;

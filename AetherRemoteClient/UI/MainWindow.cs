@@ -1,5 +1,6 @@
 using AetherRemoteClient.Accessors.Glamourer;
 using AetherRemoteClient.Domain;
+using AetherRemoteClient.Domain.Logger;
 using AetherRemoteClient.Providers;
 using AetherRemoteClient.UI.Tabs.Control;
 using AetherRemoteClient.UI.Tabs.Dashboard;
@@ -38,8 +39,8 @@ public class MainWindow : Window, IDisposable
         EmoteProvider emoteProvider,
         GlamourerAccessor glamourerAccessor,
         NetworkProvider networkProvider,
+        AetherRemoteLogger logger,
         IClientState clientState,
-        IPluginLog logger,
         ITargetManager targetManager
         ) : base($"Aether Remote - Version {Plugin.Version}", MainWindowFlags)
     {
@@ -53,9 +54,9 @@ public class MainWindow : Window, IDisposable
 
         dashboardTab = new DashboardTab(configuration, networkProvider, logger);
         friendsTab = new FriendsTab(configuration, networkProvider, logger);
-        logsTab = new LogsTab();
+        logsTab = new LogsTab(logger);
         settingsTab = new SettingsTab(configuration);
-        controlTab = new ControlTab(configuration, glamourerAccessor, emoteProvider, networkProvider, clientState, logger, targetManager);
+        controlTab = new ControlTab(configuration, glamourerAccessor, emoteProvider, networkProvider, logger, clientState, targetManager);
     }
 
     public override void Draw()

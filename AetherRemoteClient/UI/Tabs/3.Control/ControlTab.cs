@@ -1,6 +1,7 @@
 using AetherRemoteClient.Accessors.Glamourer;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Events;
+using AetherRemoteClient.Domain.Logger;
 using AetherRemoteClient.Providers;
 using AetherRemoteClient.UI.Tabs.Friends;
 using AetherRemoteClient.UI.Tabs.Modules;
@@ -27,9 +28,6 @@ public class ControlTab : ITab
     private static readonly int DefaultWindowPadding = 8;
     private static readonly string DeselectAllButtonText = "Deselect All";
 
-    // Dependencies
-    private readonly NetworkProvider networkProvider;
-
     // Variables
     private bool lockCurrentTargets = false;
 
@@ -46,15 +44,13 @@ public class ControlTab : ITab
     private readonly SpeakModule speakModule;
 
     public ControlTab(Configuration configuration, GlamourerAccessor glamourerAccessor, EmoteProvider emoteProvider, NetworkProvider networkProvider,
-        IClientState clientState, IPluginLog logger, ITargetManager targetManager)
+        AetherRemoteLogger logger, IClientState clientState, ITargetManager targetManager)
     {
-        this.networkProvider = networkProvider;
-
         friendSearchFilter = new(networkProvider, (friend, searchTerm) => { return friend.NoteOrFriendCode.Contains(searchTerm); });
 
         emoteModule = new EmoteModule(configuration, emoteProvider, networkProvider, logger, controlTargetManager, commandLockoutTimer);
-        glamourerModule = new GlamourerModule(configuration, glamourerAccessor, networkProvider, clientState, logger, targetManager, controlTargetManager, commandLockoutTimer);
-        speakModule = new SpeakModule(configuration, networkProvider, clientState, logger, targetManager, controlTargetManager, commandLockoutTimer);
+        glamourerModule = new GlamourerModule(configuration, glamourerAccessor, networkProvider, logger, clientState, targetManager, controlTargetManager, commandLockoutTimer);
+        speakModule = new SpeakModule(configuration, networkProvider, logger, clientState, targetManager, controlTargetManager, commandLockoutTimer);
 
         FriendsTab.OnFriendDeleted += FriendDeleted;
     }
@@ -93,7 +89,7 @@ public class ControlTab : ITab
             var text = selectMode == 0 ? "Single" : "Multi";
             ImGui.SetCursorPosX(style.WindowPadding.X + (MainWindow.FriendListSize.X / 2) - (ImGui.CalcTextSize(text).X / 2) - (style.FramePadding.X / 2));
 
-            ImGui.Text($"{text}");
+            ImGui.Text(text);
 
             ImGui.SameLine(MainWindow.FriendListSize.X - style.WindowPadding.X - style.FramePadding.X - (ImGui.GetFontSize() * 2));
 

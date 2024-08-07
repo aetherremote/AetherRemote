@@ -1,3 +1,4 @@
+using AetherRemoteClient.Domain.Logger;
 using AetherRemoteClient.Providers;
 using AetherRemoteCommon;
 using AetherRemoteCommon.Domain;
@@ -5,7 +6,6 @@ using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Become;
 using AetherRemoteCommon.Domain.Network.Emote;
 using AetherRemoteCommon.Domain.Network.Speak;
-using Dalamud.Plugin.Services;
 using Microsoft.AspNetCore.SignalR.Client;
 using System;
 using System.Linq;
@@ -20,7 +20,7 @@ public class NetworkListener
     private readonly ActionQueueProvider actionQueueProvider;
     private readonly EmoteProvider emoteProvider;
     private readonly NetworkProvider networkProvider;
-    private readonly IPluginLog logger;
+    private readonly AetherRemoteLogger logger;
 
     /// <summary>
     /// Listens for commands from the server. Will also perform validation and enqueue actions to <see cref="ActionQueueProvider"/>
@@ -29,7 +29,7 @@ public class NetworkListener
         ActionQueueProvider actionQueueProvider,
         EmoteProvider emoteProvider,
         NetworkProvider networkProvider, 
-        IPluginLog logger)
+        AetherRemoteLogger logger)
     {
         this.actionQueueProvider = actionQueueProvider;
         this.emoteProvider = emoteProvider;
@@ -57,7 +57,7 @@ public class NetworkListener
         if (validFriend == null)
         {
             var message = $"Filtered out \'Become\' command from {execute.SenderFriendCode} who is not on your friend list";
-            AetherRemoteLogging.Log(execute.SenderFriendCode, message, DateTime.Now, LogType.Error);
+            // TODO: Proper log implementation.
             return;
         }
 
@@ -65,7 +65,7 @@ public class NetworkListener
         if (hasPermission == false)
         {
             var message = $"Filtered out \'Become\' command from {execute.SenderFriendCode} who does not have {execute.GlamourerApplyType} permissions";
-            AetherRemoteLogging.Log(execute.SenderFriendCode, message, DateTime.Now, LogType.Error);
+            // TODO: Proper log implementation.
             return;
         }
         
@@ -78,7 +78,7 @@ public class NetworkListener
         if (validFriend == null)
         {
             var message = $"Filtered out \'Emote\' command from {execute.SenderFriendCode} who is not on your friend list";
-            AetherRemoteLogging.Log(execute.SenderFriendCode, message, DateTime.Now, LogType.Error);
+            // TODO: Proper log implementation.
             return;
         }
 
@@ -86,7 +86,7 @@ public class NetworkListener
         if (hasPermission == false)
         {
             var message = $"Filtered out \'Emote\' command from {execute.SenderFriendCode} who does not have Emote permissions";
-            AetherRemoteLogging.Log(execute.SenderFriendCode, message, DateTime.Now, LogType.Error);
+            // TODO: Proper log implementation.
             return;
         }
 
@@ -94,7 +94,7 @@ public class NetworkListener
         if (validEmote == false)
         {
             var message = $"Filtered out \'Emote\' command from {execute.SenderFriendCode} that contained an invalid emote";
-            AetherRemoteLogging.Log(execute.SenderFriendCode, message, DateTime.Now, LogType.Error);
+            // TODO: Proper log implementation.
             return;
         }
 
@@ -107,7 +107,7 @@ public class NetworkListener
         if (validFriend == null)
         {
             var message = $"Filtered out \'Speak\' command from {execute.SenderFriendCode} who is not on your friend list";
-            AetherRemoteLogging.Log(execute.SenderFriendCode, message, DateTime.Now, LogType.Error);
+            // TODO: Proper log implementation.
             return;
         }
 
@@ -115,7 +115,7 @@ public class NetworkListener
         if (hasPermission == false)
         {
             var message = $"Filtered out \'Speak\' command from {execute.SenderFriendCode} who does not have {execute.ChatMode} permissions";
-            AetherRemoteLogging.Log(execute.SenderFriendCode, message, DateTime.Now, LogType.Error);
+            // TODO: Proper log implementation.
             return;
         }
 
