@@ -36,7 +36,7 @@ public class ControlTab : ITab
 
     // Variables - Friend List
     private string searchInputText = "";
-    private readonly FriendListFilter friendSearchFilter;
+    private readonly ListFilter<Friend> friendSearchFilter;
 
     private readonly ControlTargetManager controlTargetManager = new();
     private readonly EmoteModule emoteModule;
@@ -44,9 +44,9 @@ public class ControlTab : ITab
     private readonly SpeakModule speakModule;
 
     public ControlTab(Configuration configuration, GlamourerAccessor glamourerAccessor, EmoteProvider emoteProvider, NetworkProvider networkProvider,
-        AetherRemoteLogger logger, IClientState clientState, ITargetManager targetManager)
+        AetherRemoteLogger logger, ClientDataManager clientDataManager, IClientState clientState, ITargetManager targetManager)
     {
-        friendSearchFilter = new(networkProvider, (friend, searchTerm) => { return friend.NoteOrFriendCode.Contains(searchTerm); });
+        friendSearchFilter = new(clientDataManager.FriendList.Friends, (friend, searchTerm) => { return friend.NoteOrFriendCode.Contains(searchTerm); });
 
         emoteModule = new EmoteModule(configuration, emoteProvider, networkProvider, logger, controlTargetManager, commandLockoutTimer);
         glamourerModule = new GlamourerModule(configuration, glamourerAccessor, networkProvider, logger, clientState, targetManager, controlTargetManager, commandLockoutTimer);

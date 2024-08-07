@@ -4,16 +4,19 @@ using System.Linq;
 
 namespace AetherRemoteClient.Domain;
 
-public class FriendList(List<Friend> friends)
+public class FriendList()
 {
-    public readonly List<Friend> Friends = friends;
+    /// <summary>
+    /// Local list of <see cref="Friend"></see>
+    /// </summary>
+    public List<Friend> Friends = [];
 
     /// <summary>
     /// Creates a <see cref="Friend"/> and adds them to the friend list
     /// </summary>
     /// <param name="friendCode"></param>
     /// <returns>Friend created</returns>
-    public bool CreateAndAddFriend(string friendCode, bool online = false)
+    public bool Add(string friendCode, bool online = false)
     {
         var exists = Friends.Any(existingFriend => existingFriend.FriendCode == friendCode);
         if (exists == false)
@@ -31,7 +34,7 @@ public class FriendList(List<Friend> friends)
     /// Removes a friend from the friend list
     /// </summary>
     /// <param name="friendCode"></param>
-    public void RemoveFriend(string friendCode)
+    public void Remove(string friendCode)
     {
         Friends.RemoveAll(friend => friend.FriendCode == friendCode);
     }
@@ -41,7 +44,7 @@ public class FriendList(List<Friend> friends)
     /// </summary>
     /// <param name="friendCode"></param>
     /// <returns>Friend if found</returns>
-    public Friend? FindFriend(string friendCode)
+    public Friend? Find(string friendCode)
     {
         return Friends.FirstOrDefault(friend => friend.FriendCode == friendCode);
     }

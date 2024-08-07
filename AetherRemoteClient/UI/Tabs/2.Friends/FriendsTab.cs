@@ -27,17 +27,19 @@ public class FriendsTab : ITab
     private readonly Configuration configuration;
     private readonly NetworkProvider networkProvider;
     private readonly AetherRemoteLogger logger;
+    private readonly ClientDataManager clientDataManager;
 
     // Events
     public static event EventHandler<FriendDeletedEventArgs>? OnFriendDeleted;
 
-    public FriendsTab(Configuration configuration, NetworkProvider networkProvider, AetherRemoteLogger logger)
+    public FriendsTab(Configuration configuration, NetworkProvider networkProvider, AetherRemoteLogger logger, ClientDataManager clientDataManager)
     {
         this.configuration = configuration;
         this.networkProvider = networkProvider;
         this.logger = logger;
+        this.clientDataManager = clientDataManager;
 
-        friendSearchFilter = new(networkProvider, FilterFriend);
+        friendSearchFilter = new(clientDataManager.FriendList.Friends, FilterFriend);
         showAddFriendStateTimer.Elapsed += ResetAddFriendState;
     }
 
@@ -59,7 +61,7 @@ public class FriendsTab : ITab
     /// <summary>
     /// Threaded filter for searching your friend list
     /// </summary>
-    private readonly FriendListFilter friendSearchFilter;
+    private readonly ListFilter<Friend> friendSearchFilter;
 
     /// <summary>
     /// Should the currently editted friend be deleted
@@ -347,7 +349,7 @@ public class FriendsTab : ITab
         // Update the state of adding a friend
         addFriendState = AddFriendState.Attempting;
 
-        var findFriendResult = networkProvider.FriendList?.FindFriend(friendCode);
+        var findFriendResult = clientDataManager.FriendList.Find(friendCode);
         if (findFriendResult != null) // Grumble.. I hate using != but grammatically nothing else makes readable sense..
         {
             logger.Warning($"[AetherRemote] Error adding friend: Already friends");
@@ -365,7 +367,7 @@ public class FriendsTab : ITab
             return;
         }
 
-        var localAddResult = networkProvider.FriendList?.CreateAndAddFriend(friendCode, networkAddResult.Online) ?? false;
+        var localAddResult = clientDataManager.FriendList.Add(friendCode, networkAddResult.Online);
         if (localAddResult == false)
         {
             logger.Error("[AetherRemote] Error adding friend. Desync has occurred.");
@@ -383,7 +385,6 @@ public class FriendsTab : ITab
     {
         if (shouldDeleteFriend == false) return;
         if (friendBeingEditted == null) return;
-        if (networkProvider.FriendList == null) return;
 
         var friendCode = friendBeingEditted.FriendCode;
         var serverDeleteResult = await networkProvider.DeleteFriend(configuration.Secret, friendCode);
@@ -393,7 +394,7 @@ public class FriendsTab : ITab
         // Invoke Event
         OnFriendDeleted?.Invoke(this, new(friendBeingEditted));
         
-        networkProvider.FriendList.RemoveFriend(friendCode);
+        clientDataManager.FriendList.Remove(friendCode);
         friendBeingEditted = null;
     }
 

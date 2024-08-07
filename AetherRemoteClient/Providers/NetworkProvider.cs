@@ -23,6 +23,7 @@ public class NetworkProvider : IDisposable
 {
     // Inject
     private readonly AetherRemoteLogger logger;
+    private readonly ClientDataManager clientDataManager;
 
     // Endpoint
     private const string ConnectionUrl = "http://75.72.17.196:25565/mainHub";
@@ -33,32 +34,23 @@ public class NetworkProvider : IDisposable
     // State
     public ServerConnectionState ConnectionState = ServerConnectionState.Disconnected;
 
-    // Data
-    public string? FriendCode { get; private set; } = null;
-    public FriendList? FriendList { get; private set; } = null;
-
-    public NetworkProvider(AetherRemoteLogger logger)
+    public NetworkProvider(AetherRemoteLogger logger, ClientDataManager clientDataManager)
     {
         this.logger = logger;
+        this.clientDataManager = clientDataManager;
+
         Connection.Closed += Closed;
         Connection.Reconnecting += Reconnecting;
         Connection.Reconnected += Reconnected;
 
         if (Plugin.DeveloperMode)
         {
-            FriendCode = "DevMode";
-
-            var newGuy = new Friend("OnlineFriend8");
-            newGuy.Online = true;
-
-            FriendList = new FriendList([
-                new("OnlineFriend1") { Online = true },
-                new("OnlineFriend2") { Online = false },
-                new("OnlineFriend3") { Online = false },
-                new("OnlineFriend4") { Online = true },
-                new("OnlineFriend5") { Online = false },
-                new("OnlineFriend6") { Online = true },
-                new("OnlineFriend7") { Online = true }]);
+            clientDataManager.FriendCode = "Dev Mode";
+            clientDataManager.FriendList.Add("Friend1", false);
+            clientDataManager.FriendList.Add("Friend2", true);
+            clientDataManager.FriendList.Add("Friend3", true);
+            clientDataManager.FriendList.Add("Friend4", false);
+            clientDataManager.FriendList.Add("Friend5", false);
         }
     }
 
@@ -109,20 +101,14 @@ public class NetworkProvider : IDisposable
 
     private async Task<AsyncResult> LoginToServer(string secret)
     {
-        if (Plugin.DeveloperMode)
-        {
-            FriendCode = "DevMode";
-            return new AsyncResult(true, "DeveloperMode Enabled");
-        }
-
         try
         {
             var request = new LoginRequest(secret);
             var response = await InvokeCommand<LoginRequest, LoginResponse>(Constants.ApiLogin, request);
             if (response.Success)
             {
-                FriendCode = response.FriendCode;
-                FriendList = new(response.FriendList);
+                clientDataManager.FriendCode = response.FriendCode;
+                clientDataManager.FriendList.Friends = response.FriendList;
             }
 
             return new AsyncResult(response.Success, response.Message);
@@ -139,7 +125,8 @@ public class NetworkProvider : IDisposable
             await Connection.StopAsync();
 
         ConnectionState = ServerConnectionState.Disconnected;
-        FriendCode = null;
+        clientDataManager.FriendCode = null;
+        clientDataManager.FriendList.Friends = [];
     }
     #endregion
 

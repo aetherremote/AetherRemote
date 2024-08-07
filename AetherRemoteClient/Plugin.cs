@@ -41,6 +41,7 @@ public sealed class Plugin : IDalamudPlugin
     private SharedUserInterfaces sharedUserInterfaces { get; init; }
     private Chat chat { get; init; }
     private AetherRemoteLogger aetherRemoteLogger { get; init; }
+    private ClientDataManager clientDataManager { get; init; }
 
     // Accessors
     private GlamourerAccessor glamourerAccessor { get; init; }
@@ -75,14 +76,11 @@ public sealed class Plugin : IDalamudPlugin
         configuration = pluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
         configuration.Initialize(pluginInterface);
 
-        // Used in UI events
-        sharedUserInterfaces = new SharedUserInterfaces(logger, pluginInterface);
-
-        // Used to send messages to the server
-        chat = new Chat(sigScanner);
-
-        // Logging wrapper
+        // Instantiate
         aetherRemoteLogger = new AetherRemoteLogger(logger);
+        chat = new Chat(sigScanner);
+        clientDataManager = new ClientDataManager();
+        sharedUserInterfaces = new SharedUserInterfaces(logger, pluginInterface);
 
         // Accessors
         glamourerAccessor = new GlamourerAccessor(aetherRemoteLogger, pluginInterface);
@@ -90,14 +88,14 @@ public sealed class Plugin : IDalamudPlugin
         // Providers
         actionQueueProvider = new ActionQueueProvider(chat, glamourerAccessor, aetherRemoteLogger, clientState);
         emoteProvider = new EmoteProvider(dataManager);
-        networkProvider = new NetworkProvider(aetherRemoteLogger);
+        networkProvider = new NetworkProvider(aetherRemoteLogger, clientDataManager);
 
         // Network Listener
-        networkListener = new NetworkListener(actionQueueProvider, emoteProvider, networkProvider, aetherRemoteLogger);
+        networkListener = new NetworkListener(actionQueueProvider, emoteProvider, networkProvider, aetherRemoteLogger, clientDataManager);
 
         // Windows
         mainWindow = new MainWindow(configuration, emoteProvider, glamourerAccessor, 
-            networkProvider, aetherRemoteLogger, clientState, targetManager);
+            networkProvider, aetherRemoteLogger, clientDataManager, clientState, targetManager);
 
         windowSystem.AddWindow(mainWindow);
 

@@ -15,17 +15,19 @@ public class DashboardTab : ITab
     private readonly Configuration configuration;
     private readonly NetworkProvider networkProvider;
     private readonly AetherRemoteLogger logger;
+    private readonly ClientDataManager clientDataManager;
     
     private static readonly int LoginElementsWidth = 200;
     private static readonly int LoginButtonWidth = 50;
 
     private string secretInputText;
 
-    public DashboardTab(Configuration configuration, NetworkProvider networkProvider, AetherRemoteLogger logger)
+    public DashboardTab(Configuration configuration, NetworkProvider networkProvider, AetherRemoteLogger logger, ClientDataManager clientDataManager)
     {
         this.configuration = configuration;
         this.networkProvider = networkProvider;
         this.logger = logger;
+        this.clientDataManager = clientDataManager;
 
         secretInputText = configuration.Secret;
 
@@ -104,7 +106,7 @@ public class DashboardTab : ITab
         ImGui.SetCursorPosY(windowPadding.Y);
         SharedUserInterfaces.TextCentered("My Friend Code");
 
-        var friendCode = networkProvider.FriendCode ?? "null";
+        var friendCode = clientDataManager.FriendCode;
         var friendCodeSize = ImGui.CalcTextSize(friendCode);
         
         ImGui.SetCursorPosX((width / 2) - (friendCodeSize.X / 2));

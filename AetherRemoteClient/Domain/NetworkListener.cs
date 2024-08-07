@@ -21,6 +21,7 @@ public class NetworkListener
     private readonly EmoteProvider emoteProvider;
     private readonly NetworkProvider networkProvider;
     private readonly AetherRemoteLogger logger;
+    private readonly ClientDataManager clientDataManager;
 
     /// <summary>
     /// Listens for commands from the server. Will also perform validation and enqueue actions to <see cref="ActionQueueProvider"/>
@@ -29,12 +30,14 @@ public class NetworkListener
         ActionQueueProvider actionQueueProvider,
         EmoteProvider emoteProvider,
         NetworkProvider networkProvider, 
-        AetherRemoteLogger logger)
+        AetherRemoteLogger logger,
+        ClientDataManager clientDataManager)
     {
         this.actionQueueProvider = actionQueueProvider;
         this.emoteProvider = emoteProvider;
         this.networkProvider = networkProvider;
         this.logger = logger;
+        this.clientDataManager = clientDataManager;
 
         networkProvider.Connection.On(Constants.ApiOnlineStatus, (OnlineStatusExecute execute) => { SetOnlineStatus(execute); });
         networkProvider.Connection.On(Constants.ApiBecome, (BecomeExecute execute) => { HandleBecome(execute); });
@@ -44,7 +47,7 @@ public class NetworkListener
 
     public void SetOnlineStatus(OnlineStatusExecute execute)
     {
-        var friend = networkProvider.FriendList?.FindFriend(execute.FriendCode);
+        var friend = clientDataManager.FriendList.Find(execute.FriendCode);
         if (friend == null)
             return;
 
@@ -53,7 +56,7 @@ public class NetworkListener
 
     public void HandleBecome(BecomeExecute execute)
     {
-        var validFriend = networkProvider.FriendList?.FindFriend(execute.SenderFriendCode);
+        var validFriend = clientDataManager.FriendList.Find(execute.SenderFriendCode);
         if (validFriend == null)
         {
             var message = $"Filtered out \'Become\' command from {execute.SenderFriendCode} who is not on your friend list";
@@ -74,7 +77,7 @@ public class NetworkListener
 
     public void HandleEmote(EmoteExecute execute)
     {
-        var validFriend = networkProvider.FriendList?.FindFriend(execute.SenderFriendCode);
+        var validFriend = clientDataManager.FriendList.Find(execute.SenderFriendCode);
         if (validFriend == null)
         {
             var message = $"Filtered out \'Emote\' command from {execute.SenderFriendCode} who is not on your friend list";
@@ -103,7 +106,7 @@ public class NetworkListener
 
     public void HandleSpeak(SpeakExecute execute)
     {
-        var validFriend = networkProvider.FriendList?.FindFriend(execute.SenderFriendCode);
+        var validFriend = clientDataManager.FriendList.Find(execute.SenderFriendCode);
         if (validFriend == null)
         {
             var message = $"Filtered out \'Speak\' command from {execute.SenderFriendCode} who is not on your friend list";

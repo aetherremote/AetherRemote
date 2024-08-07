@@ -40,6 +40,7 @@ public class MainWindow : Window, IDisposable
         GlamourerAccessor glamourerAccessor,
         NetworkProvider networkProvider,
         AetherRemoteLogger logger,
+        ClientDataManager clientDataManager,
         IClientState clientState,
         ITargetManager targetManager
         ) : base($"Aether Remote - Version {Plugin.Version}", MainWindowFlags)
@@ -52,11 +53,11 @@ public class MainWindow : Window, IDisposable
 
         this.networkProvider = networkProvider;
 
-        dashboardTab = new DashboardTab(configuration, networkProvider, logger);
-        friendsTab = new FriendsTab(configuration, networkProvider, logger);
+        dashboardTab = new DashboardTab(configuration, networkProvider, logger, clientDataManager);
+        friendsTab = new FriendsTab(configuration, networkProvider, logger, clientDataManager);
         logsTab = new LogsTab(logger);
         settingsTab = new SettingsTab(configuration);
-        controlTab = new ControlTab(configuration, glamourerAccessor, emoteProvider, networkProvider, logger, clientState, targetManager);
+        controlTab = new ControlTab(configuration, glamourerAccessor, emoteProvider, networkProvider, logger, clientDataManager, clientState, targetManager);
     }
 
     public override void Draw()
