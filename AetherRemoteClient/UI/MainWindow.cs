@@ -66,7 +66,7 @@ public class MainWindow : Window, IDisposable
         if (ImGui.BeginTabBar("AetherRemoteMainTabBar"))
         {
             dashboardTab.Draw();
-            if (Plugin.DeveloperMode || networkProvider.ConnectionState == ServerConnectionState.Connected)
+            if (Plugin.DeveloperMode || networkProvider.Connected)
             {
                 friendsTab.Draw();
                 controlTab.Draw();

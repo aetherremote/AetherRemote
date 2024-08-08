@@ -137,11 +137,8 @@ public class GlamourerModule : IAetherRemoteModule
 
         var secret = configuration.Secret;
         var targetNames = string.Join(',', controlTargetManager.TargetNames);
-        var result = await networkProvider.Become(secret, controlTargetManager.Targets, glamourerData, glamourerApplyType);
-        if (result.Success)
-            logger.LogInternal($"Successfully made {targetNames} excute glamourer changes: {glamourerData}");
-        else
-            logger.LogInternal($"Unable to make {targetNames} excute glamourer changes: {glamourerData}");
+        var result = await networkProvider.IssueBecomeCommand(secret, controlTargetManager.Targets, glamourerData, glamourerApplyType);
+        logger.LogInternal($"{(result ? "Successfully made" : "Unable to make")} {targetNames} excute glamourer changes: {glamourerData}");
 
         // Reset glamourer data
         glamourerData = "";

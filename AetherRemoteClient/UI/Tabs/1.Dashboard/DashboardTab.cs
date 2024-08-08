@@ -6,6 +6,8 @@ using Dalamud.Interface.Colors;
 using ImGuiNET;
 using System;
 using System.Numerics;
+using Microsoft.AspNetCore.SignalR.Client;
+using System.Threading.Tasks;
 
 namespace AetherRemoteClient.UI.Tabs.Dashboard;
 
@@ -41,28 +43,15 @@ public class DashboardTab : ITab
         {
             if (ImGui.BeginChild("DashboardArea", Vector2.Zero, true))
             {
-                if (Plugin.DeveloperMode)
-                {
-                    if (ImGui.Button("Toggle"))
-                    {
-                        if (networkProvider.ConnectionState == ServerConnectionState.Connected)
-                            networkProvider.ConnectionState = ServerConnectionState.Disconnected;
-                        else
-                            networkProvider.ConnectionState = ServerConnectionState.Connected;
-                    }
-
-                    ImGui.SameLine();
-                }
-
-                var state = networkProvider.ConnectionState;
+                var state = networkProvider.Connection.State;
                 var color = state switch
                 {
-                    ServerConnectionState.Connected => ImGuiColors.ParsedGreen,
-                    ServerConnectionState.Disconnected => ImGuiColors.DPSRed,
+                    HubConnectionState.Connected => ImGuiColors.ParsedGreen,
+                    HubConnectionState.Disconnected => ImGuiColors.DPSRed,
                     _ => ImGuiColors.DalamudYellow,
                 };
 
-                if (state == ServerConnectionState.Connected)
+                if (state == HubConnectionState.Connected)
                     DrawConnectedMenu();
                 else
                     DrawDisconnectedMenu(state);
@@ -120,9 +109,9 @@ public class DashboardTab : ITab
         SharedUserInterfaces.Tooltip("Copy to Clipboard");
     }
 
-    private void DrawDisconnectedMenu(ServerConnectionState state)
+    private void DrawDisconnectedMenu(HubConnectionState state)
     {
-        if (state == ServerConnectionState.Connecting || state == ServerConnectionState.Reconnecting)
+        if (state == HubConnectionState.Connecting || state == HubConnectionState.Reconnecting)
             ImGui.BeginDisabled();
 
         var shouldLogin = false;
@@ -156,15 +145,14 @@ public class DashboardTab : ITab
             Login();
         }
 
-        if (state == ServerConnectionState.Connecting || state == ServerConnectionState.Reconnecting)
+        if (state == HubConnectionState.Connecting || state == HubConnectionState.Reconnecting)
             ImGui.EndDisabled();
     }
 
-    private async void Login()
+    private void Login()
     {
-        var connectResult = await networkProvider.Connect(configuration.Secret);
-        if (connectResult.Success == false)
-            return;
+        // TODO: Verify correctness of this statement
+        _ = networkProvider.Connect(configuration.Secret);
     }
 
     public void Dispose() { GC.SuppressFinalize(this); }

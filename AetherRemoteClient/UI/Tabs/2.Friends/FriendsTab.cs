@@ -335,7 +335,6 @@ public class FriendsTab : ITab
         ImGui.PopStyleColor();
     }
 
-    // TODO: Update logs to publish to the logs tab
     private async void ProcessAddFriend()
     {
         // If no text
@@ -350,27 +349,24 @@ public class FriendsTab : ITab
         addFriendState = AddFriendState.Attempting;
 
         var findFriendResult = clientDataManager.FriendList.Find(friendCode);
-        if (findFriendResult != null) // Grumble.. I hate using != but grammatically nothing else makes readable sense..
+        if (findFriendResult != null)
         {
-            logger.Warning($"[AetherRemote] Error adding friend: Already friends");
             addFriendState = AddFriendState.Failure;
             StartAddFriendTimer();
             return;
         }
 
-        var networkAddResult = await networkProvider.CreateOrUpdateFriend(configuration.Secret, friendCode);
-        if (networkAddResult.Success == false)
+        var (addFriendResult, friendOnline) = await networkProvider.CreateOrUpdateFriend(configuration.Secret, friendCode);
+        if (addFriendResult == false)
         {
-            logger.Warning ($"[AetherRemote] Error adding friend: {networkAddResult.Message}");
             addFriendState = AddFriendState.Failure;
             StartAddFriendTimer();
             return;
         }
-
-        var localAddResult = clientDataManager.FriendList.Add(friendCode, networkAddResult.Online);
+        
+        var localAddResult = clientDataManager.FriendList.Add(friendCode, friendOnline);
         if (localAddResult == false)
         {
-            logger.Error("[AetherRemote] Error adding friend. Desync has occurred.");
             addFriendState = AddFriendState.Failure;
             StartAddFriendTimer();
             return;
@@ -387,8 +383,7 @@ public class FriendsTab : ITab
         if (friendBeingEditted == null) return;
 
         var friendCode = friendBeingEditted.FriendCode;
-        var serverDeleteResult = await networkProvider.DeleteFriend(configuration.Secret, friendCode);
-        if (serverDeleteResult.Success == false)
+        if (await networkProvider.DeleteFriend(configuration.Secret, friendCode) == false)
             return;
 
         // Invoke Event
@@ -430,8 +425,8 @@ public class FriendsTab : ITab
             allowYell, allowShout, allowTell, allowParty, allowAlliance,
             allowFreeCompany, allowLinkshell, allowCrossworldLinkshell, allowPvPTeam);
 
-        var result = await networkProvider.CreateOrUpdateFriend(configuration.Secret, converted);
-        if (result.Success == false)
+        var (result, _) = await networkProvider.CreateOrUpdateFriend(configuration.Secret, converted);
+        if (result == false)
             return;
         
         friendBeingEditted.Note = friendNote == string.Empty ? null : friendNote;
@@ -442,8 +437,10 @@ public class FriendsTab : ITab
 
     private void SetAllSpeakPermissions(bool enabled)
     {
-        allowSpeak = enabled; allowSay = enabled;
-        allowYell = enabled; allowShout = enabled;
+        allowSpeak = enabled;
+        allowSay = enabled;
+        allowYell = enabled;
+        allowShout = enabled;
         allowTell = enabled;
         allowParty = enabled;
         allowAlliance = enabled;

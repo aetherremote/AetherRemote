@@ -180,11 +180,8 @@ public class SpeakModule : IAetherRemoteModule
 
         var secret = configuration.Secret;
         var targetNames = string.Join(',', controlTargetManager.TargetNames);
-        var result = await networkProvider.Speak(secret, controlTargetManager.Targets, message, chatMode, extra);
-        if (result.Success)
-            logger.LogInternal($"Successfully made {targetNames} say {message} in {chatMode.ToCondensedString()} chat");
-        else
-            logger.LogInternal($"Unable to make {targetNames} say {message} in {chatMode.ToCondensedString()} chat: {result.Message}");
+        var result = await networkProvider.IssueSpeakCommand(secret, controlTargetManager.Targets, message, chatMode, extra);
+        logger.LogInternal($"{(result ? "Successfully made" : "Unable to make")} {targetNames} say {message} in {chatMode.ToCondensedString()} chat");
 
         // Reset message
         message = "";

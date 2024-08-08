@@ -89,11 +89,8 @@ public class EmoteModule : IAetherRemoteModule
 
         var secret = configuration.Secret;
         var targetNames = string.Join(',', controlTargetManager.TargetNames);
-        var result = await networkProvider.Emote(secret, controlTargetManager.Targets, emote);
-        if (result.Success)
-            logger.LogInternal($"Successfully made {targetNames} do the {emote} emote");
-        else
-            logger.LogInternal($"Unable to make {targetNames} do the {emote} emote");
+        var result = await networkProvider.IssueEmoteCommand(secret, controlTargetManager.Targets, emote);
+        logger.LogInternal($"{(result ? "Successfully made" : "Unable to make")} {targetNames} do the {emote} emote");
 
         // Reset emote
         emote = "";

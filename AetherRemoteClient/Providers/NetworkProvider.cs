@@ -30,18 +30,12 @@ public class NetworkProvider : IDisposable
 
     // Network
     public readonly HubConnection Connection = new HubConnectionBuilder().WithUrl(ConnectionUrl).Build();
-
-    // State
-    public ServerConnectionState ConnectionState = ServerConnectionState.Disconnected;
+    public bool Connected => Connection.State == HubConnectionState.Connected;
 
     public NetworkProvider(AetherRemoteLogger logger, ClientDataManager clientDataManager)
     {
         this.logger = logger;
         this.clientDataManager = clientDataManager;
-
-        Connection.Closed += Closed;
-        Connection.Reconnecting += Reconnecting;
-        Connection.Reconnected += Reconnected;
 
         if (Plugin.DeveloperMode)
         {
@@ -55,55 +49,40 @@ public class NetworkProvider : IDisposable
     }
 
     #region === Connect ===
-    public async Task<AsyncResult> Connect(string secret)
+    public async Task<bool> Connect(string secret)
     {
         if (Plugin.DeveloperMode)
-        {
-            ConnectionState = ServerConnectionState.Connected;
-            return new AsyncResult(true, "DeveloperMode Enabled");
-        }
-        
+            return true;
 
         if (Connection.State != HubConnectionState.Disconnected)
-            return new AsyncResult(false, "Pending connection in progress");
+            return false;
 
-        ConnectionState = ServerConnectionState.Connecting;
-
-        var connectionResult = await ConnectToServer();
-        if (connectionResult.Success == false)
+        if (await ConnectToServer() == false) return false;
+        if (await LoginToServer(secret) == false)
         {
-            ConnectionState = ServerConnectionState.Disconnected;
-            return connectionResult;
+            Disconnect();
+            return false;
         }
 
-        var loginResult = await LoginToServer(secret);
-        if (loginResult.Success == false)
-        {
-            ConnectionState = ServerConnectionState.Disconnected;
-            await Task.Run(() => Connection.StopAsync());
-            return loginResult;
-        }
-
-        ConnectionState = ServerConnectionState.Connected;
-        return new AsyncResult(true);
+        return true;
     }
 
-    private async Task<AsyncResult> ConnectToServer()
+    private async Task<bool> ConnectToServer()
     {
         try
         {
             await Task.Run(() => Connection.StartAsync());
 
             if (Connection.State == HubConnectionState.Connected)
-                return new AsyncResult(true);
+                return true;
         }
-        catch (HttpRequestException) { /* Server likely down */ }
-        catch (Exception) { /* Something else */ }
+        catch (HttpRequestException) { logger.Warning($"Unable to connect to the server. Is it down?"); }
+        catch (Exception ex) { logger.Warning($"Unable to connect to the server. {ex.Message}"); }
 
-        return new AsyncResult(false, "Failed to connect to server");
+        return false;
     }
 
-    private async Task<AsyncResult> LoginToServer(string secret)
+    private async Task<bool> LoginToServer(string secret)
     {
         try
         {
@@ -115,11 +94,12 @@ public class NetworkProvider : IDisposable
                 clientDataManager.FriendList.Friends = response.FriendList;
             }
 
-            return new AsyncResult(response.Success, response.Message);
+            return response.Success;
         }
         catch (Exception ex)
         {
-            return new AsyncResult(false, ex.Message);
+            logger.Warning($"Caught exception while attempting to log into the server: {ex.Message}");
+            return false;
         }
     }
 
@@ -128,72 +108,86 @@ public class NetworkProvider : IDisposable
         if (Plugin.DeveloperMode == false)
             await Connection.StopAsync();
 
-        ConnectionState = ServerConnectionState.Disconnected;
         clientDataManager.FriendCode = null;
         clientDataManager.FriendList.Friends = [];
     }
     #endregion
 
     #region === Friend List ===
-    public async Task<ResultWithOnlineStatus> CreateOrUpdateFriend(string secret, string friendCode)
+    public async Task<(bool, bool)> CreateOrUpdateFriend(string secret, string friendCode)
     {
         var friend = new Friend(friendCode);
         return await CreateOrUpdateFriend(secret, friend);
     }
 
-    public async Task<ResultWithOnlineStatus> CreateOrUpdateFriend(string secret, Friend friend)
+    public async Task<(bool, bool)> CreateOrUpdateFriend(string secret, Friend friend)
     {
         if (Plugin.DeveloperMode)
-            return new ResultWithOnlineStatus(true, "DeveloperMode Enabled");
+            return (true, true);
 
         var request = new CreateOrUpdateFriendRequest(secret, friend);
         var response = await InvokeCommand<CreateOrUpdateFriendRequest, CreateOrUpdateFriendResponse>(Constants.ApiCreateOrUpdateFriend, request);
-        return new ResultWithOnlineStatus(response.Success, response.Message, response.Online);
+        if (response.Success == false)
+            logger.Warning($"Unable to add friend {friend.FriendCode}. {response.Message}");
+
+        return (response.Success, response.Online);
     }
 
-    public async Task<AsyncResult> DeleteFriend(string secret, string friendCode)
+    public async Task<bool> DeleteFriend(string secret, string friendCode)
     {
         if (Plugin.DeveloperMode)
-            return new AsyncResult(true, "DeveloperMode Enabled");
+            return true;
 
         var request = new DeleteFriendRequest(secret, friendCode);
         var response = await InvokeCommand<DeleteFriendRequest, DeleteFriendResponse>(Constants.ApiDeleteFriend, request);
-        return new AsyncResult(response.Success, response.Message);
+        if (response.Success == false)
+            logger.Warning($"Unable to delete friend {friendCode}. {response.Message}");
+
+        return response.Success;
     }
     #endregion
 
     #region === Commands ===
-    public async Task<AsyncResult> Become(string secret, List<Friend> targets, string glamourerData, GlamourerApplyType glamourerApplyType)
+    public async Task<bool> IssueBecomeCommand(string secret, List<Friend> targets, string glamourerData, GlamourerApplyType glamourerApplyType)
     {
         if (Plugin.DeveloperMode)
-            return new AsyncResult(true, "DeveloperMode Enabled");
+            return true;
 
         var targetFriendCodes = targets.Select(friend => friend.FriendCode).ToList();
         var request = new BecomeRequest(secret, targetFriendCodes, glamourerData, glamourerApplyType);
         var response = await InvokeCommand<BecomeRequest, BecomeResponse>(Constants.ApiBecome, request);
-        return new AsyncResult(response.Success, response.Message);
+        if (response.Success == false)
+            logger.Warning($"Unable to issue become command. {response.Message}");
+
+        return response.Success;
     }
 
-    public async Task<AsyncResult> Emote(string secret, List<Friend> targets, string emote)
+    public async Task<bool> IssueEmoteCommand(string secret, List<Friend> targets, string emote)
     {
         if (Plugin.DeveloperMode)
-            return new AsyncResult(true, "DeveloperMode Enabled");
+            return true;
 
         var targetFriendCodes = targets.Select(friend => friend.FriendCode).ToList();
         var request = new EmoteRequest(secret, targetFriendCodes, emote);
         var response = await InvokeCommand<EmoteRequest, EmoteResponse>(Constants.ApiEmote, request);
-        return new AsyncResult(response.Success, response.Message);
+        if (response.Success == false)
+            logger.Warning($"Unable to issue emote command. {response.Message}");
+
+        return response.Success;
     }   
 
-    public async Task<AsyncResult> Speak(string secret, List<Friend> targets, string message, ChatMode chatMode, string? extra)
+    public async Task<bool> IssueSpeakCommand(string secret, List<Friend> targets, string message, ChatMode chatMode, string? extra)
     {
         if (Plugin.DeveloperMode)
-            return new AsyncResult(true, "DeveloperMode Enabled");
+            return true;
 
         var targetFriendCodes = targets.Select(friend => friend.FriendCode).ToList();
         var request = new SpeakRequest(secret, targetFriendCodes, message, chatMode, extra);
         var response = await InvokeCommand<SpeakRequest, SpeakResponse>(Constants.ApiSpeak, request);
-        return new AsyncResult(response.Success, response.Message);
+        if (response.Success == false)
+            logger.Warning($"Unable to issue speak command. {response.Message}");
+
+        return response.Success;
     }
     #endregion
 
@@ -208,23 +202,6 @@ public class NetworkProvider : IDisposable
     public async void Dispose()
     {
         GC.SuppressFinalize(this);
-        Connection.Reconnecting -= Reconnecting;
-        Connection.Reconnected -= Reconnected;
         await Connection.DisposeAsync();
-    }
-
-    private async Task Closed(Exception? exception)
-    {
-        await Task.Run(() => { ConnectionState = ServerConnectionState.Disconnected; });
-    }
-
-    private async Task Reconnecting(Exception? exception)
-    {
-        await Task.Run(() => { ConnectionState = ServerConnectionState.Reconnecting; });
-    }
-
-    private async Task Reconnected(string? arg)
-    {
-        await Task.Run(() => { ConnectionState = ServerConnectionState.Connected; });
     }
 }
