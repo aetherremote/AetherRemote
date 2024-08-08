@@ -1,6 +1,7 @@
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Logger;
 using AetherRemoteClient.Providers;
+using AetherRemoteCommon.Domain.CommonChatMode;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using ImGuiNET;
@@ -39,7 +40,7 @@ public class EmoteModule : IAetherRemoteModule
         this.commandLockoutTimer = commandLockoutTimer;
         this.commandLockoutTimer.Elapsed += EndLockout;
 
-        emoteSearchFilter = new(emoteProvider.Emotes, (emote, searchTerm) => { return emote.Contains(searchTerm); });
+        emoteSearchFilter = new(emoteProvider.Emotes, FilterEmote);
     }
 
     public void Draw()
@@ -87,15 +88,12 @@ public class EmoteModule : IAetherRemoteModule
             return;
 
         var secret = configuration.Secret;
+        var targetNames = string.Join(',', controlTargetManager.TargetNames);
         var result = await networkProvider.Emote(secret, controlTargetManager.Targets, emote);
         if (result.Success)
-        {
-            // TODO: Logging
-        }
+            logger.LogInternal($"Successfully made {targetNames} do the {emote} emote");
         else
-        {
-            // TODO: Logging
-        }
+            logger.LogInternal($"Unable to make {targetNames} do the {emote} emote");
 
         // Reset emote
         emote = "";
@@ -119,5 +117,10 @@ public class EmoteModule : IAetherRemoteModule
     {
         commandLockoutTimer.Elapsed -= EndLockout;
         GC.SuppressFinalize(this);
+    }
+
+    public static bool FilterEmote(string emote, string searchTerm)
+    {
+        return emote.Contains(searchTerm);
     }
 }

@@ -58,7 +58,11 @@ public class NetworkProvider : IDisposable
     public async Task<AsyncResult> Connect(string secret)
     {
         if (Plugin.DeveloperMode)
+        {
+            ConnectionState = ServerConnectionState.Connected;
             return new AsyncResult(true, "DeveloperMode Enabled");
+        }
+        
 
         if (Connection.State != HubConnectionState.Disconnected)
             return new AsyncResult(false, "Pending connection in progress");

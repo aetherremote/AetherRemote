@@ -16,6 +16,11 @@ public class ControlTargetManager
     public readonly List<Friend> Targets = [];
 
     /// <summary>
+    /// The names of targets currently selected
+    /// </summary>
+    public List<string> TargetNames => Targets.Select(target => target.NoteOrFriendCode).ToList();
+
+    /// <summary>
     /// The number of targets required to send a command
     /// </summary>
     public readonly int MinimumTargetsRequired = 1;
