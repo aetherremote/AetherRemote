@@ -1,0 +1,9 @@
+.vs/
+obj/
+bin/
+*.user
+AetherRemoteInterface/
+AetherRemoteAdminConsole/
+AetherRemoteServer/Data/
+/AetherRemoteServer/Properties/PublishProfiles
+AetherRemoteServer/.config/dotnet-tools.json
