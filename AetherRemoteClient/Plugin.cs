@@ -27,6 +27,8 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static ISigScanner SigScanner { get; private set; } = null!;
     [PluginService] internal static ITargetManager TargetManager { get; private set; } = null!;
 
+    internal static Configuration Configuration { get; private set; } = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+
     /// <summary>
     /// Plugin command name
     /// </summary>
@@ -55,7 +57,6 @@ public sealed class Plugin : IDalamudPlugin
     // Instantiated
     private Chat chat { get; init; }
     private ClientDataManager clientDataManager { get; init; }
-    private Configuration configuration { get; init; }
     private HistoryLogManager historyLogManager { get; set; }
     private SharedUserInterfaces sharedUserInterfaces { get; init; }
 
@@ -73,9 +74,6 @@ public sealed class Plugin : IDalamudPlugin
 
     public Plugin()
     {
-        // Injected
-        configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
-
         // Instantiate
         chat = new Chat();
         clientDataManager = new ClientDataManager();
@@ -92,7 +90,7 @@ public sealed class Plugin : IDalamudPlugin
 
         // Windows
         windowSystem = new WindowSystem("AetherRemote");
-        mainWindow = new MainWindow(actionQueueProvider, clientDataManager, configuration, emoteProvider, glamourerAccessor, historyLogManager, networkProvider);
+        mainWindow = new MainWindow(actionQueueProvider, clientDataManager, emoteProvider, glamourerAccessor, historyLogManager, networkProvider);
         windowSystem.AddWindow(mainWindow);
 
         CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)

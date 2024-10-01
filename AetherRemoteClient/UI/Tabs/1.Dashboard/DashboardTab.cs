@@ -18,23 +18,18 @@ public class DashboardTab : ITab
 
     // Injected
     private readonly ClientDataManager clientDataManager;
-    private readonly Configuration configuration;
     private readonly NetworkProvider networkProvider;
 
     private string secretInputText;
 
-    public DashboardTab(
-        ClientDataManager clientDataManager,
-        Configuration configuration,
-        NetworkProvider networkProvider)
+    public DashboardTab(ClientDataManager clientDataManager, NetworkProvider networkProvider)
     {
         this.clientDataManager = clientDataManager;
-        this.configuration = configuration;
         this.networkProvider = networkProvider;
 
-        secretInputText = configuration.Secret;
+        secretInputText = Plugin.Configuration.Secret;
 
-        if (configuration.AutoLogin)
+        if (Plugin.Configuration.AutoLogin)
             Login();
     }
 
@@ -133,7 +128,7 @@ public class DashboardTab : ITab
                 shouldLogin = true;
 
             ImGui.SetCursorPosX(centerTextX);
-            if (ImGui.Checkbox("Auto Login", ref configuration.AutoLogin))
+            if (ImGui.Checkbox("Auto Login", ref Plugin.Configuration.AutoLogin))
                 shouldSave = true;
 
             ImGui.SameLine();
@@ -143,14 +138,12 @@ public class DashboardTab : ITab
                 shouldLogin = true;
 
             if (shouldSave)
-            {
-                configuration.Save();
-            }
+                Plugin.Configuration.Save();
 
             if (shouldLogin)
             {
-                configuration.Secret = secretInputText;
-                configuration.Save();
+                Plugin.Configuration.Secret = secretInputText;
+                Plugin.Configuration.Save();
                 Login();
             }
         });
@@ -159,10 +152,10 @@ public class DashboardTab : ITab
     private void Login()
     {
         // Don't auto login if secret is empty
-        if (string.IsNullOrEmpty(configuration.Secret))
+        if (string.IsNullOrEmpty(Plugin.Configuration.Secret))
             return;
 
-        _ = networkProvider.Connect(configuration.Secret);
+        _ = networkProvider.Connect(Plugin.Configuration.Secret);
     }
 
     public void Dispose() => GC.SuppressFinalize(this);

@@ -2,14 +2,9 @@ using AetherRemoteClient.Accessors.Glamourer;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Log;
 using AetherRemoteCommon;
-using AetherRemoteCommon.Domain;
-using AetherRemoteCommon.Domain.CommonChatMode;
-using AetherRemoteCommon.Domain.CommonGlamourerApplyType;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Domain.Network.Commands;
 using Microsoft.AspNetCore.SignalR.Client;
 using System;
-using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
@@ -21,16 +16,13 @@ namespace AetherRemoteClient.Providers;
 
 public class NetworkProvider : IDisposable
 {
-#if DEBUG
-    // Const
+    #if DEBUG
     private const string HubUrl = "https://localhost:5006/primaryHub";
     private const string PostUrl = "https://localhost:5006/api/auth/login";
-#else
-    // Const
+    #else
     private const string HubUrl = "https://foxitsvc.com:5006/primaryHub";
     private const string PostUrl = "https://foxitsvc.com:5006/api/auth/login";
-#endif
-
+    #endif
 
     // Inject
     private readonly ActionQueueProvider actionQueueProvider;
@@ -67,6 +59,41 @@ public class NetworkProvider : IDisposable
         }
     }
 
+    /// <summary>
+    /// Is there a connection to the server
+    /// </summary>
+    public bool Connected => connection != null && connection.State == HubConnectionState.Connected;
+
+    /// <summary>
+    /// The current state of the server connection
+    /// </summary>
+    public HubConnectionState State => connection == null ? HubConnectionState.Disconnected : connection.State;
+
+    /// <summary>
+    /// Invokes a method on the server hub
+    /// </summary>
+    public async Task<U> InvokeCommand<T, U>(string commandName, T request)
+    {
+        if (connection == null)
+        {
+            Plugin.Log.Warning($"Cannot invoke commands while server is disconnected");
+            return Activator.CreateInstance<U>();
+        }
+
+        try
+        {
+            Plugin.Log.Verbose($"[{commandName}] Request: {request}");
+            var response = await connection.InvokeAsync<U>(commandName, request);
+            Plugin.Log.Verbose($"[{commandName}] Response: {response}");
+            return response;
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.Error($"Exception while invoking command: {ex}");
+            return Activator.CreateInstance<U>();
+        }
+    }
+
     // TODO: Cancellation token across requests
     public async Task Connect(string secret)
     {
@@ -76,22 +103,7 @@ public class NetworkProvider : IDisposable
         if (connection != null)
             await Disconnect().ConfigureAwait(false);
 
-        var token = string.Empty;
-        try
-        {
-            using var client = new HttpClient();
-            var payload = new StringContent(JsonSerializer.Serialize(secret), Encoding.UTF8, "application/json");
-            var post = await client.PostAsync(PostUrl, payload).ConfigureAwait(false);
-            if (post.IsSuccessStatusCode == false)
-                return;
-
-            token = await post.Content.ReadAsStringAsync().ConfigureAwait(false);
-        }
-        catch (Exception ex)
-        {
-            Plugin.Log.Warning($"Login post failed: {ex}");
-            return;
-        }
+        var token = await GetToken(secret).ConfigureAwait(false);
 
         try
         {
@@ -142,103 +154,22 @@ public class NetworkProvider : IDisposable
         return true;
     }
 
-    public async Task<(bool, bool)> CreateOrUpdateFriend(string friendCode, UserPermissions permissions = UserPermissions.None)
+    private static async Task<string> GetToken(string secret)
     {
-        if (Plugin.DeveloperMode)
-            return (true, true);
-
-        var request = new CreateOrUpdatePermissionsRequest(friendCode, permissions);
-        var response = await InvokeCommand<CreateOrUpdatePermissionsRequest, CreateOrUpdatePermissionsResponse>(Network.Permissions.CreateOrUpdate, request);
-        if (response.Success == false)
-            Plugin.Log.Warning($"Unable to add friend {friendCode}. {response.Message}");
-
-        return (response.Success, response.Online);
-    }
-
-    public async Task<bool> DeleteFriend(Friend friend)
-    {
-        if (Plugin.DeveloperMode)
-            return true;
-
-        var request = new DeletePermissionsRequest(friend.FriendCode);
-        var response = await InvokeCommand<DeletePermissionsRequest, DeletePermissionsResponse>(Network.Permissions.Delete, request);
-        if (response.Success == false)
-            Plugin.Log.Warning($"Unable to delete friend {friend.FriendCode}. {response.Message}");
-
-        return response.Success;
-    }
-
-    public async Task<bool> IssueEmoteCommand(List<string> targets, string emote)
-    {
-        if (Plugin.DeveloperMode)
-            return true;
-
-        var request = new EmoteRequest(targets, emote);
-        var result = await InvokeCommand<EmoteRequest, EmoteResponse>(Network.Commands.Emote, request);
-        if (result.Success == false)
-            Plugin.Log.Warning($"Issuing emote command unsuccessful: {result.Message}");
-
-        return result.Success;
-    }
-
-    public async Task<bool> IssueTransformCommand(List<string> targets, string glamourerData, GlamourerApplyFlag applyType)
-    {
-        if (Plugin.DeveloperMode)
-            return true;
-
-        var request = new TransformRequest(targets, glamourerData, applyType);
-        var result = await InvokeCommand<TransformRequest, TransformResponse>(Network.Commands.Transform, request);
-        if (result.Success == false)
-            Plugin.Log.Warning($"Issuing transform command unsuccessful: {result.Message}");
-
-        return result.Success;
-    }
-
-    public async Task<bool> IssueSpeakCommand(List<string> targets, string message, ChatMode chatMode, string? extra)
-    {
-        if (Plugin.DeveloperMode)
-            return true;
-
-        var request = new SpeakRequest(targets, message, chatMode, extra);
-        var result = await InvokeCommand<SpeakRequest, SpeakResponse>(Network.Commands.Speak, request);
-        if (result.Success == false)
-            Plugin.Log.Warning($"Issuing speak command unsuccessful: {result.Message}");
-
-        return result.Success;
-    }
-
-    public async Task<(bool, string?)> IssueBodySwapCommand(List<string> targets, string characterData)
-    {
-        if (Plugin.DeveloperMode)
-            return (true, null);
-
-        var request = new BodySwapRequest(targets, characterData);
-        var result = await InvokeCommand<BodySwapRequest, BodySwapResponse>(Network.Commands.BodySwap, request);
-        if (result.Success == false)
-            Plugin.Log.Warning($"Issuing body swap command unsuccessful: {result.Message}");
-
-        return (result.Success, result.CharacterData);
-    }
-
-    private async Task<U> InvokeCommand<T, U>(string commandName, T request)
-    {
-        if (connection == null)
-        {
-            Plugin.Log.Warning($"Cannot invoke commands while server is disconnected");
-            return Activator.CreateInstance<U>();
-        }
-
         try
         {
-            Plugin.Log.Verbose($"[{commandName}] Request: {request}");
-            var response = await connection.InvokeAsync<U>(commandName, request);
-            Plugin.Log.Verbose($"[{commandName}] Response: {response}");
-            return response;
+            using var client = new HttpClient();
+            var payload = new StringContent(JsonSerializer.Serialize(secret), Encoding.UTF8, "application/json");
+            var post = await client.PostAsync(PostUrl, payload).ConfigureAwait(false);
+            if (post.IsSuccessStatusCode == false)
+                return string.Empty;
+
+            return await post.Content.ReadAsStringAsync().ConfigureAwait(false);
         }
         catch (Exception ex)
         {
-            Plugin.Log.Error($"Exception while invoking command: {ex}");
-            return Activator.CreateInstance<U>();
+            Plugin.Log.Warning($"Token post failed: {ex}");
+            return string.Empty;
         }
     }
 
@@ -264,30 +195,6 @@ public class NetworkProvider : IDisposable
     {
         Plugin.Log.Information("Server connection closed, what should we do?");
         return Task.CompletedTask;
-    }
-
-    /// <summary>
-    /// Is there a connection to the server
-    /// </summary>
-    public bool Connected => IsConnected();
-    private bool IsConnected()
-    {
-        if (connection == null)
-            return false;
-
-        return connection.State == HubConnectionState.Connected;
-    }
-
-    /// <summary>
-    /// The current state of the server connection
-    /// </summary>
-    public HubConnectionState State => GetServerState();
-    private HubConnectionState GetServerState()
-    {
-        if (connection == null)
-            return HubConnectionState.Disconnected;
-
-        return connection.State;
     }
 
     public async void Dispose()

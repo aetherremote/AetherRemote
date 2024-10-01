@@ -3,10 +3,12 @@ using AetherRemoteClient.Domain.Log;
 using AetherRemoteClient.Domain.UI;
 using AetherRemoteClient.Providers;
 using AetherRemoteCommon;
+using AetherRemoteCommon.Domain.Network.Commands;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using ImGuiNET;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -82,17 +84,14 @@ public class EmoteModule : IControlTableModule
 
     private async Task ProcessEmoteCommand()
     {
-        if (clientDataManager.TargetManager.Targets.Count > Constraints.MaximumTargetsForInGameOperations)
-            return;
-
-        if ((emote.Length > 0 && emoteProvider.ValidEmote(emote)) == false)
-            return;
+        if (clientDataManager.TargetManager.Targets.Count > Constraints.MaximumTargetsForInGameOperations) return;
+        if ((emote.Length > 0 && emoteProvider.ValidEmote(emote)) == false) return;
 
         // Initiate UI Lockout
         commandLockoutManager.Lock(Constraints.GameCommandCooldownInSeconds);
 
         var targets = clientDataManager.TargetManager.Targets.ToList();
-        var result = await networkProvider.IssueEmoteCommand(targets, emote).ConfigureAwait(false);
+        var result = await IssueEmoteCommand(targets, emote).ConfigureAwait(false);
         if (result)
         {
             var message = $"You issued {string.Join(", ", targets)} to do the {emote} emote";
@@ -107,6 +106,21 @@ public class EmoteModule : IControlTableModule
         {
             // TODO: Make a toast with what went wrong
         }
+    }
+
+    public async Task<bool> IssueEmoteCommand(List<string> targets, string emote)
+    {
+        #pragma warning disable CS0162
+        if (Plugin.DeveloperMode)
+            return true;
+        #pragma warning restore CS0162
+
+        var request = new EmoteRequest(targets, emote);
+        var result = await networkProvider.InvokeCommand<EmoteRequest, EmoteResponse>(Network.Commands.Emote, request);
+        if (result.Success == false)
+            Plugin.Log.Warning($"Issuing emote command unsuccessful: {result.Message}");
+
+        return result.Success;
     }
 
     public void Dispose() => GC.SuppressFinalize(this);

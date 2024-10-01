@@ -4,10 +4,13 @@ using AetherRemoteClient.Domain.Log;
 using AetherRemoteClient.Domain.UI;
 using AetherRemoteClient.Providers;
 using AetherRemoteCommon;
+using AetherRemoteCommon.Domain.CommonGlamourerApplyType;
+using AetherRemoteCommon.Domain.Network.Commands;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using ImGuiNET;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -15,6 +18,9 @@ namespace AetherRemoteClient.UI.Tabs.Modules;
 
 public class ExtraModule : IControlTableModule
 {
+    // Const
+    private const GlamourerApplyFlag TwinningApplyFlags = GlamourerApplyFlag.Once | GlamourerApplyFlag.Customization | GlamourerApplyFlag.Equipment;
+
     // Injected
     private readonly ClientDataManager clientDataManager;
     private readonly CommandLockoutManager commandLockoutManager;
@@ -97,12 +103,17 @@ public class ExtraModule : IControlTableModule
 
     private async Task ProcessTwinning()
     {
-        // Await local data
-        var localData = await GetLocalPlayerData();
-        if (localData.Success == false)
+        var characterName = Plugin.ClientState.LocalPlayer?.Name.ToString();
+        if (characterName == null)
         {
-            // TODO: Toast explaining what went wrong
-            Plugin.Log.Warning($"Unable to process twinning command, {localData.Message}!");
+            Plugin.Log.Warning($"Unable to process twinning command, no local body!");
+            return;
+        }
+
+        var characterData = await glamourerAccessor.GetDesignAsync(characterName).ConfigureAwait(false);
+        if (characterData == null)
+        {
+            Plugin.Log.Warning($"Unable to process twinning command, unable to get glamourer data!");
             return;
         }
 
@@ -110,25 +121,8 @@ public class ExtraModule : IControlTableModule
         commandLockoutManager.Lock(Constraints.ExternalCommandCooldownInSeconds);
 
         var targets = clientDataManager.TargetManager.Targets.ToList();
-        var (successful, newBodyData) = await networkProvider.IssueBodySwapCommand(targets, localData.CharacterData).ConfigureAwait(false);
-        if (successful)
-        {
-            if (newBodyData == null)
-            {
-                // TODO: Toast explaining what went wrong
-                Plugin.Log.Warning("Your new body was lost in the aether during transfer! Tell a developer");
-                return;
-            }
-
-            var result = await glamourerAccessor.ApplyDesignAsync(localData.CharacterName, newBodyData).ConfigureAwait(false);
-            if (result)
-            {
-                var message = $"You issued yourself and {string.Join(", ", targets)} to swap bodies";
-                Plugin.Log.Information(message);
-                historyLogManager.LogHistoryGlamourer(message, newBodyData);
-            }
-        }
-        else
+        var successful = await IssueTransformCommand(targets, characterData, TwinningApplyFlags).ConfigureAwait(false);
+        if (successful == false)
         {
             // TODO: Make a toast with what went wrong
         }
@@ -136,12 +130,17 @@ public class ExtraModule : IControlTableModule
 
     private async Task ProcessBodySwap()
     {
-        // Await local data
-        var localData = await GetLocalPlayerData();
-        if (localData.Success == false)
+        var characterName = Plugin.ClientState.LocalPlayer?.Name.ToString();
+        if (characterName == null)
         {
-            // TODO: Toast explaining what went wrong
-            Plugin.Log.Warning($"Unable to process body swap command, {localData.Message}");
+            Plugin.Log.Warning($"Unable to process body swap command, no local body!");
+            return;
+        }
+
+        var characterData = await glamourerAccessor.GetDesignAsync(characterName).ConfigureAwait(false);
+        if (characterData == null)
+        {
+            Plugin.Log.Warning($"Unable to process body swap command, unable to get glamourer data!");
             return;
         }
 
@@ -149,7 +148,7 @@ public class ExtraModule : IControlTableModule
         commandLockoutManager.Lock(Constraints.ExternalCommandCooldownInSeconds);
 
         var targets = clientDataManager.TargetManager.Targets.ToList();
-        var (successful, newBodyData) = await networkProvider.IssueBodySwapCommand(targets, localData.CharacterData).ConfigureAwait(false);
+        var (successful, newBodyData) = await IssueBodySwapCommand(targets, characterData).ConfigureAwait(false);
         if (successful)
         {
             if (newBodyData == null)
@@ -159,7 +158,7 @@ public class ExtraModule : IControlTableModule
                 return;
             }
 
-            var result = await glamourerAccessor.ApplyDesignAsync(localData.CharacterName, newBodyData).ConfigureAwait(false);
+            var result = await glamourerAccessor.ApplyDesignAsync(characterName, newBodyData).ConfigureAwait(false);
             if (result)
             {
                 var message = $"You issued yourself and {string.Join(", ", targets)} to swap bodies";
@@ -173,37 +172,35 @@ public class ExtraModule : IControlTableModule
         }
     }
 
+    public async Task<bool> IssueTransformCommand(List<string> targets, string glamourerData, GlamourerApplyFlag applyType)
+    {
+        #pragma warning disable CS0162
+        if (Plugin.DeveloperMode)
+            return true;
+        #pragma warning restore CS0162
+
+        var request = new TransformRequest(targets, glamourerData, applyType);
+        var result = await networkProvider.InvokeCommand<TransformRequest, TransformResponse>(Network.Commands.Transform, request);
+        if (result.Success == false)
+            Plugin.Log.Warning($"Issuing transform command unsuccessful: {result.Message}");
+
+        return result.Success;
+    }
+
+    public async Task<(bool, string?)> IssueBodySwapCommand(List<string> targets, string characterData)
+    {
+        #pragma warning disable CS0162
+        if (Plugin.DeveloperMode)
+            return (true, null);
+        #pragma warning restore CS0162
+
+        var request = new BodySwapRequest(targets, characterData);
+        var result = await networkProvider.InvokeCommand<BodySwapRequest, BodySwapResponse>(Network.Commands.BodySwap, request);
+        if (result.Success == false)
+            Plugin.Log.Warning($"Issuing body swap command unsuccessful: {result.Message}");
+
+        return (result.Success, result.CharacterData);
+    }
+
     public void Dispose() => GC.SuppressFinalize(this);
-
-    /// <summary>
-    /// Retrieves local player's name, and glamourer data
-    /// </summary>
-    private async Task<LocalData> GetLocalPlayerData()
-    {
-        var _characterName = Plugin.ClientState.LocalPlayer?.Name.ToString();
-        if (_characterName == null)
-            return new(false, "No local body");
-
-        var _characterData = await glamourerAccessor.GetDesignAsync(_characterName).ConfigureAwait(false);
-        if (_characterData == null)
-            return new(false, "No glamourer data");
-
-        return new(true, string.Empty, _characterName, _characterData);
-    }
-
-    private readonly struct LocalData
-    {
-        public readonly bool Success;
-        public readonly string Message;
-        public readonly string CharacterName;
-        public readonly string CharacterData;
-
-        public LocalData(bool success, string message = "", string characterName = "", string characterData = "")
-        {
-            Success = success;
-            Message = message;
-            CharacterName = characterName;
-            CharacterData = characterData;
-        }
-    }
 }

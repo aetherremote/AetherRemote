@@ -4,10 +4,12 @@ using AetherRemoteClient.Domain.UI;
 using AetherRemoteClient.Providers;
 using AetherRemoteCommon;
 using AetherRemoteCommon.Domain.CommonChatMode;
+using AetherRemoteCommon.Domain.Network.Commands;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using ImGuiNET;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -182,7 +184,7 @@ public class SpeakModule : IControlTableModule
         commandLockoutManager.Lock(Constraints.GameCommandCooldownInSeconds);
 
         var targets = clientDataManager.TargetManager.Targets.ToList();
-        var result = await networkProvider.IssueSpeakCommand(targets, message, chatMode, extra).ConfigureAwait(false);
+        var result = await IssueSpeakCommand(targets, message, chatMode, extra).ConfigureAwait(false);
         if (result)
         {
             var targetNames = string.Join(", ", targets);
@@ -204,6 +206,21 @@ public class SpeakModule : IControlTableModule
         {
             // TODO: Make a toast with what went wrong
         }
+    }
+
+    public async Task<bool> IssueSpeakCommand(List<string> targets, string message, ChatMode chatMode, string? extra)
+    {
+        #pragma warning disable CS0162
+        if (Plugin.DeveloperMode)
+            return true;
+        #pragma warning restore CS0162
+
+        var request = new SpeakRequest(targets, message, chatMode, extra);
+        var result = await networkProvider.InvokeCommand<SpeakRequest, SpeakResponse>(Network.Commands.Speak, request);
+        if (result.Success == false)
+            Plugin.Log.Warning($"Issuing speak command unsuccessful: {result.Message}");
+
+        return result.Success;
     }
 
     public void Dispose() => GC.SuppressFinalize(this);

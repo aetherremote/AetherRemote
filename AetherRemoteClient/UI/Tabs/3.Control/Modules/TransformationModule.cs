@@ -5,10 +5,12 @@ using AetherRemoteClient.Domain.UI;
 using AetherRemoteClient.Providers;
 using AetherRemoteCommon;
 using AetherRemoteCommon.Domain.CommonGlamourerApplyType;
+using AetherRemoteCommon.Domain.Network.Commands;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using ImGuiNET;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -141,7 +143,7 @@ public class TransformationModule : IControlTableModule
         commandLockoutManager.Lock(Constraints.ExternalCommandCooldownInSeconds);
 
         var targets = clientDataManager.TargetManager.Targets.ToList();
-        var result = await networkProvider.IssueTransformCommand(targets, glamourerData, glamourerApplyFlags).ConfigureAwait(false);
+        var result = await IssueTransformCommand(targets, glamourerData, glamourerApplyFlags).ConfigureAwait(false);
         if (result)
         {
             var targetNames = string.Join(", ", targets);
@@ -181,6 +183,21 @@ public class TransformationModule : IControlTableModule
             return;
 
         glamourerData = await glamourerAccessor.GetDesignAsync(targetName).ConfigureAwait(false) ?? string.Empty;
+    }
+
+    public async Task<bool> IssueTransformCommand(List<string> targets, string glamourerData, GlamourerApplyFlag applyType)
+    {
+        #pragma warning disable CS0162
+        if (Plugin.DeveloperMode)
+            return true;
+        #pragma warning restore CS0162
+
+        var request = new TransformRequest(targets, glamourerData, applyType);
+        var result = await networkProvider.InvokeCommand<TransformRequest, TransformResponse>(Network.Commands.Transform, request);
+        if (result.Success == false)
+            Plugin.Log.Warning($"Issuing transform command unsuccessful: {result.Message}");
+
+        return result.Success;
     }
 
     public void Dispose() => GC.SuppressFinalize(this);

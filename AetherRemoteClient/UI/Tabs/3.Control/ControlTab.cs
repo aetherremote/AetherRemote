@@ -25,7 +25,6 @@ public class ControlTab : ITab
 
     // Injected
     private readonly ClientDataManager clientDataManager;
-    private readonly Configuration configuration;
 
     // Instantiated
     private readonly CommandLockoutManager commandLockoutManager = new();
@@ -43,14 +42,12 @@ public class ControlTab : ITab
 
     public ControlTab(
         ClientDataManager clientDataManager,
-        Configuration configuration,
         EmoteProvider emoteProvider,
         GlamourerAccessor glamourerAccessor,
         HistoryLogManager historyLogManager,
         NetworkProvider networkProvider)
     {
         this.clientDataManager = clientDataManager;
-        this.configuration = configuration;
 
         friendListFilter = new ListFilter<Friend>(clientDataManager.FriendsList.Friends, FilterFriends);
 
@@ -226,7 +223,7 @@ public class ControlTab : ITab
     private bool FilterFriends(Friend friend, string searchTerm)
     {
         var containedInNote = false;
-        if (configuration.Notes.TryGetValue(searchTerm, out var note))
+        if (Plugin.Configuration.Notes.TryGetValue(searchTerm, out var note))
             containedInNote = note.Contains(searchTerm, StringComparison.OrdinalIgnoreCase);
 
         return containedInNote || friend.FriendCode.Contains(searchTerm, StringComparison.OrdinalIgnoreCase);

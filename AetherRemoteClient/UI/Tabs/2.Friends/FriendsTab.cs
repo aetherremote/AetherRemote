@@ -3,43 +3,30 @@ using AetherRemoteClient.Domain.UI;
 using AetherRemoteClient.Providers;
 using AetherRemoteCommon;
 using AetherRemoteCommon.Domain;
+using AetherRemoteCommon.Domain.Network;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Threading.Tasks;
 
 namespace AetherRemoteClient.UI.Tabs.Friends;
 
-public class FriendsTab : ITab
+public class FriendsTab(ClientDataManager clientDataManager, NetworkProvider networkProvider) : ITab
 {
     // Constants
     private static readonly Vector2 FriendListPadding = new(0, 2);
     private static readonly Vector2 RoundButtonSize = new(40, 40);
     private static readonly Vector2 SmallButtonSize = new(24, 0);
-    private static readonly Vector4 IconOnlineColor = ImGuiColors.ParsedGreen;
-    private static readonly Vector4 IconOfflineColor = ImGuiColors.DPSRed;
 
     // Injected
-    private readonly ClientDataManager clientDataManager;
-    private readonly Configuration configuration;
-    private readonly NetworkProvider networkProvider;
+    private readonly ClientDataManager clientDataManager = clientDataManager;
+    private readonly NetworkProvider networkProvider = networkProvider;
 
     // Instantiated
-    private readonly ListFilter<Friend> friendListFilter;
-
-    public FriendsTab(
-        ClientDataManager clientDataManager,
-        Configuration configuration,
-        NetworkProvider networkProvider)
-    {
-        this.clientDataManager = clientDataManager;
-        this.configuration = configuration;
-        this.networkProvider = networkProvider;
-
-        friendListFilter = new ListFilter<Friend>(clientDataManager.FriendsList.Friends, FilterFriends);
-    }
+    private readonly ListFilter<Friend> friendListFilter = new(clientDataManager.FriendsList.Friends, FilterFriends);
 
     // Input text reference for adding a friend
     private string addFriendInputText = "";
@@ -59,13 +46,10 @@ public class FriendsTab : ITab
         var style = ImGui.GetStyle();
 
         // Reset
-        shouldProcessAddFriend = false;
-        shouldProcessSaveFriend = false;
-        shouldProcessDeleteFriend = false;        
+        shouldProcessAddFriend = shouldProcessSaveFriend = shouldProcessDeleteFriend = false;
 
         // The height of the footer containing the friend code input text and the add friend button
-        var addFriendButtonSize = ImGui.CalcTextSize("Add Friend");
-        var footerHeight = (addFriendButtonSize.Y + (style.FramePadding.Y * 2) + style.ItemSpacing.Y) * 2;
+        var footerHeight = (ImGui.CalcTextSize("Add Friend").Y + (style.FramePadding.Y * 2) + style.ItemSpacing.Y) * 2;
 
         if (ImGui.BeginTabItem("Friends"))
         {
@@ -76,9 +60,8 @@ public class FriendsTab : ITab
 
             // Save the cursor at the bottom of the search input text before calling ImGui.SameLine for use later
             var bottomOfSearchInputText = ImGui.GetCursorPosY();
-
             ImGui.SameLine();
-            //
+
             // Draw the settings area beside the search bar using the remaining space
             if (ImGui.BeginChild("FriendSettingsArea", Vector2.Zero, true))
             {
@@ -93,10 +76,29 @@ public class FriendsTab : ITab
             // By setting the Y value as negative, the window will be that many pixels up from the bottom
             if (ImGui.BeginChild("FriendListArea", new Vector2(MainWindow.FriendListSize.X, -1 * footerHeight), true))
             {
-                DrawFriendList();
+                var onlineFriends = new List<Friend>();
+                var offlineFriends = new List<Friend>();
+                foreach (var friend in friendListFilter.List)
+                    (friend.Online ? onlineFriends : offlineFriends).Add(friend);
+
+                if (ImGui.TreeNodeEx($"Online ({onlineFriends.Count})", ImGuiTreeNodeFlags.DefaultOpen))
+                {
+                    for (var i = 0; i < onlineFriends.Count; i++)
+                        DrawSelectableFriend(onlineFriends[i]);
+
+                    ImGui.TreePop();
+                }
+
+                if (ImGui.TreeNodeEx($"Offline ({offlineFriends.Count})", ImGuiTreeNodeFlags.DefaultOpen))
+                {
+                    for (var i = 0; i < offlineFriends.Count; i++)
+                        DrawSelectableFriend(offlineFriends[i]);
+
+                    ImGui.TreePop();
+                }
+
                 ImGui.EndChild();
             }
-
             ImGui.PopStyleVar();
 
             ImGui.SetNextItemWidth(MainWindow.FriendListSize.X);
@@ -112,32 +114,6 @@ public class FriendsTab : ITab
         if (shouldProcessAddFriend) ProcessAddFriend();
         if (shouldProcessSaveFriend) ProcessSaveFriend();
         if (shouldProcessDeleteFriend) ProcessDeleteFriend();
-    }
-
-    private void DrawFriendList()
-    {
-        var onlineFriends = new List<Friend>();
-        var offlineFriends = new List<Friend>();
-        foreach (var friend in friendListFilter.List)
-        {
-            (friend.Online ? onlineFriends : offlineFriends).Add(friend);
-        }
-        
-        if (ImGui.TreeNodeEx($"Online ({onlineFriends.Count})", ImGuiTreeNodeFlags.DefaultOpen))
-        {
-            for (var i = 0; i < onlineFriends.Count; i++)
-                DrawSelectableFriend(onlineFriends[i]);
-
-            ImGui.TreePop();
-        }
-
-        if (ImGui.TreeNodeEx($"Offline ({offlineFriends.Count})", ImGuiTreeNodeFlags.DefaultOpen))
-        {
-            for (var i = 0; i < offlineFriends.Count; i++)
-                DrawSelectableFriend(offlineFriends[i]);
-
-            ImGui.TreePop();
-        }
     }
 
     private void DrawFriendSetting()
@@ -275,12 +251,6 @@ public class FriendsTab : ITab
 
             ImGui.PopStyleVar();
         }
-
-        if (shouldProcessDeleteFriend)
-            ProcessDeleteFriend();
-
-        if (shouldProcessSaveFriend)
-            ProcessSaveFriend();
     }
 
     private void DrawSelectableFriend(Friend friend)
@@ -291,21 +261,19 @@ public class FriendsTab : ITab
         // Draw Selectable Text
         if (onlineStatus == false) ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.DalamudGrey);
         if (ImGui.Selectable($"{friend.FriendCode}", focusedFriend == friend, ImGuiSelectableFlags.SpanAllColumns))
-            FocusFriend(friend);
+        {
+            focusedFriend = friend;
+            focusedFriendNote = Plugin.Configuration.Notes.TryGetValue(friend.FriendCode, out var note) ? note : string.Empty;
+            focusedPermissions = ConvertUserPermissionsToBooleans(friend.Permissions);
+        }
+
         if (onlineStatus == false) ImGui.PopStyleColor();
 
         // Draw Icon
         ImGui.SameLine(8);
-        ImGui.PushStyleColor(ImGuiCol.Text, onlineStatus ? IconOnlineColor : IconOfflineColor);
+        ImGui.PushStyleColor(ImGuiCol.Text, onlineStatus ? ImGuiColors.ParsedGreen : ImGuiColors.DPSRed);
         SharedUserInterfaces.Icon(FontAwesomeIcon.User);
         ImGui.PopStyleColor();
-    }
-
-    private void FocusFriend(Friend friend)
-    {
-        focusedFriend = friend;
-        focusedFriendNote = configuration.Notes.TryGetValue(friend.FriendCode, out var note) ? note : string.Empty;
-        focusedPermissions = ConvertUserPermissionsToBooleans(friend.Permissions);
     }
 
     private async void ProcessAddFriend()
@@ -313,28 +281,25 @@ public class FriendsTab : ITab
         var friendCode = addFriendInputText;
         addFriendInputText = "";
 
-        if (string.IsNullOrEmpty(friendCode))
-            return;
+        if (string.IsNullOrEmpty(friendCode)) return;
+        if (clientDataManager.FriendsList.FindFriend(friendCode) != null) return;
 
-        if (clientDataManager.FriendsList.FindFriend(friendCode) != null)
-            return;
-
-        var (success, online) = await networkProvider.CreateOrUpdateFriend(friendCode);
+        var (success, online) = await CreateOrUpdateFriend(friendCode);
         if (success)
             clientDataManager.FriendsList.CreateOrUpdateFriend(friendCode, online);
     }
 
     private async void ProcessSaveFriend()
     {
-        // Safety
+        // Guard
         if (focusedFriend == null) return;
 
         // Always save the note
-        configuration.Notes[focusedFriend.FriendCode] = focusedFriendNote;
+        Plugin.Configuration.Notes[focusedFriend.FriendCode] = focusedFriendNote;
 
         // Convert permissions back to UserPermissions
         var permissions = ConvertBooleansToUserPermissions(focusedPermissions);
-        var (success, online) = await networkProvider.CreateOrUpdateFriend(focusedFriend.FriendCode, permissions).ConfigureAwait(false);
+        var (success, online) = await CreateOrUpdateFriend(focusedFriend.FriendCode, permissions).ConfigureAwait(false);
         if (success)
         {
             // Only set locally if success on server
@@ -343,18 +308,48 @@ public class FriendsTab : ITab
         }
     }
 
+    public async Task<(bool, bool)> CreateOrUpdateFriend(string friendCode, UserPermissions permissions = UserPermissions.None)
+    {
+        #pragma warning disable CS0162
+        if (Plugin.DeveloperMode)
+            return (true, true);
+        #pragma warning restore CS0162
+
+        var request = new CreateOrUpdatePermissionsRequest(friendCode, permissions);
+        var response = await networkProvider.InvokeCommand<CreateOrUpdatePermissionsRequest, CreateOrUpdatePermissionsResponse>(Network.Permissions.CreateOrUpdate, request);
+        if (response.Success == false)
+            Plugin.Log.Warning($"Unable to add friend {friendCode}. {response.Message}");
+
+        return (response.Success, response.Online);
+    }
+
     private async void ProcessDeleteFriend()
     {
-        // Safety
+        // Guard
         if (focusedFriend == null) return;
 
-        var success = await networkProvider.DeleteFriend(focusedFriend);
+        var success = await DeleteFriend(focusedFriend);
         if (success)
             clientDataManager.FriendsList.DeleteFriend(focusedFriend.FriendCode);
 
         focusedFriend = null;
         focusedFriendNote = string.Empty;
         focusedPermissions = [];
+    }
+
+    public async Task<bool> DeleteFriend(Friend friend)
+    {
+        #pragma warning disable CS0162
+        if (Plugin.DeveloperMode)
+            return true;
+        #pragma warning restore CS0162
+
+        var request = new DeletePermissionsRequest(friend.FriendCode);
+        var response = await networkProvider.InvokeCommand<DeletePermissionsRequest, DeletePermissionsResponse>(Network.Permissions.Delete, request);
+        if (response.Success == false)
+            Plugin.Log.Warning($"Unable to delete friend {friend.FriendCode}. {response.Message}");
+
+        return response.Success;
     }
 
     /// <summary>
@@ -371,10 +366,8 @@ public class FriendsTab : ITab
     /// </summary>
     private bool PendingChanges()
     {
-        if (focusedFriend == null)
-            return false;
-
-        if (focusedFriendNote != (configuration.Notes.TryGetValue(focusedFriend.FriendCode, out var note) ? note : string.Empty))
+        if (focusedFriend == null) return false;
+        if (focusedFriendNote != (Plugin.Configuration.Notes.TryGetValue(focusedFriend.FriendCode, out var note) ? note : string.Empty))
             return true;
 
         var permissions = ConvertBooleansToUserPermissions(focusedPermissions);
@@ -392,9 +385,7 @@ public class FriendsTab : ITab
         var length = Enum.GetValues(typeof(UserPermissions)).Length;
         var result = new bool[length];
         for(var i = 0; i < length; i++)
-        {
             result[i] = ((int)permissions & (1 << i)) != 0;
-        }
 
         return result;
     }
@@ -406,9 +397,8 @@ public class FriendsTab : ITab
     {
         var result = UserPermissions.None;
         for (var i = 0; i < permissions.Length; i++)
-        {
-            if (permissions[i]) result |= (UserPermissions)(1 << i);
-        }
+            if (permissions[i])
+                result |= (UserPermissions)(1 << i);
 
         return result;
     }
@@ -432,10 +422,10 @@ public class FriendsTab : ITab
 
     public void Dispose() => GC.SuppressFinalize(this);
 
-    private bool FilterFriends(Friend friend, string searchTerm)
+    private static bool FilterFriends(Friend friend, string searchTerm)
     {
         var containedInNote = false;
-        if (configuration.Notes.TryGetValue(searchTerm, out var note))
+        if (Plugin.Configuration.Notes.TryGetValue(searchTerm, out var note))
             containedInNote = note.Contains(searchTerm, StringComparison.OrdinalIgnoreCase);
 
         return containedInNote || friend.FriendCode.Contains(searchTerm, StringComparison.OrdinalIgnoreCase);

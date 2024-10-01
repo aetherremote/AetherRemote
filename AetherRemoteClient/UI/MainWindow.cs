@@ -33,7 +33,6 @@ public class MainWindow : Window, IDisposable
     public MainWindow(
         ActionQueueProvider actionQueueProvider,
         ClientDataManager clientDataManager,
-        Configuration configuration,
         EmoteProvider emoteProvider,
         GlamourerAccessor glamourerAccessor,
         HistoryLogManager historyLogManager,
@@ -48,11 +47,11 @@ public class MainWindow : Window, IDisposable
 
         this.networkProvider = networkProvider;
 
-        dashboardTab = new DashboardTab(clientDataManager, configuration, networkProvider);
-        friendsTab = new FriendsTab(clientDataManager, configuration, networkProvider);
-        controlTab = new ControlTab(clientDataManager, configuration, emoteProvider, glamourerAccessor, historyLogManager, networkProvider);
+        dashboardTab = new DashboardTab(clientDataManager, networkProvider);
+        friendsTab = new FriendsTab(clientDataManager, networkProvider);
+        controlTab = new ControlTab(clientDataManager, emoteProvider, glamourerAccessor, historyLogManager, networkProvider);
         historyTab = new HistoryTab(historyLogManager);
-        settingsTab = new SettingsTab(actionQueueProvider, clientDataManager, configuration);
+        settingsTab = new SettingsTab(actionQueueProvider, clientDataManager);
     }
 
     public override void Draw()
@@ -60,7 +59,7 @@ public class MainWindow : Window, IDisposable
         if (ImGui.BeginTabBar("AetherRemoteMainTabBar"))
         {
             dashboardTab.Draw();
-            if (Plugin.DeveloperMode || networkProvider.Connected)
+            if (networkProvider.Connected || Plugin.DeveloperMode)
             {
                 friendsTab.Draw();
                 controlTab.Draw();

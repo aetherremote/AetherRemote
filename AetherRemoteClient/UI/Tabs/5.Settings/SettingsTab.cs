@@ -8,21 +8,10 @@ using System.Numerics;
 
 namespace AetherRemoteClient.UI.Tabs.Settings;
 
-public class SettingsTab : ITab
+public class SettingsTab(ActionQueueProvider actionQueueProvider, ClientDataManager clientDataManager) : ITab
 {
-    private readonly ActionQueueProvider actionQueueProvider;
-    private readonly ClientDataManager clientDataManager;
-    private readonly Configuration configuration;
-
-    public SettingsTab(
-        ActionQueueProvider actionQueueProvider,
-        ClientDataManager clientDataManager,
-        Configuration configuration)
-    {
-        this.actionQueueProvider = actionQueueProvider;
-        this.clientDataManager = clientDataManager;
-        this.configuration = configuration;
-    }
+    private readonly ActionQueueProvider actionQueueProvider = actionQueueProvider;
+    private readonly ClientDataManager clientDataManager = clientDataManager;
 
     public void Draw()
     {
@@ -32,7 +21,7 @@ public class SettingsTab : ITab
             {
                 SharedUserInterfaces.MediumText("General Settings");
 
-                ImGui.Checkbox("Auto Login", ref configuration.AutoLogin);
+                ImGui.Checkbox("Auto Login", ref Plugin.Configuration.AutoLogin);
                 SharedUserInterfaces.Tooltip("Should the plugin automatically connect to the server?");
 
                 SharedUserInterfaces.MediumText("Emergency Actions");

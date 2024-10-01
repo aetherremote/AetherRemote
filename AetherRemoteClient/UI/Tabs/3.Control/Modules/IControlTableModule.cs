@@ -1,6 +1,3 @@
-using AetherRemoteClient.Domain.UI;
-using Dalamud.Interface;
-using ImGuiNET;
 using System;
 
 namespace AetherRemoteClient.UI.Tabs.Modules;
