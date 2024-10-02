@@ -35,7 +35,19 @@ public class ClientDataManager : IDisposable
         FriendCode = null;
         SafeMode = false;
         FriendsList = new();
-        TargetManager = new(FriendsList);
+        TargetManager = new();
+
+#pragma warning disable CS0162
+        if (Plugin.DeveloperMode)
+        {
+            FriendCode = "Dev Mode";
+            FriendsList.CreateOrUpdateFriend("Friend1", false);
+            FriendsList.CreateOrUpdateFriend("Friend2", true);
+            FriendsList.CreateOrUpdateFriend("Friend3", true);
+            FriendsList.CreateOrUpdateFriend("Friend4", false);
+            FriendsList.CreateOrUpdateFriend("Friend5", false);
+        }
+#pragma warning restore CS0162
     }
 
     public void Dispose()

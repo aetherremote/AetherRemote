@@ -27,7 +27,7 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static ISigScanner SigScanner { get; private set; } = null!;
     [PluginService] internal static ITargetManager TargetManager { get; private set; } = null!;
 
-    internal static Configuration Configuration { get; private set; } = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+    internal static Configuration Configuration { get; private set; } = null!;
 
     /// <summary>
     /// Plugin command name
@@ -74,6 +74,8 @@ public sealed class Plugin : IDalamudPlugin
 
     public Plugin()
     {
+        Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+
         // Instantiate
         chat = new Chat();
         clientDataManager = new ClientDataManager();

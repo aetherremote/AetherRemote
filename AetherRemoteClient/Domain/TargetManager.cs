@@ -1,4 +1,3 @@
-using AetherRemoteClient.Domain.Events;
 using System;
 using System.Collections.Immutable;
 using System.Linq;
@@ -10,18 +9,6 @@ namespace AetherRemoteClient.Domain;
 /// </summary>
 public class TargetManager : IDisposable
 {
-    // Injected
-    private readonly FriendsList friendsList;
-
-    /// <summary>
-    /// <inheritdoc cref="TargetManager"/>
-    /// </summary>
-    public TargetManager(FriendsList friendsList)
-    {
-        this.friendsList = friendsList;
-        this.friendsList.OnFriendDeleted += HandleFriendDeleted;
-    }
-
     /// <summary>
     /// List of target friend
     /// </summary>
@@ -72,21 +59,14 @@ public class TargetManager : IDisposable
     }
 
     /// <summary>
+    /// Deselects friend from target list
+    /// </summary>
+    public void Deselect(string friendCode) => Targets = Targets.Remove(friendCode);
+
+    /// <summary>
     /// Deselects all friend codes
     /// </summary>
     public void Clear() => Targets.Clear();
 
-    /// <summary>
-    /// Handle event fired when a friend is deleted
-    /// </summary>
-    private void HandleFriendDeleted(object? sender, FriendDeletedEventArgs e)
-    {
-        Targets = Targets.Remove(e.Friend.FriendCode);
-    }
-
-    public void Dispose()
-    {
-        friendsList.OnFriendDeleted -= HandleFriendDeleted;
-        GC.SuppressFinalize(this);
-    }
+    public void Dispose() => GC.SuppressFinalize(this);
 }

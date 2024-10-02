@@ -2,7 +2,6 @@ using AetherRemoteClient.Domain.Events;
 using AetherRemoteCommon.Domain;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace AetherRemoteClient.Domain;
 
@@ -20,6 +19,11 @@ public class FriendsList
     /// Fired when a friend is deleted from the friends list using <see cref="DeleteFriend"/>
     /// </summary>
     public event EventHandler<FriendDeletedEventArgs>? OnFriendDeleted;
+
+    /// <summary>
+    /// Fired when the friends list is cleared
+    /// </summary>
+    public event EventHandler<FriendsListDeletedEventArgs>? OnFriendsListCleared;
 
     /// <summary>
     /// Converts a permission map from the server into friends list format
@@ -78,6 +82,15 @@ public class FriendsList
 
         Friends.Remove(friend);
         OnFriendDeleted?.Invoke(this, new(friend));
+    }
+
+    /// <summary>
+    /// Clears the friends list
+    /// </summary>
+    public void Clear()
+    {
+        Friends = [];
+        OnFriendsListCleared?.Invoke(this, new());
     }
 
     /// <summary>

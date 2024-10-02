@@ -1,4 +1,5 @@
 using AetherRemoteClient.Domain;
+using AetherRemoteClient.Domain.Events;
 using AetherRemoteClient.Domain.UI;
 using AetherRemoteClient.Providers;
 using AetherRemoteCommon;
@@ -14,7 +15,10 @@ using System.Threading.Tasks;
 
 namespace AetherRemoteClient.UI.Tabs.Friends;
 
-public class FriendsTab(ClientDataManager clientDataManager, NetworkProvider networkProvider) : ITab
+/// <summary>
+/// Container for all UI elements of the Friend Tab
+/// </summary>
+public class FriendsTab : ITab
 {
     // Constants
     private static readonly Vector2 FriendListPadding = new(0, 2);
@@ -22,11 +26,11 @@ public class FriendsTab(ClientDataManager clientDataManager, NetworkProvider net
     private static readonly Vector2 SmallButtonSize = new(24, 0);
 
     // Injected
-    private readonly ClientDataManager clientDataManager = clientDataManager;
-    private readonly NetworkProvider networkProvider = networkProvider;
+    private readonly ClientDataManager clientDataManager;
+    private readonly NetworkProvider networkProvider;
 
     // Instantiated
-    private readonly ListFilter<Friend> friendListFilter = new(clientDataManager.FriendsList.Friends, FilterFriends);
+    private readonly ListFilter<Friend> friendListFilter;
 
     // Input text reference for adding a friend
     private string addFriendInputText = "";
@@ -39,6 +43,19 @@ public class FriendsTab(ClientDataManager clientDataManager, NetworkProvider net
 
     // Processes
     private bool shouldProcessAddFriend, shouldProcessDeleteFriend, shouldProcessSaveFriend = false;
+
+    /// <summary>
+    /// <inheritdoc cref="FriendsTab"/>
+    /// </summary>
+    public FriendsTab(ClientDataManager clientDataManager, NetworkProvider networkProvider)
+    {
+        this.clientDataManager = clientDataManager;
+        this.networkProvider = networkProvider;
+
+        friendListFilter = new(clientDataManager.FriendsList.Friends, FilterFriends);
+
+        this.clientDataManager.FriendsList.OnFriendsListCleared += HandleFriendsListDeleted;
+    }
 
     public void Draw()
     {
@@ -332,9 +349,7 @@ public class FriendsTab(ClientDataManager clientDataManager, NetworkProvider net
         if (success)
             clientDataManager.FriendsList.DeleteFriend(focusedFriend.FriendCode);
 
-        focusedFriend = null;
-        focusedFriendNote = string.Empty;
-        focusedPermissions = [];
+        ResetFocusedFriend();
     }
 
     public async Task<bool> DeleteFriend(Friend friend)
@@ -350,6 +365,22 @@ public class FriendsTab(ClientDataManager clientDataManager, NetworkProvider net
             Plugin.Log.Warning($"Unable to delete friend {friend.FriendCode}. {response.Message}");
 
         return response.Success;
+    }
+
+    public void Dispose()
+    {
+        clientDataManager.FriendsList.OnFriendsListCleared -= HandleFriendsListDeleted;
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Resets Focused Friend related variables to their defaults
+    /// </summary>
+    private void ResetFocusedFriend()
+    {
+        focusedFriend = null;
+        focusedFriendNote = string.Empty;
+        focusedPermissions = [];
     }
 
     /// <summary>
@@ -420,8 +451,6 @@ public class FriendsTab(ClientDataManager clientDataManager, NetworkProvider net
         return position;
     }
 
-    public void Dispose() => GC.SuppressFinalize(this);
-
     private static bool FilterFriends(Friend friend, string searchTerm)
     {
         var containedInNote = false;
@@ -430,4 +459,6 @@ public class FriendsTab(ClientDataManager clientDataManager, NetworkProvider net
 
         return containedInNote || friend.FriendCode.Contains(searchTerm, StringComparison.OrdinalIgnoreCase);
     }
+
+    private void HandleFriendsListDeleted(object? sender, FriendsListDeletedEventArgs e) => ResetFocusedFriend();
 }

@@ -216,6 +216,8 @@ public class ControlTab : ITab
 
     private void HandleFriendDeleted(object? sender, FriendDeletedEventArgs e)
     {
+        clientDataManager.TargetManager.Deselect(e.Friend.FriendCode);
+
         if (clientDataManager.TargetManager.Targets.Count == 0)
             lockCurrentTargets = false;
     }
@@ -231,6 +233,8 @@ public class ControlTab : ITab
 
     public void Dispose()
     {
+        clientDataManager.FriendsList.OnFriendDeleted -= HandleFriendDeleted;
+
         commandLockoutManager.Dispose();
         emoteModule.Dispose();
         glamourerModule.Dispose();
