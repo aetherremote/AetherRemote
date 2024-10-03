@@ -112,7 +112,6 @@ public sealed class Plugin : IDalamudPlugin
     {
         glamourerAccessor.Dispose();
 
-        clientDataManager.Dispose();
         networkProvider.Dispose();
 
         mainWindow.Dispose();

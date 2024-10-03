@@ -24,6 +24,9 @@ public class ActionQueueProvider
     private DateTime timeLastUpdated = DateTime.Now;
     private double timeUntilNextProcess = 0;
 
+    /// <summary>
+    /// <inheritdoc cref="ActionQueueProvider"/>
+    /// </summary>
     public ActionQueueProvider(Chat chat, HistoryLogManager historyLogManager)
     {
         this.chat = chat;
@@ -42,6 +45,9 @@ public class ActionQueueProvider
         historyLogManager.LogHistory(message);
     }
 
+    /// <summary>
+    /// Updates the action queue provider. This should be called once per framework update
+    /// </summary>
     public void Update()
     {
         if (queue.IsEmpty || Plugin.ClientState.LocalPlayer == null)
@@ -73,12 +79,18 @@ public class ActionQueueProvider
         }
     }
 
+    /// <summary>
+    /// Adds an emote command to the queue
+    /// </summary>
     public void EnqueueEmoteAction(string sender, string emote)
     {
         var action = new EmoteAction(sender, emote);
         queue.Enqueue(action);
     }
 
+    /// <summary>
+    /// Adds a speak command to the queue
+    /// </summary>
     public void EnqueueSpeakAction(string sender, string message, ChatMode channel, string? extra)
     {
         var action = new SpeakAction(sender, message, channel, extra);
@@ -90,6 +102,9 @@ public class ActionQueueProvider
     /// </summary>
     public void Clear() => queue.Clear();
 
+    /// <summary>
+    /// Container holding the information required to process an emote command
+    /// </summary>
     private struct EmoteAction(string sender, string emote) : IChatAction
     {
         public string Sender = sender;
@@ -99,6 +114,9 @@ public class ActionQueueProvider
         public readonly string BuildLog() => $"{Sender} made you do the {Emote} emote";
     }
 
+    /// <summary>
+    /// Container holding the information required to process a speak command
+    /// </summary>
     private struct SpeakAction(string sender, string message, ChatMode channel, string? extra) : IChatAction
     {
         public string Sender = sender;

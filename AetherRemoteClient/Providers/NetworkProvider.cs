@@ -17,6 +17,9 @@ using System.Threading.Tasks;
 
 namespace AetherRemoteClient.Providers;
 
+/// <summary>
+/// Provisions a connection to the server and exposes methods to interact with the server
+/// </summary>
 public class NetworkProvider : IDisposable
 {
 #if DEBUG
@@ -43,6 +46,9 @@ public class NetworkProvider : IDisposable
     // Instantiated
     private HubConnection? connection = null;
 
+    /// <summary>
+    /// <inheritdoc cref="NetworkProvider"/>
+    /// </summary>
     public NetworkProvider(
         ActionQueueProvider actionQueueProvider,
         ClientDataManager clientDataManager,
@@ -142,6 +148,9 @@ public class NetworkProvider : IDisposable
         connection.On(Network.BodySwapQuery, async (BodySwapQueryRequest request) => await HandleBodySwapQuery(request));
     }
 
+    /// <summary>
+    /// Disconnects from the server
+    /// </summary>
     public async Task Disconnect() => await CleanUp();
     private Task ServerConnectionClosed(Exception? exception) => CleanUp();
 

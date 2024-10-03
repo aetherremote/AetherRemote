@@ -1,11 +1,9 @@
-using System;
-
 namespace AetherRemoteClient.Domain;
 
 /// <summary>
 /// Responsible for managing all local client data such as friend code, friend list, etc.
 /// </summary>
-public class ClientDataManager : IDisposable
+public class ClientDataManager
 {
     /// <summary>
     /// Local Client's Friend Code
@@ -48,11 +46,5 @@ public class ClientDataManager : IDisposable
             FriendsList.CreateOrUpdateFriend("Friend5", false);
         }
 #pragma warning restore CS0162
-    }
-
-    public void Dispose()
-    {
-        TargetManager.Dispose();
-        GC.SuppressFinalize(this);
     }
 }

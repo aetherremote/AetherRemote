@@ -4,6 +4,9 @@ using System.Collections.Generic;
 
 namespace AetherRemoteClient.Providers;
 
+/// <summary>
+/// Provides a list all current available emotes in game
+/// </summary>
 public class EmoteProvider
 {
     /// <summary>
@@ -11,6 +14,9 @@ public class EmoteProvider
     /// </summary>
     public List<string> Emotes { get; private set; }
 
+    /// <summary>
+    /// <inheritdoc cref="EmoteProvider"/>
+    /// </summary>
     public EmoteProvider()
     {
         Emotes = [];
@@ -34,5 +40,8 @@ public class EmoteProvider
         Emotes.Sort();
     }
 
+    /// <summary>
+    /// Checks if the provided emote is valid
+    /// </summary>
     public bool ValidEmote(string emote) => Emotes.Contains(emote);
 }

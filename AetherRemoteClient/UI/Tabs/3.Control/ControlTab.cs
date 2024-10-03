@@ -57,6 +57,7 @@ public class ControlTab : ITab
         speakModule = new SpeakModule(clientDataManager, commandLockoutManager, historyLogManager, networkProvider);
 
         clientDataManager.FriendsList.OnFriendDeleted += HandleFriendDeleted;
+        clientDataManager.FriendsList.OnFriendsListCleared += HandleFriendsListCleared;
     }
 
     public void Draw()
@@ -222,6 +223,11 @@ public class ControlTab : ITab
             lockCurrentTargets = false;
     }
 
+    private void HandleFriendsListCleared(object? sender, FriendsListDeletedEventArgs e)
+    {
+        lockCurrentTargets = false;
+    }
+
     private bool FilterFriends(Friend friend, string searchTerm)
     {
         var containedInNote = false;
@@ -234,6 +240,7 @@ public class ControlTab : ITab
     public void Dispose()
     {
         clientDataManager.FriendsList.OnFriendDeleted -= HandleFriendDeleted;
+        clientDataManager.FriendsList.OnFriendsListCleared -= HandleFriendsListCleared;
 
         commandLockoutManager.Dispose();
         emoteModule.Dispose();

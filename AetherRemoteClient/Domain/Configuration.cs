@@ -4,6 +4,9 @@ using System.Collections.Generic;
 
 namespace AetherRemoteClient.Domain;
 
+/// <summary>
+/// Configurations for the plugin, also used to store client-side information like last used secret, and notes
+/// </summary>
 [Serializable]
 public class Configuration : IPluginConfiguration
 {
@@ -27,6 +30,9 @@ public class Configuration : IPluginConfiguration
     /// </summary>
     public Dictionary<string, string> Notes { get; set; } = [];
 
+    /// <summary>
+    /// Save configuration to file
+    /// </summary>
     public void Save()
     {
         Plugin.PluginInterface.SavePluginConfig(this);

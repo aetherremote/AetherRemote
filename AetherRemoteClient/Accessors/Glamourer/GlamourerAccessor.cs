@@ -8,6 +8,9 @@ using System.Timers;
 
 namespace AetherRemoteClient.Accessors.Glamourer;
 
+/// <summary>
+/// Provides access to Glamourer's exposed methods
+/// </summary>
 public class GlamourerAccessor : IDisposable
 {
     // Consts
@@ -30,6 +33,9 @@ public class GlamourerAccessor : IDisposable
     // Glamourer Installed?
     private bool glamourerUsable = false;
 
+    /// <summary>
+    /// <inheritdoc cref="GlamourerAccessor"/>
+    /// </summary>
     public GlamourerAccessor()
     {
         glamourerApiVersion = new ApiVersion(Plugin.PluginInterface);

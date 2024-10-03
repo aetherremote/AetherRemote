@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace AetherRemoteClient.Domain.UI;
 
+/// <summary>
+/// Exposes multiple static methods that simplify the process of many ImGui objects
+/// </summary>
 public class SharedUserInterfaces
 {
     public static readonly Vector4 HoveredColorTheme = ImGuiColors.ParsedOrange - new Vector4(0.2f, 0.2f, 0.2f, 0);
@@ -28,6 +31,9 @@ public class SharedUserInterfaces
     private static bool MediumFontBuilt = false;
     private const int MediumFontSize = 24;
 
+    /// <summary>
+    /// <inheritdoc cref="SharedUserInterfaces"/>
+    /// </summary>
     public SharedUserInterfaces()
     {
         Task.Run(BuildDefaultFontExtraSizes);
@@ -77,17 +83,6 @@ public class SharedUserInterfaces
     }
 
     /// <summary>
-    /// Returns the size of a <see cref="FontAwesomeIcon"/>
-    /// </summary>
-    public static Vector2 CalcIconSize(FontAwesomeIcon icon)
-    {
-        ImGui.PushFont(UiBuilder.IconFont);
-        var size = ImGui.CalcTextSize(icon.ToIconString());
-        ImGui.PopFont();
-        return size;
-    }
-
-    /// <summary>
     /// Creates a button with specified icon
     /// </summary>
     public static bool IconButton(FontAwesomeIcon icon, Vector2? size = null, string? id = null)
@@ -115,27 +110,11 @@ public class SharedUserInterfaces
     }
 
     /// <summary>
-    /// Draws text using the big font with optional color.
-    /// </summary>
-    public static void BigText(string text, Vector4? color = null)
-    {
-        FontText(text, BigFont, BigFontBuilt, color);
-    }
-
-    /// <summary>
     /// Draws text using the default font, centered, with optional color.
     /// </summary>
     public static void TextCentered(string text, Vector4? color = null, Vector2? offset = null)
     {
         FontTextCentered(text, null, false, offset, color);
-    }
-
-    /// <summary>
-    /// Draws text using the medium font, centered, with optional color.
-    /// </summary>
-    public static void MediumTextCentered(string text, Vector4? color = null, Vector2? offset = null)
-    {
-        FontTextCentered(text, MediumFont, MediumFontBuilt, offset, color);
     }
 
     /// <summary>
@@ -146,8 +125,6 @@ public class SharedUserInterfaces
         FontTextCentered(text, BigFont, BigFontBuilt, offset, color);
     }
 
-    public static void PushMediumFont() { MediumFont?.Push(); }
-    public static void PopMediumFont() { MediumFont?.Pop(); }
     public static void PushBigFont() { BigFont?.Push(); }
     public static void PopBigFont() { BigFont?.Pop(); }
 
@@ -190,6 +167,9 @@ public class SharedUserInterfaces
         }
     }
 
+    /// <summary>
+    /// Wraps a predicate around <see cref="ImGui.BeginDisabled"/> and <see cref="ImGui.EndDisabled"/>
+    /// </summary>
     public static void DisableIf(bool condition, Action action)
     {
         if (condition)
@@ -233,6 +213,7 @@ public class SharedUserInterfaces
         if (fontBuilt) font?.Pop();
     }
 
+    // Grab whatever the default dalamud font is, and make a medium version, and a big version of it
     private async Task BuildDefaultFontExtraSizes()
     {
         BigFont = Plugin.PluginInterface.UiBuilder.FontAtlas.NewDelegateFontHandle(toolkit =>

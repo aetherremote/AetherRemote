@@ -3,7 +3,7 @@ using AetherRemoteCommon.Domain;
 namespace AetherRemoteClient.Domain;
 
 /// <summary>
-/// Placeholder for local friend implementation
+/// Container for all of the information that makes up a friend
 /// </summary>
 public class Friend
 {
@@ -11,6 +11,9 @@ public class Friend
     public bool Online;
     public UserPermissions Permissions;
     
+    /// <summary>
+    /// <inheritdoc cref="Friend"/>
+    /// </summary>
     public Friend(string friendCode, bool online = false, UserPermissions permissions = UserPermissions.None)
     {
         FriendCode = friendCode;

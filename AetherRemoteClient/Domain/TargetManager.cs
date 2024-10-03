@@ -7,7 +7,7 @@ namespace AetherRemoteClient.Domain;
 /// <summary>
 /// Manages a list of targets and functions that interact with them
 /// </summary>
-public class TargetManager : IDisposable
+public class TargetManager
 {
     /// <summary>
     /// List of target friend
@@ -67,6 +67,4 @@ public class TargetManager : IDisposable
     /// Deselects all friend codes
     /// </summary>
     public void Clear() => Targets.Clear();
-
-    public void Dispose() => GC.SuppressFinalize(this);
 }
