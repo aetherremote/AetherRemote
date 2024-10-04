@@ -17,6 +17,10 @@ public struct LoginDetailsResponse
     public string Message { get; set; }
     public string? FriendCode { get; set; }
     public Dictionary<string, UserPermissions>? Permissions { get; set; }
+
+    /// <summary>
+    /// List of online users in the user's permission list (friends list)
+    /// </summary>
     public HashSet<string>? Online { get; set; }
 
     public LoginDetailsResponse(

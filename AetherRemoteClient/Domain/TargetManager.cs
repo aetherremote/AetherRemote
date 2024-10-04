@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Immutable;
 using System.Linq;
 
@@ -66,5 +65,5 @@ public class TargetManager
     /// <summary>
     /// Deselects all friend codes
     /// </summary>
-    public void Clear() => Targets.Clear();
+    public void Clear() => Targets = [];
 }

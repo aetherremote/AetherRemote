@@ -13,7 +13,7 @@ public class FriendsList
     /// <summary>
     /// Local <see cref="List{T}"/> of <see cref="Friend"/>
     /// </summary>
-    public List<Friend> Friends = [];
+    public List<Friend> Friends { get; private set; } = [];
 
     /// <summary>
     /// Fired when a friend is deleted from the friends list using <see cref="DeleteFriend"/>
@@ -33,17 +33,15 @@ public class FriendsList
         if (permissionsMap == null || onlineSet == null)
             return;
 
-        var result = new List<Friend>();
+        Friends.Clear();
         foreach(var kvp in permissionsMap)
         {
             var friendCode = kvp.Key;
             var online = onlineSet.Contains(friendCode);
             var permissions = kvp.Value;
 
-            result.Add(new(friendCode, online, permissions));
+            Friends.Add(new(friendCode, online, permissions));
         }
-
-        Friends = result;
     }
 
     /// <summary>
@@ -89,7 +87,7 @@ public class FriendsList
     /// </summary>
     public void Clear()
     {
-        Friends = [];
+        Friends.Clear();
         OnFriendsListCleared?.Invoke(this, new());
     }
 

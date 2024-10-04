@@ -146,6 +146,24 @@ public class NetworkProvider : IDisposable
 
         // Query Events
         connection.On(Network.BodySwapQuery, async (BodySwapQueryRequest request) => await HandleBodySwapQuery(request));
+
+        // Retrieve user detail
+        await RequestUserDetails();
+    }
+
+    private async Task<bool> RequestUserDetails()
+    {
+        var request = new LoginDetailsRequest();
+        var response = await InvokeCommand<LoginDetailsRequest, LoginDetailsResponse>(Network.LoginDetails, request);
+        if (response.Success == false)
+        {
+            Plugin.Log.Warning($"Unable to retrieve login details: {response.Message}");
+            return false;
+        }
+
+        clientDataManager.FriendCode = response.FriendCode;
+        clientDataManager.FriendsList.ConvertServerPermissionsToLocal(response.Permissions, response.Online);
+        return true;
     }
 
     /// <summary>
@@ -175,24 +193,6 @@ public class NetworkProvider : IDisposable
         clientDataManager.FriendCode = null;
         clientDataManager.FriendsList.Clear();
         clientDataManager.TargetManager.Clear();
-    }
-
-    public async Task<bool> GetAndSetLoginDetails()
-    {
-        if (Plugin.DeveloperMode)
-            return true;
-
-        var request = new LoginDetailsRequest();
-        var response = await InvokeCommand<LoginDetailsRequest, LoginDetailsResponse>(Network.LoginDetails, request);
-        if (response.Success == false)
-        {
-            Plugin.Log.Warning($"Unable to retrieve login details: {response.Message}");
-            return false;
-        }
-
-        clientDataManager.FriendCode = response.FriendCode;
-        clientDataManager.FriendsList.ConvertServerPermissionsToLocal(response.Permissions, response.Online);
-        return true;
     }
 
     private static async Task<string> GetToken(string secret)
