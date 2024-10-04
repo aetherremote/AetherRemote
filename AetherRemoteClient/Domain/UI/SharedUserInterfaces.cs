@@ -182,6 +182,65 @@ public class SharedUserInterfaces
     }
 
     /// <summary>
+    /// Creates a <see cref="FontAwesomeIcon.QuestionCircle"/> displaying a description
+    /// </summary>
+    public static void CommandDescriptionWithQuestionMark(
+        string description,
+        string[]? requiredPlugins = null,
+        string[]? requiredPermissions = null,
+        string[]? optionalPermissions = null)
+    {
+        // Align previous text
+        ImGui.AlignTextToFramePadding();
+        Icon(FontAwesomeIcon.QuestionCircle);
+
+        CommandDescription(description, requiredPlugins, requiredPermissions, optionalPermissions);
+    }
+
+    /// <summary>
+    /// Creates a description on the object before this call outlining a brief explaination and requirements
+    /// </summary>
+    public static void CommandDescription(
+        string description,
+        string[]? requiredPlugins = null,
+        string[]? requiredPermissions = null,
+        string[]? optionalPermissions = null)
+    {
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.BeginTooltip();
+
+            ImGui.TextColored(ImGuiColors.ParsedOrange, "[Description]");
+            ImGui.Text(description);
+
+            ImGui.Separator();
+
+            if (requiredPlugins is not null)
+            {
+                ImGui.TextColored(ImGuiColors.ParsedOrange, "[Required Plugins]");
+                foreach(var plugin in requiredPlugins)
+                    ImGui.BulletText(plugin);
+            }
+
+            if (requiredPermissions is not null)
+            {
+                ImGui.TextColored(ImGuiColors.ParsedOrange, "[Required Permissions]");
+                foreach (var permissions in requiredPermissions)
+                    ImGui.BulletText(permissions);
+            }
+
+            if (optionalPermissions is not null)
+            {
+                ImGui.TextColored(ImGuiColors.ParsedOrange, "[Optional Permissions]");
+                foreach (var permissions in optionalPermissions)
+                    ImGui.BulletText(permissions);
+            }
+
+            ImGui.EndTooltip();
+        }
+    }
+
+    /// <summary>
     /// Draws text using a specific font with optional color.
     /// </summary>
     private static void FontText(string text, IFontHandle? font, bool fontBuilt, Vector4? color = null)

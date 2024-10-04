@@ -56,23 +56,10 @@ public class ExtraModule : IControlTableModule
                 _ = ProcessBodySwap();
         });
 
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.BeginTooltip();
-            ImGui.TextColored(ImGuiColors.ParsedOrange, "[Description]");
-            ImGui.Text("Attempts to swap bodies with yourself and selected targets randomly.");
-
-            ImGui.Separator();
-
-            ImGui.TextColored(ImGuiColors.ParsedOrange, "[Required Plugins]");
-            ImGui.BulletText("Glamourer");
-            ImGui.BulletText("Mare Synchronos");
-
-            ImGui.TextColored(ImGuiColors.DalamudGrey, "[Required Permissions]");
-            ImGui.BulletText("Customization");
-            ImGui.BulletText("Equipment");
-            ImGui.EndTooltip();
-        }
+        SharedUserInterfaces.CommandDescription(
+            description: "Attempts to swap bodies with yourself and selected targets randomly.",
+            requiredPlugins: ["Glamourer", "Mare Synchronos"],
+            requiredPermissions: ["Customization", "Equipment"]);
 
         ImGui.SameLine();
 
@@ -82,23 +69,10 @@ public class ExtraModule : IControlTableModule
                 _ = ProcessTwinning();
         });
 
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.BeginTooltip();
-            ImGui.TextColored(ImGuiColors.ParsedOrange, "[Description]");
-            ImGui.Text("Attempts to transform selected targets into you.");
-
-            ImGui.Separator();
-
-            ImGui.TextColored(ImGuiColors.ParsedOrange, "[Required Plugins]");
-            ImGui.BulletText("Glamourer");
-            ImGui.BulletText("Mare Synchronos");
-
-            ImGui.TextColored(ImGuiColors.DalamudGrey, "[Required Permissions]");
-            ImGui.BulletText("Customization");
-            ImGui.BulletText("Equipment");
-            ImGui.EndTooltip();
-        }
+        SharedUserInterfaces.CommandDescription(
+            description: "Attempts to transform selected targets into you.",
+            requiredPlugins: ["Glamourer", "Mare Synchronos"],
+            requiredPermissions: ["Customization", "Equipment"]);
     }
 
     private async Task ProcessTwinning()

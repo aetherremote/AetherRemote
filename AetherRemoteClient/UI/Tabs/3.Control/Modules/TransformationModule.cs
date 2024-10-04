@@ -58,26 +58,11 @@ public class TransformationModule : IControlTableModule
 
         SharedUserInterfaces.MediumText("Transformation", glamourerInstalled ? ImGuiColors.ParsedOrange : ImGuiColors.DalamudGrey);
         ImGui.SameLine();
-        ImGui.AlignTextToFramePadding();
-        SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
 
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.BeginTooltip();
-            ImGui.TextColored(ImGuiColors.ParsedOrange, "[Description]");
-            ImGui.Text("Attempts to change selected friend(s)' appearance and or equipment.");
-
-            ImGui.Separator();
-
-            ImGui.TextColored(ImGuiColors.ParsedOrange, "[Required Plugins]");
-            ImGui.BulletText("Glamourer");
-            ImGui.BulletText("Mare Synchronos");
-
-            ImGui.TextColored(ImGuiColors.DalamudGrey, "[Optional Permissions]");
-            ImGui.BulletText("Customization");
-            ImGui.BulletText("Equipment");
-            ImGui.EndTooltip();
-        }
+        SharedUserInterfaces.CommandDescriptionWithQuestionMark(
+            description: "Attempts to change selected friend(s)' appearance and or equipment.",
+            requiredPlugins: ["Glamourer", "Mare Synchronos"],
+            optionalPermissions: ["Customization", "Equipment"]);
 
         SharedUserInterfaces.DisableIf(glamourerInstalled == false, () =>
         {

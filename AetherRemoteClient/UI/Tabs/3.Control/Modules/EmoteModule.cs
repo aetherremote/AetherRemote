@@ -50,21 +50,10 @@ public class EmoteModule : IControlTableModule
 
         SharedUserInterfaces.MediumText("Emote", ImGuiColors.ParsedOrange);
         ImGui.SameLine();
-        ImGui.AlignTextToFramePadding();
-        SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
 
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.BeginTooltip();
-            ImGui.TextColored(ImGuiColors.ParsedOrange, "[Description]");
-            ImGui.Text("Attempts to make selected friend(s) perform specified emote.");
-            
-            ImGui.Separator();
-
-            ImGui.TextColored(ImGuiColors.ParsedOrange, "[Required Permissions]");
-            ImGui.BulletText("Emote");
-            ImGui.EndTooltip();
-        }
+        SharedUserInterfaces.CommandDescriptionWithQuestionMark(
+            description: "Attempts to make selected friend(s) perform specified emote.",
+            requiredPermissions: ["Emote"]);
 
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(4, 4));
         SharedUserInterfaces.ComboWithFilter(ref emote, "Emote", emoteSearchFilter);

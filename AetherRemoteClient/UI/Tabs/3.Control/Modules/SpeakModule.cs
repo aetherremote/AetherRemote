@@ -54,26 +54,12 @@ public class SpeakModule : IControlTableModule
         ImGui.SameLine();
         SharedUserInterfaces.MediumText(chatMode.Beautify());
         ImGui.SameLine();
-        ImGui.AlignTextToFramePadding();
-        SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
 
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.BeginTooltip();
-            ImGui.TextColored(ImGuiColors.ParsedOrange, "[Description]");
-            ImGui.Text("Attempts to make selected friend(s) send a message in specified chat mode.");
-
-            ImGui.Separator();
-
-            ImGui.TextColored(ImGuiColors.ParsedOrange, "[Required Permissions]");
-            ImGui.BulletText("Speak");  
-
-            ImGui.TextColored(ImGuiColors.DalamudGrey, "[Optional Permissions]");
-            ImGui.BulletText("Say, Yell, Shout, Tell, Party, Alliance, Free Company, PvP Team");
-            ImGui.BulletText("Linkshell 1 - 8");
-            ImGui.BulletText("Crossworld Linkshell 1 - 8");
-            ImGui.EndTooltip();
-        }
+        SharedUserInterfaces.CommandDescriptionWithQuestionMark(
+            description: "Attempts to make selected friend(s) send a message in specified chat mode.",
+            requiredPermissions: ["Speak"],
+            optionalPermissions: ["Say, Yell, Shout, Tell, Party, Alliance, Free Company, PvP Team", "Linkshell 1 - 8", "Crossworld Linkshell 1 - 8"]
+            );
 
         if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Comment))
             ImGui.OpenPopup("ChatModeSelector");
