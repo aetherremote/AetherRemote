@@ -98,7 +98,9 @@ public class NetworkProvider : IDisposable
         }
     }
 
-    // TODO: Cancellation token across requests
+    /// <summary>
+    /// Attempt to connect to the server
+    /// </summary>
     public async Task Connect(string secret)
     {
         if (Plugin.DeveloperMode)
@@ -108,6 +110,7 @@ public class NetworkProvider : IDisposable
             await Disconnect().ConfigureAwait(false);
 
         var token = await GetToken(secret).ConfigureAwait(false);
+        if (token == null) return;
 
         try
         {
@@ -195,7 +198,7 @@ public class NetworkProvider : IDisposable
         clientDataManager.TargetManager.Clear();
     }
 
-    private static async Task<string> GetToken(string secret)
+    private static async Task<string?> GetToken(string secret)
     {
         try
         {
@@ -203,14 +206,34 @@ public class NetworkProvider : IDisposable
             var payload = new StringContent(JsonSerializer.Serialize(secret), Encoding.UTF8, "application/json");
             var post = await client.PostAsync(PostUrl, payload).ConfigureAwait(false);
             if (post.IsSuccessStatusCode == false)
-                return string.Empty;
+            {
+                var errorMessage = post.StatusCode switch
+                {
+                    System.Net.HttpStatusCode.Unauthorized => "Unable to connect, invalid secret. Please register in the discord or reach out for assistance.",
+                    _ => $"Post was unsuccessful. Status Code: {post.StatusCode}"
+                };
+
+                Plugin.Log.Warning(errorMessage);
+                return null;
+            }
 
             return await post.Content.ReadAsStringAsync().ConfigureAwait(false);
         }
+        catch (HttpRequestException ex)
+        {
+            var errorMessage = ex.StatusCode switch
+            {
+                null => "Unable to connect to server, server is likely offline.",
+                _ => ex.Message
+            };
+
+            Plugin.Log.Warning(errorMessage);
+            return null;
+        }
         catch (Exception ex)
         {
-            Plugin.Log.Warning($"Token post failed: {ex}");
-            return string.Empty;
+            Plugin.Log.Warning($"Token post failed, tell a developer: {ex}");
+            return null;
         }
     }
 
