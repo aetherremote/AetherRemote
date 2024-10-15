@@ -103,9 +103,19 @@ public class TransformationModule : IControlTableModule
             var equipmentTextWidth = ImGui.CalcTextSize("Equipment").X;
             ImGui.SetCursorPosX(ImGui.GetWindowWidth() - appearanceTextWidth - equipmentTextWidth - (ImGui.GetFontSize() * 2) - (ImGui.GetStyle().WindowPadding.X * 4) - ImGui.GetStyle().FramePadding.X);
 
-            ImGui.Checkbox("Appearance", ref applyCustomization);
+            if (ImGui.Checkbox("Appearance", ref applyCustomization))
+            {
+                if (applyCustomization == false && applyEquipment == false)
+                    applyEquipment = true;
+            }
+
             ImGui.SameLine();
-            ImGui.Checkbox("Equipment", ref applyEquipment);
+
+            if (ImGui.Checkbox("Equipment", ref applyEquipment))
+            {
+                if (applyCustomization == false && applyEquipment == false)
+                    applyCustomization = true;
+            }
 
             if (shouldProcessBecomeCommand && isCommandLockout == false)
                 _ = ProcessBecomeCommand();

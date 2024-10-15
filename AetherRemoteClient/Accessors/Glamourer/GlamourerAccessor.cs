@@ -75,8 +75,12 @@ public class GlamourerAccessor : IDisposable
         {
             try
             {
+                // Glamourer flags seem to be subtractive.
+                // AetherRemote implemented them additively. The flags must be switched.
+                // There is a chance this is also just a bug. Who knows! I certainly don't.
+                var finalizedFlags = InverseGlamourerFlags(flags);
                 Plugin.Log.Verbose($"Attempting to apply glamourer design {glamourerData} to {characterName} with flags {flags}");
-                glamourerApiApplyDesign.Invoke(glamourerData, characterName, 0, flags);
+                glamourerApiApplyDesign.Invoke(glamourerData, characterName, 0, finalizedFlags);
                 return true;
             }
             catch (Exception ex)
@@ -159,6 +163,15 @@ public class GlamourerAccessor : IDisposable
         {
             Plugin.Log.Error($"Something went wrong trying to check for glamourer plugin: {ex}");
         }
+    }
+
+    private static ApplyFlag InverseGlamourerFlags(ApplyFlag flags)
+    {
+        var finalizedFlags = ApplyFlag.Once;
+        if (flags.HasFlag(ApplyFlag.Customization)) finalizedFlags |= ApplyFlag.Equipment;
+        if (flags.HasFlag(ApplyFlag.Equipment)) finalizedFlags |= ApplyFlag.Customization;
+        if (finalizedFlags == ApplyFlag.Once) finalizedFlags |= ApplyFlag.Customization | ApplyFlag.Equipment;
+        return finalizedFlags;
     }
 
     private void PeriodicCheckApi(object? sender, ElapsedEventArgs e) => CheckApi();
