@@ -273,14 +273,17 @@ public class FriendsTab : ITab
     private void DrawSelectableFriend(Friend friend)
     {
         var onlineStatus = friend.Online;
+        var friendNote = Plugin.Configuration.Notes.TryGetValue(friend.FriendCode, out var note) ? note : null;
         ImGui.SetCursorPosX(8 + ImGui.GetFontSize() + (ImGui.GetStyle().FramePadding.X * 2));
 
         // Draw Selectable Text
         if (onlineStatus == false) ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.DalamudGrey);
-        if (ImGui.Selectable($"{friend.FriendCode}", focusedFriend == friend, ImGuiSelectableFlags.SpanAllColumns))
+
+        var selectableId = $"{friendNote ?? friend.FriendCode}###{friend.FriendCode}";
+        if (ImGui.Selectable(selectableId, focusedFriend == friend, ImGuiSelectableFlags.SpanAllColumns))
         {
             focusedFriend = friend;
-            focusedFriendNote = Plugin.Configuration.Notes.TryGetValue(friend.FriendCode, out var note) ? note : string.Empty;
+            focusedFriendNote = friendNote ?? string.Empty;
             focusedPermissions = ConvertUserPermissionsToBooleans(friend.Permissions);
         }
 
@@ -312,7 +315,11 @@ public class FriendsTab : ITab
         if (focusedFriend == null) return;
 
         // Always save the note
-        Plugin.Configuration.Notes[focusedFriend.FriendCode] = focusedFriendNote;
+        if (focusedFriendNote == string.Empty)
+            Plugin.Configuration.Notes.Remove(focusedFriend.FriendCode);
+        else
+            Plugin.Configuration.Notes[focusedFriend.FriendCode] = focusedFriendNote;
+        Plugin.Configuration.Save();
 
         // Convert permissions back to UserPermissions
         var permissions = ConvertBooleansToUserPermissions(focusedPermissions);

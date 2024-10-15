@@ -164,7 +164,9 @@ public class ControlTab : ITab
         ImGui.SetCursorPosX(DefaultWindowPadding + ImGui.GetFontSize() + (ImGui.GetStyle().FramePadding.X * 2));
         
         var selected = clientDataManager.TargetManager.Selected(friend.FriendCode);
-        if (ImGui.Selectable($"{friend.FriendCode}", selected, ImGuiSelectableFlags.SpanAllColumns))
+        var friendNote = Plugin.Configuration.Notes.TryGetValue(friend.FriendCode, out var note) ? note : null;
+        var selectableId = $"{friendNote ?? friend.FriendCode}###{friend.FriendCode}";
+        if (ImGui.Selectable(selectableId, selected, ImGuiSelectableFlags.SpanAllColumns))
         {
             if (lockCurrentTargets == false)
                 clientDataManager.TargetManager.ToggleSelect(friend.FriendCode);
@@ -192,7 +194,17 @@ public class ControlTab : ITab
             return;
         }
 
-        var text = clientDataManager.TargetManager.Targets.Count > 1 ? $"{clientDataManager.TargetManager.Targets.Count} Friends" : clientDataManager.TargetManager.Targets.First();
+        string text;
+        if (clientDataManager.TargetManager.Targets.Count > 1)
+        {
+            text = $"{clientDataManager.TargetManager.Targets.Count} Friends";
+        }
+        else
+        {
+            var friendCode = clientDataManager.TargetManager.Targets.First();
+            text = Plugin.Configuration.Notes.TryGetValue(friendCode, out var note) ? note : friendCode;
+        }
+
         SharedUserInterfaces.BigTextCentered(text, ImGuiColors.ParsedOrange);
 
         ImGui.SameLine();
