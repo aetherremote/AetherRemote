@@ -3,6 +3,7 @@ obj/
 bin/
 *.user
 AetherRemoteInterface/
+AetherRemoteDiscordBot/
 AetherRemoteAdminConsole/
 AetherRemoteServer/Data/
 /AetherRemoteServer/Properties/PublishProfiles
