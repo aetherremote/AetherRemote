@@ -38,6 +38,11 @@ public static class Constraints
     public const uint PlayerNameCharLimit = 25;
 
     /// <summary>
+    /// Limits the amount of characters that should be in a tell target
+    /// </summary>
+    public const uint TellTargetLimit = PlayerNameCharLimit * 2;
+
+    /// <summary>
     /// Limit the amount of players targetable with in-game operations temporarily
     /// </summary>
     public const uint MaximumTargetsForInGameOperations = 3;

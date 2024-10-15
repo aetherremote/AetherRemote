@@ -36,7 +36,8 @@ public class MainWindow : Window, IDisposable
         EmoteProvider emoteProvider,
         GlamourerAccessor glamourerAccessor,
         HistoryLogManager historyLogManager,
-        NetworkProvider networkProvider
+        NetworkProvider networkProvider,
+        WorldProvider worldProvider
         ) : base($"Aether Remote - Version {Plugin.Version}", MainWindowFlags)
     {
         SizeConstraints = new WindowSizeConstraints()
@@ -49,7 +50,7 @@ public class MainWindow : Window, IDisposable
 
         dashboardTab = new DashboardTab(clientDataManager, networkProvider);
         friendsTab = new FriendsTab(clientDataManager, networkProvider);
-        controlTab = new ControlTab(clientDataManager, emoteProvider, glamourerAccessor, historyLogManager, networkProvider);
+        controlTab = new ControlTab(clientDataManager, emoteProvider, glamourerAccessor, historyLogManager, networkProvider, worldProvider);
         historyTab = new HistoryTab(historyLogManager);
         settingsTab = new SettingsTab(actionQueueProvider, clientDataManager);
     }

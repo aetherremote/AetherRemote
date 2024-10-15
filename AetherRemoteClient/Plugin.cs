@@ -39,7 +39,7 @@ public sealed class Plugin : IDalamudPlugin
     /// the server is invoked
     /// </summary>
 #if DEBUG
-    public const bool DeveloperMode = false;
+    public const bool DeveloperMode = true;
 #else
     public const bool DeveloperMode = false;
 #endif
@@ -67,6 +67,7 @@ public sealed class Plugin : IDalamudPlugin
     private ActionQueueProvider actionQueueProvider { get; init; }
     private EmoteProvider emoteProvider { get; init; }
     private NetworkProvider networkProvider { get; init; }
+    private WorldProvider worldProvider { get; init; }
 
     // Windows
     private WindowSystem windowSystem { get; init; }
@@ -89,10 +90,11 @@ public sealed class Plugin : IDalamudPlugin
         actionQueueProvider = new ActionQueueProvider(chat, historyLogManager);
         emoteProvider = new EmoteProvider();
         networkProvider = new NetworkProvider(actionQueueProvider, clientDataManager, emoteProvider, glamourerAccessor, historyLogManager);
+        worldProvider = new WorldProvider();
 
         // Windows
         windowSystem = new WindowSystem("AetherRemote");
-        mainWindow = new MainWindow(actionQueueProvider, clientDataManager, emoteProvider, glamourerAccessor, historyLogManager, networkProvider);
+        mainWindow = new MainWindow(actionQueueProvider, clientDataManager, emoteProvider, glamourerAccessor, historyLogManager, networkProvider, worldProvider);
         windowSystem.AddWindow(mainWindow);
 
         CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)

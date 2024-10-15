@@ -55,7 +55,7 @@ Functionality found in the settings tab to immediately disable the plugin and re
 All actions sent to the server and receieved by the client are validated for correctness. This means, like permissions, both the server and the client will ensure no tampering has occurred. The plugin will not act on invalid data, examples include trying to utilize a command instead of an emote such as `/logout` or `/trade`, or sending invalid message data to the server.
 
 # Community & Discord
-Please feel free to join the [Discord](https://discord.gg/R4rDY4Tp) community! I would love to hear any feedback you have, or bugs you discover. I would also just love to chat about all things this plugin relates to!
+Please feel free to join the [Discord](https://discord.gg/yxtdENpyEg) community! I would love to hear any feedback you have, or bugs you discover. I would also just love to chat about all things this plugin relates to!
 
 # About The Plugin
 Aether Remote is a project I have been working on for a little under a year now. I took inspiration from many sources in the XIV community involving these fetishes. It started as a tool just control speech and emotes but slowly grew as new ideas popped into my mind. I hope that it can be fun for everyone who decides to use it, and I really wish to improve the tool any way I can! Feel free to take a look through any of the code, I've documented the best I can, and hope that they may be of help to anyone seeking to do something similar.

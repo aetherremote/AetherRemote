@@ -7,6 +7,7 @@ using AetherRemoteCommon.Domain.CommonChatMode;
 using AetherRemoteCommon.Domain.Network.Commands;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
+using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
@@ -26,6 +27,7 @@ public class SpeakModule : IControlTableModule
     private readonly CommandLockoutManager commandLockoutManager;
     private readonly HistoryLogManager historyLogManager;
     private readonly NetworkProvider networkProvider;
+    private readonly WorldProvider worldProvider;
 
     // Variables - Speak
     private ChatMode chatMode = ChatMode.Say;
@@ -37,12 +39,14 @@ public class SpeakModule : IControlTableModule
         ClientDataManager clientDataManager,
         CommandLockoutManager commandLockoutManager,
         HistoryLogManager historyLogManager,
-        NetworkProvider networkProvider)
+        NetworkProvider networkProvider,
+        WorldProvider worldProvider)
     {
         this.clientDataManager = clientDataManager;
         this.commandLockoutManager = commandLockoutManager;
         this.historyLogManager = historyLogManager;
         this.networkProvider = networkProvider;
+        this.worldProvider = worldProvider;
     }
 
     public void Draw()
@@ -99,7 +103,7 @@ public class SpeakModule : IControlTableModule
             ImGui.SameLine();
 
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Crosshairs))
-                tellTarget = Plugin.TargetManager.Target?.Name.ToString() ?? tellTarget;
+                tellTarget = GetTellTarget() ?? tellTarget;
 
             SharedUserInterfaces.Tooltip("Copy my target's name");
             ImGui.SameLine();
@@ -111,7 +115,7 @@ public class SpeakModule : IControlTableModule
             ImGui.SameLine();
 
             ImGui.SetNextItemWidth(ImGui.GetWindowWidth() / 2);
-            ImGui.InputTextWithHint("##TellTargetInput", "Tell Target", ref tellTarget, Constraints.PlayerNameCharLimit);
+            ImGui.InputTextWithHint("##TellTargetInput", "Tell Target", ref tellTarget, Constraints.TellTargetLimit);
         }
         else if (chatMode == ChatMode.Linkshell || chatMode == ChatMode.CrossworldLinkshell)
         {
@@ -192,6 +196,25 @@ public class SpeakModule : IControlTableModule
         {
             // TODO: Make a toast with what went wrong
         }
+    }
+
+    private unsafe string? GetTellTarget()
+    {
+        var targetName = Plugin.TargetManager.Target?.Name.ToString();
+        if (targetName == null)
+            return null;
+
+        // Can we look this up by id rather than name?
+        var characterObject = CharacterManager.Instance() -> LookupBattleCharaByName(targetName, true);
+        if (characterObject is null)
+            return null;
+
+        var worldId = characterObject->CurrentWorld;
+        var worldName = worldProvider.TryGetWorld(worldId);
+        if (worldName == null)
+            return null;
+
+        return $"{targetName}@{worldName}";
     }
 
     public async Task<bool> IssueSpeakCommand(List<string> targets, string message, ChatMode chatMode, string? extra)

@@ -45,7 +45,8 @@ public class ControlTab : ITab
         EmoteProvider emoteProvider,
         GlamourerAccessor glamourerAccessor,
         HistoryLogManager historyLogManager,
-        NetworkProvider networkProvider)
+        NetworkProvider networkProvider,
+        WorldProvider worldProvider)
     {
         this.clientDataManager = clientDataManager;
 
@@ -54,7 +55,7 @@ public class ControlTab : ITab
         emoteModule = new EmoteModule(clientDataManager, commandLockoutManager, emoteProvider, historyLogManager, networkProvider);
         extraModule = new ExtraModule(clientDataManager, commandLockoutManager, glamourerAccessor, historyLogManager, networkProvider);
         glamourerModule = new TransformationModule(clientDataManager, commandLockoutManager, glamourerAccessor, historyLogManager, networkProvider);
-        speakModule = new SpeakModule(clientDataManager, commandLockoutManager, historyLogManager, networkProvider);
+        speakModule = new SpeakModule(clientDataManager, commandLockoutManager, historyLogManager, networkProvider, worldProvider);
 
         clientDataManager.FriendsList.OnFriendDeleted += HandleFriendDeleted;
         clientDataManager.FriendsList.OnFriendsListCleared += HandleFriendsListCleared;
