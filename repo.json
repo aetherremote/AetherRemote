@@ -15,8 +15,8 @@
         "LoadPriority": 0,
         "IconUrl": "https://raw.githubusercontent.com/aetherremote/AetherRemote/main/Images/icon.jpg",
         "Punchline": "Control other player's speech, emotes, and appearance.",
-        "DownloadLinkInstall": "https://github.com/aetherremote/AetherRemote/releases/download/1.0.0.1/latest.zip",
-        "DownloadLinkTesting": "https://github.com/aetherremote/AetherRemote/releases/download/1.0.0.1/latest.zip",
-        "DownloadLinkUpdate": "https://github.com/aetherremote/AetherRemote/releases/download/1.0.0.1/latest.zip"
+        "DownloadLinkInstall": "https://github.com/aetherremote/AetherRemote/releases/download/1.0.0.2/latest.zip",
+        "DownloadLinkTesting": "https://github.com/aetherremote/AetherRemote/releases/download/1.0.0.2/latest.zip",
+        "DownloadLinkUpdate": "https://github.com/aetherremote/AetherRemote/releases/download/1.0.0.2/latest.zip"
     }
 ]
