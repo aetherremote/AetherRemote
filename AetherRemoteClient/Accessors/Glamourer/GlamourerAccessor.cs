@@ -28,6 +28,9 @@ public class GlamourerAccessor : IDisposable
     private readonly ApiVersion glamourerApiVersion;
     private readonly ApplyStateName glamourerApiApplyDesign;
     private readonly GetStateBase64Name glamourerApiGetDesign;
+    private readonly RevertStateName glamourerRevertToGame;
+    private readonly RevertToAutomationName glamourerRevertToAutomation;
+
     private readonly Timer periodicGlamourerTest;
 
     // Glamourer Installed?
@@ -41,6 +44,8 @@ public class GlamourerAccessor : IDisposable
         glamourerApiVersion = new ApiVersion(Plugin.PluginInterface);
         glamourerApiApplyDesign = new ApplyStateName(Plugin.PluginInterface);
         glamourerApiGetDesign = new GetStateBase64Name(Plugin.PluginInterface);
+        glamourerRevertToGame = new RevertStateName(Plugin.PluginInterface);
+        glamourerRevertToAutomation = new RevertToAutomationName(Plugin.PluginInterface);
 
         periodicGlamourerTest = new Timer(TestApiIntervalInSeconds * 1000);
         periodicGlamourerTest.AutoReset = true;
@@ -54,6 +59,50 @@ public class GlamourerAccessor : IDisposable
     /// Is the glamourer api available for use?
     /// </summary>
     public bool IsGlamourerUsable => glamourerUsable;
+
+    /// <summary>
+    /// Reverts back to original game defaults
+    /// </summary>
+    public async Task<bool> RevertToGame(string characterName)
+    {
+        var result = await RunOnFramework(() =>
+        {
+            try
+            {
+                var result = glamourerRevertToGame.Invoke(characterName);
+                return result == GlamourerApiEc.Success;
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.Warning($"Failed to revert to game: {ex.Message}");
+                return false;
+            }
+        });
+
+        return result;
+    }
+
+    /// <summary>
+    /// Reverts back to original automation
+    /// </summary>
+    public async Task<bool> RevertToAutomation(string characterName)
+    {
+        var result = await RunOnFramework(() =>
+        {
+            try
+            {
+                var result = glamourerRevertToAutomation.Invoke(characterName);
+                return result == GlamourerApiEc.Success;
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.Warning($"Failed to revert to game: {ex.Message}");
+                return false;
+            }
+        });
+
+        return result;
+    }
 
     /// <summary>
     /// Applies a glamourer design to specified character.

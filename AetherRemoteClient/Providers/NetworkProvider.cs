@@ -146,6 +146,7 @@ public class NetworkProvider : IDisposable
         connection.On(Network.Commands.Speak, (SpeakCommand command) => { HandleSpeak(command); });
         connection.On(Network.Commands.Transform, (TransformCommand command) => { _ = HandleTransform(command); });
         connection.On(Network.Commands.BodySwap, (BodySwapCommand command) => { _ = HandleBodySwap(command); });
+        connection.On(Network.Commands.Revert, (RevertCommand command) => { HandleRevert(command); });
 
         // Query Events
         connection.On(Network.BodySwapQuery, async (BodySwapQueryRequest request) => await HandleBodySwapQuery(request));
@@ -272,7 +273,42 @@ public class NetworkProvider : IDisposable
             return;
         }
 
-        actionQueueProvider.EnqueueEmoteAction(command.SenderFriendCode, command.Emote);
+        actionQueueProvider.EnqueueEmoteAction(command.SenderFriendCode, command.Emote, command.DisplayLogMessage);
+    }
+
+    private void HandleRevert(RevertCommand command)
+    {
+        Plugin.Log.Verbose(command.ToString());
+
+        var noteOrFriendCode = command.SenderFriendCode;
+        var friend = clientDataManager.FriendsList.FindFriend(command.SenderFriendCode);
+        if (friend == null)
+        {
+            var message = HistoryLog.NotFriends("Revert", noteOrFriendCode);
+            Plugin.Log.Information(message);
+            historyLogManager.LogHistory(message);
+            return;
+        }
+
+        if (PermissionChecker.HasAnyTransformPermissions(friend.Permissions) == false)
+        {
+            var message = HistoryLog.LackingPermissions("Revert", noteOrFriendCode);
+            Plugin.Log.Information(message);
+            historyLogManager.LogHistory(message);
+            return;
+        }
+
+        var characterName = LocalPlayerName();
+        if (characterName == null)
+        {
+            Plugin.Log.Warning($"{noteOrFriendCode} tried to revert you, but you do not have a body to revert");
+            return;
+        }
+
+        if (command.RevertType == RevertType.Automation)
+            _ = glamourerAccessor.RevertToAutomation(characterName);
+        else if (command.RevertType == RevertType.Game)
+            _ = glamourerAccessor.RevertToGame(characterName);
     }
 
     private void HandleSpeak(SpeakCommand command)

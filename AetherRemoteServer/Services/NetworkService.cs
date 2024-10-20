@@ -220,7 +220,7 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
 
             try
             {
-                var command = new EmoteCommand(friendCode, request.Emote);
+                var command = new EmoteCommand(friendCode, request.Emote, request.DisplayLogMessage);
                 _ = clients.Client(targetUser.ConnectionId).SendAsync(Network.Commands.Emote, command);
             }
             catch (Exception ex)
@@ -306,6 +306,41 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
             catch (Exception ex)
             {
                 Console.WriteLine($"Exception sending transform command to {targetFriendCode}! {ex.Message}");
+            }
+        }
+
+        PrimaryHub.ActiveUserConnections[friendCode].LastAction = DateTime.Now;
+        return new(true);
+    }
+
+    public async Task<RevertResponse> Revert(string friendCode, RevertRequest request, IHubCallerClients clients)
+    {
+        if (IsUserSpamming(friendCode))
+            return new(false, "Spamming! Slow down!");
+
+        foreach (var targetFriendCode in request.TargetFriendCodes)
+        {
+            // Target not online
+            if (PrimaryHub.ActiveUserConnections.TryGetValue(targetFriendCode, out var targetUser) == false)
+                continue;
+
+            // Not friends with
+            var (targetPermissions, _) = await databaseService.GetPermissions(targetFriendCode);
+            if (targetPermissions.TryGetValue(friendCode, out var permissionsGrantedToFriendCode) == false)
+                continue;
+
+            // Has valid transform permissions
+            if (PermissionChecker.HasAnyTransformPermissions(permissionsGrantedToFriendCode) == false)
+                continue;
+
+            try
+            {
+                var command = new RevertCommand(friendCode, request.RevertType);
+                _ = clients.Client(targetUser.ConnectionId).SendAsync(Network.Commands.Revert, command);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception sending revert command to {targetFriendCode}! {ex.Message}");
             }
         }
 

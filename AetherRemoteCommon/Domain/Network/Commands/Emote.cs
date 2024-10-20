@@ -4,11 +4,13 @@ public struct EmoteRequest
 {
     public List<string> TargetFriendCodes { get; set; }
     public string Emote { get; set; }
+    public bool DisplayLogMessage { get; set; }
 
-    public EmoteRequest(List<string> targetFriendCodes, string emote)
+    public EmoteRequest(List<string> targetFriendCodes, string emote, bool displayLogMessage)
     {
         TargetFriendCodes = targetFriendCodes;
         Emote = emote;
+        DisplayLogMessage = displayLogMessage;
     }
 
     public override readonly string ToString()
@@ -16,6 +18,7 @@ public struct EmoteRequest
         var sb = new AetherRemoteStringBuilder("EmoteRequest");
         sb.AddVariable("TargetFriendCodes", TargetFriendCodes);
         sb.AddVariable("Emote", Emote);
+        sb.AddVariable("DisplayLogMessage", DisplayLogMessage);
         return sb.ToString();
     }
 }
@@ -44,11 +47,13 @@ public struct EmoteCommand
 {
     public string SenderFriendCode { get; set; }
     public string Emote { get; set; }
+    public bool DisplayLogMessage { get; set; }
 
-    public EmoteCommand(string senderFriendCode, string emote)
+    public EmoteCommand(string senderFriendCode, string emote, bool displayLogMessage)
     {
         SenderFriendCode = senderFriendCode;
         Emote = emote;
+        DisplayLogMessage = displayLogMessage;
     }
 
     public override readonly string ToString()
@@ -56,6 +61,7 @@ public struct EmoteCommand
         var sb = new AetherRemoteStringBuilder("EmoteCommand");
         sb.AddVariable("SenderFriendCode", SenderFriendCode);
         sb.AddVariable("Emote", Emote);
+        sb.AddVariable("DisplayLogMessage", DisplayLogMessage);
         return sb.ToString();
     }
 }

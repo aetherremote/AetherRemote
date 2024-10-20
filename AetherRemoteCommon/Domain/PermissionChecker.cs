@@ -5,6 +5,11 @@ namespace AetherRemoteCommon.Domain;
 
 public static class PermissionChecker
 {
+    public static bool HasAnyTransformPermissions(UserPermissions permissions)
+    {
+        return permissions.HasFlag(UserPermissions.Customization) || permissions.HasFlag(UserPermissions.Equipment);
+    }
+
     public static bool HasValidTransformPermissions(GlamourerApplyFlag applyFlags, UserPermissions permissions)
     {
         if (applyFlags.HasFlag(GlamourerApplyFlag.Customization) && !permissions.HasFlag(UserPermissions.Customization))

@@ -3,6 +3,7 @@ using AetherRemoteClient.Domain.Log;
 using AetherRemoteCommon.Domain.CommonChatMode;
 using System;
 using System.Collections.Concurrent;
+using System.Text;
 
 namespace AetherRemoteClient.Providers;
 
@@ -82,9 +83,9 @@ public class ActionQueueProvider
     /// <summary>
     /// Adds an emote command to the queue
     /// </summary>
-    public void EnqueueEmoteAction(string sender, string emote)
+    public void EnqueueEmoteAction(string sender, string emote, bool displayLogMessage)
     {
-        var action = new EmoteAction(sender, emote);
+        var action = new EmoteAction(sender, emote, displayLogMessage);
         queue.Enqueue(action);
     }
 
@@ -105,12 +106,13 @@ public class ActionQueueProvider
     /// <summary>
     /// Container holding the information required to process an emote command
     /// </summary>
-    private struct EmoteAction(string sender, string emote) : IChatAction
+    private struct EmoteAction(string sender, string emote, bool displayLogMessage) : IChatAction
     {
         public string Sender = sender;
         public string Emote = emote;
+        public bool DisplayLogMessage = displayLogMessage;
 
-        public readonly string BuildAction() => $"/{Emote} motion";
+        public readonly string BuildAction() => $"/{Emote}{(DisplayLogMessage ? string.Empty : " motion")}";
         public readonly string BuildLog() => $"{Sender} made you do the {Emote} emote";
     }
 
@@ -126,6 +128,7 @@ public class ActionQueueProvider
 
         public readonly string BuildAction() => Channel switch
         {
+            ChatMode.Say => $"/{(Extra == "1" ? "em" : "say")} {Message}",
             ChatMode.Linkshell => $"/l{Extra} {Message}",
             ChatMode.CrossworldLinkshell => $"/cwl{Extra} {Message}",
             ChatMode.Tell => $"/t {Extra} {Message}",

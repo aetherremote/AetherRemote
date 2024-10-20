@@ -26,6 +26,7 @@ public class EmoteModule : IControlTableModule
 
     // Variables - Emote
     private string emote = "";
+    private bool sendLogMessage = false;
     private readonly ListFilter<string> emoteSearchFilter;
 
     public EmoteModule(
@@ -67,6 +68,8 @@ public class EmoteModule : IControlTableModule
                 shouldProcessEmoteCommand = true;
         });
 
+        ImGui.Checkbox("Display log message", ref sendLogMessage);
+
         if (shouldProcessEmoteCommand)
             _ = ProcessEmoteCommand();
     }
@@ -80,7 +83,7 @@ public class EmoteModule : IControlTableModule
         commandLockoutManager.Lock(Constraints.GameCommandCooldownInSeconds);
 
         var targets = clientDataManager.TargetManager.Targets.ToList();
-        var result = await IssueEmoteCommand(targets, emote).ConfigureAwait(false);
+        var result = await IssueEmoteCommand(targets, emote, sendLogMessage).ConfigureAwait(false);
         if (result)
         {
             var message = $"You issued {string.Join(", ", targets)} to do the {emote} emote";
@@ -97,14 +100,14 @@ public class EmoteModule : IControlTableModule
         }
     }
 
-    public async Task<bool> IssueEmoteCommand(List<string> targets, string emote)
+    public async Task<bool> IssueEmoteCommand(List<string> targets, string emote, bool sendMessageLog)
     {
         #pragma warning disable CS0162
         if (Plugin.DeveloperMode)
             return true;
         #pragma warning restore CS0162
 
-        var request = new EmoteRequest(targets, emote);
+        var request = new EmoteRequest(targets, emote, sendMessageLog);
         var result = await networkProvider.InvokeCommand<EmoteRequest, EmoteResponse>(Network.Commands.Emote, request);
         if (result.Success == false)
             Plugin.Log.Warning($"Issuing emote command unsuccessful: {result.Message}");

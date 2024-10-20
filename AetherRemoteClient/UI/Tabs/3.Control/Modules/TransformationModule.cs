@@ -4,6 +4,7 @@ using AetherRemoteClient.Domain.Log;
 using AetherRemoteClient.Domain.UI;
 using AetherRemoteClient.Providers;
 using AetherRemoteCommon;
+using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.CommonGlamourerApplyType;
 using AetherRemoteCommon.Domain.Network.Commands;
 using Dalamud.Interface;
@@ -99,6 +100,22 @@ public class TransformationModule : IControlTableModule
             SharedUserInterfaces.Tooltip("Clear glamourer data input field");
             ImGui.SameLine();
 
+            var shouldProcessRevert = RevertType.None;
+            SharedUserInterfaces.DisableIf(isCommandLockout, () =>
+            {
+                if (SharedUserInterfaces.IconButton(FontAwesomeIcon.UserClock))
+                    shouldProcessRevert = RevertType.Game;
+
+                SharedUserInterfaces.Tooltip("Revert to Game");
+                ImGui.SameLine();
+
+                if (SharedUserInterfaces.IconButton(FontAwesomeIcon.ArrowsSpin))
+                    shouldProcessRevert = RevertType.Automation;
+
+                SharedUserInterfaces.Tooltip("Revert to Automation");
+                ImGui.SameLine();
+            });
+
             var appearanceTextWidth = ImGui.CalcTextSize("Appearance").X;
             var equipmentTextWidth = ImGui.CalcTextSize("Equipment").X;
             ImGui.SetCursorPosX(ImGui.GetWindowWidth() - appearanceTextWidth - equipmentTextWidth - (ImGui.GetFontSize() * 2) - (ImGui.GetStyle().WindowPadding.X * 4) - ImGui.GetStyle().FramePadding.X);
@@ -117,9 +134,41 @@ public class TransformationModule : IControlTableModule
                     applyCustomization = true;
             }
 
+            if (shouldProcessRevert != RevertType.None)
+                _ = ProcessRevertCommand(shouldProcessRevert);
+
             if (shouldProcessBecomeCommand && isCommandLockout == false)
                 _ = ProcessBecomeCommand();
         });
+    }
+
+    private async Task ProcessRevertCommand(RevertType revertType)
+    {
+        // Initiate UI Lockout
+        commandLockoutManager.Lock(Constraints.ExternalCommandCooldownInSeconds);
+
+        var targets = clientDataManager.TargetManager.Targets.ToList();
+
+        var request = new RevertRequest(targets, revertType);
+        var result = await networkProvider.InvokeCommand<RevertRequest, RevertResponse>(Network.Commands.Revert, request);
+        if (result.Success)
+        {
+            var targetNames = string.Join(", ", targets);
+            var logMessage = revertType switch
+            {
+                RevertType.Automation => $"You issued {targetNames} to revert to their automations",
+                RevertType.Game => $"You issued {targetNames} to revert to game",
+                _ => $"You issued {targetNames} to revert"
+            };
+
+            Plugin.Log.Information(logMessage);
+            historyLogManager.LogHistory(logMessage);
+        }
+        else
+        {
+            // TODO: Make a toast with what went wrong
+            Plugin.Log.Warning($"Issuing revert command unsuccessful: {result.Message}");
+        }
     }
 
     private async Task ProcessBecomeCommand()

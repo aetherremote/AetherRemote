@@ -34,6 +34,7 @@ public class SpeakModule : IControlTableModule
     private int linkshellNumber = 1;
     private string tellTarget = "";
     private string message = "";
+    private int userEmoteInsteadOfSay = 0;
 
     public SpeakModule(
         ClientDataManager clientDataManager,
@@ -80,6 +81,7 @@ public class SpeakModule : IControlTableModule
         }
 
         ImGui.SameLine();
+        var additionalArgumentsOffset = ImGui.GetCursorPosX();
 
         ImGui.SetNextItemWidth(-1 * (SendButtonSize.X + style.WindowPadding.X));
         if (ImGui.InputTextWithHint("###MessageInputBox", "Message", ref message, 500, ImGuiInputTextFlags.EnterReturnsTrue))
@@ -94,57 +96,73 @@ public class SpeakModule : IControlTableModule
                 shouldProcessSpeakCommand = true;
         });
 
-        if (chatMode == ChatMode.Tell)
+        switch(chatMode)
         {
-            if (SharedUserInterfaces.IconButton(FontAwesomeIcon.User))
-                tellTarget = Plugin.ClientState.LocalPlayer?.Name.ToString() ?? tellTarget;
+            case ChatMode.Say:
+                ImGui.SetCursorPosX(additionalArgumentsOffset);
+                ImGui.RadioButton("/say", ref userEmoteInsteadOfSay, 0);
+                SharedUserInterfaces.Tooltip("Executes the message with /say");
 
-            SharedUserInterfaces.Tooltip("Copy my name");
-            ImGui.SameLine();
+                ImGui.SameLine();
 
-            if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Crosshairs))
-                tellTarget = GetTellTarget() ?? tellTarget;
+                ImGui.RadioButton("/em", ref userEmoteInsteadOfSay, 1);
+                SharedUserInterfaces.Tooltip("Executes the message with /em");
+                break;
 
-            SharedUserInterfaces.Tooltip("Copy my target's name");
-            ImGui.SameLine();
+            case ChatMode.Tell:
+                ImGui.SetCursorPosX(additionalArgumentsOffset);
+                if (SharedUserInterfaces.IconButton(FontAwesomeIcon.User))
+                    tellTarget = Plugin.ClientState.LocalPlayer?.Name.ToString() ?? tellTarget;
 
-            if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Broom))
-                tellTarget = string.Empty;
+                SharedUserInterfaces.Tooltip("Copy my name");
+                ImGui.SameLine();
 
-            SharedUserInterfaces.Tooltip("Clear the tell target input field");
-            ImGui.SameLine();
+                if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Crosshairs))
+                    tellTarget = GetTellTarget() ?? tellTarget;
 
-            ImGui.SetNextItemWidth(ImGui.GetWindowWidth() / 2);
-            ImGui.InputTextWithHint("##TellTargetInput", "Tell Target", ref tellTarget, Constraints.TellTargetLimit);
-        }
-        else if (chatMode == ChatMode.Linkshell || chatMode == ChatMode.CrossworldLinkshell)
-        {
-            ImGui.SetCursorPosX((style.WindowPadding.X * 2) + (style.FramePadding.X * 2) + ImGui.GetFontSize());
+                SharedUserInterfaces.Tooltip("Copy my target's name");
+                ImGui.SameLine();
 
-            ImGui.SetNextItemWidth(50);
-            if (ImGui.BeginCombo("Linkshell Number", linkshellNumber.ToString()))
-            {
-                for (var i = 1; i < 9; i++)
+                if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Broom))
+                    tellTarget = string.Empty;
+
+                SharedUserInterfaces.Tooltip("Clear the tell target input field");
+                ImGui.SameLine();
+
+                ImGui.SetNextItemWidth(ImGui.GetWindowWidth() / 2);
+                ImGui.InputTextWithHint("##TellTargetInput", "Tell Target", ref tellTarget, Constraints.TellTargetLimit);
+                break;
+
+            case ChatMode.Linkshell:
+            case ChatMode.CrossworldLinkshell:
+                ImGui.SetCursorPosX(additionalArgumentsOffset);
+                ImGui.SetCursorPosX((style.WindowPadding.X * 2) + (style.FramePadding.X * 2) + ImGui.GetFontSize());
+
+                ImGui.SetNextItemWidth(50);
+                if (ImGui.BeginCombo("Linkshell Number", linkshellNumber.ToString()))
                 {
-                    var selected = i == linkshellNumber;
-                    if (ImGui.Selectable(i.ToString(), selected))
-                        linkshellNumber = i;
-                    if (selected)
-                        ImGui.SetItemDefaultFocus();
+                    for (var i = 1; i < 9; i++)
+                    {
+                        var selected = i == linkshellNumber;
+                        if (ImGui.Selectable(i.ToString(), selected))
+                            linkshellNumber = i;
+                        if (selected)
+                            ImGui.SetItemDefaultFocus();
+                    }
+
+                    ImGui.EndCombo();
                 }
 
-                ImGui.EndCombo();
-            }
-
-            ImGui.SameLine();
-            SharedUserInterfaces.Icon(FontAwesomeIcon.ExclamationCircle);
-            if (ImGui.IsItemHovered())
-            {
-                ImGui.BeginTooltip();
-                SharedUserInterfaces.TextCentered("Caution!");
-                ImGui.Text("Which number a linkshell corresponds with may differ from person to person.");
-                ImGui.EndTooltip();
-            }
+                ImGui.SameLine();
+                SharedUserInterfaces.Icon(FontAwesomeIcon.ExclamationCircle);
+                if (ImGui.IsItemHovered())
+                {
+                    ImGui.BeginTooltip();
+                    SharedUserInterfaces.TextCentered("Caution!");
+                    ImGui.Text("Which number a linkshell corresponds with may differ from person to person.");
+                    ImGui.EndTooltip();
+                }
+                break;
         }
 
         if (shouldProcessSpeakCommand && isCommandLockout == false)
@@ -159,16 +177,13 @@ public class SpeakModule : IControlTableModule
         if (string.IsNullOrEmpty(message))
             return;
 
-        string? extra = null;
-        if (chatMode == ChatMode.Linkshell || chatMode == ChatMode.CrossworldLinkshell)
+        var extra = chatMode switch
         {
-            extra = linkshellNumber.ToString();
-        }
-        else if (chatMode == ChatMode.Tell)
-        {
-            if (tellTarget.Length > 0)
-                extra = tellTarget;
-        }
+            ChatMode.Linkshell or ChatMode.CrossworldLinkshell => linkshellNumber.ToString(),
+            ChatMode.Tell => tellTarget.Length > 0 ? tellTarget : null,
+            ChatMode.Say => userEmoteInsteadOfSay.ToString(),
+            _ => null
+        };
 
         // Initiate UI Lockout
         commandLockoutManager.Lock(Constraints.GameCommandCooldownInSeconds);

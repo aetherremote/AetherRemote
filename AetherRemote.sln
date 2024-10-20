@@ -13,8 +13,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AetherRemoteTests", "Aether
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AetherRemoteInterface", "AetherRemoteInterface\AetherRemoteInterface.csproj", "{2768F530-C7CD-47B1-AAA9-8B525AC96E03}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AetherRemoteDiscordBot", "AetherRemoteDiscordBot\AetherRemoteDiscordBot.csproj", "{591E172A-818A-404E-BD00-0340F6DA72AA}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -104,22 +102,6 @@ Global
 		{2768F530-C7CD-47B1-AAA9-8B525AC96E03}.Release|ARM64.Build.0 = Release|Any CPU
 		{2768F530-C7CD-47B1-AAA9-8B525AC96E03}.Release|x64.ActiveCfg = Release|Any CPU
 		{2768F530-C7CD-47B1-AAA9-8B525AC96E03}.Release|x64.Build.0 = Release|Any CPU
-		{591E172A-818A-404E-BD00-0340F6DA72AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{591E172A-818A-404E-BD00-0340F6DA72AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{591E172A-818A-404E-BD00-0340F6DA72AA}.Debug|ARM32.ActiveCfg = Debug|Any CPU
-		{591E172A-818A-404E-BD00-0340F6DA72AA}.Debug|ARM32.Build.0 = Debug|Any CPU
-		{591E172A-818A-404E-BD00-0340F6DA72AA}.Debug|ARM64.ActiveCfg = Debug|Any CPU
-		{591E172A-818A-404E-BD00-0340F6DA72AA}.Debug|ARM64.Build.0 = Debug|Any CPU
-		{591E172A-818A-404E-BD00-0340F6DA72AA}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{591E172A-818A-404E-BD00-0340F6DA72AA}.Debug|x64.Build.0 = Debug|Any CPU
-		{591E172A-818A-404E-BD00-0340F6DA72AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{591E172A-818A-404E-BD00-0340F6DA72AA}.Release|Any CPU.Build.0 = Release|Any CPU
-		{591E172A-818A-404E-BD00-0340F6DA72AA}.Release|ARM32.ActiveCfg = Release|Any CPU
-		{591E172A-818A-404E-BD00-0340F6DA72AA}.Release|ARM32.Build.0 = Release|Any CPU
-		{591E172A-818A-404E-BD00-0340F6DA72AA}.Release|ARM64.ActiveCfg = Release|Any CPU
-		{591E172A-818A-404E-BD00-0340F6DA72AA}.Release|ARM64.Build.0 = Release|Any CPU
-		{591E172A-818A-404E-BD00-0340F6DA72AA}.Release|x64.ActiveCfg = Release|Any CPU
-		{591E172A-818A-404E-BD00-0340F6DA72AA}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

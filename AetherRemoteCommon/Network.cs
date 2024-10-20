@@ -12,6 +12,7 @@ public static class Network
         public const string Transform = "TransformCommand";
         public const string BodySwap = "BodySwapCommand";
         public const string UpdateOnlineStatus = "UpdateOnlineStatusCommand";
+        public const string Revert = "RevertCommand";
     }
 
     public static class User

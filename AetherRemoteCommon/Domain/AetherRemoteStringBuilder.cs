@@ -87,6 +87,14 @@ public class AetherRemoteStringBuilder
     /// <summary>
     /// Extension for <see cref="UserPermissions"/>
     /// </summary>
+    public void AddVariable(string name, RevertType value)
+    {
+        AddVariable(name, value.ToString());
+    }
+
+    /// <summary>
+    /// Extension for <see cref="UserPermissions"/>
+    /// </summary>
     public void AddVariable(string name, Dictionary<string, UserPermissions>? value)
     {
         if (value == null)

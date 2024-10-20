@@ -25,7 +25,7 @@ public static class Constraints
     /// <summary>
     /// Limits the amount of characters when entering glamourer data
     /// </summary>
-    public const uint GlamourerDataCharLimit = 2000;
+    public const uint GlamourerDataCharLimit = 4000;
 
     /// <summary>
     /// Limits the amount of characters that should be in an emote (In-game max is 17)

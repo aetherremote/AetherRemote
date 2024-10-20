@@ -108,6 +108,13 @@ public class PrimaryHub(NetworkService network, ILogger<PrimaryHub> logger) : Hu
         return await network.Transform(FriendCode, request, Clients);
     }
 
+    [HubMethodName(Network.Commands.Revert)]
+    public async Task<RevertResponse> Revert(RevertRequest request)
+    {
+        logger.LogInformation("{Request}", request);
+        return await network.Revert(FriendCode, request, Clients);
+    }
+
     public override Task OnConnectedAsync()
     {
         network.UpdateOnlineStatus(FriendCode, true, Clients);
