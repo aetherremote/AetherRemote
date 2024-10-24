@@ -284,7 +284,7 @@ public class FriendsTab : ITab
         {
             focusedFriend = friend;
             focusedFriendNote = friendNote ?? string.Empty;
-            focusedPermissions = ConvertUserPermissionsToBooleans(friend.Permissions);
+            focusedPermissions = ConvertUserPermissionsToBooleans(friend.PermissionsGrantedToFriend);
         }
 
         if (onlineStatus == false) ImGui.PopStyleColor();
@@ -306,7 +306,7 @@ public class FriendsTab : ITab
 
         var (success, online) = await CreateOrUpdateFriend(friendCode);
         if (success)
-            clientDataManager.FriendsList.CreateOrUpdateFriend(friendCode, online);
+            clientDataManager.FriendsList.CreateFriend(friendCode, online);
     }
 
     private async void ProcessSaveFriend()
@@ -328,7 +328,7 @@ public class FriendsTab : ITab
         {
             // Only set locally if success on server
             focusedFriend.Online = online;
-            focusedFriend.Permissions = permissions;
+            focusedFriend.PermissionsGrantedToFriend = permissions;
         }
     }
 
@@ -409,7 +409,7 @@ public class FriendsTab : ITab
             return true;
 
         var permissions = ConvertBooleansToUserPermissions(focusedPermissions);
-        if (permissions != focusedFriend.Permissions)
+        if (permissions != focusedFriend.PermissionsGrantedToFriend)
             return true;
 
         return false;

@@ -100,12 +100,11 @@ public class DatabaseServiceTests
 
         await db.CreateOrUpdatePermissions("FriendCode1", "FriendCode2", UserPermissions.Speak).ConfigureAwait(false);
 
-        var (permissions, message) = await db.GetPermissions("FriendCode1").ConfigureAwait(false);
+        var permissions = await db.GetPermissions("FriendCode1").ConfigureAwait(false);
         Assert.That(permissions, Has.Count.EqualTo(1));
         Assert.Multiple(() =>
         {
             Assert.That(permissions["FriendCode2"], Is.EqualTo(UserPermissions.Speak));
-            Assert.That(message, Is.EqualTo(string.Empty));
         });
     }
 
@@ -118,12 +117,11 @@ public class DatabaseServiceTests
         await db.CreateOrUpdatePermissions("FriendCode1", "FriendCode2", UserPermissions.Speak).ConfigureAwait(false);
         await db.CreateOrUpdatePermissions("FriendCode1", "FriendCode2", UserPermissions.CWL6).ConfigureAwait(false);
 
-        var (permissions, message) = await db.GetPermissions("FriendCode1").ConfigureAwait(false);
+        var permissions = await db.GetPermissions("FriendCode1").ConfigureAwait(false);
         Assert.That(permissions, Has.Count.EqualTo(1));
         Assert.Multiple(() =>
         {
             Assert.That(permissions["FriendCode2"], Is.EqualTo(UserPermissions.CWL6));
-            Assert.That(message, Is.EqualTo(string.Empty));
         });
     }
 
@@ -135,14 +133,14 @@ public class DatabaseServiceTests
 
         await db.CreateOrUpdatePermissions("FriendCode1", "FriendCode2", UserPermissions.Speak).ConfigureAwait(false);
 
-        var (permissions, _) = await db.GetPermissions("FriendCode1").ConfigureAwait(false);
+        var permissions = await db.GetPermissions("FriendCode1").ConfigureAwait(false);
         Assert.That(permissions, Has.Count.EqualTo(1));
         Assert.That(permissions["FriendCode2"], Is.EqualTo(UserPermissions.Speak));
 
         var (rows, _) = await db.DeletePermissions("FriendCode1", "FriendCode2").ConfigureAwait(false);
         Assert.That(rows, Is.EqualTo(1));
 
-        var (deletedPermissions, _) = await db.GetPermissions("FriendCode1").ConfigureAwait(false);
+        var deletedPermissions = await db.GetPermissions("FriendCode1").ConfigureAwait(false);
         Assert.That(deletedPermissions, Has.Count.EqualTo(0));
     }
 }

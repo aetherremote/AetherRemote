@@ -142,6 +142,7 @@ public class NetworkProvider : IDisposable
 
         // Handle Events
         connection.On(Network.Commands.UpdateOnlineStatus, (UpdateOnlineStatusCommand command) => { HandleOnlineStatus(command); });
+        connection.On(Network.Commands.UpdateLocalPermissions, (UpdateLocalPermissionsCommand command) => { HandleLocalPermissions(command); });
         connection.On(Network.Commands.Emote, (EmoteCommand command) => { HandleEmote(command); });
         connection.On(Network.Commands.Speak, (SpeakCommand command) => { HandleSpeak(command); });
         connection.On(Network.Commands.Transform, (TransformCommand command) => { _ = HandleTransform(command); });
@@ -166,7 +167,7 @@ public class NetworkProvider : IDisposable
         }
 
         clientDataManager.FriendCode = response.FriendCode;
-        clientDataManager.FriendsList.ConvertServerPermissionsToLocal(response.Permissions, response.Online);
+        clientDataManager.FriendsList.ConvertServerPermissionsToLocal(response.PermissionsGrantedToOthers, response.PermissionsGrantedByOthers);
         return true;
     }
 
@@ -244,6 +245,12 @@ public class NetworkProvider : IDisposable
         clientDataManager.FriendsList.UpdateFriendOnlineStatus(command.FriendCode, command.Online);
     }
 
+    private void HandleLocalPermissions(UpdateLocalPermissionsCommand command)
+    {
+        Plugin.Log.Verbose($"{command}");
+        clientDataManager.FriendsList.UpdateLocalPermissions(command.FriendCode, command.PermissionsGrantedToUser);
+    }
+
     private void HandleEmote(EmoteCommand command)
     {
         Plugin.Log.Verbose(command.ToString());
@@ -258,7 +265,7 @@ public class NetworkProvider : IDisposable
             return;
         }
 
-        if (PermissionChecker.HasValidEmotePermissions(friend.Permissions) == false)
+        if (PermissionChecker.HasValidEmotePermissions(friend.PermissionsGrantedToFriend) == false)
         {
             var message = HistoryLog.LackingPermissions("Emote", noteOrFriendCode);
             Plugin.Log.Information(message);
@@ -290,7 +297,7 @@ public class NetworkProvider : IDisposable
             return;
         }
 
-        if (PermissionChecker.HasAnyTransformPermissions(friend.Permissions) == false)
+        if (PermissionChecker.HasAnyTransformPermissions(friend.PermissionsGrantedToFriend) == false)
         {
             var message = HistoryLog.LackingPermissions("Revert", noteOrFriendCode);
             Plugin.Log.Information(message);
@@ -325,7 +332,7 @@ public class NetworkProvider : IDisposable
             return;
         }
 
-        if (PermissionChecker.HasValidSpeakPermissions(command.ChatMode, friend.Permissions) == false)
+        if (PermissionChecker.HasValidSpeakPermissions(command.ChatMode, friend.PermissionsGrantedToFriend) == false)
         {
             var message = HistoryLog.LackingPermissions("Speak", noteOrFriendCode);
             Plugin.Log.Information(message);
@@ -350,7 +357,7 @@ public class NetworkProvider : IDisposable
             return;
         }
 
-        if (PermissionChecker.HasValidTransformPermissions(command.ApplyFlags, friend.Permissions) == false)
+        if (PermissionChecker.HasValidTransformPermissions(command.ApplyFlags, friend.PermissionsGrantedToFriend) == false)
         {
             var message = HistoryLog.LackingPermissions("Transform", noteOrFriendCode);
             Plugin.Log.Information(message);
@@ -395,7 +402,7 @@ public class NetworkProvider : IDisposable
             return;
         }
 
-        if (PermissionChecker.HasValidTransformPermissions(BodySwapFlags, friend.Permissions) == false)
+        if (PermissionChecker.HasValidTransformPermissions(BodySwapFlags, friend.PermissionsGrantedToFriend) == false)
         {
             var message = HistoryLog.LackingPermissions("Body Swap", noteOrFriendCode);
             Plugin.Log.Information(message);
@@ -433,7 +440,7 @@ public class NetworkProvider : IDisposable
             return new();
         }
 
-        if (PermissionChecker.HasValidTransformPermissions(BodySwapFlags, friend.Permissions) == false)
+        if (PermissionChecker.HasValidTransformPermissions(BodySwapFlags, friend.PermissionsGrantedToFriend) == false)
         {
             var message = HistoryLog.LackingPermissions("Body Swap Query", noteOrFriendCode);
             Plugin.Log.Information(message);

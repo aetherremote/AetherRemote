@@ -49,24 +49,44 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
     /// </summary>
     public async Task<LoginDetailsResponse> LoginDetails(string friendCode, LoginDetailsRequest request)
     {
-        var (permissions, _) = await databaseService.GetPermissions(friendCode);
-        var onlineMap = new HashSet<string>();
-        foreach(var kvp in permissions)
+        var permissionsGrantedToOthers = await databaseService.GetPermissions(friendCode);
+        var permissionsGrantedByOthers = new Dictionary<string, UserPermissions>();
+        foreach(var kvp in permissionsGrantedToOthers)
         {
-            if (PrimaryHub.ActiveUserConnections.ContainsKey(kvp.Key))
-                onlineMap.Add(kvp.Key);
+            if (PrimaryHub.ActiveUserConnections.ContainsKey(kvp.Key) == false)
+                continue;
+
+            var permissionsGrantedByFriendToOthers = await databaseService.GetPermissions(kvp.Key);
+            if (permissionsGrantedByFriendToOthers.TryGetValue(friendCode, out var permissions))
+                permissionsGrantedByOthers[kvp.Key] = permissions;
         }
 
-        return new LoginDetailsResponse(true, friendCode, permissions, onlineMap);
+        return new LoginDetailsResponse(true, friendCode, permissionsGrantedToOthers, permissionsGrantedByOthers);
     }
 
     /// <summary>
     /// Creates or updates permissions a user has set for another
     /// </summary>
-    public async Task<CreateOrUpdatePermissionsResponse> CreateOrUpdatePermissions(string friendCode, CreateOrUpdatePermissionsRequest request)
+    public async Task<CreateOrUpdatePermissionsResponse> CreateOrUpdatePermissions(string friendCode, CreateOrUpdatePermissionsRequest request, IHubCallerClients clients)
     {
         var (rows, message) = await databaseService.CreateOrUpdatePermissions(friendCode, request.TargetCode, request.Permissions);
-        return new CreateOrUpdatePermissionsResponse(rows == 1, PrimaryHub.ActiveUserConnections.ContainsKey(request.TargetCode), message);
+        var online = false;
+        if (PrimaryHub.ActiveUserConnections.TryGetValue(request.TargetCode, out var connection))
+        {
+            try
+            {
+                var command = new UpdateLocalPermissionsCommand(friendCode, request.Permissions);
+                _ = clients.Client(connection.ConnectionId).SendAsync(Network.Commands.UpdateLocalPermissions, command);
+                online = true;
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("Exception while updating permissions for online clients {Exception}", ex);
+                return new CreateOrUpdatePermissionsResponse(false, false, ex.Message);
+            }
+        }
+
+        return new CreateOrUpdatePermissionsResponse(rows == 1, online, message);
     }
 
     /// <summary>
@@ -83,8 +103,8 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
     /// </summary>
     public async Task<GetPermissionsResponse> GetPermissions(string friendCode, GetPermissionsRequest request)
     {
-        var (permissions, message) = await databaseService.GetPermissions(friendCode);
-        return new GetPermissionsResponse(true, permissions, message);
+        var permissions = await databaseService.GetPermissions(friendCode);
+        return new GetPermissionsResponse(true, permissions, string.Empty);
     }
 
     /// <summary>
@@ -108,7 +128,7 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
             }
 
             // Not friends with
-            var (targetPermissions, _) = await databaseService.GetPermissions(request.TargetFriendCodes[i]);
+            var targetPermissions = await databaseService.GetPermissions(request.TargetFriendCodes[i]);
             if (targetPermissions.TryGetValue(friendCode, out var permissionsGrantedToFriendCode) == false)
             {
                 cancellationToken.Cancel();
@@ -210,7 +230,7 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
                 continue;
 
             // Not friends with
-            var (targetPermissions, _) = await databaseService.GetPermissions(targetFriendCode);
+            var targetPermissions = await databaseService.GetPermissions(targetFriendCode);
             if (targetPermissions.TryGetValue(friendCode, out var permissionsGrantedToFriendCode) == false)
                 continue;
 
@@ -251,7 +271,7 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
                 continue;
 
             // Not friends with
-            var (targetPermissions, _) = await databaseService.GetPermissions(targetFriendCode);
+            var targetPermissions = await databaseService.GetPermissions(targetFriendCode);
             if (targetPermissions.TryGetValue(friendCode, out var permissionsGrantedToFriendCode) == false)
                 continue;
 
@@ -290,7 +310,7 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
                 continue;
 
             // Not friends with
-            var (targetPermissions, _) = await databaseService.GetPermissions(targetFriendCode);
+            var targetPermissions = await databaseService.GetPermissions(targetFriendCode);
             if (targetPermissions.TryGetValue(friendCode, out var permissionsGrantedToFriendCode) == false)
                 continue;
 
@@ -325,7 +345,7 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
                 continue;
 
             // Not friends with
-            var (targetPermissions, _) = await databaseService.GetPermissions(targetFriendCode);
+            var targetPermissions = await databaseService.GetPermissions(targetFriendCode);
             if (targetPermissions.TryGetValue(friendCode, out var permissionsGrantedToFriendCode) == false)
                 continue;
 
@@ -353,13 +373,21 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
     /// </summary>
     public async void UpdateOnlineStatus(string friendCode, bool online, IHubCallerClients clients)
     {
-        var (permissions, _) = await databaseService.GetPermissions(friendCode).ConfigureAwait(false);
+        var permissions = await databaseService.GetPermissions(friendCode).ConfigureAwait(false);
         foreach (var key in permissions.Keys)
         {
-            if (PrimaryHub.ActiveUserConnections.TryGetValue(key, out var user))
+            if (PrimaryHub.ActiveUserConnections.TryGetValue(key, out var user) == false)
+                continue;
+
+            try
             {
                 var request = new UpdateOnlineStatusCommand(friendCode, online);
                 _ = clients.Client(user.ConnectionId).SendAsync(Network.Commands.UpdateOnlineStatus, request);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError("Exception while updating online status {Exception}", ex);
+                return;
             }
         }
     }

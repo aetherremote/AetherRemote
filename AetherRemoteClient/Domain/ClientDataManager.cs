@@ -39,11 +39,11 @@ public class ClientDataManager
         if (Plugin.DeveloperMode)
         {
             FriendCode = "Dev Mode";
-            FriendsList.CreateOrUpdateFriend("Friend1", false);
-            FriendsList.CreateOrUpdateFriend("Friend2", true);
-            FriendsList.CreateOrUpdateFriend("Friend3", true);
-            FriendsList.CreateOrUpdateFriend("Friend4", false);
-            FriendsList.CreateOrUpdateFriend("Friend5", false);
+            FriendsList.CreateFriend("Friend1", false);
+            FriendsList.CreateFriend("Friend2", true);
+            FriendsList.CreateFriend("Friend3", true);
+            FriendsList.CreateFriend("Friend4", false);
+            FriendsList.CreateFriend("Friend5", false);
         }
 #pragma warning restore CS0162
     }

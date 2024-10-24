@@ -1,5 +1,6 @@
 using AetherRemoteClient.Domain.Events;
 using AetherRemoteCommon.Domain;
+using Dalamud.Interface.Animation.EasingFunctions;
 using System;
 using System.Collections.Generic;
 
@@ -28,45 +29,31 @@ public class FriendsList
     /// <summary>
     /// Converts a permission map from the server into friends list format
     /// </summary>
-    public void ConvertServerPermissionsToLocal(Dictionary<string, UserPermissions>? permissionsMap, HashSet<string>? onlineSet)
+    public void ConvertServerPermissionsToLocal(
+        Dictionary<string, UserPermissions>? permissionsGrantedToOthers,
+        Dictionary<string, UserPermissions>? permissionsGrantedByOthers)
     {
-        if (permissionsMap == null || onlineSet == null)
+        if (permissionsGrantedToOthers == null || permissionsGrantedByOthers == null)
             return;
 
         Friends.Clear();
-        foreach(var kvp in permissionsMap)
+        foreach(var kvp in permissionsGrantedToOthers)
         {
             var friendCode = kvp.Key;
-            var online = onlineSet.Contains(friendCode);
-            var permissions = kvp.Value;
-
-            Friends.Add(new(friendCode, online, permissions));
+            var permissionsGrantedToFriend = kvp.Value;
+            var online = permissionsGrantedByOthers.TryGetValue(friendCode, out var permissionsGrantedByFriend);
+            Friends.Add(new(friendCode, online, permissionsGrantedToFriend, permissionsGrantedByFriend));
         }
     }
 
     /// <summary>
     /// Creates a <see cref="Friend"/> and adds them to the friends list
     /// </summary>
-    public void CreateOrUpdateFriend(string friendCode, bool online = false)
+    public void CreateFriend(string friendCode, bool online)
     {
-        CreateOrUpdateFriend(new Friend(friendCode, online));
-    }
-
-    /// <summary>
-    /// Updates a <see cref="Friend"/> and adds them to the friends list
-    /// </summary>
-    public void CreateOrUpdateFriend(Friend friend)
-    {
-        var existing = FindFriend(friend.FriendCode);
+        var existing = FindFriend(friendCode);
         if (existing == null)
-        {
-            Friends.Add(friend);
-        }
-        else
-        {
-            existing.Online = friend.Online;
-            existing.Permissions = friend.Permissions;
-        }
+            Friends.Add(new Friend(friendCode, online));
     }
 
     /// <summary>
@@ -109,5 +96,17 @@ public class FriendsList
             return;
 
         friend.Online = online;
+    }
+
+    /// <summary>
+    /// Updates the permissions another <see cref="Friend"/> gives the user
+    /// </summary>
+    public void UpdateLocalPermissions(string friendCode, UserPermissions permissions)
+    {
+        var friend = FindFriend(friendCode);
+        if (friend == null)
+            return;
+
+        friend.PermissionsGrantedByFriend = permissions;
     }
 }

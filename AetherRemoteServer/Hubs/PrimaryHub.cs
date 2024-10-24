@@ -62,7 +62,7 @@ public class PrimaryHub(NetworkService network, ILogger<PrimaryHub> logger) : Hu
     public async Task<CreateOrUpdatePermissionsResponse> CreateOrUpdatePermissions(CreateOrUpdatePermissionsRequest request)
     {
         logger.LogInformation("{Request}", request);
-        return await network.CreateOrUpdatePermissions(FriendCode, request);
+        return await network.CreateOrUpdatePermissions(FriendCode, request, Clients);
     }
 
     [HubMethodName(Network.Permissions.Delete)]

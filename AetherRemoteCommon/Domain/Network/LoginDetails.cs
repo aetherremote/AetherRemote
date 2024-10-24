@@ -16,25 +16,21 @@ public struct LoginDetailsResponse
     public bool Success { get; set; }
     public string Message { get; set; }
     public string? FriendCode { get; set; }
-    public Dictionary<string, UserPermissions>? Permissions { get; set; }
-
-    /// <summary>
-    /// List of online users in the user's permission list (friends list)
-    /// </summary>
-    public HashSet<string>? Online { get; set; }
+    public Dictionary<string, UserPermissions>? PermissionsGrantedToOthers { get; set; }
+    public Dictionary<string, UserPermissions>? PermissionsGrantedByOthers { get; set; }
 
     public LoginDetailsResponse(
         bool success, string? 
         friendCode = null, 
-        Dictionary<string, UserPermissions>? permissions = null,
-        HashSet<string>? online = null,
+        Dictionary<string, UserPermissions>? permissionsGrantedToOthers = null,
+        Dictionary<string, UserPermissions>? permissionsGrantedByOthers = null,
         string message = "")
     {
         Success = success;
         Message = message;
         FriendCode = friendCode;
-        Permissions = permissions;
-        Online = online;
+        PermissionsGrantedToOthers = permissionsGrantedToOthers;
+        PermissionsGrantedByOthers = permissionsGrantedByOthers;
     }
 
     public override readonly string ToString()
@@ -43,8 +39,8 @@ public struct LoginDetailsResponse
         sb.AddVariable("Success", Success);
         sb.AddVariable("Message", Message);
         sb.AddVariable("FriendCode", FriendCode);
-        sb.AddVariable("Permissions", Permissions);
-        sb.AddVariable("Online", Online);
+        sb.AddVariable("PermissionsGrantedToOthers", PermissionsGrantedToOthers);
+        sb.AddVariable("PermissionsGrantedByOthers", PermissionsGrantedByOthers);
         return sb.ToString();
     }
 }

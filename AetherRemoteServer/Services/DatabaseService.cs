@@ -180,10 +180,10 @@ public class DatabaseService : IDisposable
     /// <summary>
     /// Gets all permissions user has granted to others
     /// </summary>
-    public async Task<(Dictionary<string, UserPermissions>, string)> GetPermissions(string friendCode)
+    public async Task<Dictionary<string, UserPermissions>> GetPermissions(string friendCode)
     {
         if (permissionsCache.TryGetValue(friendCode, out Dictionary<string, UserPermissions>? cachedPermissions))
-            return (cachedPermissions ?? [], string.Empty);
+            return cachedPermissions ?? [];
 
         using var command = db.CreateCommand();
         command.CommandText = $"SELECT TargetFriendCode, Permissions FROM {PermissionsTable} WHERE UserFriendCode={FriendCodeParam}";
@@ -201,12 +201,12 @@ public class DatabaseService : IDisposable
             }
 
             permissionsCache.Set(friendCode, result);
-            return (result, string.Empty);
+            return result;
         }
         catch (Exception ex)
         {
             logger.LogWarning("Unable to retrieve permission list for friend code {FriendCode}, {Exception}", friendCode, ex.Message);
-            return ([], ex.Message);
+            return [];
         }
     }
 
@@ -281,6 +281,17 @@ public class DatabaseService : IDisposable
 
         validationCommand.ExecuteNonQuery();
 
+        /*
+         * This can be slightly confusing at first
+         * 
+         * The idea is that this table contains a mapping of
+         * user A to user B as the primary key, and then the
+         * permissions that user A is granting to user B as
+         * an integer that is converted to UserPermissions.
+         * 
+         * The absence of permissions from user A to user B
+         * means that user A has not added user B.
+         */
         using var friendshipCommand = db.CreateCommand();
         friendshipCommand.CommandText =
            $"""

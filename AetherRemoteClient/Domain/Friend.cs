@@ -9,16 +9,22 @@ public class Friend
 {
     public string FriendCode;
     public bool Online;
-    public UserPermissions Permissions;
+    public UserPermissions PermissionsGrantedToFriend;
+    public UserPermissions PermissionsGrantedByFriend;
     
     /// <summary>
     /// <inheritdoc cref="Friend"/>
     /// </summary>
-    public Friend(string friendCode, bool online = false, UserPermissions permissions = UserPermissions.None)
+    public Friend(
+        string friendCode, 
+        bool online = false, 
+        UserPermissions permissionsGrantedToFriend = UserPermissions.None,
+        UserPermissions permissionsGrantedByFriend = UserPermissions.None)
     {
         FriendCode = friendCode;
         Online = online;
-        Permissions = permissions;
+        PermissionsGrantedToFriend = permissionsGrantedToFriend;
+        PermissionsGrantedByFriend = permissionsGrantedByFriend;
     }
 
     public override string ToString()
@@ -26,7 +32,8 @@ public class Friend
         var sb = new AetherRemoteStringBuilder("LocalFriendData");
         sb.AddVariable("FriendCode", FriendCode);
         sb.AddVariable("Online", Online);
-        sb.AddVariable("Permissions", Permissions);
+        sb.AddVariable("PermissionsGrantedToFriend", PermissionsGrantedToFriend);
+        sb.AddVariable("PermissionsGrantedByFriend", PermissionsGrantedByFriend);
         return sb.ToString();
     }
 }
