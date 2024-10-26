@@ -1,3 +1,5 @@
+using AetherRemoteCommon.Domain;
+
 namespace AetherRemoteClient.Domain;
 
 /// <summary>
@@ -40,7 +42,7 @@ public class ClientDataManager
         {
             FriendCode = "Dev Mode";
             FriendsList.CreateFriend("Friend1", false);
-            FriendsList.CreateFriend("Friend2", true);
+            FriendsList.CreateFriend("Friend2", true, UserPermissions.Speak | UserPermissions.Emote | UserPermissions.CWL6 | UserPermissions.Shout | UserPermissions.Equipment);
             FriendsList.CreateFriend("Friend3", true);
             FriendsList.CreateFriend("Friend4", false);
             FriendsList.CreateFriend("Friend5", false);

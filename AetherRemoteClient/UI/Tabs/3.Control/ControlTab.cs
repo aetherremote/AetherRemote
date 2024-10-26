@@ -170,7 +170,7 @@ public class ControlTab : ITab
         if (ImGui.Selectable(selectableId, selected, ImGuiSelectableFlags.SpanAllColumns))
         {
             if (lockCurrentTargets == false)
-                clientDataManager.TargetManager.ToggleSelect(friend.FriendCode);
+                clientDataManager.TargetManager.ToggleSelect(friend);
         }
 
         // Draw Icon
@@ -202,8 +202,8 @@ public class ControlTab : ITab
         }
         else
         {
-            var friendCode = clientDataManager.TargetManager.Targets.First();
-            text = Plugin.Configuration.Notes.TryGetValue(friendCode, out var note) ? note : friendCode;
+            var firstFriend = clientDataManager.TargetManager.Targets.First();
+            text = Plugin.Configuration.Notes.TryGetValue(firstFriend.Key, out var note) ? note : firstFriend.Key;
         }
 
         SharedUserInterfaces.BigTextCentered(text, ImGuiColors.ParsedOrange);

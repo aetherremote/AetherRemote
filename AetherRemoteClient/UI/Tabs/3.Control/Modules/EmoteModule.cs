@@ -3,6 +3,7 @@ using AetherRemoteClient.Domain.Log;
 using AetherRemoteClient.Domain.UI;
 using AetherRemoteClient.Providers;
 using AetherRemoteCommon;
+using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Network.Commands;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
@@ -56,6 +57,20 @@ public class EmoteModule : IControlTableModule
             description: "Attempts to make selected friend(s) perform specified emote.",
             requiredPermissions: ["Emote"]);
 
+        var friendsMissingPermissions = new List<string>();
+        foreach (var target in clientDataManager.TargetManager.Targets)
+        {
+            if (PermissionChecker.HasValidEmotePermissions(target.Value.PermissionsGrantedByFriend) == false)
+                friendsMissingPermissions.Add(target.Key);
+        }
+
+        if (friendsMissingPermissions.Count > 0)
+        {
+            // Hardcoded size of emote selector
+            ImGui.SameLine(200 + (ImGui.GetStyle().WindowPadding.X * 2.5f));
+            SharedUserInterfaces.PermissionsWarning(friendsMissingPermissions);
+        }
+
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(4, 4));
         SharedUserInterfaces.ComboWithFilter(ref emote, "Emote", emoteSearchFilter);
         ImGui.PopStyleVar();
@@ -82,7 +97,7 @@ public class EmoteModule : IControlTableModule
         // Initiate UI Lockout
         commandLockoutManager.Lock(Constraints.GameCommandCooldownInSeconds);
 
-        var targets = clientDataManager.TargetManager.Targets.ToList();
+        var targets = clientDataManager.TargetManager.Targets.Keys.ToList();
         var result = await IssueEmoteCommand(targets, emote, sendLogMessage).ConfigureAwait(false);
         if (result)
         {

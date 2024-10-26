@@ -3,6 +3,7 @@ using Dalamud.Interface.Colors;
 using Dalamud.Interface.ManagedFontAtlas;
 using ImGuiNET;
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
 
@@ -195,6 +196,26 @@ public class SharedUserInterfaces
         Icon(FontAwesomeIcon.QuestionCircle);
 
         CommandDescription(description, requiredPlugins, requiredPermissions, optionalPermissions);
+    }
+
+    public static void PermissionsWarning(List<string> friendsMissingPermissions)
+    {
+        ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.DalamudYellow);
+        Icon(FontAwesomeIcon.ExclamationTriangle);
+        ImGui.PopStyleColor();
+
+        if (ImGui.IsItemHovered())
+        {
+            ImGui.BeginTooltip();
+            ImGui.Text("Inadequate permissions!");
+            ImGui.Separator();
+            foreach (var friend in friendsMissingPermissions)
+            {
+                Plugin.Configuration.Notes.TryGetValue(friend, out var note);
+                ImGui.Text(note ?? friend);
+            }
+            ImGui.EndTooltip();
+        }
     }
 
     /// <summary>

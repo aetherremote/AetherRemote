@@ -65,6 +65,27 @@ public class TransformationModule : IControlTableModule
             requiredPlugins: ["Glamourer", "Mare Synchronos"],
             optionalPermissions: ["Customization", "Equipment"]);
 
+        var friendsMissingPermissions = new List<string>();
+        foreach (var target in clientDataManager.TargetManager.Targets)
+        {
+            var glamourerApplyFlags = GlamourerApplyFlag.Once
+            | (applyCustomization ? GlamourerApplyFlag.Customization : 0)
+            | (applyEquipment ? GlamourerApplyFlag.Equipment : 0);
+
+            if (glamourerApplyFlags == GlamourerApplyFlag.Once)
+                glamourerApplyFlags = CustomizationAndEquipmentFlags;
+
+            if (PermissionChecker.HasValidTransformPermissions(glamourerApplyFlags, target.Value.PermissionsGrantedByFriend) == false)
+                friendsMissingPermissions.Add(target.Key);
+        }
+
+        if (friendsMissingPermissions.Count > 0)
+        {
+            // Hardcoded size of emote selector
+            ImGui.SameLine(ImGui.GetWindowWidth() - ImGui.GetFontSize() - (ImGui.GetStyle().WindowPadding.X * 1.5f));
+            SharedUserInterfaces.PermissionsWarning(friendsMissingPermissions);
+        }
+
         SharedUserInterfaces.DisableIf(glamourerInstalled == false, () =>
         {
             ImGui.SetNextItemWidth(-1 * (TransformButtonSize.X + ImGui.GetStyle().WindowPadding.X));
@@ -147,7 +168,7 @@ public class TransformationModule : IControlTableModule
         // Initiate UI Lockout
         commandLockoutManager.Lock(Constraints.ExternalCommandCooldownInSeconds);
 
-        var targets = clientDataManager.TargetManager.Targets.ToList();
+        var targets = clientDataManager.TargetManager.Targets.Keys.ToList();
 
         var request = new RevertRequest(targets, revertType);
         var result = await networkProvider.InvokeCommand<RevertRequest, RevertResponse>(Network.Commands.Revert, request);
@@ -186,7 +207,7 @@ public class TransformationModule : IControlTableModule
         // Initiate UI Lockout
         commandLockoutManager.Lock(Constraints.ExternalCommandCooldownInSeconds);
 
-        var targets = clientDataManager.TargetManager.Targets.ToList();
+        var targets = clientDataManager.TargetManager.Targets.Keys.ToList();
         var result = await IssueTransformCommand(targets, glamourerData, glamourerApplyFlags).ConfigureAwait(false);
         if (result)
         {

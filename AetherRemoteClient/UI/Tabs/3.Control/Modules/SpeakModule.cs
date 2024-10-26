@@ -3,6 +3,7 @@ using AetherRemoteClient.Domain.Log;
 using AetherRemoteClient.Domain.UI;
 using AetherRemoteClient.Providers;
 using AetherRemoteCommon;
+using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.CommonChatMode;
 using AetherRemoteCommon.Domain.Network.Commands;
 using Dalamud.Interface;
@@ -65,6 +66,20 @@ public class SpeakModule : IControlTableModule
             requiredPermissions: ["Speak"],
             optionalPermissions: ["Say, Yell, Shout, Tell, Party, Alliance, Free Company, PvP Team", "Linkshell 1 - 8", "Crossworld Linkshell 1 - 8"]
             );
+
+        var friendsMissingPermissions = new List<string>();
+        foreach (var target in clientDataManager.TargetManager.Targets)
+        {
+            if (PermissionChecker.HasValidSpeakPermissions(chatMode, target.Value.PermissionsGrantedByFriend, linkshellNumber) == false)
+                friendsMissingPermissions.Add(target.Key);
+        }
+
+        if (friendsMissingPermissions.Count > 0)
+        {
+            // Hardcoded size of emote selector
+            ImGui.SameLine(ImGui.GetWindowWidth() - ImGui.GetFontSize() - (ImGui.GetStyle().WindowPadding.X * 1.5f));
+            SharedUserInterfaces.PermissionsWarning(friendsMissingPermissions);
+        }
 
         if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Comment))
             ImGui.OpenPopup("ChatModeSelector");
@@ -188,7 +203,7 @@ public class SpeakModule : IControlTableModule
         // Initiate UI Lockout
         commandLockoutManager.Lock(Constraints.GameCommandCooldownInSeconds);
 
-        var targets = clientDataManager.TargetManager.Targets.ToList();
+        var targets = clientDataManager.TargetManager.Targets.Keys.ToList();
         var result = await IssueSpeakCommand(targets, message, chatMode, extra).ConfigureAwait(false);
         if (result)
         {

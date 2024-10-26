@@ -49,11 +49,11 @@ public class FriendsList
     /// <summary>
     /// Creates a <see cref="Friend"/> and adds them to the friends list
     /// </summary>
-    public void CreateFriend(string friendCode, bool online)
+    public void CreateFriend(string friendCode, bool online, UserPermissions permissionsGrantedByFriend = UserPermissions.None)
     {
         var existing = FindFriend(friendCode);
         if (existing == null)
-            Friends.Add(new Friend(friendCode, online));
+            Friends.Add(new Friend(friendCode, online, UserPermissions.None, permissionsGrantedByFriend));
     }
 
     /// <summary>

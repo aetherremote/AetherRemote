@@ -1,4 +1,5 @@
-using System.Collections.Immutable;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace AetherRemoteClient.Domain;
@@ -9,9 +10,9 @@ namespace AetherRemoteClient.Domain;
 public class TargetManager
 {
     /// <summary>
-    /// List of target friend
+    /// Dictionary of friend code mapped to friend object
     /// </summary>
-    public ImmutableHashSet<string> Targets { get; private set; } = [];
+    public readonly ConcurrentDictionary<string, Friend> Targets = [];
 
     /// <summary>
     /// Select only a single friend code, or multiple
@@ -23,7 +24,14 @@ public class TargetManager
         {
             singleSelectionMode = value;
             if (singleSelectionMode)
-                Targets = Targets.Count > 0 ? [Targets.First()] : [];
+            {
+                if (Targets.Count <= 1)
+                    return;
+
+                var kvp = Targets.First();
+                Targets.Clear();
+                Targets[kvp.Key] = kvp.Value;
+            }
         }
     }
 
@@ -33,37 +41,38 @@ public class TargetManager
     /// <summary>
     /// Returns if friend code is selected
     /// </summary>
-    public bool Selected(string friendCode) => Targets.Contains(friendCode);
+    public bool Selected(string friendCode) => Targets.ContainsKey(friendCode);
 
     /// <summary>
     /// Toggles a friend code
     /// </summary>
-    public void ToggleSelect(string friendCode)
+    public void ToggleSelect(Friend friend)
     {
+        var friendCode = friend.FriendCode;
         if (singleSelectionMode)
         {
-            Targets = [friendCode];
+            if (Targets.TryGetValue(friendCode, out var _))
+                return;
+
+            Targets.Clear();
+            Targets[friendCode] = friend;
         }
         else
         {
-            if (Targets.Contains(friendCode))
-            {
-                Targets = Targets.Remove(friendCode);
-            }
+            if (Targets.ContainsKey(friendCode))
+                Targets.TryRemove(friendCode, out var _);
             else
-            {
-                Targets = Targets.Add(friendCode);
-            }
+                Targets.TryAdd(friendCode, friend);
         }
     }
 
     /// <summary>
     /// Deselects friend from target list
     /// </summary>
-    public void Deselect(string friendCode) => Targets = Targets.Remove(friendCode);
+    public void Deselect(string friendCode) => Targets.TryRemove(friendCode, out var _);
 
     /// <summary>
     /// Deselects all friend codes
     /// </summary>
-    public void Clear() => Targets = [];
+    public void Clear() => Targets.Clear();
 }

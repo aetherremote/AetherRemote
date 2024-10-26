@@ -4,6 +4,7 @@ using AetherRemoteClient.Domain.Log;
 using AetherRemoteClient.Domain.UI;
 using AetherRemoteClient.Providers;
 using AetherRemoteCommon;
+using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.CommonGlamourerApplyType;
 using AetherRemoteCommon.Domain.Network.Commands;
 using Dalamud.Interface;
@@ -61,13 +62,39 @@ public class ExtraModule : IControlTableModule
             requiredPlugins: ["Glamourer", "Mare Synchronos"],
             requiredPermissions: ["Customization", "Equipment"]);
 
-        ImGui.SameLine();
+        var missingBodySwapPermissions = new List<string>();
+        foreach (var target in clientDataManager.TargetManager.Targets)
+        {
+            if (PermissionChecker.HasValidTransformPermissions(TwinningApplyFlags, target.Value.PermissionsGrantedByFriend) == false)
+                missingBodySwapPermissions.Add(target.Key);
+        }
+
+        if (missingBodySwapPermissions.Count > 0)
+        {
+            // Hardcoded size of emote selector
+            ImGui.SameLine();
+            SharedUserInterfaces.PermissionsWarning(missingBodySwapPermissions);
+        }
 
         SharedUserInterfaces.DisableIf(commandLockoutManager.IsLocked, () =>
         {
             if (ImGui.Button("Twinning"))
                 _ = ProcessTwinning();
         });
+
+        var missingTwinningPermissions = new List<string>();
+        foreach (var target in clientDataManager.TargetManager.Targets)
+        {
+            if (PermissionChecker.HasValidTransformPermissions(TwinningApplyFlags, target.Value.PermissionsGrantedByFriend) == false)
+                missingTwinningPermissions.Add(target.Key);
+        }
+
+        if (missingTwinningPermissions.Count > 0)
+        {
+            // Hardcoded size of emote selector
+            ImGui.SameLine();
+            SharedUserInterfaces.PermissionsWarning(missingTwinningPermissions);
+        }
 
         SharedUserInterfaces.CommandDescription(
             description: "Attempts to transform selected targets into you.",
@@ -94,7 +121,7 @@ public class ExtraModule : IControlTableModule
         // Initiate UI Lockout
         commandLockoutManager.Lock(Constraints.ExternalCommandCooldownInSeconds);
 
-        var targets = clientDataManager.TargetManager.Targets.ToList();
+        var targets = clientDataManager.TargetManager.Targets.Keys.ToList();
         var successful = await IssueTransformCommand(targets, characterData, TwinningApplyFlags).ConfigureAwait(false);
         if (successful == false)
         {
@@ -121,7 +148,7 @@ public class ExtraModule : IControlTableModule
         // Initiate UI Lockout
         commandLockoutManager.Lock(Constraints.ExternalCommandCooldownInSeconds);
 
-        var targets = clientDataManager.TargetManager.Targets.ToList();
+        var targets = clientDataManager.TargetManager.Targets.Keys.ToList();
         var (successful, newBodyData) = await IssueBodySwapCommand(targets, characterData).ConfigureAwait(false);
         if (successful)
         {
