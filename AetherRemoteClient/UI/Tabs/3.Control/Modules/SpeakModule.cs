@@ -76,7 +76,6 @@ public class SpeakModule : IControlTableModule
 
         if (friendsMissingPermissions.Count > 0)
         {
-            // Hardcoded size of emote selector
             ImGui.SameLine(ImGui.GetWindowWidth() - ImGui.GetFontSize() - (ImGui.GetStyle().WindowPadding.X * 1.5f));
             SharedUserInterfaces.PermissionsWarning(friendsMissingPermissions);
         }

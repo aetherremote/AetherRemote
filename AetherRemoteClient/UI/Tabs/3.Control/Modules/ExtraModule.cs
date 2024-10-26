@@ -71,7 +71,6 @@ public class ExtraModule : IControlTableModule
 
         if (missingBodySwapPermissions.Count > 0)
         {
-            // Hardcoded size of emote selector
             ImGui.SameLine();
             SharedUserInterfaces.PermissionsWarning(missingBodySwapPermissions);
         }
@@ -91,7 +90,6 @@ public class ExtraModule : IControlTableModule
 
         if (missingTwinningPermissions.Count > 0)
         {
-            // Hardcoded size of emote selector
             ImGui.SameLine();
             SharedUserInterfaces.PermissionsWarning(missingTwinningPermissions);
         }
