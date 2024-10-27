@@ -187,7 +187,8 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
         }
 
         // Add extra body data for sender client
-        bodyData.Add(request.CharacterData);
+        if (request.CharacterData is not null)
+            bodyData.Add(request.CharacterData);
 
         // Shuffle all body data, then distribute it
         var derangedBodyData = Derange(bodyData);
@@ -208,7 +209,7 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
         }
 
         // Send the last body data back to the client
-        var newSenderBody = derangedBodyData[^1];
+        var newSenderBody = request.CharacterData is not null ? derangedBodyData[^1] : string.Empty;
         return new(true, string.Empty, newSenderBody);
     }
 

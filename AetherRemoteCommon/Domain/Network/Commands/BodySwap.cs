@@ -3,9 +3,9 @@ namespace AetherRemoteCommon.Domain.Network.Commands;
 public struct BodySwapRequest
 {
     public List<string> TargetFriendCodes { get; set; }
-    public string CharacterData { get; set; }
+    public string? CharacterData { get; set; }
 
-    public BodySwapRequest(List<string> targetFriendCodes, string characterData)
+    public BodySwapRequest(List<string> targetFriendCodes, string? characterData)
     {
         TargetFriendCodes = targetFriendCodes;
         CharacterData = characterData;

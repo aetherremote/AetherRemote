@@ -29,6 +29,8 @@ public class ExtraModule : IControlTableModule
     private readonly HistoryLogManager historyLogManager;
     private readonly NetworkProvider networkProvider;
 
+    private bool includeSelfInBodySwap = false;
+
     public ExtraModule(
         ClientDataManager clientDataManager,
         CommandLockoutManager commandLockoutManager,
@@ -58,7 +60,7 @@ public class ExtraModule : IControlTableModule
         });
 
         SharedUserInterfaces.CommandDescription(
-            description: "Attempts to swap bodies with yourself and selected targets randomly.",
+            description: "Attempts to swap bodies of selected targets randomly, optionally including yourself.",
             requiredPlugins: ["Glamourer", "Mare Synchronos"],
             requiredPermissions: ["Customization", "Equipment"]);
 
@@ -74,6 +76,9 @@ public class ExtraModule : IControlTableModule
             ImGui.SameLine();
             SharedUserInterfaces.PermissionsWarning(missingBodySwapPermissions);
         }
+
+        ImGui.Checkbox("Include Self", ref includeSelfInBodySwap);
+        SharedUserInterfaces.Tooltip("Should you be included in the bodies to shuffle?");
 
         SharedUserInterfaces.DisableIf(commandLockoutManager.IsLocked, () =>
         {
@@ -128,6 +133,35 @@ public class ExtraModule : IControlTableModule
     }
 
     private async Task ProcessBodySwap()
+    {
+        if (includeSelfInBodySwap)
+            await BodySwapWithoutRequester().ConfigureAwait(false);
+        else
+            await BodySwapWithRequester().ConfigureAwait(false);
+    }
+
+    private async Task BodySwapWithoutRequester()
+    {
+        if (clientDataManager.TargetManager.Targets.Count < 2)
+            return;
+
+        commandLockoutManager.Lock(Constraints.ExternalCommandCooldownInSeconds);
+
+        var targets = clientDataManager.TargetManager.Targets.Keys.ToList();
+        var (successful, newBodyData) = await IssueBodySwapCommand(targets).ConfigureAwait(false);
+        if (successful)
+        {
+            var message = $"You issued {string.Join(", ", targets)} to swap bodies at random";
+            Plugin.Log.Information(message);
+            historyLogManager.LogHistory(message);
+        }
+        else
+        {
+            // TODO: Make a toast with what went wrong
+        }
+    }
+
+    private async Task BodySwapWithRequester()
     {
         var characterName = Plugin.ClientState.LocalPlayer?.Name.ToString();
         if (characterName == null)
@@ -186,7 +220,7 @@ public class ExtraModule : IControlTableModule
         return result.Success;
     }
 
-    public async Task<(bool, string?)> IssueBodySwapCommand(List<string> targets, string characterData)
+    public async Task<(bool, string?)> IssueBodySwapCommand(List<string> targets, string? characterData = null)
     {
         #pragma warning disable CS0162
         if (Plugin.DeveloperMode)
