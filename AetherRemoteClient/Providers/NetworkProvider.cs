@@ -247,6 +247,7 @@ public class NetworkProvider : IDisposable
     {
         Plugin.Log.Verbose(command.ToString());
         clientDataManager.FriendsList.UpdateFriendOnlineStatus(command.FriendCode, command.Online);
+        clientDataManager.FriendsList.UpdateLocalPermissions(command.FriendCode, command.Permissions);
     }
 
     private void HandleLocalPermissions(UpdateLocalPermissionsCommand command)

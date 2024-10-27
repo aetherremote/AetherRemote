@@ -373,15 +373,15 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
     /// </summary>
     public async void UpdateOnlineStatus(string friendCode, bool online, IHubCallerClients clients)
     {
-        var permissions = await databaseService.GetPermissions(friendCode).ConfigureAwait(false);
-        foreach (var key in permissions.Keys)
+        var permissionsGrantedToOthers = await databaseService.GetPermissions(friendCode).ConfigureAwait(false);
+        foreach (var kvp in permissionsGrantedToOthers)
         {
-            if (PrimaryHub.ActiveUserConnections.TryGetValue(key, out var user) == false)
+            if (PrimaryHub.ActiveUserConnections.TryGetValue(kvp.Key, out var user) == false)
                 continue;
 
             try
             {
-                var request = new UpdateOnlineStatusCommand(friendCode, online);
+                var request = new UpdateOnlineStatusCommand(friendCode, online, online ? kvp.Value : UserPermissions.None);
                 _ = clients.Client(user.ConnectionId).SendAsync(Network.Commands.UpdateOnlineStatus, request);
             }
             catch (Exception ex)
