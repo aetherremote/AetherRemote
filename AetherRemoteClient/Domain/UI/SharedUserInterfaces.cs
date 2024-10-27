@@ -129,19 +129,25 @@ public class SharedUserInterfaces
     public static void PushBigFont() { BigFont?.Push(); }
     public static void PopBigFont() { BigFont?.Pop(); }
 
-    public static void ComboWithFilter(ref string choice, string hint, ListFilter<string> filterHelper,
-        string? id = null, ImGuiWindowFlags? flags = null)
+    public static void ComboWithFilter(
+        string id,
+        string hint,
+        ref string choice,
+        float width,
+        ListFilter<string> filterHelper,
+        ImGuiWindowFlags? flags = null)
     {
         var comboFilterFlags = flags ?? ComboWithFilterFlags;
-        var comboFilterId = id == null ? "##ComboFilter" : $"##{id}-ComboFilter";
-        var popupName = id == null ? "##ComboFilterPopup" : $"##{id}-ComboFilterPopup";
+        var comboFilterId = $"##{id}-ComboFilter";
+        var popupName = $"##{id}-ComboFilterPopup";
 
-        var _sizeX = 200;
         var _sizeY = (20 * Math.Min(filterHelper.List.Count, 10)) + ImGui.GetStyle().WindowPadding.Y;
 
-        ImGui.SetNextItemWidth(_sizeX);
+        ImGui.SetNextItemWidth(width);
         if (ImGui.InputTextWithHint(comboFilterId, hint, ref choice, 100))
             filterHelper.UpdateSearchTerm(choice);
+
+        var itemWidth = ImGui.GetItemRectSize().X;
 
         var isInputTextActive = ImGui.IsItemActive();
         var isInputTextActivated = ImGui.IsItemActivated();
@@ -151,7 +157,7 @@ public class SharedUserInterfaces
         var _x = ImGui.GetItemRectMin().X;
         var _y = ImGui.GetCursorPosY() + ImGui.GetWindowPos().Y;
         ImGui.SetNextWindowPos(new Vector2(_x, _y));
-        ImGui.SetNextWindowSize(new Vector2(_sizeX, _sizeY));
+        ImGui.SetNextWindowSize(new Vector2(itemWidth, _sizeY));
 
         if (ImGui.BeginPopup(popupName, comboFilterFlags))
         {

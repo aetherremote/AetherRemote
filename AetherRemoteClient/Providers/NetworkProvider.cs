@@ -3,6 +3,7 @@ using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Log;
 using AetherRemoteCommon;
 using AetherRemoteCommon.Domain;
+using AetherRemoteCommon.Domain.CommonChatMode;
 using AetherRemoteCommon.Domain.CommonGlamourerApplyType;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Commands;
@@ -42,6 +43,7 @@ public class NetworkProvider : IDisposable
     private readonly EmoteProvider emoteProvider;
     private readonly GlamourerAccessor glamourerAccessor;
     private readonly HistoryLogManager historyLogManager;
+    private readonly WorldProvider worldProvider;
 
     // Instantiated
     private HubConnection? connection = null;
@@ -54,13 +56,15 @@ public class NetworkProvider : IDisposable
         ClientDataManager clientDataManager,
         EmoteProvider emoteProvider,
         GlamourerAccessor glamourerAccessor,
-        HistoryLogManager historyLogManager)
+        HistoryLogManager historyLogManager,
+        WorldProvider worldProvider)
     {
         this.actionQueueProvider = actionQueueProvider;
         this.clientDataManager = clientDataManager;
         this.emoteProvider = emoteProvider;
         this.glamourerAccessor = glamourerAccessor;
         this.historyLogManager = historyLogManager;
+        this.worldProvider = worldProvider;
     }
 
     /// <summary>
@@ -338,6 +342,17 @@ public class NetworkProvider : IDisposable
             Plugin.Log.Information(message);
             historyLogManager.LogHistory(message);
             return;
+        }
+
+        if (command.ChatMode == ChatMode.Tell)
+        {
+            var split = command.Extra?.Split('@');
+            if(split == null || split.Length != 2 || worldProvider.IsValidWorld(split[1]) == false)
+            {
+                var message = HistoryLog.InvalidData("Speak", noteOrFriendCode);
+                Plugin.Log.Warning(message);
+                return;
+            }
         }
 
         actionQueueProvider.EnqueueSpeakAction(command.SenderFriendCode, command.Message, command.ChatMode, command.Extra);

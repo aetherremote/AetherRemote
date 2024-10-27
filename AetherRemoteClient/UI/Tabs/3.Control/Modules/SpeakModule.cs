@@ -6,6 +6,7 @@ using AetherRemoteCommon;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.CommonChatMode;
 using AetherRemoteCommon.Domain.Network.Commands;
+using Dalamud.Game.ClientState.Objects.Types;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
@@ -30,12 +31,17 @@ public class SpeakModule : IControlTableModule
     private readonly NetworkProvider networkProvider;
     private readonly WorldProvider worldProvider;
 
+    // Instantiated
+    private readonly ListFilter<string> worldNameFilter;
+
     // Variables - Speak
     private ChatMode chatMode = ChatMode.Say;
     private int linkshellNumber = 1;
-    private string tellTarget = "";
     private string message = "";
     private int userEmoteInsteadOfSay = 0;
+
+    private string tellTargetName = "";
+    private string tellTargetWorld = "";
 
     public SpeakModule(
         ClientDataManager clientDataManager,
@@ -49,6 +55,8 @@ public class SpeakModule : IControlTableModule
         this.historyLogManager = historyLogManager;
         this.networkProvider = networkProvider;
         this.worldProvider = worldProvider;
+
+        worldNameFilter = new(worldProvider.WorldNames, FilterWorldName);
     }
 
     public void Draw()
@@ -126,25 +134,25 @@ public class SpeakModule : IControlTableModule
             case ChatMode.Tell:
                 ImGui.SetCursorPosX(additionalArgumentsOffset);
                 if (SharedUserInterfaces.IconButton(FontAwesomeIcon.User))
-                    tellTarget = Plugin.ClientState.LocalPlayer?.Name.ToString() ?? tellTarget;
+                    SetTellTargetFor(Plugin.ClientState.LocalPlayer);
 
                 SharedUserInterfaces.Tooltip("Copy my name");
                 ImGui.SameLine();
 
                 if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Crosshairs))
-                    tellTarget = GetTellTarget() ?? tellTarget;
+                    SetTellTargetFor(Plugin.TargetManager.Target);
 
                 SharedUserInterfaces.Tooltip("Copy my target's name");
                 ImGui.SameLine();
 
-                if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Broom))
-                    tellTarget = string.Empty;
-
-                SharedUserInterfaces.Tooltip("Clear the tell target input field");
+                ImGui.SetNextItemWidth(130);
+                ImGui.InputTextWithHint("##TellTargetNameInput", "Name", ref tellTargetName, Constraints.PlayerNameCharLimit);
                 ImGui.SameLine();
 
-                ImGui.SetNextItemWidth(ImGui.GetWindowWidth() / 2);
-                ImGui.InputTextWithHint("##TellTargetInput", "Tell Target", ref tellTarget, Constraints.TellTargetLimit);
+                SharedUserInterfaces.Icon(FontAwesomeIcon.At);
+                ImGui.SameLine();
+
+                SharedUserInterfaces.ComboWithFilter("WorldSelector", "World", ref tellTargetWorld, -1, worldNameFilter);
                 break;
 
             case ChatMode.Linkshell:
@@ -194,7 +202,7 @@ public class SpeakModule : IControlTableModule
         var extra = chatMode switch
         {
             ChatMode.Linkshell or ChatMode.CrossworldLinkshell => linkshellNumber.ToString(),
-            ChatMode.Tell => tellTarget.Length > 0 ? tellTarget : null,
+            ChatMode.Tell => $"{tellTargetName}@{tellTargetWorld}",
             ChatMode.Say => userEmoteInsteadOfSay.ToString(),
             _ => null
         };
@@ -227,23 +235,19 @@ public class SpeakModule : IControlTableModule
         }
     }
 
-    private unsafe string? GetTellTarget()
+    private unsafe void SetTellTargetFor(IGameObject? target)
     {
-        var targetName = Plugin.TargetManager.Target?.Name.ToString();
-        if (targetName == null)
-            return null;
+        if (target is null) return;
 
-        // Can we look this up by id rather than name?
-        var characterObject = CharacterManager.Instance() -> LookupBattleCharaByName(targetName, true);
-        if (characterObject is null)
-            return null;
+        var character = CharacterManager.Instance()->LookupBattleCharaByEntityId(target.EntityId);
+        if (character is null) return;
 
-        var worldId = characterObject->CurrentWorld;
-        var worldName = worldProvider.TryGetWorld(worldId);
-        if (worldName == null)
-            return null;
+        var homeWorldId = character->HomeWorld;
+        var homeWorld = worldProvider.TryGetWorldById(homeWorldId);
+        if (homeWorld is null) return;
 
-        return $"{targetName}@{worldName}";
+        tellTargetName = character->NameString ?? tellTargetName;
+        tellTargetWorld = homeWorld;
     }
 
     public async Task<bool> IssueSpeakCommand(List<string> targets, string message, ChatMode chatMode, string? extra)
@@ -262,4 +266,5 @@ public class SpeakModule : IControlTableModule
     }
 
     public void Dispose() => GC.SuppressFinalize(this);
+    private static bool FilterWorldName(string worldName, string searchTerm) => worldName.Contains(searchTerm);
 }

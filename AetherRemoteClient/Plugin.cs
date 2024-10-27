@@ -90,8 +90,8 @@ public sealed class Plugin : IDalamudPlugin
         // Providers
         actionQueueProvider = new ActionQueueProvider(chat, historyLogManager);
         emoteProvider = new EmoteProvider();
-        networkProvider = new NetworkProvider(actionQueueProvider, clientDataManager, emoteProvider, glamourerAccessor, historyLogManager);
         worldProvider = new WorldProvider();
+        networkProvider = new NetworkProvider(actionQueueProvider, clientDataManager, emoteProvider, glamourerAccessor, historyLogManager, worldProvider);
 
         // Windows
         windowSystem = new WindowSystem("AetherRemote");

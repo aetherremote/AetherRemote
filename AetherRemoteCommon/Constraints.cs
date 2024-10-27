@@ -20,7 +20,7 @@ public static class Constraints
     /// <summary>
     /// Limits the amount of characters when entering a secret
     /// </summary>
-    public const uint SecretCharLimit = 36;
+    public const uint SecretCharLimit = 48;
 
     /// <summary>
     /// Limits the amount of characters when entering glamourer data
@@ -35,7 +35,12 @@ public static class Constraints
     /// <summary>
     /// Limits the amount of characters that should be in an in-game player name
     /// </summary>
-    public const uint PlayerNameCharLimit = 25;
+    public const uint PlayerNameCharLimit = 20;
+
+    /// <summary>
+    /// Limits the amount of characters that should be in a world input
+    /// </summary>
+    public const uint WorldNameLimit = 24;
 
     /// <summary>
     /// Limits the amount of characters that should be in a tell target

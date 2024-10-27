@@ -72,7 +72,7 @@ public class EmoteModule : IControlTableModule
         }
 
         ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(4, 4));
-        SharedUserInterfaces.ComboWithFilter(ref emote, "Emote", emoteSearchFilter);
+        SharedUserInterfaces.ComboWithFilter("EmoteSelector", "Emote", ref emote, 200, emoteSearchFilter);
         ImGui.PopStyleVar();
 
         ImGui.SameLine();

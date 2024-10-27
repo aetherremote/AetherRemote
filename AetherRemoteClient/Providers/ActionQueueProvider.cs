@@ -1,5 +1,6 @@
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Log;
+using AetherRemoteCommon;
 using AetherRemoteCommon.Domain.CommonChatMode;
 using System;
 using System.Collections.Concurrent;
@@ -39,7 +40,15 @@ public class ActionQueueProvider
         if (Plugin.ClientState.LocalPlayer == null)
             return;
 
-        chat.SendMessage(action.BuildAction());
+        // TODO: Revisit this
+        var finalizedChatCommand = action.BuildAction();
+        if (finalizedChatCommand.Length > Constraints.SpeakCommandCharLimit + Constraints.TellTargetLimit)
+        {
+            Plugin.Log.Warning($"Prevented processing a message over {Constraints.SpeakCommandCharLimit + Constraints.TellTargetLimit} characters");
+            return;
+        }
+
+        chat.SendMessage(finalizedChatCommand);
 
         var message = action.BuildLog();
         Plugin.Log.Information(message);
