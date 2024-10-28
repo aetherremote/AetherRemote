@@ -266,5 +266,5 @@ public class SpeakModule : IControlTableModule
     }
 
     public void Dispose() => GC.SuppressFinalize(this);
-    private static bool FilterWorldName(string worldName, string searchTerm) => worldName.Contains(searchTerm);
+    private static bool FilterWorldName(string worldName, string searchTerm) => worldName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase);
 }

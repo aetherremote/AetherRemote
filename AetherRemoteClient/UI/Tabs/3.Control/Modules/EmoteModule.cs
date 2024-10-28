@@ -131,5 +131,5 @@ public class EmoteModule : IControlTableModule
     }
 
     public void Dispose() => GC.SuppressFinalize(this);
-    private static bool FilterEmote(string emote, string searchTerm) => emote.Contains(searchTerm);
+    private static bool FilterEmote(string emote, string searchTerm) => emote.Contains(searchTerm, StringComparison.OrdinalIgnoreCase);
 }
