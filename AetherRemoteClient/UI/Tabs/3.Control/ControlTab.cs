@@ -5,6 +5,7 @@ using AetherRemoteClient.Domain.Log;
 using AetherRemoteClient.Domain.UI;
 using AetherRemoteClient.Providers;
 using AetherRemoteClient.UI.Tabs.Modules;
+using AetherRemoteClient.UI.Tabs.Views;
 using AetherRemoteCommon;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
@@ -29,9 +30,11 @@ public class ControlTab : ITab
     // Instantiated
     private readonly CommandLockoutManager commandLockoutManager = new();
     private readonly EmoteModule emoteModule;
-    private readonly ExtraModule extraModule;
+    //private readonly ExtraModule extraModule;
     private readonly TransformationModule glamourerModule;
     private readonly SpeakModule speakModule;
+    private readonly ExtraView extraView;
+
     private readonly ListFilter<Friend> friendListFilter;
 
     // Variables
@@ -53,9 +56,10 @@ public class ControlTab : ITab
         friendListFilter = new ListFilter<Friend>(clientDataManager.FriendsList.Friends, FilterFriends);
 
         emoteModule = new EmoteModule(clientDataManager, commandLockoutManager, emoteProvider, historyLogManager, networkProvider);
-        extraModule = new ExtraModule(clientDataManager, commandLockoutManager, glamourerAccessor, historyLogManager, networkProvider);
+        //extraModule = new ExtraModule(clientDataManager, commandLockoutManager, glamourerAccessor, historyLogManager, networkProvider);
         glamourerModule = new TransformationModule(clientDataManager, commandLockoutManager, glamourerAccessor, historyLogManager, networkProvider);
         speakModule = new SpeakModule(clientDataManager, commandLockoutManager, historyLogManager, networkProvider, worldProvider);
+        extraView = new ExtraView(clientDataManager, commandLockoutManager, glamourerAccessor, historyLogManager, networkProvider);
 
         clientDataManager.FriendsList.OnFriendDeleted += HandleFriendDeleted;
         clientDataManager.FriendsList.OnFriendsListCleared += HandleFriendsListCleared;
@@ -183,7 +187,7 @@ public class ControlTab : ITab
     private void DrawControlPanel()
     {
         // No friend selected
-        if (clientDataManager.TargetManager.Targets.Count == 0)
+        if (clientDataManager.TargetManager.Targets.IsEmpty)
         {
             var defaultFontSize = ImGui.GetFontSize();
             SharedUserInterfaces.PushBigFont();
@@ -225,7 +229,7 @@ public class ControlTab : ITab
         glamourerModule.Draw();
 
         ImGui.Separator();
-        extraModule.Draw();
+        extraView.Draw();
     }
 
     private void HandleFriendDeleted(object? sender, FriendDeletedEventArgs e)
@@ -259,7 +263,7 @@ public class ControlTab : ITab
         emoteModule.Dispose();
         glamourerModule.Dispose();
         speakModule.Dispose();
-        extraModule.Dispose();
+        extraView.Dispose();
 
         GC.SuppressFinalize(this);
     }
