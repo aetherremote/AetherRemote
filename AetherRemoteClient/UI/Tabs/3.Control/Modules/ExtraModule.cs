@@ -135,9 +135,9 @@ public class ExtraModule : IControlTableModule
     private async Task ProcessBodySwap()
     {
         if (includeSelfInBodySwap)
-            await BodySwapWithoutRequester().ConfigureAwait(false);
-        else
             await BodySwapWithRequester().ConfigureAwait(false);
+        else
+            await BodySwapWithoutRequester().ConfigureAwait(false);
     }
 
     private async Task BodySwapWithoutRequester()
@@ -148,7 +148,7 @@ public class ExtraModule : IControlTableModule
         commandLockoutManager.Lock(Constraints.ExternalCommandCooldownInSeconds);
 
         var targets = clientDataManager.TargetManager.Targets.Keys.ToList();
-        var (successful, newBodyData) = await IssueBodySwapCommand(targets).ConfigureAwait(false);
+        var (successful, _) = await IssueBodySwapCommand(targets).ConfigureAwait(false);
         if (successful)
         {
             var message = $"You issued {string.Join(", ", targets)} to swap bodies at random";
