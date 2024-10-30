@@ -13,6 +13,7 @@ using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using System;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace AetherRemoteClient;
 
@@ -141,5 +142,16 @@ public sealed class Plugin : IDalamudPlugin
     private void OpenMainUI()
     {
         mainWindow.IsOpen = true;
+    }
+
+    /// <summary>
+    /// Runs provided function on the XIV Framework. Await should never be utilized inside of the <see cref="Func{T}"/> passed to this function.
+    /// </summary>
+    public static async Task<T> RunOnFramework<T>(Func<T> func)
+    {
+        if (Framework.IsInFrameworkUpdateThread)
+            return func.Invoke();
+
+        return await Framework.RunOnFrameworkThread(func).ConfigureAwait(false);
     }
 }

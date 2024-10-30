@@ -65,7 +65,7 @@ public class GlamourerAccessor : IDisposable
     /// </summary>
     public async Task<bool> RevertToGame(string characterName)
     {
-        var result = await RunOnFramework(() =>
+        var result = await Plugin.RunOnFramework(() =>
         {
             try
             {
@@ -87,7 +87,7 @@ public class GlamourerAccessor : IDisposable
     /// </summary>
     public async Task<bool> RevertToAutomation(string characterName)
     {
-        var result = await RunOnFramework(() =>
+        var result = await Plugin.RunOnFramework(() =>
         {
             try
             {
@@ -120,7 +120,7 @@ public class GlamourerAccessor : IDisposable
         if (glamourerUsable == false)
             return false;
 
-        var result = await RunOnFramework(() =>
+        var result = await Plugin.RunOnFramework(() =>
         {
             try
             {
@@ -150,7 +150,7 @@ public class GlamourerAccessor : IDisposable
         if (glamourerUsable == false)
             return string.Empty;
 
-        return await RunOnFramework(() =>
+        return await Plugin.RunOnFramework(() =>
         {
             try
             {
@@ -174,17 +174,6 @@ public class GlamourerAccessor : IDisposable
     /// <param name="glamourerApplyFlags"></param>
     /// <returns></returns>
     public static ApplyFlag Convert(GlamourerApplyFlag glamourerApplyFlags) => (ApplyFlag)(ulong)glamourerApplyFlags;
-
-    /// <summary>
-    /// Do not utilize await in any functions passed to this function 
-    /// </summary>
-    private static async Task<T> RunOnFramework<T>(Func<T> func)
-    {
-        if (Plugin.Framework.IsInFrameworkUpdateThread)
-            return func.Invoke();
-
-        return await Plugin.Framework.RunOnFrameworkThread(func).ConfigureAwait(false);
-    }
 
     private void CheckApi()
     {
