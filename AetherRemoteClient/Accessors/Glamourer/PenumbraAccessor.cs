@@ -8,6 +8,9 @@ using System.Timers;
 
 namespace AetherRemoteClient.Accessors.Glamourer;
 
+/// <summary>
+/// Provides access to Penumbra's exposed methods
+/// </summary>
 public class PenumbraAccessor : IDisposable
 {
     // Consts
@@ -45,13 +48,19 @@ public class PenumbraAccessor : IDisposable
     /// <summary>
     /// <inheritdoc cref="GetGameObjectResourcePaths"/>
     /// </summary>
-    public static async Task<Dictionary<string, HashSet<string>>?[]> CallGetGameObjectResourcePaths(ushort objectIndex)
+    public async Task<Dictionary<string, HashSet<string>>?[]> CallGetGameObjectResourcePaths(ushort objectIndex)
     {
+        if (penumbraUsable == false)
+        {
+            Plugin.Log.Warning("Cannot use Penumbra::GetGameObjectResourcePaths because Penumbra is not installed!");
+            return [];
+        }
+
         return await Plugin.RunOnFramework(() =>
         {
             try
             {
-                var resources = new GetGameObjectResourcePaths(Plugin.PluginInterface).Invoke(objectIndex);
+                var resources = getGameObjectResourcePaths.Invoke(objectIndex);
                 if (resources is null)
                     Plugin.Log.Warning($"Penumbra::GetGameObjectResourcePaths returned null for {objectIndex}");
 
@@ -68,13 +77,19 @@ public class PenumbraAccessor : IDisposable
     /// <summary>
     /// <inheritdoc cref="CreateTemporaryCollection"/>
     /// </summary>
-    public static async Task<Guid> CallCreateTemporaryCollection(string collectionName)
+    public async Task<Guid> CallCreateTemporaryCollection(string collectionName)
     {
+        if (penumbraUsable == false)
+        {
+            Plugin.Log.Warning("Cannot use Penumbra::CreateTemporaryCollection because Penumbra is not installed!");
+            return Guid.Empty;
+        }
+
         return await Plugin.RunOnFramework(() =>
         {
             try
             {
-                return new CreateTemporaryCollection(Plugin.PluginInterface).Invoke(collectionName);
+                return createTemporaryCollection.Invoke(collectionName);
             }
             catch (Exception ex)
             {
@@ -87,13 +102,19 @@ public class PenumbraAccessor : IDisposable
     /// <summary>
     /// <inheritdoc cref="GetMetaManipulations"/>
     /// </summary>
-    public static async Task<string> CallGetMetaManipulations(ushort objectIndex)
+    public async Task<string> CallGetMetaManipulations(ushort objectIndex)
     {
+        if (penumbraUsable == false)
+        {
+            Plugin.Log.Warning("Cannot use Penumbra::GetMetaManipulations because Penumbra is not installed!");
+            return string.Empty;
+        }
+
         return await Plugin.RunOnFramework(() =>
         {
             try
             {
-                var meta = new GetMetaManipulations(Plugin.PluginInterface).Invoke(objectIndex);
+                var meta = getMetaManipulations.Invoke(objectIndex);
                 if (meta is null)
                     Plugin.Log.Warning($"Penumbra::GetMetaManipulations returned null for {objectIndex}");
 
@@ -110,14 +131,20 @@ public class PenumbraAccessor : IDisposable
     /// <summary>
     /// <inheritdoc cref="AddTemporaryMod"/>
     /// </summary>
-    public static async Task<bool> CallAddTemporaryMod(string tag, Guid collectionGuid, 
+    public async Task<bool> CallAddTemporaryMod(string tag, Guid collectionGuid, 
         Dictionary<string, string> modifiedPaths,  string meta, int priority = 0)
     {
+        if (penumbraUsable == false)
+        {
+            Plugin.Log.Warning("Cannot use Penumbra::AddTemporaryMod because Penumbra is not installed!");
+            return false;
+        }
+
         return await Plugin.RunOnFramework(() =>
         {
             try
             {
-                var result = new AddTemporaryMod(Plugin.PluginInterface).Invoke(tag, collectionGuid, modifiedPaths, meta, priority);
+                var result = addTemporaryMod.Invoke(tag, collectionGuid, modifiedPaths, meta, priority);
                 return result == PenumbraApiEc.Success;
             }
             catch (Exception ex)
@@ -131,13 +158,19 @@ public class PenumbraAccessor : IDisposable
     /// <summary>
     /// <inheritdoc cref="AssignTemporaryCollection"/>
     /// </summary>
-    public static async Task<bool> CallAssignTemporaryCollection(Guid collectionGuid, int actorIndex = 0, bool forceAssignment = true)
+    public async Task<bool> CallAssignTemporaryCollection(Guid collectionGuid, int actorIndex = 0, bool forceAssignment = true)
     {
+        if (penumbraUsable == false)
+        {
+            Plugin.Log.Warning("Cannot use Penumbra::AssignTemporaryCollection because Penumbra is not installed!");
+            return false;
+        }
+
         return await Plugin.RunOnFramework(() =>
         {
             try
             {
-                var success = new AssignTemporaryCollection(Plugin.PluginInterface).Invoke(collectionGuid, actorIndex, forceAssignment);
+                var success = assignTemporaryCollection.Invoke(collectionGuid, actorIndex, forceAssignment);
                 return success == PenumbraApiEc.Success;
             }
             catch (Exception ex)
