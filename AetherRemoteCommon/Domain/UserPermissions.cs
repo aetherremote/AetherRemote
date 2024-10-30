@@ -42,5 +42,8 @@ public enum UserPermissions
     CWL5 = 1 << 24,
     CWL6 = 1 << 25,
     CWL7 = 1 << 26,
-    CWL8 = 1 << 27
+    CWL8 = 1 << 27,
+
+    // Extra
+    ModSwap = 1 << 28,
 }

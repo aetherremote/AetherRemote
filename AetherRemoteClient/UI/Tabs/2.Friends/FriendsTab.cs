@@ -249,6 +249,12 @@ public class FriendsTab : ITab
                 SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
                 SharedUserInterfaces.Tooltip("Allows friend to change your outfit");
 
+                ImGui.TableNextColumn();
+                ImGui.Checkbox("Allow Mod Swaps", ref focusedPermissions[GetBitPosition(UserPermissions.ModSwap)]);
+                ImGui.SameLine();
+                SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
+                SharedUserInterfaces.Tooltip("Allows your mods to be swapped during bodyswap and twinning commands.");
+
                 ImGui.EndTable();
             }
 

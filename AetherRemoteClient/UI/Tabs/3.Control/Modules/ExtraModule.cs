@@ -30,6 +30,7 @@ public class ExtraModule : IControlTableModule
     private readonly NetworkProvider networkProvider;
 
     private bool includeSelfInBodySwap = false;
+    private bool includeModSwaps = false;
 
     public ExtraModule(
         ClientDataManager clientDataManager,
@@ -79,6 +80,10 @@ public class ExtraModule : IControlTableModule
 
         ImGui.Checkbox("Include Self", ref includeSelfInBodySwap);
         SharedUserInterfaces.Tooltip("Should you be included in the bodies to shuffle?");
+
+        ImGui.SameLine();
+        ImGui.Checkbox("Swap Mods", ref includeModSwaps);
+        SharedUserInterfaces.Tooltip("Should the mods of the people being targetted be swapped as well?");
 
         SharedUserInterfaces.DisableIf(commandLockoutManager.IsLocked, () =>
         {
