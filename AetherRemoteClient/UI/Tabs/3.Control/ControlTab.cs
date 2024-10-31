@@ -48,6 +48,7 @@ public class ControlTab : ITab
         EmoteProvider emoteProvider,
         GlamourerAccessor glamourerAccessor,
         HistoryLogManager historyLogManager,
+        ModSwapManager modSwapManager,
         NetworkProvider networkProvider,
         WorldProvider worldProvider)
     {
@@ -59,7 +60,7 @@ public class ControlTab : ITab
         //extraModule = new ExtraModule(clientDataManager, commandLockoutManager, glamourerAccessor, historyLogManager, networkProvider);
         glamourerModule = new TransformationModule(clientDataManager, commandLockoutManager, glamourerAccessor, historyLogManager, networkProvider);
         speakModule = new SpeakModule(clientDataManager, commandLockoutManager, historyLogManager, networkProvider, worldProvider);
-        extraView = new ExtraView(clientDataManager, commandLockoutManager, glamourerAccessor, historyLogManager, networkProvider);
+        extraView = new ExtraView(clientDataManager, commandLockoutManager, glamourerAccessor, historyLogManager, modSwapManager, networkProvider);
 
         clientDataManager.FriendsList.OnFriendDeleted += HandleFriendDeleted;
         clientDataManager.FriendsList.OnFriendsListCleared += HandleFriendsListCleared;

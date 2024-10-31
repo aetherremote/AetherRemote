@@ -1,12 +1,15 @@
 using AetherRemoteClient.Accessors.Glamourer;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Log;
+using AetherRemoteClient.Domain.UI;
 using AetherRemoteClient.Providers;
 using AetherRemoteClient.UI.Tabs.Control;
 using AetherRemoteClient.UI.Tabs.Dashboard;
 using AetherRemoteClient.UI.Tabs.Friends;
 using AetherRemoteClient.UI.Tabs.History;
+using AetherRemoteClient.UI.Tabs.ResidualAether;
 using AetherRemoteClient.UI.Tabs.Settings;
+using Dalamud.Interface.Colors;
 using Dalamud.Interface.Windowing;
 using ImGuiNET;
 using System;
@@ -29,6 +32,7 @@ public class MainWindow : Window, IDisposable
     private readonly ControlTab controlTab;
     private readonly HistoryTab historyTab;
     private readonly SettingsTab settingsTab;
+    private readonly ResidualAetherTab residualAetherTab;
 
     public MainWindow(
         ActionQueueProvider actionQueueProvider,
@@ -36,13 +40,14 @@ public class MainWindow : Window, IDisposable
         EmoteProvider emoteProvider,
         GlamourerAccessor glamourerAccessor,
         HistoryLogManager historyLogManager,
+        ModSwapManager modSwapManager,
         NetworkProvider networkProvider,
         WorldProvider worldProvider
         ) : base($"Aether Remote - Version {Plugin.Version}", MainWindowFlags)
     {
         SizeConstraints = new WindowSizeConstraints()
         {
-            MinimumSize = new Vector2(600, 500),
+            MinimumSize = new Vector2(600, 510),
             MaximumSize = ImGui.GetIO().DisplaySize,
         };
 
@@ -50,9 +55,10 @@ public class MainWindow : Window, IDisposable
 
         dashboardTab = new DashboardTab(clientDataManager, networkProvider);
         friendsTab = new FriendsTab(clientDataManager, networkProvider);
-        controlTab = new ControlTab(clientDataManager, emoteProvider, glamourerAccessor, historyLogManager, networkProvider, worldProvider);
+        controlTab = new ControlTab(clientDataManager, emoteProvider, glamourerAccessor, historyLogManager, modSwapManager, networkProvider, worldProvider);
         historyTab = new HistoryTab(historyLogManager);
         settingsTab = new SettingsTab(actionQueueProvider, clientDataManager);
+        residualAetherTab = new ResidualAetherTab(modSwapManager);
     }
 
     public override void Draw()
@@ -64,10 +70,10 @@ public class MainWindow : Window, IDisposable
             {
                 friendsTab.Draw();
                 controlTab.Draw();
+                residualAetherTab.Draw();
                 historyTab.Draw();
             }
             settingsTab.Draw();
-
             ImGui.EndTabBar();
         }
     }

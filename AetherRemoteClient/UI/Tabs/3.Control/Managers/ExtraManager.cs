@@ -17,6 +17,7 @@ public class ExtraManager
     private readonly CommandLockoutManager commandLockoutManager;
     private readonly GlamourerAccessor glamourerAccessor;
     private readonly HistoryLogManager historyLogManager;
+    private readonly ModSwapManager modSwapManager;
     private readonly NetworkProvider networkProvider;
 
     public ExtraManager(
@@ -24,16 +25,19 @@ public class ExtraManager
         CommandLockoutManager commandLockoutManager,
         GlamourerAccessor glamourerAccessor,
         HistoryLogManager historyLogManager,
+        ModSwapManager modSwapManager,
         NetworkProvider networkProvider)
     {
         this.clientDataManager = clientDataManager;
         this.commandLockoutManager = commandLockoutManager;
         this.glamourerAccessor = glamourerAccessor;
         this.historyLogManager = historyLogManager;
+        this.modSwapManager = modSwapManager;
         this.networkProvider = networkProvider;
     }
 
-    public async Task Twinning()
+    // TODO: Twinning mod swap
+    public async Task Twinning(bool swapMods)
     {
         if (Plugin.DeveloperMode)
             return;
@@ -63,18 +67,18 @@ public class ExtraManager
         // TODO Logging
     }
 
-    public async Task BodySwap(bool includeSelfInBodySwap)
+    public async Task BodySwap(bool includeSelfInBodySwap, bool swapMods)
     {
         if (Plugin.DeveloperMode)
             return;
 
         if (includeSelfInBodySwap)
-            await BodySwapWithRequester().ConfigureAwait(false);
+            await BodySwapWithRequester(swapMods).ConfigureAwait(false);
         else
-            await BodySwapWithoutRequester().ConfigureAwait(false);
+            await BodySwapWithoutRequester(swapMods).ConfigureAwait(false);
     }
 
-    private async Task BodySwapWithoutRequester()
+    private async Task BodySwapWithoutRequester(bool swapMods)
     {
         if (clientDataManager.TargetManager.Targets.Count < 2)
             return;
@@ -82,13 +86,13 @@ public class ExtraManager
         commandLockoutManager.Lock(Constraints.ExternalCommandCooldownInSeconds);
 
         var targets = clientDataManager.TargetManager.Targets.Keys.ToList();
-        var request = new BodySwapRequest(targets, null);
+        var request = new BodySwapRequest(targets, swapMods, null, null);
         var result = await networkProvider.InvokeCommand<BodySwapRequest, BodySwapResponse>(Network.Commands.BodySwap, request).ConfigureAwait(false);
         if (result.Success == false)
             Plugin.Log.Warning($"[Body Swap] Failure, {result.Message}");
     }
 
-    private async Task BodySwapWithRequester()
+    private async Task BodySwapWithRequester(bool swapMods)
     {
         var characterName = Plugin.ClientState.LocalPlayer?.Name.ToString();
         if (characterName is null)
@@ -107,7 +111,7 @@ public class ExtraManager
         commandLockoutManager.Lock(Constraints.ExternalCommandCooldownInSeconds);
 
         var targets = clientDataManager.TargetManager.Targets.Keys.ToList();
-        var request = new BodySwapRequest(targets, characterData);
+        var request = new BodySwapRequest(targets, swapMods, characterName, characterData);
         var result = await networkProvider.InvokeCommand<BodySwapRequest, BodySwapResponse>(Network.Commands.BodySwap, request).ConfigureAwait(false);
         if (result.Success == false)
         {
@@ -119,6 +123,17 @@ public class ExtraManager
         {
             Plugin.Log.Warning($"[Body Swap] Failure, body data invalid. Tell a developer!");
             return;
+        }
+
+        if (swapMods)
+        {
+            if (result.CharacterName is null)
+            {
+                Plugin.Log.Warning($"[Body Swap] Failure, character name not included when it should have been. Tell a developer!");
+                return;
+            }
+
+            await modSwapManager.SwapMods(result.CharacterName);
         }
 
         var glamourerResult = await glamourerAccessor.ApplyDesignAsync(characterName, result.CharacterData).ConfigureAwait(false);

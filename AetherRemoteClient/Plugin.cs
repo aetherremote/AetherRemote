@@ -60,10 +60,12 @@ public sealed class Plugin : IDalamudPlugin
     private Chat chat { get; init; }
     private ClientDataManager clientDataManager { get; init; }
     private HistoryLogManager historyLogManager { get; set; }
+    private ModSwapManager modSwapManager { get; set; }
     private SharedUserInterfaces sharedUserInterfaces { get; init; }
 
     // Accessors
     private GlamourerAccessor glamourerAccessor { get; init; }
+    private PenumbraAccessor penumbraAccessor { get; init; }
 
     // Providers
     private ActionQueueProvider actionQueueProvider { get; init; }
@@ -79,24 +81,26 @@ public sealed class Plugin : IDalamudPlugin
     {
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
+        // Accessors
+        glamourerAccessor = new GlamourerAccessor();
+        penumbraAccessor = new PenumbraAccessor();
+
         // Instantiate
         chat = new Chat();
         clientDataManager = new ClientDataManager();
         historyLogManager = new HistoryLogManager();
+        modSwapManager = new ModSwapManager(penumbraAccessor);
         sharedUserInterfaces = new SharedUserInterfaces();
-
-        // Accessors
-        glamourerAccessor = new GlamourerAccessor();
 
         // Providers
         actionQueueProvider = new ActionQueueProvider(chat, historyLogManager);
         emoteProvider = new EmoteProvider();
         worldProvider = new WorldProvider();
-        networkProvider = new NetworkProvider(actionQueueProvider, clientDataManager, emoteProvider, glamourerAccessor, historyLogManager, worldProvider);
+        networkProvider = new NetworkProvider(actionQueueProvider, clientDataManager, emoteProvider, glamourerAccessor, historyLogManager, modSwapManager, worldProvider);
 
         // Windows
         windowSystem = new WindowSystem("AetherRemote");
-        mainWindow = new MainWindow(actionQueueProvider, clientDataManager, emoteProvider, glamourerAccessor, historyLogManager, networkProvider, worldProvider);
+        mainWindow = new MainWindow(actionQueueProvider, clientDataManager, emoteProvider, glamourerAccessor, historyLogManager, modSwapManager, networkProvider, worldProvider);
         windowSystem.AddWindow(mainWindow);
 
         CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)

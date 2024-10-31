@@ -113,7 +113,7 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
     public async Task<BodySwapResponse> BodySwap(string friendCode, BodySwapRequest request, IHubCallerClients clients)
     {
         if (IsUserSpamming(friendCode))
-            return new(false, "Spamming! Slow down!");
+            return new(false, null, null, "Spamming! Slow down!");
 
         var cancellationToken = new CancellationTokenSource();
         var taskList = new Task<BodySwapQueryResponse>[request.TargetFriendCodes.Count];
@@ -124,7 +124,7 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
             if (PrimaryHub.ActiveUserConnections.TryGetValue(request.TargetFriendCodes[i], out var targetUser) == false)
             {
                 cancellationToken.Cancel();
-                return new(false, "One or more target friends are offline");
+                return new(false, null, null, "One or more target friends are offline");
             }
 
             // Not friends with
@@ -132,20 +132,20 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
             if (targetPermissions.TryGetValue(friendCode, out var permissionsGrantedToFriendCode) == false)
             {
                 cancellationToken.Cancel();
-                return new(false, "You are not friends with all your targets");
+                return new(false, null, null, "You are not friends with all your targets");
             }
 
             // Has valid transform permissions
             if (PermissionChecker.HasValidTransformPermissions(GlamourerApplyFlag.Customization | GlamourerApplyFlag.Equipment, permissionsGrantedToFriendCode) == false)
             {
                 cancellationToken.Cancel();
-                return new(false, "You do not have valid permissions with all your friends");
+                return new(false, null, null, "You do not have valid permissions with all your friends");
             }
 
             try
             {
                 // Issue query requests for body data
-                var query = new BodySwapQueryRequest(friendCode);
+                var query = new BodySwapQueryRequest(friendCode, request.SwapMods);
                 taskList[i] = clients.Client(targetUser.ConnectionId).InvokeAsync<BodySwapQueryResponse>(Network.BodySwapQuery, query, cancellationToken.Token);
                 connectionIds[i] = targetUser.ConnectionId;
             }
@@ -153,7 +153,7 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
             {
                 cancellationToken.Cancel();
                 logger.LogError("Exception while querying body data: {Exception}", ex);
-                return new(false, ex.Message);
+                return new(false, null, null, ex.Message);
             }
         }
 
@@ -166,29 +166,29 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
         if (resultingTask == timeoutTask)
         {
             cancellationToken.Cancel();
-            return new(false, "Body swap timed out");
+            return new(false, null, null, "Body swap timed out");
         }
 
         // WhenAny should take care of this, but just in case...
         var queryResponses = await pendingQueryTasks;
 
         // Convert them in the order we sent the requests
-        var bodyData = new List<string>();
+        var bodyData = new List<BodyData>();
         for (var i = 0; i < queryResponses.Length; i++)
         {
             var response = queryResponses[i];
-            if (response.CharacterData == null)
+            if (response.CharacterData is null || (request.SwapMods && response.CharacterName is null))
             {
                 cancellationToken.Cancel();
-                return new(false, "One or more targets are unable to swap bodies at this time");
+                return new(false, null, null, "One or more targets are unable to swap bodies at this time");
             }
 
-            bodyData.Add(response.CharacterData);
+            bodyData.Add(new BodyData(response.CharacterName, response.CharacterData));
         }
 
         // Add extra body data for sender client
-        if (request.CharacterData is not null)
-            bodyData.Add(request.CharacterData);
+        if (request.CharacterData is not null && (request.SwapMods == false || request.CharacterName is null))
+            bodyData.Add(new BodyData(request.CharacterName, request.CharacterData));
 
         // Shuffle all body data, then distribute it
         var derangedBodyData = Derange(bodyData);
@@ -197,20 +197,23 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
             try
             {
                 // Issue new body data 
-                var command = new BodySwapCommand(friendCode, derangedBodyData[i]);
+                var data = derangedBodyData[i];
+                var command = new BodySwapCommand(friendCode, data.CharacterName, data.CharacterData);
                 _ = clients.Client(connectionIds[i]).SendAsync(Network.Commands.BodySwap, command);
             }
             catch (Exception ex)
             {
                 cancellationToken.Cancel();
                 logger.LogError("Exception while sending body data: {Exception}", ex);
-                return new(false, ex.Message);
+                return new(false, null, null, ex.Message);
             }
         }
 
-        // Send the last body data back to the client
-        var newSenderBody = request.CharacterData is not null ? derangedBodyData[^1] : string.Empty;
-        return new(true, string.Empty, newSenderBody);
+        if (request.CharacterData is null)
+            return new BodySwapResponse(true);
+
+        var lastBody = derangedBodyData[^1];
+        return new BodySwapResponse(true, lastBody.CharacterName, lastBody.CharacterData);
     }
 
     /// <summary>
@@ -445,5 +448,11 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
         while (deranged == false);
 
         return result;
+    }
+
+    private class BodyData(string? characterName, string characterData)
+    {
+        public readonly string? CharacterName = characterName;
+        public readonly string CharacterData = characterData;
     }
 }

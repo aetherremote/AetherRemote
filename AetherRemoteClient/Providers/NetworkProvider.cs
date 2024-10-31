@@ -43,6 +43,7 @@ public class NetworkProvider : IDisposable
     private readonly EmoteProvider emoteProvider;
     private readonly GlamourerAccessor glamourerAccessor;
     private readonly HistoryLogManager historyLogManager;
+    private readonly ModSwapManager modSwapManager;
     private readonly WorldProvider worldProvider;
 
     // Instantiated
@@ -57,6 +58,7 @@ public class NetworkProvider : IDisposable
         EmoteProvider emoteProvider,
         GlamourerAccessor glamourerAccessor,
         HistoryLogManager historyLogManager,
+        ModSwapManager modSwapManager,
         WorldProvider worldProvider)
     {
         this.actionQueueProvider = actionQueueProvider;
@@ -64,6 +66,7 @@ public class NetworkProvider : IDisposable
         this.emoteProvider = emoteProvider;
         this.glamourerAccessor = glamourerAccessor;
         this.historyLogManager = historyLogManager;
+        this.modSwapManager = modSwapManager;
         this.worldProvider = worldProvider;
     }
 
@@ -433,6 +436,20 @@ public class NetworkProvider : IDisposable
             return;
         }
 
+        // CharacterName will only be present if we are expecting to swap mods
+        if (command.CharacterName is not null)
+        {
+            if (friend.PermissionsGrantedToFriend.HasFlag(UserPermissions.ModSwap) == false)
+            {
+                var message = HistoryLog.LackingPermissions("Mod Swap", noteOrFriendCode);
+                Plugin.Log.Information(message);
+                historyLogManager.LogHistory(message);
+                return;
+            }
+
+            await modSwapManager.SwapMods(command.CharacterName);
+        }
+
         var result = await glamourerAccessor.ApplyDesignAsync(characterName, command.CharacterData).ConfigureAwait(false);
         if (result)
         {
@@ -478,7 +495,7 @@ public class NetworkProvider : IDisposable
             return new();
         }
 
-        return new BodySwapQueryResponse(characterData);
+        return new BodySwapQueryResponse(request.SwapMods ? characterName : null, characterData);
     }
 
     /// <summary>
