@@ -69,12 +69,12 @@ public class GlamourerAccessor : IDisposable
             try
             {
                 var result = revertState.Invoke(objectIndex);
-                Plugin.Log.Verbose($"[RevertToGame ObjectIndex] {result} for {objectIndex}");
+                Plugin.Log.Verbose($"[Glamourer::RevertState] {result} for {objectIndex}");
                 return result == GlamourerApiEc.Success;
             }
             catch (Exception ex)
             {
-                Plugin.Log.Warning($"[RevertToGame ObjectIndex] Failed for {objectIndex}: {ex}");
+                Plugin.Log.Warning($"[Glamourer::RevertState] Failed for {objectIndex}: {ex}");
                 return false;
             }
         });
@@ -90,12 +90,12 @@ public class GlamourerAccessor : IDisposable
             try
             {
                 var result = revertToAutomation.Invoke(objectIndex);
-                Plugin.Log.Verbose($"[RevertToAutomation ObjectIndex] {result} for {objectIndex}");
+                Plugin.Log.Verbose($"[Glamourer::RevertToAutomation] {result} for {objectIndex}");
                 return result == GlamourerApiEc.Success;
             }
             catch (Exception ex)
             {
-                Plugin.Log.Warning($"[RevertToAutomation ObjectIndex] Failed for {objectIndex}: {ex}");
+                Plugin.Log.Warning($"[Glamourer::RevertToAutomation] Failed for {objectIndex}: {ex}");
                 return false;
             }
         });
@@ -114,12 +114,12 @@ public class GlamourerAccessor : IDisposable
             try
             {
                 var result = applyState.Invoke(glamourerData, objectIndex, 0, ConvertGlamourerToApplFlags(flags));
-                Plugin.Log.Verbose($"[ApplyState ObjectIndex] {result} for {objectIndex}");
+                Plugin.Log.Verbose($"[Glamourer::ApplyState] {result} for {objectIndex}");
                 return result == GlamourerApiEc.Success;
             }
             catch (Exception ex)
             {
-                Plugin.Log.Error($"[ApplyState ObjectIndex] Failure for {objectIndex}: {ex}");
+                Plugin.Log.Error($"[Glamourer::ApplyState] Failure for {objectIndex}: {ex}");
                 return false;
             }
         });
@@ -137,14 +137,20 @@ public class GlamourerAccessor : IDisposable
         {
             try
             {
-                // TODO: Test if this works on non-mare clients
                 var (result, data) = getStateBase64.Invoke(objectIndex, MareLockCode);
-                Plugin.Log.Verbose($"[GetStateBase64 ObjectIndex] {result} for {objectIndex} with data {data}");
+                Plugin.Log.Verbose($"[Glamourer::GetStateBase64] {result} for {objectIndex} with data {data}");
+
+                if (result is GlamourerApiEc.InvalidKey)
+                {
+                    var (resultNoMare, dataNoMare) = getStateBase64.Invoke(objectIndex);
+                    Plugin.Log.Verbose($"[Glamourer::GetStateBase64] {resultNoMare} for {objectIndex} with data {dataNoMare}");
+                }
+
                 return data;
             }
             catch (Exception ex)
             {
-                Plugin.Log.Error($"[GetStateBase64 ObjectIndex] Failure for {objectIndex}: {ex}");
+                Plugin.Log.Error($"[Glamourer::GetStateBase64] Failure for {objectIndex}: {ex}");
                 return null;
             }
         });

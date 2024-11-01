@@ -56,7 +56,7 @@ public class PenumbraAccessor : IDisposable
     {
         if (penumbraUsable == false)
         {
-            Plugin.Log.Warning("Cannot use Penumbra::GetGameObjectResourcePaths because Penumbra is not installed!");
+            Plugin.Log.Warning("[Penumbra::GetGameObjectResourcePaths] Penumbra is not installed!");
             return [];
         }
 
@@ -66,13 +66,13 @@ public class PenumbraAccessor : IDisposable
             {
                 var resources = getGameObjectResourcePaths.Invoke(objectIndex);
                 if (resources is null)
-                    Plugin.Log.Warning($"Penumbra::GetGameObjectResourcePaths returned null for {objectIndex}");
+                    Plugin.Log.Warning($"[Penumbra::GetGameObjectResourcePaths] returned null for {objectIndex}");
 
                 return resources ?? [];
             }
             catch (Exception ex)
             {
-                Plugin.Log.Warning($"Exception while calling Penumbra::GetGameObjectResourcePaths, {ex}");
+                Plugin.Log.Warning($"[Penumbra::GetGameObjectResourcePaths] Failure, {ex}");
                 return [];
             }
         });
@@ -85,7 +85,7 @@ public class PenumbraAccessor : IDisposable
     {
         if (penumbraUsable == false)
         {
-            Plugin.Log.Warning("Cannot use Penumbra::CreateTemporaryCollection because Penumbra is not installed!");
+            Plugin.Log.Warning("[Penumbra::CreateTemporaryCollection] Penumbra is not installed!");
             return Guid.Empty;
         }
 
@@ -93,11 +93,13 @@ public class PenumbraAccessor : IDisposable
         {
             try
             {
-                return createTemporaryCollection.Invoke(collectionName);
+                var guid = createTemporaryCollection.Invoke(collectionName);
+                Plugin.Log.Verbose($"[Penumbra::CreateTemporaryCollection] {guid} for {collectionName}");
+                return guid;
             }
             catch (Exception ex)
             {
-                Plugin.Log.Warning($"Exception while calling Penumbra::CreateTemporaryCollection, {ex}");
+                Plugin.Log.Warning($"[Penumbra::CreateTemporaryCollection] Failure, {ex}");
                 return Guid.Empty;
             }
         });
@@ -110,7 +112,7 @@ public class PenumbraAccessor : IDisposable
     {
         if (penumbraUsable == false)
         {
-            Plugin.Log.Warning("Cannot use Penumbra::CreateTemporaryCollection because Penumbra is not installed!");
+            Plugin.Log.Warning("[Penumbra::CreateTemporaryCollection] Penumbra is not installed!");
             return false;
         }
 
@@ -118,12 +120,13 @@ public class PenumbraAccessor : IDisposable
         {
             try
             {
-                deleteTemporaryCollection.Invoke(collectionId);
-                return true;
+                var result = deleteTemporaryCollection.Invoke(collectionId);
+                Plugin.Log.Verbose($"[Penumbra::CreateTemporaryCollection] {result} for {collectionId}");
+                return result is PenumbraApiEc.Success || result is PenumbraApiEc.NothingChanged;
             }
             catch (Exception ex)
             {
-                Plugin.Log.Warning($"Exception while calling Penumbra::CreateTemporaryCollection, {ex}");
+                Plugin.Log.Warning($"[Penumbra::CreateTemporaryCollection] Failure, {ex}");
                 return false;
             }
         });
@@ -136,7 +139,7 @@ public class PenumbraAccessor : IDisposable
     {
         if (penumbraUsable == false)
         {
-            Plugin.Log.Warning("Cannot use Penumbra::GetMetaManipulations because Penumbra is not installed!");
+            Plugin.Log.Warning("[Penumbra::GetMetaManipulations] Penumbra is not installed!");
             return string.Empty;
         }
 
@@ -145,14 +148,12 @@ public class PenumbraAccessor : IDisposable
             try
             {
                 var meta = getMetaManipulations.Invoke(objectIndex);
-                if (meta is null)
-                    Plugin.Log.Warning($"Penumbra::GetMetaManipulations returned null for {objectIndex}");
-
-                return meta ?? string.Empty;
+                Plugin.Log.Verbose($"[Penumbra::GetMetaManipulations] {meta} for {objectIndex}");
+                return meta;
             }
             catch (Exception ex)
             {
-                Plugin.Log.Warning($"Exception while calling Penumbra::GetMetaManipulations, {ex}");
+                Plugin.Log.Warning($"[Penumbra::GetMetaManipulations] Failure, {ex}");
                 return string.Empty;
             }
         });
@@ -166,7 +167,7 @@ public class PenumbraAccessor : IDisposable
     {
         if (penumbraUsable == false)
         {
-            Plugin.Log.Warning("Cannot use Penumbra::AddTemporaryMod because Penumbra is not installed!");
+            Plugin.Log.Warning("[Penumbra::AddTemporaryMod] Penumbra is not installed!");
             return false;
         }
 
@@ -175,11 +176,12 @@ public class PenumbraAccessor : IDisposable
             try
             {
                 var result = addTemporaryMod.Invoke(tag, collectionGuid, modifiedPaths, meta, priority);
+                Plugin.Log.Verbose($"[Penumbra::AddTemporaryMod] {result} for {tag} - {collectionGuid} - {priority}");
                 return result == PenumbraApiEc.Success;
             }
             catch (Exception ex)
             {
-                Plugin.Log.Warning($"Exception while calling Penumbra::AddTemporaryMod, {ex}");
+                Plugin.Log.Warning($"[Penumbra::AddTemporaryMod] Failure, {ex}");
                 return false;
             }
         });
@@ -192,7 +194,7 @@ public class PenumbraAccessor : IDisposable
     {
         if (penumbraUsable == false)
         {
-            Plugin.Log.Warning("Cannot use Penumbra::AddTemporaryMod because Penumbra is not installed!");
+            Plugin.Log.Warning("[Penumbra::AddTemporaryMod] Penumbra is not installed!");
             return false;
         }
 
@@ -201,11 +203,12 @@ public class PenumbraAccessor : IDisposable
             try
             {
                 var result = removeTemporaryMod.Invoke(tag, collectionId, priority);
+                Plugin.Log.Verbose($"[Penumbra::AddTemporaryMod] {result} for {tag} - {collectionId} - {priority}");
                 return result == PenumbraApiEc.Success || result == PenumbraApiEc.NothingChanged;
             }
             catch (Exception ex)
             {
-                Plugin.Log.Warning($"Exception while calling Penumbra::AddTemporaryMod, {ex}");
+                Plugin.Log.Warning($"[Penumbra::AddTemporaryMod] Failure, {ex}");
                 return false;
             }
         });
@@ -218,7 +221,7 @@ public class PenumbraAccessor : IDisposable
     {
         if (penumbraUsable == false)
         {
-            Plugin.Log.Warning("Cannot use Penumbra::AssignTemporaryCollection because Penumbra is not installed!");
+            Plugin.Log.Warning("[Penumbra::AssignTemporaryCollection] Penumbra is not installed!");
             return false;
         }
 
@@ -226,12 +229,13 @@ public class PenumbraAccessor : IDisposable
         {
             try
             {
-                var success = assignTemporaryCollection.Invoke(collectionGuid, actorIndex, forceAssignment);
-                return success == PenumbraApiEc.Success;
+                var result = assignTemporaryCollection.Invoke(collectionGuid, actorIndex, forceAssignment);
+                Plugin.Log.Verbose($"[Penumbra::AssignTemporaryCollection] {result} for {collectionGuid} - {actorIndex}");
+                return result == PenumbraApiEc.Success;
             }
             catch (Exception ex)
             {
-                Plugin.Log.Warning($"Exception while calling Penumbra::AssignTemporaryCollection, {ex}");
+                Plugin.Log.Warning($"[Penumbra::AssignTemporaryCollection] Failure, {ex}");
                 return false;
             }
         });
