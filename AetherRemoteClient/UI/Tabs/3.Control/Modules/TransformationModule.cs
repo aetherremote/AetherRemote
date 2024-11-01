@@ -233,20 +233,18 @@ public class TransformationModule : IControlTableModule
 
     private async Task CopyMyGlamourerDataAsync()
     {
-        var playerName = Plugin.ClientState.LocalPlayer?.Name.ToString();
-        if (playerName == null)
+        if (Plugin.ClientState.LocalPlayer is null)
             return;
 
-        glamourerData = await glamourerAccessor.GetDesignAsync(playerName).ConfigureAwait(false) ?? string.Empty;
+        glamourerData = await glamourerAccessor.GetDesignAsync().ConfigureAwait(false) ?? string.Empty;
     }
 
     private async Task CopyTargetGlamourerData()
     {
-        var targetName = Plugin.TargetManager.Target?.Name.ToString();
-        if (targetName == null)
+        if (Plugin.TargetManager.Target is null)
             return;
 
-        glamourerData = await glamourerAccessor.GetDesignAsync(targetName).ConfigureAwait(false) ?? string.Empty;
+        glamourerData = await glamourerAccessor.GetDesignAsync(Plugin.TargetManager.Target.ObjectIndex).ConfigureAwait(false) ?? string.Empty;
     }
 
     public async Task<bool> IssueTransformCommand(List<string> targets, string glamourerData, GlamourerApplyFlag applyType)

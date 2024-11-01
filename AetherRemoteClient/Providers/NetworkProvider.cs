@@ -311,17 +311,16 @@ public class NetworkProvider : IDisposable
             return;
         }
 
-        var characterName = LocalPlayerName();
-        if (characterName == null)
+        if (Plugin.ClientState.LocalPlayer is null)
         {
             Plugin.Log.Warning($"{noteOrFriendCode} tried to revert you, but you do not have a body to revert");
             return;
         }
 
         if (command.RevertType == RevertType.Automation)
-            _ = glamourerAccessor.RevertToAutomation(characterName);
+            _ = glamourerAccessor.RevertToAutomation();
         else if (command.RevertType == RevertType.Game)
-            _ = glamourerAccessor.RevertToGame(characterName);
+            _ = glamourerAccessor.RevertToGame();
     }
 
     private void HandleSpeak(SpeakCommand command)
@@ -382,14 +381,13 @@ public class NetworkProvider : IDisposable
             return;
         }
 
-        var characterName = LocalPlayerName();
-        if (characterName == null)
+        if (Plugin.ClientState.LocalPlayer is null)
         {
             Plugin.Log.Warning($"{noteOrFriendCode} tried to transform you, but you do not have a body to transform");
             return;
         }
 
-        var result = await glamourerAccessor.ApplyDesignAsync(characterName, command.GlamourerData, command.ApplyFlags).ConfigureAwait(false);
+        var result = await glamourerAccessor.ApplyDesignAsync(command.GlamourerData, 0, command.ApplyFlags).ConfigureAwait(false);
         if (result)
         {
             var message = command.ApplyFlags switch
@@ -427,8 +425,7 @@ public class NetworkProvider : IDisposable
             return;
         }
 
-        var characterName = LocalPlayerName();
-        if (characterName == null)
+        if (Plugin.ClientState.LocalPlayer is null)
         {
             Plugin.Log.Warning($"{noteOrFriendCode} attempted to swap your body, but you don't have a body to swap");
             return;
@@ -448,7 +445,7 @@ public class NetworkProvider : IDisposable
             await modSwapManager.SwapMods(command.CharacterName);
         }
 
-        var result = await glamourerAccessor.ApplyDesignAsync(characterName, command.CharacterData).ConfigureAwait(false);
+        var result = await glamourerAccessor.ApplyDesignAsync(command.CharacterData);
         if (result)
         {
             var message = $"{noteOrFriendCode} swapped your body with {command.SenderFriendCode}'s body";
@@ -479,25 +476,26 @@ public class NetworkProvider : IDisposable
             return new();
         }
 
-        var characterName = LocalPlayerName();
-        if (characterName == null)
-        {
-            Plugin.Log.Warning($"{noteOrFriendCode} attempted to scan your body for a swap, but you don't have a body to scan");
-            return new();
-        }
-
-        var characterData = await glamourerAccessor.GetDesignAsync(characterName);
+        var characterData = await glamourerAccessor.GetDesignAsync();
         if (characterData == null)
         {
             Plugin.Log.Warning($"{noteOrFriendCode} attempted to scan your body for a swap, but the scan failed");
             return new();
         }
 
-        return new BodySwapQueryResponse(request.SwapMods ? characterName : null, characterData);
-    }
+        // We only need name if we intend to swap mods
+        if (request.SwapMods)
+        {
+            var characterName = Plugin.ClientState.LocalPlayer?.Name.ToString();
+            if (characterName == null)
+            {
+                Plugin.Log.Warning($"{noteOrFriendCode} attempted to scan your body for a swap, but you don't have a body to scan");
+                return new BodySwapQueryResponse();
+            }
 
-    /// <summary>
-    /// Attempts to retrieve the name of the local player instance. This will be null is the player is on the main menu or loading to a new zone
-    /// </summary>
-    private static string? LocalPlayerName() => Plugin.ClientState.LocalPlayer?.Name.ToString();
+            return new BodySwapQueryResponse(characterName, characterData);
+        }
+        
+        return new BodySwapQueryResponse(null, characterData);
+    }
 }

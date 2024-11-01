@@ -42,14 +42,13 @@ public class ExtraManager
         if (Plugin.DeveloperMode)
             return;
 
-        var characterName = Plugin.ClientState.LocalPlayer?.Name.ToString();
-        if (characterName is null)
+        if (Plugin.ClientState.LocalPlayer is null)
         {
             Plugin.Log.Warning($"[Twinning] Failure, no local body");
             return;
         }
 
-        var characterData = await glamourerAccessor.GetDesignAsync(characterName).ConfigureAwait(false);
+        var characterData = await glamourerAccessor.GetDesignAsync().ConfigureAwait(false);
         if (characterData is null)
         {
             Plugin.Log.Warning($"[Twinning] Failure, unable to get glamourer data");
@@ -94,14 +93,18 @@ public class ExtraManager
 
     private async Task BodySwapWithRequester(bool swapMods)
     {
-        var characterName = Plugin.ClientState.LocalPlayer?.Name.ToString();
-        if (characterName is null)
+        string? characterName = null;
+        if (swapMods)
         {
-            Plugin.Log.Warning($"[Body Swap] Failure, no local body");
-            return;
+            characterName = Plugin.ClientState.LocalPlayer?.Name.ToString();
+            if (characterName is null)
+            {
+                Plugin.Log.Warning($"[Body Swap] Failure, no local body");
+                return;
+            }
         }
 
-        var characterData = await glamourerAccessor.GetDesignAsync(characterName).ConfigureAwait(false);
+        var characterData = await glamourerAccessor.GetDesignAsync().ConfigureAwait(false);
         if (characterData is null)
         {
             Plugin.Log.Warning($"[Body Swap] Failure, unable to get glamourer data");
@@ -136,7 +139,7 @@ public class ExtraManager
             await modSwapManager.SwapMods(result.CharacterName);
         }
 
-        var glamourerResult = await glamourerAccessor.ApplyDesignAsync(characterName, result.CharacterData).ConfigureAwait(false);
+        var glamourerResult = await glamourerAccessor.ApplyDesignAsync(result.CharacterData).ConfigureAwait(false);
         if (glamourerResult == false)
             Plugin.Log.Warning($"[Body Swap] Failure, failed to apply glamourer");
 

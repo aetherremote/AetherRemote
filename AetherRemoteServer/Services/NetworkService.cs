@@ -69,6 +69,9 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
     /// </summary>
     public async Task<CreateOrUpdatePermissionsResponse> CreateOrUpdatePermissions(string friendCode, CreateOrUpdatePermissionsRequest request, IHubCallerClients clients)
     {
+        if (friendCode == request.TargetCode)
+            return new CreateOrUpdatePermissionsResponse(false, false, "Cannot add yourself!");
+
         var (rows, message) = await databaseService.CreateOrUpdatePermissions(friendCode, request.TargetCode, request.Permissions);
         var online = false;
         if (PrimaryHub.ActiveUserConnections.TryGetValue(request.TargetCode, out var connection))
@@ -114,6 +117,14 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
     {
         if (IsUserSpamming(friendCode))
             return new(false, null, null, "Spamming! Slow down!");
+
+        if (request.TargetFriendCodes.Count < 2)
+        {
+            if (request.CharacterData is null || request.TargetFriendCodes.Count == 0)
+                return new(false, null, null, "Minimum targets not met.");
+            else if (request.TargetFriendCodes[0] == friendCode)
+                return new(false, null, null, "Cannot bodyswap with just yourself");
+        }
 
         var cancellationToken = new CancellationTokenSource();
         var taskList = new Task<BodySwapQueryResponse>[request.TargetFriendCodes.Count];

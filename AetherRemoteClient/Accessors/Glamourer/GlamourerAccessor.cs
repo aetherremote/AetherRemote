@@ -17,7 +17,6 @@ public class GlamourerAccessor : IDisposable
     private const int RequiredMajorVersion = 1;
     private const int RequiredMinorVersion = 3;
     private const int TestApiIntervalInSeconds = 30;
-    private const ApplyFlag DefaultApplyFlags = ApplyFlag.Once | ApplyFlag.Customization | ApplyFlag.Equipment;
 
     // When Mare updates a local glamourer profile, it locks to prevent local tampering
     // Unfortunately, we need this key to unlock the profile to get the state.
@@ -25,11 +24,11 @@ public class GlamourerAccessor : IDisposable
     private const uint MareLockCode = 0x6D617265;
 
     // Glamourer Api
-    private readonly ApiVersion glamourerApiVersion;
-    private readonly ApplyStateName glamourerApiApplyDesign;
-    private readonly GetStateBase64Name glamourerApiGetDesign;
-    private readonly RevertStateName glamourerRevertToGame;
-    private readonly RevertToAutomationName glamourerRevertToAutomation;
+    private readonly ApiVersion apiVersion;
+    private readonly ApplyState applyState;
+    private readonly GetStateBase64 getStateBase64;
+    private readonly RevertState revertState;
+    private readonly RevertToAutomation revertToAutomation;
 
     private readonly Timer periodicGlamourerTest;
 
@@ -41,11 +40,11 @@ public class GlamourerAccessor : IDisposable
     /// </summary>
     public GlamourerAccessor()
     {
-        glamourerApiVersion = new ApiVersion(Plugin.PluginInterface);
-        glamourerApiApplyDesign = new ApplyStateName(Plugin.PluginInterface);
-        glamourerApiGetDesign = new GetStateBase64Name(Plugin.PluginInterface);
-        glamourerRevertToGame = new RevertStateName(Plugin.PluginInterface);
-        glamourerRevertToAutomation = new RevertToAutomationName(Plugin.PluginInterface);
+        apiVersion = new ApiVersion(Plugin.PluginInterface);
+        applyState = new ApplyState(Plugin.PluginInterface);
+        getStateBase64 = new GetStateBase64(Plugin.PluginInterface);
+        revertState = new RevertState(Plugin.PluginInterface);
+        revertToAutomation = new RevertToAutomation(Plugin.PluginInterface);
 
         periodicGlamourerTest = new Timer(TestApiIntervalInSeconds * 1000);
         periodicGlamourerTest.AutoReset = true;
@@ -63,89 +62,73 @@ public class GlamourerAccessor : IDisposable
     /// <summary>
     /// Reverts back to original game defaults
     /// </summary>
-    public async Task<bool> RevertToGame(string characterName)
+    public async Task<bool> RevertToGame(ushort objectIndex = 0)
     {
-        var result = await Plugin.RunOnFramework(() =>
+        return await Plugin.RunOnFramework(() =>
         {
             try
             {
-                var result = glamourerRevertToGame.Invoke(characterName);
+                var result = revertState.Invoke(objectIndex);
+                Plugin.Log.Verbose($"[RevertToGame ObjectIndex] {result} for {objectIndex}");
                 return result == GlamourerApiEc.Success;
             }
             catch (Exception ex)
             {
-                Plugin.Log.Warning($"Failed to revert to game: {ex.Message}");
+                Plugin.Log.Warning($"[RevertToGame ObjectIndex] Failed for {objectIndex}: {ex}");
                 return false;
             }
         });
-
-        return result;
     }
 
     /// <summary>
     /// Reverts back to original automation
     /// </summary>
-    public async Task<bool> RevertToAutomation(string characterName)
+    public async Task<bool> RevertToAutomation(ushort objectIndex = 0)
     {
-        var result = await Plugin.RunOnFramework(() =>
+        return await Plugin.RunOnFramework(() =>
         {
             try
             {
-                var result = glamourerRevertToAutomation.Invoke(characterName);
+                var result = revertToAutomation.Invoke(objectIndex);
+                Plugin.Log.Verbose($"[RevertToAutomation ObjectIndex] {result} for {objectIndex}");
                 return result == GlamourerApiEc.Success;
             }
             catch (Exception ex)
             {
-                Plugin.Log.Warning($"Failed to revert to game: {ex.Message}");
+                Plugin.Log.Warning($"[RevertToAutomation ObjectIndex] Failed for {objectIndex}: {ex}");
                 return false;
             }
         });
-
-        return result;
     }
 
     /// <summary>
-    /// Applies a glamourer design to specified character.
+    /// Applies a given design to an object index
     /// </summary>
-    public async Task<bool> ApplyDesignAsync(string characterName, string glamourerData, GlamourerApplyFlag flags)
-    {
-        return await ApplyDesignAsync(characterName, glamourerData, Convert(flags));
-    }
-
-    /// <summary>
-    /// Applies a glamourer design to specified character.
-    /// </summary>
-    public async Task<bool> ApplyDesignAsync(string characterName, string glamourerData, ApplyFlag flags = DefaultApplyFlags)
+    public async Task<bool> ApplyDesignAsync(string glamourerData, ushort objectIndex = 0, GlamourerApplyFlag flags = GlamourerApplyFlag.All)
     {
         if (glamourerUsable == false)
             return false;
 
-        var result = await Plugin.RunOnFramework(() =>
+        return await Plugin.RunOnFramework(() =>
         {
             try
             {
-                // Glamourer flags seem to be subtractive.
-                // AetherRemote implemented them additively. The flags must be switched.
-                // There is a chance this is also just a bug. Who knows! I certainly don't.
-                var finalizedFlags = InverseGlamourerFlags(flags);
-                Plugin.Log.Verbose($"Attempting to apply glamourer design {glamourerData} to {characterName} with flags {flags}");
-                glamourerApiApplyDesign.Invoke(glamourerData, characterName, 0, finalizedFlags);
-                return true;
+                var result = applyState.Invoke(glamourerData, objectIndex, 0, ConvertGlamourerToApplFlags(flags));
+                Plugin.Log.Verbose($"[ApplyState ObjectIndex] {result} for {objectIndex}");
+                return result == GlamourerApiEc.Success;
             }
             catch (Exception ex)
             {
-                Plugin.Log.Error($"Something went wrong trying to apply glamourer design: {ex}");
+                Plugin.Log.Error($"[ApplyState ObjectIndex] Failure for {objectIndex}: {ex}");
                 return false;
             }
         });
-
-        return result;
     }
 
     /// <summary>
-    /// Gets glamourer design from target character
+    /// Gets a design from a given index
     /// </summary>
-    public async Task<string?> GetDesignAsync(string characterName)
+    public async Task<string?> GetDesignAsync(ushort objectIndex = 0)
     {
         if (glamourerUsable == false)
             return string.Empty;
@@ -154,27 +137,31 @@ public class GlamourerAccessor : IDisposable
         {
             try
             {
-                var result = glamourerApiGetDesign.Invoke(characterName);
-                if (result.Item1 == GlamourerApiEc.InvalidKey)
-                    result = glamourerApiGetDesign.Invoke(characterName, MareLockCode);
-
-                return result.Item2;
+                // TODO: Test if this works on non-mare clients
+                var (result, data) = getStateBase64.Invoke(objectIndex, MareLockCode);
+                Plugin.Log.Verbose($"[GetStateBase64 ObjectIndex] {result} for {objectIndex} with data {data}");
+                return data;
             }
             catch (Exception ex)
             {
-                Plugin.Log.Error($"Something went wrong trying to get glamourer design: {ex}");
-                return string.Empty;
+                Plugin.Log.Error($"[GetStateBase64 ObjectIndex] Failure for {objectIndex}: {ex}");
+                return null;
             }
         });
     }
 
     /// <summary>
-    /// Converts from <see cref="AetherRemoteCommon"/> <see cref="GlamourerApplyFlag"/> to Glamourer <see cref="ApplyFlag"/>
+    /// Clean up managed resources
     /// </summary>
-    /// <param name="glamourerApplyFlags"></param>
-    /// <returns></returns>
-    public static ApplyFlag Convert(GlamourerApplyFlag glamourerApplyFlags) => (ApplyFlag)(ulong)glamourerApplyFlags;
+    public void Dispose()
+    {
+        periodicGlamourerTest.Elapsed -= PeriodicCheckApi;
+        periodicGlamourerTest.Dispose();
 
+        GC.SuppressFinalize(this);
+    }
+
+    private void PeriodicCheckApi(object? sender, ElapsedEventArgs e) => CheckApi();
     private void CheckApi()
     {
         try
@@ -188,7 +175,7 @@ public class GlamourerAccessor : IDisposable
             }
 
             // Test if plugin can be invoked
-            var glamourerVersion = glamourerApiVersion.Invoke();
+            var glamourerVersion = apiVersion.Invoke();
             if (glamourerVersion.Major != RequiredMajorVersion || glamourerVersion.Minor < RequiredMinorVersion)
             {
                 glamourerUsable = false;
@@ -203,22 +190,17 @@ public class GlamourerAccessor : IDisposable
         }
     }
 
-    private static ApplyFlag InverseGlamourerFlags(ApplyFlag flags)
+    /// <summary>
+    /// Glamourer flags seem to be subtractive.
+    /// AetherRemote implemented them additively. The flags must be switched.
+    /// There is a chance this is also just a bug. Who knows! I certainly don't.
+    /// </summary>
+    private static ApplyFlag ConvertGlamourerToApplFlags(GlamourerApplyFlag flags)
     {
         var finalizedFlags = ApplyFlag.Once;
-        if (flags.HasFlag(ApplyFlag.Customization)) finalizedFlags |= ApplyFlag.Equipment;
-        if (flags.HasFlag(ApplyFlag.Equipment)) finalizedFlags |= ApplyFlag.Customization;
+        if (flags.HasFlag(GlamourerApplyFlag.Customization)) finalizedFlags |= ApplyFlag.Equipment;
+        if (flags.HasFlag(GlamourerApplyFlag.Equipment)) finalizedFlags |= ApplyFlag.Customization;
         if (finalizedFlags == ApplyFlag.Once) finalizedFlags |= ApplyFlag.Customization | ApplyFlag.Equipment;
         return finalizedFlags;
-    }
-
-    private void PeriodicCheckApi(object? sender, ElapsedEventArgs e) => CheckApi();
-
-    public void Dispose()
-    {
-        periodicGlamourerTest.Elapsed -= PeriodicCheckApi;
-        periodicGlamourerTest.Dispose();
-
-        GC.SuppressFinalize(this);
     }
 }
