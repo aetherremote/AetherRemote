@@ -34,8 +34,6 @@ public class NetworkProvider : IDisposable
     // Const
     private const GlamourerApplyFlag CustomizationFlags = GlamourerApplyFlag.Once | GlamourerApplyFlag.Customization;
     private const GlamourerApplyFlag EquipmentFlags = GlamourerApplyFlag.Once | GlamourerApplyFlag.Equipment;
-    private const GlamourerApplyFlag CustomizationAndEquipmentFlags = GlamourerApplyFlag.Once | GlamourerApplyFlag.Customization | GlamourerApplyFlag.Equipment;
-    private const GlamourerApplyFlag BodySwapFlags = GlamourerApplyFlag.Once | GlamourerApplyFlag.Customization | GlamourerApplyFlag.Equipment;
 
     // Inject
     private readonly ActionQueueProvider actionQueueProvider;
@@ -398,7 +396,7 @@ public class NetworkProvider : IDisposable
             {
                 CustomizationFlags => $"{noteOrFriendCode} changed your appearance",
                 EquipmentFlags => $"{noteOrFriendCode} changed your outfit",
-                CustomizationAndEquipmentFlags => $"{noteOrFriendCode} changed your outfit and appearance",
+                GlamourerApplyFlag.All => $"{noteOrFriendCode} changed your outfit and appearance",
                 _ => $"{noteOrFriendCode} changed you"
             };
 
@@ -409,7 +407,7 @@ public class NetworkProvider : IDisposable
 
     private async Task HandleBodySwap(BodySwapCommand command)
     {
-        Plugin.Log.Verbose(command.ToString());
+        Plugin.Log.Verbose($"{command}");
 
         var noteOrFriendCode = command.SenderFriendCode;
         var friend = clientDataManager.FriendsList.FindFriend(command.SenderFriendCode);
@@ -421,7 +419,7 @@ public class NetworkProvider : IDisposable
             return;
         }
 
-        if (PermissionChecker.HasValidTransformPermissions(BodySwapFlags, friend.PermissionsGrantedToFriend) == false)
+        if (PermissionChecker.HasValidTransformPermissions(GlamourerApplyFlag.All, friend.PermissionsGrantedToFriend) == false)
         {
             var message = HistoryLog.LackingPermissions("Body Swap", noteOrFriendCode);
             Plugin.Log.Information(message);
@@ -473,7 +471,7 @@ public class NetworkProvider : IDisposable
             return new();
         }
 
-        if (PermissionChecker.HasValidTransformPermissions(BodySwapFlags, friend.PermissionsGrantedToFriend) == false)
+        if (PermissionChecker.HasValidTransformPermissions(GlamourerApplyFlag.All, friend.PermissionsGrantedToFriend) == false)
         {
             var message = HistoryLog.LackingPermissions("Body Swap Query", noteOrFriendCode);
             Plugin.Log.Information(message);

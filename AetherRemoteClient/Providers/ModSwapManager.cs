@@ -1,4 +1,4 @@
-using AetherRemoteClient.Accessors.Glamourer;
+using AetherRemoteClient.Accessors.Penumbra;
 using System;
 using System.Collections.Generic;
 using System.Linq;

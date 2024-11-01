@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
 
-namespace AetherRemoteClient.Accessors.Glamourer;
+namespace AetherRemoteClient.Accessors.Penumbra;
 
 /// <summary>
 /// Provides access to Penumbra's exposed methods
@@ -161,8 +161,8 @@ public class PenumbraAccessor : IDisposable
     /// <summary>
     /// <inheritdoc cref="AddTemporaryMod"/>
     /// </summary>
-    public async Task<bool> CallAddTemporaryMod(string tag, Guid collectionGuid, 
-        Dictionary<string, string> modifiedPaths,  string meta, int priority = 0)
+    public async Task<bool> CallAddTemporaryMod(string tag, Guid collectionGuid,
+        Dictionary<string, string> modifiedPaths, string meta, int priority = 0)
     {
         if (penumbraUsable == false)
         {

@@ -1,4 +1,5 @@
 using AetherRemoteClient.Accessors.Glamourer;
+using AetherRemoteClient.Accessors.Penumbra;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Log;
 using AetherRemoteClient.Domain.UI;
