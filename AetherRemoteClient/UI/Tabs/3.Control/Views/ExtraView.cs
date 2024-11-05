@@ -21,15 +21,11 @@ public class ExtraView(
     GlamourerAccessor glamourerAccessor,
     HistoryLogManager historyLogManager,
     ModSwapManager modSwapManager,
-    NetworkProvider networkProvider) : IControlTableModule
+    NetworkProvider networkProvider) : IControlTabView
 {
     // Instantiated
     private readonly ExtraManager _extraManager = new(clientDataManager, commandLockoutManager, glamourerAccessor, historyLogManager, modSwapManager, networkProvider);
-
-    private bool _includeSelfInBodySwap;
-    private bool _includeModSwapWithBodySwap;
-    private bool _includeModSwapWithTwinning;
-
+    
     public void Draw()
     {
         SharedUserInterfaces.MediumText("Extra", ImGuiColors.ParsedOrange);
@@ -41,7 +37,7 @@ public class ExtraView(
         SharedUserInterfaces.DisableIf(commandLockoutManager.IsLocked, () =>
         {
             if (ImGui.Button("Body swap"))
-                _ = _extraManager.BodySwap(_includeSelfInBodySwap, _includeModSwapWithBodySwap);
+                _ = _extraManager.BodySwap();
         });
 
         SharedUserInterfaces.CommandDescription(
@@ -62,17 +58,17 @@ public class ExtraView(
             SharedUserInterfaces.PermissionsWarning(missingBodySwapPermissions);
         }
 
-        ImGui.Checkbox("Include Self", ref _includeSelfInBodySwap);
+        ImGui.Checkbox("Include Self", ref _extraManager.IncludeSelfInBodySwap);
         SharedUserInterfaces.Tooltip("Should you be included in the bodies to shuffle?");
 
         ImGui.SameLine();
-        ImGui.Checkbox("Swap Mods##BodySwapSwapMods", ref _includeModSwapWithBodySwap);
+        ImGui.Checkbox("Swap Mods##BodySwapSwapMods", ref _extraManager.IncludeModSwapWithBodySwap);
         SharedUserInterfaces.Tooltip(["Should the mods of the people being targeted be swapped as well?", "WARNING - HIGHLY EXPERIMENTAL"]);
 
         SharedUserInterfaces.DisableIf(commandLockoutManager.IsLocked, () =>
         {
             if (ImGui.Button("Twinning"))
-                _ = _extraManager.Twinning(_includeModSwapWithTwinning);
+                _ = _extraManager.Twinning();
         });
 
         SharedUserInterfaces.CommandDescription(
@@ -94,7 +90,7 @@ public class ExtraView(
         }
         
         ImGui.BeginDisabled();
-        ImGui.Checkbox("Swap Mods##TwinningSwapMods", ref _includeModSwapWithTwinning);
+        ImGui.Checkbox("Swap Mods##TwinningSwapMods", ref _extraManager.IncludeModSwapWithTwinning);
         ImGui.EndDisabled();
         
         SharedUserInterfaces.Tooltip(["Should the mods of the people being targeted be swapped as well?", "WARNING - HIGHLY EXPERIMENTAL"]);

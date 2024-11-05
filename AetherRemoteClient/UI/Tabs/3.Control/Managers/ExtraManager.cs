@@ -18,8 +18,12 @@ public class ExtraManager(
     ModSwapManager modSwapManager,
     NetworkProvider networkProvider)
 {
+    public bool IncludeSelfInBodySwap;
+    public bool IncludeModSwapWithBodySwap;
+    public bool IncludeModSwapWithTwinning;
+    
     // TODO: Twinning mod swap
-    public async Task Twinning(bool swapMods)
+    public async Task Twinning()
     {
         if (Plugin.DeveloperMode) return;
         if (Plugin.ClientState.LocalPlayer is null)
@@ -46,14 +50,14 @@ public class ExtraManager(
         // TODO Logging
     }
 
-    public async Task BodySwap(bool includeSelfInBodySwap, bool swapMods)
+    public async Task BodySwap()
     {
         if (Plugin.DeveloperMode) return;
         
-        if (includeSelfInBodySwap)
-            await BodySwapWithRequester(swapMods).ConfigureAwait(false);
+        if (IncludeSelfInBodySwap)
+            await BodySwapWithRequester(IncludeModSwapWithBodySwap).ConfigureAwait(false);
         else
-            await BodySwapWithoutRequester(swapMods).ConfigureAwait(false);
+            await BodySwapWithoutRequester(IncludeModSwapWithBodySwap).ConfigureAwait(false);
     }
 
     private async Task BodySwapWithoutRequester(bool swapMods)

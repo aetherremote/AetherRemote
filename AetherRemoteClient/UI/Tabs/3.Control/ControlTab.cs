@@ -4,7 +4,6 @@ using AetherRemoteClient.Domain.Events;
 using AetherRemoteClient.Domain.Log;
 using AetherRemoteClient.Domain.UI;
 using AetherRemoteClient.Providers;
-using AetherRemoteClient.UI.Tabs.Modules;
 using AetherRemoteClient.UI.Tabs.Views;
 using AetherRemoteCommon;
 using Dalamud.Interface;
@@ -30,9 +29,10 @@ public class ControlTab : ITab
 
     // Instantiated
     private readonly CommandLockoutManager _commandLockoutManager = new();
-    private readonly EmoteModule _emoteModule;
-    private readonly TransformationModule _glamourerModule;
-    private readonly SpeakModule _speakModule;
+    
+    private readonly SpeakView _speakView;
+    private readonly EmoteView _emoteView;
+    private readonly TransformationView _transformationView;
     private readonly ExtraView _extraView;
 
     private readonly ListFilter<Friend> _friendListFilter;
@@ -54,11 +54,10 @@ public class ControlTab : ITab
     {
         _clientDataManager = clientDataManager;
         _friendListFilter = new ListFilter<Friend>(clientDataManager.FriendsList.Friends, FilterFriends);
-
-        _emoteModule = new EmoteModule(clientDataManager, _commandLockoutManager, emoteProvider, historyLogManager, networkProvider);
-        _glamourerModule = new TransformationModule(clientDataManager, _commandLockoutManager, glamourerAccessor, historyLogManager, networkProvider);
-        _speakModule = new SpeakModule(clientDataManager, _commandLockoutManager, historyLogManager, networkProvider, worldProvider);
         
+        _speakView = new SpeakView(clientDataManager, _commandLockoutManager, historyLogManager, networkProvider, worldProvider);
+        _emoteView = new EmoteView(clientDataManager, _commandLockoutManager, emoteProvider, historyLogManager, networkProvider);
+        _transformationView = new TransformationView(clientDataManager, _commandLockoutManager, glamourerAccessor, historyLogManager, networkProvider);
         _extraView = new ExtraView(clientDataManager, _commandLockoutManager, glamourerAccessor, historyLogManager, modSwapManager, networkProvider);
 
         clientDataManager.FriendsList.OnFriendDeleted += HandleFriendDeleted;
@@ -219,13 +218,13 @@ public class ControlTab : ITab
 
         SharedUserInterfaces.Tooltip(_lockCurrentTargets ? "Click to unlock current targets" : "Click to lock current targets");
 
-        _speakModule.Draw();
+        _speakView.Draw();
 
         ImGui.Separator();
-        _emoteModule.Draw();
+        _emoteView.Draw();
 
         ImGui.Separator();
-        _glamourerModule.Draw();
+        _transformationView.Draw();
 
         ImGui.Separator();
         _extraView.Draw();
@@ -259,9 +258,10 @@ public class ControlTab : ITab
         _clientDataManager.FriendsList.OnFriendsListCleared -= HandleFriendsListCleared;
 
         _commandLockoutManager.Dispose();
-        _emoteModule.Dispose();
-        _glamourerModule.Dispose();
-        _speakModule.Dispose();
+        
+        _speakView.Dispose();
+        _emoteView.Dispose();
+        _transformationView.Dispose();
         _extraView.Dispose();
 
         GC.SuppressFinalize(this);
