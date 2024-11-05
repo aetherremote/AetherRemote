@@ -15,31 +15,20 @@ using System.Collections.Generic;
 
 namespace AetherRemoteClient.UI.Tabs.Views;
 
-public class ExtraView : IControlTableModule
+public class ExtraView(
+    ClientDataManager clientDataManager,
+    CommandLockoutManager commandLockoutManager,
+    GlamourerAccessor glamourerAccessor,
+    HistoryLogManager historyLogManager,
+    ModSwapManager modSwapManager,
+    NetworkProvider networkProvider) : IControlTableModule
 {
-    // Injected
-    private readonly ClientDataManager clientDataManager;
-    private readonly CommandLockoutManager commandLockoutManager;
-
     // Instantiated
-    private readonly ExtraManager extraManager;
+    private readonly ExtraManager _extraManager = new(clientDataManager, commandLockoutManager, glamourerAccessor, historyLogManager, modSwapManager, networkProvider);
 
-    private bool includeSelfInBodySwap = false;
-    private bool includeModSwapWithBodySwap = false;
-    private bool includeModSwapWithTwinning = false;
-
-    public ExtraView(
-        ClientDataManager clientDataManager,
-        CommandLockoutManager commandLockoutManager,
-        GlamourerAccessor glamourerAccessor,
-        HistoryLogManager historyLogManager,
-        ModSwapManager modSwapManager,
-        NetworkProvider networkProvider)
-    {
-        this.clientDataManager = clientDataManager;
-        this.commandLockoutManager = commandLockoutManager;
-        extraManager = new ExtraManager(clientDataManager, commandLockoutManager, glamourerAccessor, historyLogManager, modSwapManager, networkProvider);
-    }
+    private bool _includeSelfInBodySwap;
+    private bool _includeModSwapWithBodySwap;
+    private bool _includeModSwapWithTwinning;
 
     public void Draw()
     {
@@ -51,8 +40,8 @@ public class ExtraView : IControlTableModule
 
         SharedUserInterfaces.DisableIf(commandLockoutManager.IsLocked, () =>
         {
-            if (ImGui.Button("Bodyswap"))
-                _ = extraManager.BodySwap(includeSelfInBodySwap, includeModSwapWithBodySwap);
+            if (ImGui.Button("Body swap"))
+                _ = _extraManager.BodySwap(_includeSelfInBodySwap, _includeModSwapWithBodySwap);
         });
 
         SharedUserInterfaces.CommandDescription(
@@ -73,17 +62,17 @@ public class ExtraView : IControlTableModule
             SharedUserInterfaces.PermissionsWarning(missingBodySwapPermissions);
         }
 
-        ImGui.Checkbox("Include Self", ref includeSelfInBodySwap);
+        ImGui.Checkbox("Include Self", ref _includeSelfInBodySwap);
         SharedUserInterfaces.Tooltip("Should you be included in the bodies to shuffle?");
 
         ImGui.SameLine();
-        ImGui.Checkbox("Swap Mods##BodySwapSwapMods", ref includeModSwapWithBodySwap);
-        SharedUserInterfaces.Tooltip(["Should the mods of the people being targetted be swapped as well?", "WARNING - HIGHLY EXPERIMENTAL"]);
+        ImGui.Checkbox("Swap Mods##BodySwapSwapMods", ref _includeModSwapWithBodySwap);
+        SharedUserInterfaces.Tooltip(["Should the mods of the people being targeted be swapped as well?", "WARNING - HIGHLY EXPERIMENTAL"]);
 
         SharedUserInterfaces.DisableIf(commandLockoutManager.IsLocked, () =>
         {
             if (ImGui.Button("Twinning"))
-                _ = extraManager.Twinning(includeModSwapWithTwinning);
+                _ = _extraManager.Twinning(_includeModSwapWithTwinning);
         });
 
         SharedUserInterfaces.CommandDescription(
@@ -103,10 +92,12 @@ public class ExtraView : IControlTableModule
             ImGui.SameLine();
             SharedUserInterfaces.PermissionsWarning(missingTwinningPermissions);
         }
+        
         ImGui.BeginDisabled();
-        ImGui.Checkbox("Swap Mods##TwinningSwapMods", ref includeModSwapWithTwinning);
+        ImGui.Checkbox("Swap Mods##TwinningSwapMods", ref _includeModSwapWithTwinning);
         ImGui.EndDisabled();
-        SharedUserInterfaces.Tooltip(["Should the mods of the people being targetted be swapped as well?", "WARNING - HIGHLY EXPERIMENTAL"]);
+        
+        SharedUserInterfaces.Tooltip(["Should the mods of the people being targeted be swapped as well?", "WARNING - HIGHLY EXPERIMENTAL"]);
     }
 
     public void Dispose() => GC.SuppressFinalize(this);

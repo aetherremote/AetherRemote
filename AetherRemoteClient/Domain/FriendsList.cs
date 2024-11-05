@@ -14,7 +14,7 @@ public class FriendsList
     /// <summary>
     /// Local <see cref="List{T}"/> of <see cref="Friend"/>
     /// </summary>
-    public List<Friend> Friends { get; private set; } = [];
+    public List<Friend> Friends { get; } = [];
 
     /// <summary>
     /// Fired when a friend is deleted from the friends list using <see cref="DeleteFriend"/>
@@ -37,12 +37,10 @@ public class FriendsList
             return;
 
         Friends.Clear();
-        foreach(var kvp in permissionsGrantedToOthers)
+        foreach(var (friendCode, permissionsGrantedToFriend) in permissionsGrantedToOthers)
         {
-            var friendCode = kvp.Key;
-            var permissionsGrantedToFriend = kvp.Value;
             var online = permissionsGrantedByOthers.TryGetValue(friendCode, out var permissionsGrantedByFriend);
-            Friends.Add(new(friendCode, online, permissionsGrantedToFriend, permissionsGrantedByFriend));
+            Friends.Add(new Friend(friendCode, online, permissionsGrantedToFriend, permissionsGrantedByFriend));
         }
     }
 
@@ -66,7 +64,7 @@ public class FriendsList
             return;
 
         Friends.Remove(friend);
-        OnFriendDeleted?.Invoke(this, new(friend));
+        OnFriendDeleted?.Invoke(this, new FriendDeletedEventArgs(friend));
     }
 
     /// <summary>
@@ -75,7 +73,7 @@ public class FriendsList
     public void Clear()
     {
         Friends.Clear();
-        OnFriendsListCleared?.Invoke(this, new());
+        OnFriendsListCleared?.Invoke(this, new FriendsListDeletedEventArgs());
     }
 
     /// <summary>

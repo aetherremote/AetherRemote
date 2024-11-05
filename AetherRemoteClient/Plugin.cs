@@ -58,99 +58,99 @@ public sealed class Plugin : IDalamudPlugin
     public static readonly Version Version = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0, 0);
 
     // Instantiated
-    private Chat chat { get; init; }
-    private ClientDataManager clientDataManager { get; init; }
-    private HistoryLogManager historyLogManager { get; set; }
-    private ModSwapManager modSwapManager { get; set; }
-    private SharedUserInterfaces sharedUserInterfaces { get; init; }
+    private Chat Chat { get; }
+    private ClientDataManager ClientDataManager { get; }
+    private HistoryLogManager HistoryLogManager { get; }
+    private ModSwapManager ModSwapManager { get; }
+    private SharedUserInterfaces SharedUserInterfaces { get; init; }
 
     // Accessors
-    private GlamourerAccessor glamourerAccessor { get; init; }
-    private PenumbraAccessor penumbraAccessor { get; init; }
+    private GlamourerAccessor GlamourerAccessor { get; }
+    private PenumbraAccessor PenumbraAccessor { get; }
 
     // Providers
-    private ActionQueueProvider actionQueueProvider { get; init; }
-    private EmoteProvider emoteProvider { get; init; }
-    private NetworkProvider networkProvider { get; init; }
-    private WorldProvider worldProvider { get; init; }
+    private ActionQueueProvider ActionQueueProvider { get; }
+    private EmoteProvider EmoteProvider { get; }
+    private NetworkProvider NetworkProvider { get; }
+    private WorldProvider WorldProvider { get; }
 
     // Windows
-    private WindowSystem windowSystem { get; init; }
-    private MainWindow mainWindow { get; init; }
+    private WindowSystem WindowSystem { get; }
+    private MainWindow MainWindow { get; }
 
     public Plugin()
     {
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
         // Accessors
-        glamourerAccessor = new GlamourerAccessor();
-        penumbraAccessor = new PenumbraAccessor();
+        GlamourerAccessor = new GlamourerAccessor();
+        PenumbraAccessor = new PenumbraAccessor();
 
         // Instantiate
-        chat = new Chat();
-        clientDataManager = new ClientDataManager();
-        historyLogManager = new HistoryLogManager();
-        modSwapManager = new ModSwapManager(penumbraAccessor);
-        sharedUserInterfaces = new SharedUserInterfaces();
+        Chat = new Chat();
+        ClientDataManager = new ClientDataManager();
+        HistoryLogManager = new HistoryLogManager();
+        ModSwapManager = new ModSwapManager(PenumbraAccessor);
+        SharedUserInterfaces = new SharedUserInterfaces();
 
         // Providers
-        actionQueueProvider = new ActionQueueProvider(chat, historyLogManager);
-        emoteProvider = new EmoteProvider();
-        worldProvider = new WorldProvider();
-        networkProvider = new NetworkProvider(actionQueueProvider, clientDataManager, emoteProvider, glamourerAccessor, historyLogManager, modSwapManager, worldProvider);
+        ActionQueueProvider = new ActionQueueProvider(Chat, HistoryLogManager);
+        EmoteProvider = new EmoteProvider();
+        WorldProvider = new WorldProvider();
+        NetworkProvider = new NetworkProvider(ActionQueueProvider, ClientDataManager, EmoteProvider, GlamourerAccessor, HistoryLogManager, ModSwapManager, WorldProvider);
 
         // Windows
-        windowSystem = new WindowSystem("AetherRemote");
-        mainWindow = new MainWindow(actionQueueProvider, clientDataManager, emoteProvider, glamourerAccessor, historyLogManager, modSwapManager, networkProvider, worldProvider);
-        windowSystem.AddWindow(mainWindow);
+        WindowSystem = new WindowSystem("AetherRemote");
+        MainWindow = new MainWindow(ActionQueueProvider, ClientDataManager, EmoteProvider, GlamourerAccessor, HistoryLogManager, ModSwapManager, NetworkProvider, WorldProvider);
+        WindowSystem.AddWindow(MainWindow);
 
         CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
         {
             HelpMessage = "Opens primary Aether Remote window"
         });
 
-        PluginInterface.UiBuilder.Draw += DrawUI;
-        PluginInterface.UiBuilder.OpenMainUi += OpenMainUI;
-        PluginInterface.UiBuilder.OpenConfigUi += OpenMainUI;
+        PluginInterface.UiBuilder.Draw += DrawUi;
+        PluginInterface.UiBuilder.OpenMainUi += OpenMainUi;
+        PluginInterface.UiBuilder.OpenConfigUi += OpenMainUi;
 
         if (DeveloperMode)
-            mainWindow.IsOpen = true;
+            MainWindow.IsOpen = true;
     }
 
     public void Dispose()
     {
-        glamourerAccessor.Dispose();
+        GlamourerAccessor.Dispose();
 
-        networkProvider.Dispose();
+        NetworkProvider.Dispose();
 
-        mainWindow.Dispose();
-        windowSystem.RemoveAllWindows();
+        MainWindow.Dispose();
+        WindowSystem.RemoveAllWindows();
         CommandManager.RemoveHandler(CommandName);
 
-        PluginInterface.UiBuilder.Draw -= DrawUI;
-        PluginInterface.UiBuilder.OpenMainUi -= OpenMainUI;
+        PluginInterface.UiBuilder.Draw -= DrawUi;
+        PluginInterface.UiBuilder.OpenMainUi -= OpenMainUi;
     }
 
     private void OnCommand(string command, string args)
     {
-        mainWindow.IsOpen = true;
+        MainWindow.IsOpen = true;
     }
 
-    private void DrawUI()
+    private void DrawUi()
     {
         // This way we can ensure all updates are taking place on the main thread
-        actionQueueProvider.Update();
+        ActionQueueProvider.Update();
 
-        windowSystem.Draw();
+        WindowSystem.Draw();
     }
 
-    private void OpenMainUI()
+    private void OpenMainUi()
     {
-        mainWindow.IsOpen = true;
+        MainWindow.IsOpen = true;
     }
 
     /// <summary>
-    /// Runs provided function on the XIV Framework. Await should never be utilized inside of the <see cref="Func{T}"/> passed to this function.
+    /// Runs provided function on the XIV Framework. Await should never be utilized inside the <see cref="Func{T}"/> passed to this function.
     /// </summary>
     public static async Task<T> RunOnFramework<T>(Func<T> func)
     {

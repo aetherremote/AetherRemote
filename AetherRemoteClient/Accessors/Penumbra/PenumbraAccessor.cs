@@ -13,38 +13,38 @@ namespace AetherRemoteClient.Accessors.Penumbra;
 /// </summary>
 public class PenumbraAccessor : IDisposable
 {
-    // Consts
+    // Const
     private const int TestApiIntervalInSeconds = 30;
 
     // Penumbra API
-    private readonly AddTemporaryMod addTemporaryMod;
-    private readonly ApiVersion apiVersion;
-    private readonly AssignTemporaryCollection assignTemporaryCollection;
-    private readonly CreateTemporaryCollection createTemporaryCollection;
-    private readonly DeleteTemporaryCollection deleteTemporaryCollection;
-    private readonly GetGameObjectResourcePaths getGameObjectResourcePaths;
-    private readonly GetMetaManipulations getMetaManipulations;
-    private readonly RemoveTemporaryMod removeTemporaryMod;
+    private readonly AddTemporaryMod _addTemporaryMod;
+    private readonly ApiVersion _apiVersion;
+    private readonly AssignTemporaryCollection _assignTemporaryCollection;
+    private readonly CreateTemporaryCollection _createTemporaryCollection;
+    private readonly DeleteTemporaryCollection _deleteTemporaryCollection;
+    private readonly GetGameObjectResourcePaths _getGameObjectResourcePaths;
+    private readonly GetMetaManipulations _getMetaManipulations;
+    private readonly RemoveTemporaryMod _removeTemporaryMod;
 
     // Installed?
-    private readonly Timer periodicPenumbraTest;
-    private bool penumbraUsable = false;
+    private readonly Timer _periodicPenumbraTest;
+    private bool _penumbraUsable;
 
     public PenumbraAccessor()
     {
-        addTemporaryMod = new(Plugin.PluginInterface);
-        apiVersion = new(Plugin.PluginInterface);
-        assignTemporaryCollection = new(Plugin.PluginInterface);
-        createTemporaryCollection = new(Plugin.PluginInterface);
-        deleteTemporaryCollection = new(Plugin.PluginInterface);
-        getGameObjectResourcePaths = new(Plugin.PluginInterface);
-        getMetaManipulations = new(Plugin.PluginInterface);
-        removeTemporaryMod = new(Plugin.PluginInterface);
+        _addTemporaryMod = new AddTemporaryMod(Plugin.PluginInterface);
+        _apiVersion = new ApiVersion(Plugin.PluginInterface);
+        _assignTemporaryCollection = new AssignTemporaryCollection(Plugin.PluginInterface);
+        _createTemporaryCollection = new CreateTemporaryCollection(Plugin.PluginInterface);
+        _deleteTemporaryCollection = new DeleteTemporaryCollection(Plugin.PluginInterface);
+        _getGameObjectResourcePaths = new GetGameObjectResourcePaths(Plugin.PluginInterface);
+        _getMetaManipulations = new GetMetaManipulations(Plugin.PluginInterface);
+        _removeTemporaryMod = new RemoveTemporaryMod(Plugin.PluginInterface);
 
-        periodicPenumbraTest = new Timer(TestApiIntervalInSeconds * 1000);
-        periodicPenumbraTest.AutoReset = true;
-        periodicPenumbraTest.Elapsed += PeriodicCheckApi;
-        periodicPenumbraTest.Start();
+        _periodicPenumbraTest = new Timer(TestApiIntervalInSeconds * 1000);
+        _periodicPenumbraTest.AutoReset = true;
+        _periodicPenumbraTest.Elapsed += PeriodicCheckApi;
+        _periodicPenumbraTest.Start();
 
         CheckApi();
     }
@@ -54,28 +54,24 @@ public class PenumbraAccessor : IDisposable
     /// </summary>
     public async Task<Dictionary<string, HashSet<string>>?[]> CallGetGameObjectResourcePaths(ushort objectIndex)
     {
-        if (penumbraUsable == false)
+        if (_penumbraUsable)
         {
-            Plugin.Log.Warning("[Penumbra::GetGameObjectResourcePaths] Penumbra is not installed!");
-            return [];
+            return await Plugin.RunOnFramework(() =>
+            {
+                try
+                {
+                    return _getGameObjectResourcePaths.Invoke(objectIndex);
+                }
+                catch (Exception ex)
+                {
+                    Plugin.Log.Warning($"[Penumbra::GetGameObjectResourcePaths] Failure, {ex}");
+                    return [];
+                }
+            });
         }
 
-        return await Plugin.RunOnFramework(() =>
-        {
-            try
-            {
-                var resources = getGameObjectResourcePaths.Invoke(objectIndex);
-                if (resources is null)
-                    Plugin.Log.Warning($"[Penumbra::GetGameObjectResourcePaths] returned null for {objectIndex}");
-
-                return resources ?? [];
-            }
-            catch (Exception ex)
-            {
-                Plugin.Log.Warning($"[Penumbra::GetGameObjectResourcePaths] Failure, {ex}");
-                return [];
-            }
-        });
+        Plugin.Log.Warning("[Penumbra::GetGameObjectResourcePaths] Penumbra is not installed!");
+        return [];
     }
 
     /// <summary>
@@ -83,26 +79,26 @@ public class PenumbraAccessor : IDisposable
     /// </summary>
     public async Task<Guid> CallCreateTemporaryCollection(string collectionName)
     {
-        if (penumbraUsable == false)
+        if (_penumbraUsable)
         {
-            Plugin.Log.Warning("[Penumbra::CreateTemporaryCollection] Penumbra is not installed!");
-            return Guid.Empty;
+            return await Plugin.RunOnFramework(() =>
+            {
+                try
+                {
+                    var guid = _createTemporaryCollection.Invoke(collectionName);
+                    Plugin.Log.Verbose($"[Penumbra::CreateTemporaryCollection] {guid} for {collectionName}");
+                    return guid;
+                }
+                catch (Exception ex)
+                {
+                    Plugin.Log.Warning($"[Penumbra::CreateTemporaryCollection] Failure, {ex}");
+                    return Guid.Empty;
+                }
+            });
         }
-
-        return await Plugin.RunOnFramework(() =>
-        {
-            try
-            {
-                var guid = createTemporaryCollection.Invoke(collectionName);
-                Plugin.Log.Verbose($"[Penumbra::CreateTemporaryCollection] {guid} for {collectionName}");
-                return guid;
-            }
-            catch (Exception ex)
-            {
-                Plugin.Log.Warning($"[Penumbra::CreateTemporaryCollection] Failure, {ex}");
-                return Guid.Empty;
-            }
-        });
+            
+        Plugin.Log.Warning("[Penumbra::CreateTemporaryCollection] Penumbra is not installed!");
+        return Guid.Empty;
     }
 
     /// <summary>
@@ -110,26 +106,26 @@ public class PenumbraAccessor : IDisposable
     /// </summary>
     public async Task<bool> CallDeleteTemporaryCollection(Guid collectionId)
     {
-        if (penumbraUsable == false)
+        if (_penumbraUsable)
         {
-            Plugin.Log.Warning("[Penumbra::CreateTemporaryCollection] Penumbra is not installed!");
-            return false;
+            return await Plugin.RunOnFramework(() =>
+            {
+                try
+                {
+                    var result = _deleteTemporaryCollection.Invoke(collectionId);
+                    Plugin.Log.Verbose($"[Penumbra::CreateTemporaryCollection] {result} for {collectionId}");
+                    return result is PenumbraApiEc.Success or PenumbraApiEc.NothingChanged;
+                }
+                catch (Exception ex)
+                {
+                    Plugin.Log.Warning($"[Penumbra::CreateTemporaryCollection] Failure, {ex}");
+                    return false;
+                }
+            });
         }
-
-        return await Plugin.RunOnFramework(() =>
-        {
-            try
-            {
-                var result = deleteTemporaryCollection.Invoke(collectionId);
-                Plugin.Log.Verbose($"[Penumbra::CreateTemporaryCollection] {result} for {collectionId}");
-                return result is PenumbraApiEc.Success || result is PenumbraApiEc.NothingChanged;
-            }
-            catch (Exception ex)
-            {
-                Plugin.Log.Warning($"[Penumbra::CreateTemporaryCollection] Failure, {ex}");
-                return false;
-            }
-        });
+            
+        Plugin.Log.Warning("[Penumbra::CreateTemporaryCollection] Penumbra is not installed!");
+        return false;
     }
 
     /// <summary>
@@ -137,54 +133,53 @@ public class PenumbraAccessor : IDisposable
     /// </summary>
     public async Task<string> CallGetMetaManipulations(ushort objectIndex)
     {
-        if (penumbraUsable == false)
+        if (_penumbraUsable)
         {
-            Plugin.Log.Warning("[Penumbra::GetMetaManipulations] Penumbra is not installed!");
-            return string.Empty;
+            return await Plugin.RunOnFramework(() =>
+            {
+                try
+                {
+                    var meta = _getMetaManipulations.Invoke(objectIndex);
+                    Plugin.Log.Verbose($"[Penumbra::GetMetaManipulations] {meta} for {objectIndex}");
+                    return meta;
+                }
+                catch (Exception ex)
+                {
+                    Plugin.Log.Warning($"[Penumbra::GetMetaManipulations] Failure, {ex}");
+                    return string.Empty;
+                }
+            });
         }
-
-        return await Plugin.RunOnFramework(() =>
-        {
-            try
-            {
-                var meta = getMetaManipulations.Invoke(objectIndex);
-                Plugin.Log.Verbose($"[Penumbra::GetMetaManipulations] {meta} for {objectIndex}");
-                return meta;
-            }
-            catch (Exception ex)
-            {
-                Plugin.Log.Warning($"[Penumbra::GetMetaManipulations] Failure, {ex}");
-                return string.Empty;
-            }
-        });
+           
+        Plugin.Log.Warning("[Penumbra::GetMetaManipulations] Penumbra is not installed!");
+        return string.Empty;
     }
 
     /// <summary>
     /// <inheritdoc cref="AddTemporaryMod"/>
     /// </summary>
-    public async Task<bool> CallAddTemporaryMod(string tag, Guid collectionGuid,
-        Dictionary<string, string> modifiedPaths, string meta, int priority = 0)
+    public async Task<bool> CallAddTemporaryMod(string tag, Guid collectionGuid, Dictionary<string, string> modifiedPaths, string meta, int priority = 0)
     {
-        if (penumbraUsable == false)
+        if (_penumbraUsable)
         {
-            Plugin.Log.Warning("[Penumbra::AddTemporaryMod] Penumbra is not installed!");
-            return false;
+            return await Plugin.RunOnFramework(() =>
+            {
+                try
+                {
+                    var result = _addTemporaryMod.Invoke(tag, collectionGuid, modifiedPaths, meta, priority);
+                    Plugin.Log.Verbose($"[Penumbra::AddTemporaryMod] {result} for {tag} - {collectionGuid} - {priority}");
+                    return result == PenumbraApiEc.Success;
+                }
+                catch (Exception ex)
+                {
+                    Plugin.Log.Warning($"[Penumbra::AddTemporaryMod] Failure, {ex}");
+                    return false;
+                }
+            });
         }
-
-        return await Plugin.RunOnFramework(() =>
-        {
-            try
-            {
-                var result = addTemporaryMod.Invoke(tag, collectionGuid, modifiedPaths, meta, priority);
-                Plugin.Log.Verbose($"[Penumbra::AddTemporaryMod] {result} for {tag} - {collectionGuid} - {priority}");
-                return result == PenumbraApiEc.Success;
-            }
-            catch (Exception ex)
-            {
-                Plugin.Log.Warning($"[Penumbra::AddTemporaryMod] Failure, {ex}");
-                return false;
-            }
-        });
+            
+        Plugin.Log.Warning("[Penumbra::AddTemporaryMod] Penumbra is not installed!");
+        return false;
     }
 
     /// <summary>
@@ -192,26 +187,26 @@ public class PenumbraAccessor : IDisposable
     /// </summary>
     public async Task<bool> CallRemoveTemporaryMod(string tag, Guid collectionId, int priority)
     {
-        if (penumbraUsable == false)
+        if (_penumbraUsable)
         {
-            Plugin.Log.Warning("[Penumbra::AddTemporaryMod] Penumbra is not installed!");
-            return false;
+            return await Plugin.RunOnFramework(() =>
+            {
+                try
+                {
+                    var result = _removeTemporaryMod.Invoke(tag, collectionId, priority);
+                    Plugin.Log.Verbose($"[Penumbra::AddTemporaryMod] {result} for {tag} - {collectionId} - {priority}");
+                    return result is PenumbraApiEc.Success or PenumbraApiEc.NothingChanged;
+                }
+                catch (Exception ex)
+                {
+                    Plugin.Log.Warning($"[Penumbra::AddTemporaryMod] Failure, {ex}");
+                    return false;
+                }
+            });
         }
 
-        return await Plugin.RunOnFramework(() =>
-        {
-            try
-            {
-                var result = removeTemporaryMod.Invoke(tag, collectionId, priority);
-                Plugin.Log.Verbose($"[Penumbra::AddTemporaryMod] {result} for {tag} - {collectionId} - {priority}");
-                return result == PenumbraApiEc.Success || result == PenumbraApiEc.NothingChanged;
-            }
-            catch (Exception ex)
-            {
-                Plugin.Log.Warning($"[Penumbra::AddTemporaryMod] Failure, {ex}");
-                return false;
-            }
-        });
+        Plugin.Log.Warning("[Penumbra::AddTemporaryMod] Penumbra is not installed!");
+        return false;
     }
 
     /// <summary>
@@ -219,26 +214,26 @@ public class PenumbraAccessor : IDisposable
     /// </summary>
     public async Task<bool> CallAssignTemporaryCollection(Guid collectionGuid, int actorIndex = 0, bool forceAssignment = true)
     {
-        if (penumbraUsable == false)
+        if (_penumbraUsable)
         {
-            Plugin.Log.Warning("[Penumbra::AssignTemporaryCollection] Penumbra is not installed!");
-            return false;
+            return await Plugin.RunOnFramework(() =>
+            {
+                try
+                {
+                    var result = _assignTemporaryCollection.Invoke(collectionGuid, actorIndex, forceAssignment);
+                    Plugin.Log.Verbose($"[Penumbra::AssignTemporaryCollection] {result} for {collectionGuid} - {actorIndex}");
+                    return result == PenumbraApiEc.Success;
+                }
+                catch (Exception ex)
+                {
+                    Plugin.Log.Warning($"[Penumbra::AssignTemporaryCollection] Failure, {ex}");
+                    return false;
+                }
+            });
         }
-
-        return await Plugin.RunOnFramework(() =>
-        {
-            try
-            {
-                var result = assignTemporaryCollection.Invoke(collectionGuid, actorIndex, forceAssignment);
-                Plugin.Log.Verbose($"[Penumbra::AssignTemporaryCollection] {result} for {collectionGuid} - {actorIndex}");
-                return result == PenumbraApiEc.Success;
-            }
-            catch (Exception ex)
-            {
-                Plugin.Log.Warning($"[Penumbra::AssignTemporaryCollection] Failure, {ex}");
-                return false;
-            }
-        });
+           
+        Plugin.Log.Warning("[Penumbra::AssignTemporaryCollection] Penumbra is not installed!");
+        return false;
     }
 
     private void PeriodicCheckApi(object? sender, ElapsedEventArgs e) => CheckApi();
@@ -250,19 +245,19 @@ public class PenumbraAccessor : IDisposable
             var penumbraPlugin = Plugin.PluginInterface.InstalledPlugins.FirstOrDefault(plugin => string.Equals(plugin.InternalName, "Penumbra", StringComparison.OrdinalIgnoreCase));
             if (penumbraPlugin == null)
             {
-                penumbraUsable = false;
+                _penumbraUsable = false;
                 return;
             }
 
             // Test if plugin can be invoked
-            var penumbraVersion = apiVersion.Invoke();
+            var penumbraVersion = _apiVersion.Invoke();
             if (penumbraVersion.Breaking < 1)
             {
-                penumbraUsable = false;
+                _penumbraUsable = false;
                 return;
             }
 
-            penumbraUsable = true;
+            _penumbraUsable = true;
         }
         catch (Exception ex)
         {
@@ -272,8 +267,8 @@ public class PenumbraAccessor : IDisposable
 
     public void Dispose()
     {
-        periodicPenumbraTest.Elapsed -= PeriodicCheckApi;
-        periodicPenumbraTest.Dispose();
+        _periodicPenumbraTest.Elapsed -= PeriodicCheckApi;
+        _periodicPenumbraTest.Dispose();
 
         GC.SuppressFinalize(this);
     }

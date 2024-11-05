@@ -198,7 +198,7 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
         }
 
         // Add extra body data for sender client
-        if (request.CharacterData is not null && (request.SwapMods == false || request.CharacterName is null))
+        if (request.CharacterData is not null)
             bodyData.Add(new BodyData(request.CharacterName, request.CharacterData));
 
         // Shuffle all body data, then distribute it

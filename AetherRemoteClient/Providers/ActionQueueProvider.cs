@@ -11,33 +11,20 @@ namespace AetherRemoteClient.Providers;
 /// <summary>
 /// Queues actions on the main XIV thread.
 /// </summary>
-public class ActionQueueProvider
+public class ActionQueueProvider(Chat chat, HistoryLogManager historyLogManager)
 {
-    // Injected
-    private readonly Chat chat;
-    private readonly HistoryLogManager historyLogManager;
-
     private const int MinProcessTime = 6000;
     private const int MaxProcessTime = 10000;
 
-    private readonly ConcurrentQueue<IChatAction> queue = new();
-    private readonly Random random = new();
+    private readonly ConcurrentQueue<IChatAction> _queue = new();
+    private readonly Random _random = new();
 
-    private DateTime timeLastUpdated = DateTime.Now;
-    private double timeUntilNextProcess = 0;
-
-    /// <summary>
-    /// <inheritdoc cref="ActionQueueProvider"/>
-    /// </summary>
-    public ActionQueueProvider(Chat chat, HistoryLogManager historyLogManager)
-    {
-        this.chat = chat;
-        this.historyLogManager = historyLogManager;
-    }
+    private DateTime _timeLastUpdated = DateTime.Now;
+    private double _timeUntilNextProcess;
 
     private void Process(IChatAction action)
     {
-        if (Plugin.ClientState.LocalPlayer == null)
+        if (Plugin.ClientState.LocalPlayer is null)
             return;
 
         // TODO: Revisit this
@@ -60,32 +47,29 @@ public class ActionQueueProvider
     /// </summary>
     public void Update()
     {
-        if (queue.IsEmpty || Plugin.ClientState.LocalPlayer == null)
+        if (_queue.IsEmpty || Plugin.ClientState.LocalPlayer is null)
             return;
 
         var now = DateTime.Now;
-        var delta = (now - timeLastUpdated).TotalMilliseconds;
-        timeLastUpdated = now;
+        var delta = (now - _timeLastUpdated).TotalMilliseconds;
+        _timeLastUpdated = now;
 
-        if (timeUntilNextProcess <= 0)
+        if (_timeUntilNextProcess <= 0)
         {
-            if (queue.TryDequeue(out var value))
+            if (_queue.TryDequeue(out var value))
             {
-                if (value == null)
-                    return;
-
                 Process(value);
             }
             else
             {
-                Plugin.Log.Warning($"Something went wrong processing an action!");
+                Plugin.Log.Warning("Something went wrong processing an action!");
             }
 
-            timeUntilNextProcess = random.Next(MinProcessTime, MaxProcessTime);
+            _timeUntilNextProcess = _random.Next(MinProcessTime, MaxProcessTime);
         }
         else
         {
-            timeUntilNextProcess -= delta;
+            _timeUntilNextProcess -= delta;
         }
     }
 
@@ -95,7 +79,7 @@ public class ActionQueueProvider
     public void EnqueueEmoteAction(string sender, string emote, bool displayLogMessage)
     {
         var action = new EmoteAction(sender, emote, displayLogMessage);
-        queue.Enqueue(action);
+        _queue.Enqueue(action);
     }
 
     /// <summary>
@@ -104,52 +88,43 @@ public class ActionQueueProvider
     public void EnqueueSpeakAction(string sender, string message, ChatMode channel, string? extra)
     {
         var action = new SpeakAction(sender, message, channel, extra);
-        queue.Enqueue(action);
+        _queue.Enqueue(action);
     }
 
     /// <summary>
     /// Clears all the action queues
     /// </summary>
-    public void Clear() => queue.Clear();
+    public void Clear() => _queue.Clear();
 
     /// <summary>
     /// Container holding the information required to process an emote command
     /// </summary>
-    private struct EmoteAction(string sender, string emote, bool displayLogMessage) : IChatAction
+    private readonly struct EmoteAction(string sender, string emote, bool displayLogMessage) : IChatAction
     {
-        public string Sender = sender;
-        public string Emote = emote;
-        public bool DisplayLogMessage = displayLogMessage;
-
-        public readonly string BuildAction() => $"/{Emote}{(DisplayLogMessage ? string.Empty : " motion")}";
-        public readonly string BuildLog() => $"{Sender} made you do the {Emote} emote";
+        public readonly string BuildAction() => $"/{emote}{(displayLogMessage ? string.Empty : " motion")}";
+        public readonly string BuildLog() => $"{sender} made you do the {emote} emote";
     }
 
     /// <summary>
     /// Container holding the information required to process a speak command
     /// </summary>
-    private struct SpeakAction(string sender, string message, ChatMode channel, string? extra) : IChatAction
+    private readonly struct SpeakAction(string sender, string message, ChatMode channel, string? extra) : IChatAction
     {
-        public string Sender = sender;
-        public string Message = message;
-        public ChatMode Channel = channel;
-        public string? Extra = extra;
-
-        public readonly string BuildAction() => Channel switch
+        public readonly string BuildAction() => channel switch
         {
-            ChatMode.Say => $"/{(Extra == "1" ? "em" : "say")} {Message}",
-            ChatMode.Linkshell => $"/l{Extra} {Message}",
-            ChatMode.CrossworldLinkshell => $"/cwl{Extra} {Message}",
-            ChatMode.Tell => $"/t {Extra} {Message}",
-            _ => $"/{Channel.Command()} {Message}",
+            ChatMode.Say => $"/{(extra == "1" ? "em" : "say")} {message}",
+            ChatMode.Linkshell => $"/l{extra} {message}",
+            ChatMode.CrossworldLinkshell => $"/cwl{extra} {message}",
+            ChatMode.Tell => $"/t {extra} {message}",
+            _ => $"/{channel.Command()} {message}",
         };
 
-        public readonly string BuildLog() => Channel switch
+        public readonly string BuildLog() => channel switch
         {
-            ChatMode.Linkshell => $"{Sender} made you say \"{Message}\" in {Channel.Beautify()} {Extra}.",
-            ChatMode.CrossworldLinkshell => $"{Sender} made you say \"{Message}\" in {Channel.Beautify()} {Extra}.",
-            ChatMode.Tell => $"{Sender} made you say \"{Message}\" to {Extra} in a tell.",
-            _ => $"{Sender} made you say \"{Message}\" in {Channel.Beautify()} chat.",
+            ChatMode.Linkshell => $"{sender} made you say \"{message}\" in {channel.Beautify()} {extra}.",
+            ChatMode.CrossworldLinkshell => $"{sender} made you say \"{message}\" in {channel.Beautify()} {extra}.",
+            ChatMode.Tell => $"{sender} made you say \"{message}\" to {extra} in a tell.",
+            _ => $"{sender} made you say \"{message}\" in {channel.Beautify()} chat.",
         };
     }
 

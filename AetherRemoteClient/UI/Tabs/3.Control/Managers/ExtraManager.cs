@@ -10,52 +10,32 @@ using System.Threading.Tasks;
 
 namespace AetherRemoteClient.UI.Tabs.Managers;
 
-public class ExtraManager
+public class ExtraManager(
+    ClientDataManager clientDataManager,
+    CommandLockoutManager commandLockoutManager,
+    GlamourerAccessor glamourerAccessor,
+    HistoryLogManager historyLogManager,
+    ModSwapManager modSwapManager,
+    NetworkProvider networkProvider)
 {
-    // Injected
-    private readonly ClientDataManager clientDataManager;
-    private readonly CommandLockoutManager commandLockoutManager;
-    private readonly GlamourerAccessor glamourerAccessor;
-    private readonly HistoryLogManager historyLogManager;
-    private readonly ModSwapManager modSwapManager;
-    private readonly NetworkProvider networkProvider;
-
-    public ExtraManager(
-        ClientDataManager clientDataManager,
-        CommandLockoutManager commandLockoutManager,
-        GlamourerAccessor glamourerAccessor,
-        HistoryLogManager historyLogManager,
-        ModSwapManager modSwapManager,
-        NetworkProvider networkProvider)
-    {
-        this.clientDataManager = clientDataManager;
-        this.commandLockoutManager = commandLockoutManager;
-        this.glamourerAccessor = glamourerAccessor;
-        this.historyLogManager = historyLogManager;
-        this.modSwapManager = modSwapManager;
-        this.networkProvider = networkProvider;
-    }
-
     // TODO: Twinning mod swap
     public async Task Twinning(bool swapMods)
     {
-        if (Plugin.DeveloperMode)
-            return;
-
+        if (Plugin.DeveloperMode) return;
         if (Plugin.ClientState.LocalPlayer is null)
         {
-            Plugin.Log.Warning($"[Twinning] Failure, no local body");
+            Plugin.Log.Warning("[Twinning] Failure, no local body");
             return;
         }
 
         var characterData = await glamourerAccessor.GetDesignAsync().ConfigureAwait(false);
         if (characterData is null)
         {
-            Plugin.Log.Warning($"[Twinning] Failure, unable to get glamourer data");
+            Plugin.Log.Warning("[Twinning] Failure, unable to get glamourer data");
             return;
         }
 
-        commandLockoutManager.Lock(Constraints.ExternalCommandCooldownInSeconds);
+        commandLockoutManager.Lock();
 
         var targets = clientDataManager.TargetManager.Targets.Keys.ToList();
         var request = new TransformRequest(targets, characterData, GlamourerApplyFlag.All);
@@ -68,9 +48,8 @@ public class ExtraManager
 
     public async Task BodySwap(bool includeSelfInBodySwap, bool swapMods)
     {
-        if (Plugin.DeveloperMode)
-            return;
-
+        if (Plugin.DeveloperMode) return;
+        
         if (includeSelfInBodySwap)
             await BodySwapWithRequester(swapMods).ConfigureAwait(false);
         else
@@ -79,10 +58,9 @@ public class ExtraManager
 
     private async Task BodySwapWithoutRequester(bool swapMods)
     {
-        if (clientDataManager.TargetManager.Targets.Count < 2)
-            return;
+        if (clientDataManager.TargetManager.Targets.Count < 2) return;
 
-        commandLockoutManager.Lock(Constraints.ExternalCommandCooldownInSeconds);
+        commandLockoutManager.Lock();
 
         var targets = clientDataManager.TargetManager.Targets.Keys.ToList();
         var request = new BodySwapRequest(targets, swapMods, null, null);
@@ -99,7 +77,7 @@ public class ExtraManager
             characterName = Plugin.ClientState.LocalPlayer?.Name.ToString();
             if (characterName is null)
             {
-                Plugin.Log.Warning($"[Body Swap] Failure, no local body");
+                Plugin.Log.Warning("[Body Swap] Failure, no local body");
                 return;
             }
         }
@@ -107,11 +85,11 @@ public class ExtraManager
         var characterData = await glamourerAccessor.GetDesignAsync().ConfigureAwait(false);
         if (characterData is null)
         {
-            Plugin.Log.Warning($"[Body Swap] Failure, unable to get glamourer data");
+            Plugin.Log.Warning("[Body Swap] Failure, unable to get glamourer data");
             return;
         }
 
-        commandLockoutManager.Lock(Constraints.ExternalCommandCooldownInSeconds);
+        commandLockoutManager.Lock();
 
         var targets = clientDataManager.TargetManager.Targets.Keys.ToList();
         var request = new BodySwapRequest(targets, swapMods, characterName, characterData);
@@ -124,7 +102,7 @@ public class ExtraManager
         
         if (result.CharacterData is null)
         {
-            Plugin.Log.Warning($"[Body Swap] Failure, body data invalid. Tell a developer!");
+            Plugin.Log.Warning("[Body Swap] Failure, body data invalid. Tell a developer!");
             return;
         }
 
@@ -132,7 +110,7 @@ public class ExtraManager
         {
             if (result.CharacterName is null)
             {
-                Plugin.Log.Warning($"[Body Swap] Failure, character name not included when it should have been. Tell a developer!");
+                Plugin.Log.Warning("[Body Swap] Failure, character name not included when it should have been. Tell a developer!");
                 return;
             }
 
@@ -141,7 +119,7 @@ public class ExtraManager
 
         var glamourerResult = await glamourerAccessor.ApplyDesignAsync(result.CharacterData).ConfigureAwait(false);
         if (glamourerResult == false)
-            Plugin.Log.Warning($"[Body Swap] Failure, failed to apply glamourer");
+            Plugin.Log.Warning("[Body Swap] Failure, failed to apply glamourer");
 
         // TODO: Logging
     }

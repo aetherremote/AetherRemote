@@ -10,15 +10,7 @@ public class HistoryLogManager
     /// <summary>
     /// A list of all log history
     /// </summary>
-    public List<AbstractHistoryLog> History;
-
-    /// <summary>
-    /// <inheritdoc cref="HistoryLogManager"/>
-    /// </summary>
-    public HistoryLogManager()
-    {
-        History = [];
-    }
+    public readonly List<AbstractHistoryLog> History = [];
 
     /// <summary>
     /// Clears all logs

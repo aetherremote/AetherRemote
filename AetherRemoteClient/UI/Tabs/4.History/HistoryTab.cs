@@ -8,31 +8,21 @@ using System.Numerics;
 
 namespace AetherRemoteClient.UI.Tabs.History;
 
-public class HistoryTab : ITab
+public class HistoryTab(HistoryLogManager historyLogManager) : ITab
 {
-    // Injected
-    private readonly HistoryLogManager historyLogManager;
-
-    private readonly ListFilter<AbstractHistoryLog> historyLogSearchFilter;
-    private string searchTerm;
-
-    public HistoryTab(HistoryLogManager historyLogManager)
-    {
-        this.historyLogManager = historyLogManager;
-
-        searchTerm = string.Empty;
-        historyLogSearchFilter = new(historyLogManager.History, FilterHistoryLogs);
-    }
+    // Instantiated
+    private readonly ListFilter<AbstractHistoryLog> _historyLogSearchFilter = new(historyLogManager.History, FilterHistoryLogs);
+    private string _searchTerm = string.Empty;
 
     public void Draw()
     {
         if (ImGui.BeginTabItem("History"))
         {
-            var width = -1 * ((ImGui.GetStyle().WindowPadding.X * 2) + ImGui.GetFontSize());
+            var width = -1 * (ImGui.GetStyle().WindowPadding.X * 2 + ImGui.GetFontSize());
             ImGui.SetNextItemWidth(width);
 
-            if (ImGui.InputTextWithHint("##SearchLog", "Search", ref searchTerm, 128))
-                historyLogSearchFilter.UpdateSearchTerm(searchTerm);
+            if (ImGui.InputTextWithHint("##SearchLog", "Search", ref _searchTerm, 128))
+                _historyLogSearchFilter.UpdateSearchTerm(_searchTerm);
 
             ImGui.SameLine();
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.TrashAlt))
@@ -42,9 +32,9 @@ public class HistoryTab : ITab
 
             if (ImGui.BeginChild("LogArea", Vector2.Zero, true))
             {
-                for (var i = historyLogSearchFilter.List.Count - 1; i >= 0; i--)
+                for (var i = _historyLogSearchFilter.List.Count - 1; i >= 0; i--)
                 {
-                    var log = historyLogSearchFilter.List[i];
+                    var log = _historyLogSearchFilter.List[i];
                     log.Build();
                 }
 
@@ -56,5 +46,5 @@ public class HistoryTab : ITab
     }
 
     public void Dispose() => GC.SuppressFinalize(this);
-    private bool FilterHistoryLogs(AbstractHistoryLog log, string searchTerm) => log.Message.Contains(searchTerm, StringComparison.OrdinalIgnoreCase);
+    private static bool FilterHistoryLogs(AbstractHistoryLog log, string searchTerm) => log.Message.Contains(searchTerm, StringComparison.OrdinalIgnoreCase);
 }

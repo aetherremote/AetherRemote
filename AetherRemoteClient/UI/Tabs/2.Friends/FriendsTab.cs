@@ -26,35 +26,33 @@ public class FriendsTab : ITab
     private static readonly Vector2 SmallButtonSize = new(24, 0);
 
     // Injected
-    private readonly ClientDataManager clientDataManager;
-    private readonly NetworkProvider networkProvider;
+    private readonly ClientDataManager _clientDataManager;
+    private readonly NetworkProvider _networkProvider;
 
     // Instantiated
-    private readonly ListFilter<Friend> friendListFilter;
+    private readonly ListFilter<Friend> _friendListFilter;
 
     // Input text reference for adding a friend
-    private string addFriendInputText = "";
-    private string searchInputText = "";
+    private string _addFriendInputText = "";
+    private string _searchInputText = "";
 
     // Focused Friend
-    private Friend? focusedFriend = null;
-    private string focusedFriendNote = string.Empty;
-    private bool[] focusedPermissions = ConvertUserPermissionsToBooleans(UserPermissions.None);
+    private Friend? _focusedFriend;
+    private string _focusedFriendNote = string.Empty;
+    private bool[] _focusedPermissions = ConvertUserPermissionsToBooleans(UserPermissions.None);
 
     // Processes
-    private bool shouldProcessAddFriend, shouldProcessDeleteFriend, shouldProcessSaveFriend = false;
+    private bool _shouldProcessAddFriend, _shouldProcessDeleteFriend, _shouldProcessSaveFriend;
 
     /// <summary>
     /// <inheritdoc cref="FriendsTab"/>
     /// </summary>
     public FriendsTab(ClientDataManager clientDataManager, NetworkProvider networkProvider)
     {
-        this.clientDataManager = clientDataManager;
-        this.networkProvider = networkProvider;
-
-        friendListFilter = new(clientDataManager.FriendsList.Friends, FilterFriends);
-
-        this.clientDataManager.FriendsList.OnFriendsListCleared += HandleFriendsListDeleted;
+        _clientDataManager = clientDataManager;
+        _networkProvider = networkProvider;
+        _friendListFilter = new ListFilter<Friend>(clientDataManager.FriendsList.Friends, FilterFriends);
+        _clientDataManager.FriendsList.OnFriendsListCleared += HandleFriendsListDeleted;
     }
 
     public void Draw()
@@ -63,17 +61,17 @@ public class FriendsTab : ITab
         var style = ImGui.GetStyle();
 
         // Reset
-        shouldProcessAddFriend = shouldProcessSaveFriend = shouldProcessDeleteFriend = false;
+        _shouldProcessAddFriend = _shouldProcessSaveFriend = _shouldProcessDeleteFriend = false;
 
         // The height of the footer containing the friend code input text and the add friend button
-        var footerHeight = (ImGui.CalcTextSize("Add Friend").Y + (style.FramePadding.Y * 2) + style.ItemSpacing.Y) * 2;
+        var footerHeight = (ImGui.CalcTextSize("Add Friend").Y + style.FramePadding.Y * 2 + style.ItemSpacing.Y) * 2;
 
         if (ImGui.BeginTabItem("Friends"))
         {
             // Draw the settings area beside the search bar using the remaining space
             ImGui.SetNextItemWidth(MainWindow.FriendListSize.X);
-            if (ImGui.InputTextWithHint("##SearchFriendListInputText", "Search", ref searchInputText, Constraints.FriendNicknameCharLimit))
-                friendListFilter.UpdateSearchTerm(searchInputText);
+            if (ImGui.InputTextWithHint("##SearchFriendListInputText", "Search", ref _searchInputText, Constraints.FriendNicknameCharLimit))
+                _friendListFilter.UpdateSearchTerm(_searchInputText);
 
             // Save the cursor at the bottom of the search input text before calling ImGui.SameLine for use later
             var bottomOfSearchInputText = ImGui.GetCursorPosY();
@@ -95,21 +93,21 @@ public class FriendsTab : ITab
             {
                 var onlineFriends = new List<Friend>();
                 var offlineFriends = new List<Friend>();
-                foreach (var friend in friendListFilter.List)
+                foreach (var friend in _friendListFilter.List)
                     (friend.Online ? onlineFriends : offlineFriends).Add(friend);
 
                 if (ImGui.TreeNodeEx($"Online ({onlineFriends.Count})", ImGuiTreeNodeFlags.DefaultOpen))
                 {
-                    for (var i = 0; i < onlineFriends.Count; i++)
-                        DrawSelectableFriend(onlineFriends[i]);
+                    foreach (var friend in onlineFriends)
+                        DrawSelectableFriend(friend);
 
                     ImGui.TreePop();
                 }
 
                 if (ImGui.TreeNodeEx($"Offline ({offlineFriends.Count})", ImGuiTreeNodeFlags.DefaultOpen))
                 {
-                    for (var i = 0; i < offlineFriends.Count; i++)
-                        DrawSelectableFriend(offlineFriends[i]);
+                    foreach (var friend in offlineFriends)
+                        DrawSelectableFriend(friend);
 
                     ImGui.TreePop();
                 }
@@ -119,23 +117,23 @@ public class FriendsTab : ITab
             ImGui.PopStyleVar();
 
             ImGui.SetNextItemWidth(MainWindow.FriendListSize.X);
-            if (ImGui.InputTextWithHint("##FriendCodeInputText", "Friend Code", ref addFriendInputText, Constraints.FriendCodeCharLimit, ImGuiInputTextFlags.EnterReturnsTrue))
-                shouldProcessAddFriend = true;
+            if (ImGui.InputTextWithHint("##FriendCodeInputText", "Friend Code", ref _addFriendInputText, Constraints.FriendCodeCharLimit, ImGuiInputTextFlags.EnterReturnsTrue))
+                _shouldProcessAddFriend = true;
 
             if (ImGui.Button("Add Friend", MainWindow.FriendListSize))
-                shouldProcessAddFriend = true;
+                _shouldProcessAddFriend = true;
 
             ImGui.EndTabItem();
         }
 
-        if (shouldProcessAddFriend) ProcessAddFriend();
-        if (shouldProcessSaveFriend) ProcessSaveFriend();
-        if (shouldProcessDeleteFriend) ProcessDeleteFriend();
+        if (_shouldProcessAddFriend) ProcessAddFriend();
+        if (_shouldProcessSaveFriend) ProcessSaveFriend();
+        if (_shouldProcessDeleteFriend) ProcessDeleteFriend();
     }
 
     private void DrawFriendSetting()
     {
-        if (focusedFriend == null)
+        if (_focusedFriend == null)
         {
             SharedUserInterfaces.PushBigFont();
             var windowCenter = new Vector2(ImGui.GetWindowSize().X / 2, ImGui.GetWindowSize().Y / 2);
@@ -149,20 +147,20 @@ public class FriendsTab : ITab
         }
         else
         {
-            SharedUserInterfaces.BigTextCentered(focusedFriend.FriendCode, ImGuiColors.ParsedOrange);
+            SharedUserInterfaces.BigTextCentered(_focusedFriend.FriendCode, ImGuiColors.ParsedOrange);
 
             ImGui.SameLine();
             var deleteButtonPosition = ImGui.GetWindowSize() - ImGui.GetStyle().WindowPadding - RoundButtonSize;
             ImGui.SetCursorPosX(deleteButtonPosition.X);
             ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 100f);
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Trash, RoundButtonSize))
-                shouldProcessDeleteFriend = true;
+                _shouldProcessDeleteFriend = true;
 
             ImGui.PopStyleVar();
             SharedUserInterfaces.Tooltip("Delete Friend");
 
             ImGui.SetNextItemWidth(MainWindow.FriendListSize.X);
-            ImGui.InputTextWithHint("Note##EditingFriendCode", "Note", ref focusedFriendNote, Constraints.FriendCodeCharLimit);
+            ImGui.InputTextWithHint("Note##EditingFriendCode", "Note", ref _focusedFriendNote, Constraints.FriendCodeCharLimit);
             ImGui.SameLine();
             SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
             SharedUserInterfaces.Tooltip("A note or 'nickname' to more easily identify a friend");
@@ -173,13 +171,13 @@ public class FriendsTab : ITab
             if (ImGui.BeginTable("GeneralPermissionsTable", 2))
             {
                 ImGui.TableNextColumn();
-                ImGui.Checkbox("Allow Speak", ref focusedPermissions[GetBitPosition(UserPermissions.Speak)]);
+                ImGui.Checkbox("Allow Speak", ref _focusedPermissions[GetBitPosition(UserPermissions.Speak)]);
                 ImGui.SameLine();
                 SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
                 SharedUserInterfaces.Tooltip("Allows friend to say things as you");
 
                 ImGui.TableNextColumn();
-                ImGui.Checkbox("Allow Emotes", ref focusedPermissions[GetBitPosition(UserPermissions.Emote)]);
+                ImGui.Checkbox("Allow Emotes", ref _focusedPermissions[GetBitPosition(UserPermissions.Emote)]);
                 ImGui.SameLine();
                 SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
                 SharedUserInterfaces.Tooltip("Allows friend to make you emote");
@@ -190,7 +188,7 @@ public class FriendsTab : ITab
             ImGui.Separator();
             SharedUserInterfaces.TextCentered("Channel Permissions");
 
-            SharedUserInterfaces.DisableIf(focusedPermissions[GetBitPosition(UserPermissions.Speak)] == false, () =>
+            SharedUserInterfaces.DisableIf(_focusedPermissions[GetBitPosition(UserPermissions.Speak)] == false, () =>
             {
                 ImGui.SameLine(ImGui.GetWindowSize().X - (ImGui.GetStyle().WindowPadding.X * 2) - (SmallButtonSize.X * 2));
                 if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Check, SmallButtonSize)) SetAllChannelPermissions(true);
@@ -202,34 +200,34 @@ public class FriendsTab : ITab
 
                 if (ImGui.BeginTable("SpeakPermissionsTable", 3))
                 {
-                    ImGui.TableNextColumn(); ImGui.Checkbox("Say", ref focusedPermissions[GetBitPosition(UserPermissions.Say)]);
-                    ImGui.TableNextColumn(); ImGui.Checkbox("Yell", ref focusedPermissions[GetBitPosition(UserPermissions.Yell)]);
-                    ImGui.TableNextColumn(); ImGui.Checkbox("Shout", ref focusedPermissions[GetBitPosition(UserPermissions.Shout)]);
-                    ImGui.TableNextColumn(); ImGui.Checkbox("Tell", ref focusedPermissions[GetBitPosition(UserPermissions.Tell)]);
-                    ImGui.TableNextColumn(); ImGui.Checkbox("Party", ref focusedPermissions[GetBitPosition(UserPermissions.Party)]);
-                    ImGui.TableNextColumn(); ImGui.Checkbox("Alliance", ref focusedPermissions[GetBitPosition(UserPermissions.Alliance)]);
-                    ImGui.TableNextColumn(); ImGui.Checkbox("Free Company", ref focusedPermissions[GetBitPosition(UserPermissions.FreeCompany)]);
-                    ImGui.TableNextColumn(); ImGui.Checkbox("PVP Team", ref focusedPermissions[GetBitPosition(UserPermissions.PvPTeam)]);
+                    ImGui.TableNextColumn(); ImGui.Checkbox("Say", ref _focusedPermissions[GetBitPosition(UserPermissions.Say)]);
+                    ImGui.TableNextColumn(); ImGui.Checkbox("Yell", ref _focusedPermissions[GetBitPosition(UserPermissions.Yell)]);
+                    ImGui.TableNextColumn(); ImGui.Checkbox("Shout", ref _focusedPermissions[GetBitPosition(UserPermissions.Shout)]);
+                    ImGui.TableNextColumn(); ImGui.Checkbox("Tell", ref _focusedPermissions[GetBitPosition(UserPermissions.Tell)]);
+                    ImGui.TableNextColumn(); ImGui.Checkbox("Party", ref _focusedPermissions[GetBitPosition(UserPermissions.Party)]);
+                    ImGui.TableNextColumn(); ImGui.Checkbox("Alliance", ref _focusedPermissions[GetBitPosition(UserPermissions.Alliance)]);
+                    ImGui.TableNextColumn(); ImGui.Checkbox("Free Company", ref _focusedPermissions[GetBitPosition(UserPermissions.FreeCompany)]);
+                    ImGui.TableNextColumn(); ImGui.Checkbox("PVP Team", ref _focusedPermissions[GetBitPosition(UserPermissions.PvPTeam)]);
                     ImGui.EndTable();
                 }
 
                 ImGui.Text("Linkshell");
                 for (var i = 0; i < 7; i++)
                 {
-                    ImGui.Checkbox($"{i + 1}##LS", ref focusedPermissions[GetBitPosition(UserPermissions.LS1) + i]);
+                    ImGui.Checkbox($"{i + 1}##LS", ref _focusedPermissions[GetBitPosition(UserPermissions.LS1) + i]);
                     ImGui.SameLine();
                 }
 
-                ImGui.Checkbox("8##LS", ref focusedPermissions[GetBitPosition(UserPermissions.LS8)]);
+                ImGui.Checkbox("8##LS", ref _focusedPermissions[GetBitPosition(UserPermissions.LS8)]);
 
-                ImGui.Text("Crossworld Linkshells");
+                ImGui.Text("Cross-world Linkshells");
                 for (var i = 0; i < 7; i++)
                 {
-                    ImGui.Checkbox($"{i + 1}##CWL", ref focusedPermissions[GetBitPosition(UserPermissions.CWL1) + i]);
+                    ImGui.Checkbox($"{i + 1}##CWL", ref _focusedPermissions[GetBitPosition(UserPermissions.CWL1) + i]);
                     ImGui.SameLine();
                 }
 
-                ImGui.Checkbox("8##CWL", ref focusedPermissions[GetBitPosition(UserPermissions.CWL8)]);
+                ImGui.Checkbox("8##CWL", ref _focusedPermissions[GetBitPosition(UserPermissions.CWL8)]);
             });
 
             ImGui.Separator();
@@ -238,22 +236,22 @@ public class FriendsTab : ITab
             if (ImGui.BeginTable("GlamourerPermissionsTable", 2))
             {
                 ImGui.TableNextColumn();
-                ImGui.Checkbox("Allow Customization", ref focusedPermissions[GetBitPosition(UserPermissions.Customization)]);
+                ImGui.Checkbox("Allow Customization", ref _focusedPermissions[GetBitPosition(UserPermissions.Customization)]);
                 ImGui.SameLine();
                 SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
                 SharedUserInterfaces.Tooltip("Allows friend to change your appearance");
 
                 ImGui.TableNextColumn();
-                ImGui.Checkbox("Allow Equipment", ref focusedPermissions[GetBitPosition(UserPermissions.Equipment)]);
+                ImGui.Checkbox("Allow Equipment", ref _focusedPermissions[GetBitPosition(UserPermissions.Equipment)]);
                 ImGui.SameLine();
                 SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
                 SharedUserInterfaces.Tooltip("Allows friend to change your outfit");
 
                 ImGui.TableNextColumn();
-                ImGui.Checkbox("Allow Mod Swaps", ref focusedPermissions[GetBitPosition(UserPermissions.ModSwap)]);
+                ImGui.Checkbox("Allow Mod Swaps", ref _focusedPermissions[GetBitPosition(UserPermissions.ModSwap)]);
                 ImGui.SameLine();
                 SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
-                SharedUserInterfaces.Tooltip("Allows your mods to be swapped during bodyswap and twinning commands.");
+                SharedUserInterfaces.Tooltip("Allows your mods to be swapped during body swap and twinning commands.");
 
                 ImGui.EndTable();
             }
@@ -261,8 +259,8 @@ public class FriendsTab : ITab
             var saveButtonPosition = ImGui.GetWindowSize() - ImGui.GetStyle().WindowPadding - RoundButtonSize;
             ImGui.SetCursorPos(saveButtonPosition);
             ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 100f);
-            if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Save, RoundButtonSize) && focusedFriend != null)
-                shouldProcessSaveFriend = true;
+            if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Save, RoundButtonSize) && _focusedFriend != null)
+                _shouldProcessSaveFriend = true;
 
             SharedUserInterfaces.Tooltip("Save Friend");
 
@@ -279,18 +277,18 @@ public class FriendsTab : ITab
     private void DrawSelectableFriend(Friend friend)
     {
         var onlineStatus = friend.Online;
-        var friendNote = Plugin.Configuration.Notes.TryGetValue(friend.FriendCode, out var note) ? note : null;
+        var friendNote = Plugin.Configuration.Notes.GetValueOrDefault(friend.FriendCode);
         ImGui.SetCursorPosX(8 + ImGui.GetFontSize() + (ImGui.GetStyle().FramePadding.X * 2));
 
         // Draw Selectable Text
         if (onlineStatus == false) ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.DalamudGrey);
 
         var selectableId = $"{friendNote ?? friend.FriendCode}###{friend.FriendCode}";
-        if (ImGui.Selectable(selectableId, focusedFriend == friend, ImGuiSelectableFlags.SpanAllColumns))
+        if (ImGui.Selectable(selectableId, _focusedFriend == friend, ImGuiSelectableFlags.SpanAllColumns))
         {
-            focusedFriend = friend;
-            focusedFriendNote = friendNote ?? string.Empty;
-            focusedPermissions = ConvertUserPermissionsToBooleans(friend.PermissionsGrantedToFriend);
+            _focusedFriend = friend;
+            _focusedFriendNote = friendNote ?? string.Empty;
+            _focusedPermissions = ConvertUserPermissionsToBooleans(friend.PermissionsGrantedToFriend);
         }
 
         if (onlineStatus == false) ImGui.PopStyleColor();
@@ -304,49 +302,46 @@ public class FriendsTab : ITab
 
     private async void ProcessAddFriend()
     {
-        var friendCode = addFriendInputText;
-        addFriendInputText = "";
+        var friendCode = _addFriendInputText;
+        _addFriendInputText = "";
 
         if (string.IsNullOrEmpty(friendCode)) return;
-        if (clientDataManager.FriendsList.FindFriend(friendCode) != null) return;
+        if (_clientDataManager.FriendsList.FindFriend(friendCode) != null) return;
 
         var (success, online) = await CreateOrUpdateFriend(friendCode);
         if (success)
-            clientDataManager.FriendsList.CreateFriend(friendCode, online);
+            _clientDataManager.FriendsList.CreateFriend(friendCode, online);
     }
 
     private async void ProcessSaveFriend()
     {
         // Guard
-        if (focusedFriend == null) return;
+        if (_focusedFriend == null) return;
 
         // Always save the note
-        if (focusedFriendNote == string.Empty)
-            Plugin.Configuration.Notes.Remove(focusedFriend.FriendCode);
+        if (_focusedFriendNote == string.Empty)
+            Plugin.Configuration.Notes.Remove(_focusedFriend.FriendCode);
         else
-            Plugin.Configuration.Notes[focusedFriend.FriendCode] = focusedFriendNote;
+            Plugin.Configuration.Notes[_focusedFriend.FriendCode] = _focusedFriendNote;
         Plugin.Configuration.Save();
 
         // Convert permissions back to UserPermissions
-        var permissions = ConvertBooleansToUserPermissions(focusedPermissions);
-        var (success, online) = await CreateOrUpdateFriend(focusedFriend.FriendCode, permissions).ConfigureAwait(false);
+        var permissions = ConvertBooleansToUserPermissions(_focusedPermissions);
+        var (success, online) = await CreateOrUpdateFriend(_focusedFriend.FriendCode, permissions).ConfigureAwait(false);
         if (success)
         {
             // Only set locally if success on server
-            focusedFriend.Online = online;
-            focusedFriend.PermissionsGrantedToFriend = permissions;
+            _focusedFriend.Online = online;
+            _focusedFriend.PermissionsGrantedToFriend = permissions;
         }
     }
 
-    public async Task<(bool, bool)> CreateOrUpdateFriend(string friendCode, UserPermissions permissions = UserPermissions.None)
+    private async Task<(bool, bool)> CreateOrUpdateFriend(string friendCode, UserPermissions permissions = UserPermissions.None)
     {
-        #pragma warning disable CS0162
-        if (Plugin.DeveloperMode)
-            return (true, true);
-        #pragma warning restore CS0162
+        if (Plugin.DeveloperMode) return (true, true);
 
         var request = new CreateOrUpdatePermissionsRequest(friendCode, permissions);
-        var response = await networkProvider.InvokeCommand<CreateOrUpdatePermissionsRequest, CreateOrUpdatePermissionsResponse>(Network.Permissions.CreateOrUpdate, request);
+        var response = await _networkProvider.InvokeCommand<CreateOrUpdatePermissionsRequest, CreateOrUpdatePermissionsResponse>(Network.Permissions.CreateOrUpdate, request);
         if (response.Success == false)
             Plugin.Log.Warning($"Unable to add friend {friendCode}. {response.Message}");
 
@@ -356,24 +351,21 @@ public class FriendsTab : ITab
     private async void ProcessDeleteFriend()
     {
         // Guard
-        if (focusedFriend == null) return;
+        if (_focusedFriend == null) return;
 
-        var success = await DeleteFriend(focusedFriend);
+        var success = await DeleteFriend(_focusedFriend);
         if (success)
-            clientDataManager.FriendsList.DeleteFriend(focusedFriend.FriendCode);
+            _clientDataManager.FriendsList.DeleteFriend(_focusedFriend.FriendCode);
 
         ResetFocusedFriend();
     }
 
-    public async Task<bool> DeleteFriend(Friend friend)
+    private async Task<bool> DeleteFriend(Friend friend)
     {
-        #pragma warning disable CS0162
-        if (Plugin.DeveloperMode)
-            return true;
-        #pragma warning restore CS0162
+        if (Plugin.DeveloperMode) return true;
 
         var request = new DeletePermissionsRequest(friend.FriendCode);
-        var response = await networkProvider.InvokeCommand<DeletePermissionsRequest, DeletePermissionsResponse>(Network.Permissions.Delete, request);
+        var response = await _networkProvider.InvokeCommand<DeletePermissionsRequest, DeletePermissionsResponse>(Network.Permissions.Delete, request);
         if (response.Success == false)
             Plugin.Log.Warning($"Unable to delete friend {friend.FriendCode}. {response.Message}");
 
@@ -382,7 +374,7 @@ public class FriendsTab : ITab
 
     public void Dispose()
     {
-        clientDataManager.FriendsList.OnFriendsListCleared -= HandleFriendsListDeleted;
+        _clientDataManager.FriendsList.OnFriendsListCleared -= HandleFriendsListDeleted;
         GC.SuppressFinalize(this);
     }
 
@@ -391,9 +383,9 @@ public class FriendsTab : ITab
     /// </summary>
     private void ResetFocusedFriend()
     {
-        focusedFriend = null;
-        focusedFriendNote = string.Empty;
-        focusedPermissions = [];
+        _focusedFriend = null;
+        _focusedFriendNote = string.Empty;
+        _focusedPermissions = [];
     }
 
     /// <summary>
@@ -402,23 +394,20 @@ public class FriendsTab : ITab
     private void SetAllChannelPermissions(bool enabled)
     {
         for(var i = GetBitPosition(UserPermissions.Say); i < GetBitPosition(UserPermissions.CWL8) + 1; i++)
-            focusedPermissions[i] = enabled;
+            _focusedPermissions[i] = enabled;
     }
 
     /// <summary>
-    /// Checks to see if the friend being editted has pending changes
+    /// Checks to see if the friend being edited has pending changes
     /// </summary>
     private bool PendingChanges()
     {
-        if (focusedFriend == null) return false;
-        if (focusedFriendNote != (Plugin.Configuration.Notes.TryGetValue(focusedFriend.FriendCode, out var note) ? note : string.Empty))
+        if (_focusedFriend is null) return false;
+        if (_focusedFriendNote != (Plugin.Configuration.Notes.TryGetValue(_focusedFriend.FriendCode, out var note) ? note : string.Empty))
             return true;
 
-        var permissions = ConvertBooleansToUserPermissions(focusedPermissions);
-        if (permissions != focusedFriend.PermissionsGrantedToFriend)
-            return true;
-
-        return false;
+        var permissions = ConvertBooleansToUserPermissions(_focusedPermissions);
+        return permissions != _focusedFriend.PermissionsGrantedToFriend;
     }
 
     /// <summary>
@@ -448,7 +437,7 @@ public class FriendsTab : ITab
     }
 
     /// <summary>
-    /// Given a permission, calculate what position it would be in the boolean list returened by <see cref="ConvertUserPermissionsToBooleans"/>
+    /// Given a permission, calculate what position it would be in the boolean list returned by <see cref="ConvertUserPermissionsToBooleans"/>
     /// </summary>
     private static int GetBitPosition(UserPermissions permission)
     {

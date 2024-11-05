@@ -7,16 +7,8 @@ using System.Numerics;
 
 namespace AetherRemoteClient.UI.Tabs.ResidualAether;
 
-public class ResidualAetherTab : ITab
+public class ResidualAetherTab(ModSwapManager modSwapManager) : ITab
 {
-    // Injected
-    private readonly ModSwapManager modSwapManager;
-
-    public ResidualAetherTab(ModSwapManager modSwapManager)
-    {
-        this.modSwapManager = modSwapManager;
-    }
-
     public void Draw()
     {
         if (modSwapManager.ActiveChanges == false)
@@ -37,7 +29,7 @@ public class ResidualAetherTab : ITab
 
                 ImGui.Spacing();
 
-                ImGui.SetCursorPosX((ImGui.GetWindowWidth() / 2) - 100);
+                ImGui.SetCursorPosX(ImGui.GetWindowWidth() / 2 - 100);
                 if (ImGui.Button("Cleanse Residual Aether", new Vector2(200, 0)))
                     _ = modSwapManager.RemoveAllCollections();
 

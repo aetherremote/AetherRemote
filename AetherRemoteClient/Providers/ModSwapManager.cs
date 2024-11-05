@@ -14,14 +14,13 @@ public class ModSwapManager(PenumbraAccessor penumbraAccessor)
     private const int Priority = 99;
 
     // Injected
-    private readonly PenumbraAccessor penumbraAccessor = penumbraAccessor;
 
     /// <summary>
     /// Check if there is a currently applied change
     /// </summary>
-    public bool ActiveChanges => currentBodySwapCollection != Guid.Empty;
+    public bool ActiveChanges => _currentBodySwapCollection != Guid.Empty;
 
-    private Guid currentBodySwapCollection = Guid.Empty;
+    private Guid _currentBodySwapCollection = Guid.Empty;
 
     public async Task<ModSwapErrorCode> SwapMods(string targetCharacterName)
     {
@@ -33,11 +32,9 @@ public class ModSwapManager(PenumbraAccessor penumbraAccessor)
         {
             for (ushort i = 0; i < Plugin.ObjectTable.Length; i++)
             {
-                if (Plugin.ObjectTable[i]?.Name.TextValue == targetCharacterName)
-                {
-                    Plugin.Log.Verbose($"[ModSwapManager] Found index {i} for {targetCharacterName}");
-                    return i;
-                }
+                if (Plugin.ObjectTable[i]?.Name.TextValue != targetCharacterName) continue;
+                Plugin.Log.Verbose($"[ModSwapManager] Found index {i} for {targetCharacterName}");
+                return i;
             }
 
             return ushort.MaxValue;
@@ -50,12 +47,6 @@ public class ModSwapManager(PenumbraAccessor penumbraAccessor)
         }
 
         var resources = await penumbraAccessor.CallGetGameObjectResourcePaths(index).ConfigureAwait(false);
-        if (resources is null)
-        {
-            Plugin.Log.Verbose($"[ModSwapManager] Could not get resources for {targetCharacterName}");
-            return ModSwapErrorCode.NoResources;
-        }
-
         var paths = new Dictionary<string, string>();
         foreach (var resource in resources)
         {
@@ -101,29 +92,28 @@ public class ModSwapManager(PenumbraAccessor penumbraAccessor)
         }
 
         Plugin.Log.Verbose($"[ModSwapManager] Setting collection to be {guid}");
-        currentBodySwapCollection = guid;
+        _currentBodySwapCollection = guid;
         return ModSwapErrorCode.Success;
     }
 
     public async Task RemoveAllCollections()
     {
         Plugin.Log.Verbose("[Mod Swap] [Remove All Collections] Beginning");
-        if (currentBodySwapCollection == Guid.Empty)
+        if (_currentBodySwapCollection == Guid.Empty)
         {
             Plugin.Log.Verbose("[Mod Swap] [Remove All Collections] Nothing to remove");
             return;
         }
 
-        await penumbraAccessor.CallRemoveTemporaryMod(TemporaryModName, currentBodySwapCollection, Priority);
-        await penumbraAccessor.CallDeleteTemporaryCollection(currentBodySwapCollection);
-        currentBodySwapCollection = Guid.Empty;
+        await penumbraAccessor.CallRemoveTemporaryMod(TemporaryModName, _currentBodySwapCollection, Priority);
+        await penumbraAccessor.CallDeleteTemporaryCollection(_currentBodySwapCollection);
+        _currentBodySwapCollection = Guid.Empty;
     }
 
     public enum ModSwapErrorCode
     {
         Success,
         NoIndex,
-        NoResources,
         EmptyGuid,
         ModAddError,
         NoLocalPlayer,

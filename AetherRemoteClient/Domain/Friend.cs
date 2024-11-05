@@ -3,11 +3,11 @@ using AetherRemoteCommon.Domain;
 namespace AetherRemoteClient.Domain;
 
 /// <summary>
-/// Container for all of the information that makes up a friend
+/// Container for all the information that makes up a friend
 /// </summary>
 public class Friend
 {
-    public string FriendCode;
+    public readonly string FriendCode;
     public bool Online;
     public UserPermissions PermissionsGrantedToFriend;
     public UserPermissions PermissionsGrantedByFriend;

@@ -19,7 +19,7 @@ public class Chat
 
     private ProcessChatBoxDelegate? ProcessChatBox { get; }
 
-    private readonly unsafe delegate* unmanaged<Utf8String*, int, nint, void> sanitiseString = null!;
+    private readonly unsafe delegate* unmanaged<Utf8String*, int, nint, void> _sanitiseString = null!;
 
     internal Chat()
     {
@@ -29,7 +29,7 @@ public class Chat
         unsafe
         {
             if (Plugin.SigScanner.TryScanText(Signatures.SanitiseString, out var sanitisePtr))
-                sanitiseString = (delegate* unmanaged<Utf8String*, int, nint, void>)sanitisePtr;
+                _sanitiseString = (delegate* unmanaged<Utf8String*, int, nint, void>)sanitisePtr;
         }
     }
 
@@ -48,7 +48,7 @@ public class Chat
     /// <exception cref="InvalidOperationException">If the signature for this function could not be found</exception>
     private unsafe void SendMessageUnsafe(byte[] message)
     {
-        if (ProcessChatBox == null)
+        if (ProcessChatBox is null)
             throw new InvalidOperationException("Could not find signature for chat sending");
 
         var uiModule = (nint)Framework.Instance()->GetUIModule();
@@ -103,14 +103,14 @@ public class Chat
     /// <param name="text">text to sanitise</param>
     /// <returns>sanitised text</returns>
     /// <exception cref="InvalidOperationException">If the signature for this function could not be found</exception>
-    public unsafe string SanitiseText(string text)
+    private unsafe string SanitiseText(string text)
     {
-        if (sanitiseString == null)
-            throw new InvalidOperationException("Could not find signature for chat sanitisation");
+        if (_sanitiseString is null)
+            throw new InvalidOperationException("Could not find signature for chat sanitization");
 
         var uText = Utf8String.FromString(text);
 
-        sanitiseString(uText, 0x27F, nint.Zero);
+        _sanitiseString(uText, 0x27F, nint.Zero);
         var sanitised = uText->ToString();
 
         uText->Dtor();

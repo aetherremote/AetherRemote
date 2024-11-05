@@ -8,12 +8,12 @@ namespace AetherRemoteClient.Providers;
 public class WorldProvider
 {
     public readonly List<string> WorldNames;
-    private readonly ExcelSheet<World>? worldSheet;
+    private readonly ExcelSheet<World>? _worldSheet;
 
     public WorldProvider()
     {
-        worldSheet = Plugin.DataManager.Excel.GetSheet<World>();
-        if (worldSheet == null)
+        _worldSheet = Plugin.DataManager.Excel.GetSheet<World>();
+        if (_worldSheet is null)
         {
             Plugin.Log.Warning("Unable to retrieve World excel sheet.");
             WorldNames = [];
@@ -21,13 +21,11 @@ public class WorldProvider
         }
 
         var worldList = new List<string>();
-        for (uint i = 0; i < worldSheet.RowCount; i++)
+        for (uint i = 0; i < _worldSheet.RowCount; i++)
         {
-            var row = worldSheet.GetRow(i);
-            if (row == null) continue;
-
-            var name = row.Name.RawString;
-            if (name == null) continue;
+            var row = _worldSheet.GetRow(i);
+            var name = row?.Name.RawString;
+            if (name is null) continue;
 
             if (ShouldIncludeWorld(name))
                 worldList.Add(name);
@@ -41,7 +39,7 @@ public class WorldProvider
     {
         try
         {
-            return worldSheet?.GetRow(worldId)?.InternalName?.ToString();
+            return _worldSheet?.GetRow(worldId)?.InternalName?.ToString();
         }
         catch(Exception ex)
         {

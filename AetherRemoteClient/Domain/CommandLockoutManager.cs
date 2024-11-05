@@ -12,18 +12,18 @@ public class CommandLockoutManager : IDisposable
     /// <summary>
     /// Is there an active lockout
     /// </summary>
-    public bool IsLocked { get; private set; } = false;
+    public bool IsLocked { get; private set; }
 
-    private readonly Timer commandLockoutTimer;
+    private readonly Timer _commandLockoutTimer;
 
     /// <summary>
     /// <inheritdoc cref="CommandLockoutManager"/>
     /// </summary>
     public CommandLockoutManager()
     {
-        commandLockoutTimer = new Timer();
-        commandLockoutTimer.AutoReset = false;
-        commandLockoutTimer.Elapsed += LockoutComplete;
+        _commandLockoutTimer = new Timer();
+        _commandLockoutTimer.AutoReset = false;
+        _commandLockoutTimer.Elapsed += LockoutComplete;
     }
 
     /// <summary>
@@ -32,9 +32,9 @@ public class CommandLockoutManager : IDisposable
     public void Lock(uint cooldownInSeconds = Constraints.GameCommandCooldownInSeconds)
     {
         IsLocked = true;
-        commandLockoutTimer.Stop();
-        commandLockoutTimer.Interval = cooldownInSeconds * 1000;
-        commandLockoutTimer.Start();
+        _commandLockoutTimer.Stop();
+        _commandLockoutTimer.Interval = cooldownInSeconds * 1000;
+        _commandLockoutTimer.Start();
     }
 
     /// <summary>
@@ -46,8 +46,8 @@ public class CommandLockoutManager : IDisposable
 
     public void Dispose()
     {
-        commandLockoutTimer.Elapsed -= LockoutComplete;
-        commandLockoutTimer.Dispose();
+        _commandLockoutTimer.Elapsed -= LockoutComplete;
+        _commandLockoutTimer.Dispose();
         GC.SuppressFinalize(this);
     }
 }

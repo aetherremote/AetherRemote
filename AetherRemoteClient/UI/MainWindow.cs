@@ -20,19 +20,18 @@ namespace AetherRemoteClient.UI;
 public class MainWindow : Window, IDisposable
 {
     // Const
-    private const ImGuiWindowFlags MainWindowFlags = ImGuiWindowFlags.None;
     public static readonly Vector2 FriendListSize = new(150, 0);
 
     // Injected
-    private readonly NetworkProvider networkProvider;
+    private readonly NetworkProvider _networkProvider;
 
     // Tabs
-    private readonly DashboardTab dashboardTab;
-    private readonly FriendsTab friendsTab;
-    private readonly ControlTab controlTab;
-    private readonly HistoryTab historyTab;
-    private readonly SettingsTab settingsTab;
-    private readonly ResidualAetherTab residualAetherTab;
+    private readonly DashboardTab _dashboardTab;
+    private readonly FriendsTab _friendsTab;
+    private readonly ControlTab _controlTab;
+    private readonly HistoryTab _historyTab;
+    private readonly SettingsTab _settingsTab;
+    private readonly ResidualAetherTab _residualAetherTab;
 
     public MainWindow(
         ActionQueueProvider actionQueueProvider,
@@ -43,48 +42,48 @@ public class MainWindow : Window, IDisposable
         ModSwapManager modSwapManager,
         NetworkProvider networkProvider,
         WorldProvider worldProvider
-        ) : base($"Aether Remote - Version {Plugin.Version}", MainWindowFlags)
+        ) : base($"Aether Remote - Version {Plugin.Version}")
     {
-        SizeConstraints = new WindowSizeConstraints()
+        SizeConstraints = new WindowSizeConstraints
         {
             MinimumSize = new Vector2(600, 510),
-            MaximumSize = ImGui.GetIO().DisplaySize,
+            MaximumSize = ImGui.GetIO().DisplaySize
         };
 
-        this.networkProvider = networkProvider;
+        _networkProvider = networkProvider;
 
-        dashboardTab = new DashboardTab(clientDataManager, networkProvider);
-        friendsTab = new FriendsTab(clientDataManager, networkProvider);
-        controlTab = new ControlTab(clientDataManager, emoteProvider, glamourerAccessor, historyLogManager, modSwapManager, networkProvider, worldProvider);
-        historyTab = new HistoryTab(historyLogManager);
-        settingsTab = new SettingsTab(actionQueueProvider, clientDataManager);
-        residualAetherTab = new ResidualAetherTab(modSwapManager);
+        _dashboardTab = new DashboardTab(clientDataManager, networkProvider);
+        _friendsTab = new FriendsTab(clientDataManager, networkProvider);
+        _controlTab = new ControlTab(clientDataManager, emoteProvider, glamourerAccessor, historyLogManager, modSwapManager, networkProvider, worldProvider);
+        _historyTab = new HistoryTab(historyLogManager);
+        _settingsTab = new SettingsTab(actionQueueProvider, clientDataManager);
+        _residualAetherTab = new ResidualAetherTab(modSwapManager);
     }
 
     public override void Draw()
     {
         if (ImGui.BeginTabBar("AetherRemoteMainTabBar"))
         {
-            dashboardTab.Draw();
-            if (networkProvider.Connected || Plugin.DeveloperMode)
+            _dashboardTab.Draw();
+            if (_networkProvider.Connected || Plugin.DeveloperMode)
             {
-                friendsTab.Draw();
-                controlTab.Draw();
-                residualAetherTab.Draw();
-                historyTab.Draw();
+                _friendsTab.Draw();
+                _controlTab.Draw();
+                _residualAetherTab.Draw();
+                _historyTab.Draw();
             }
-            settingsTab.Draw();
+            _settingsTab.Draw();
             ImGui.EndTabBar();
         }
     }
 
     public void Dispose()
     {
-        dashboardTab.Dispose();
-        friendsTab.Dispose();
-        controlTab.Dispose();
-        historyTab.Dispose();
-        settingsTab.Dispose();
+        _dashboardTab.Dispose();
+        _friendsTab.Dispose();
+        _controlTab.Dispose();
+        _historyTab.Dispose();
+        _settingsTab.Dispose();
         GC.SuppressFinalize(this);
     }
 }

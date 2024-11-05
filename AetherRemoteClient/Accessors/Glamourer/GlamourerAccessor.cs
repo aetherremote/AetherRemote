@@ -9,11 +9,11 @@ using System.Timers;
 namespace AetherRemoteClient.Accessors.Glamourer;
 
 /// <summary>
-/// Provides access to Glamourer's exposed methods
+/// Provides access to Glamourer exposed methods
 /// </summary>
 public class GlamourerAccessor : IDisposable
 {
-    // Consts
+    // Const
     private const int RequiredMajorVersion = 1;
     private const int RequiredMinorVersion = 3;
     private const int TestApiIntervalInSeconds = 30;
@@ -24,32 +24,31 @@ public class GlamourerAccessor : IDisposable
     private const uint MareLockCode = 0x6D617265;
 
     // Glamourer Api
-    private readonly ApiVersion apiVersion;
-    private readonly ApplyState applyState;
-    private readonly GetStateBase64 getStateBase64;
-    private readonly RevertState revertState;
-    private readonly RevertToAutomation revertToAutomation;
+    private readonly ApiVersion _apiVersion;
+    private readonly ApplyState _applyState;
+    private readonly GetStateBase64 _getStateBase64;
+    private readonly RevertState _revertState;
+    private readonly RevertToAutomation _revertToAutomation;
 
-    private readonly Timer periodicGlamourerTest;
+    private readonly Timer _periodicGlamourerTest;
 
     // Glamourer Installed?
-    private bool glamourerUsable = false;
 
     /// <summary>
     /// <inheritdoc cref="GlamourerAccessor"/>
     /// </summary>
     public GlamourerAccessor()
     {
-        apiVersion = new ApiVersion(Plugin.PluginInterface);
-        applyState = new ApplyState(Plugin.PluginInterface);
-        getStateBase64 = new GetStateBase64(Plugin.PluginInterface);
-        revertState = new RevertState(Plugin.PluginInterface);
-        revertToAutomation = new RevertToAutomation(Plugin.PluginInterface);
+        _apiVersion = new ApiVersion(Plugin.PluginInterface);
+        _applyState = new ApplyState(Plugin.PluginInterface);
+        _getStateBase64 = new GetStateBase64(Plugin.PluginInterface);
+        _revertState = new RevertState(Plugin.PluginInterface);
+        _revertToAutomation = new RevertToAutomation(Plugin.PluginInterface);
 
-        periodicGlamourerTest = new Timer(TestApiIntervalInSeconds * 1000);
-        periodicGlamourerTest.AutoReset = true;
-        periodicGlamourerTest.Elapsed += PeriodicCheckApi;
-        periodicGlamourerTest.Start();
+        _periodicGlamourerTest = new Timer(TestApiIntervalInSeconds * 1000);
+        _periodicGlamourerTest.AutoReset = true;
+        _periodicGlamourerTest.Elapsed += PeriodicCheckApi;
+        _periodicGlamourerTest.Start();
 
         CheckApi();
     }
@@ -57,7 +56,7 @@ public class GlamourerAccessor : IDisposable
     /// <summary>
     /// Is the glamourer api available for use?
     /// </summary>
-    public bool IsGlamourerUsable => glamourerUsable;
+    public bool IsGlamourerUsable { get; private set; }
 
     /// <summary>
     /// Reverts back to original game defaults
@@ -68,7 +67,7 @@ public class GlamourerAccessor : IDisposable
         {
             try
             {
-                var result = revertState.Invoke(objectIndex);
+                var result = _revertState.Invoke(objectIndex);
                 Plugin.Log.Verbose($"[Glamourer::RevertState] {result} for {objectIndex}");
                 return result == GlamourerApiEc.Success;
             }
@@ -89,7 +88,7 @@ public class GlamourerAccessor : IDisposable
         {
             try
             {
-                var result = revertToAutomation.Invoke(objectIndex);
+                var result = _revertToAutomation.Invoke(objectIndex);
                 Plugin.Log.Verbose($"[Glamourer::RevertToAutomation] {result} for {objectIndex}");
                 return result == GlamourerApiEc.Success;
             }
@@ -106,14 +105,14 @@ public class GlamourerAccessor : IDisposable
     /// </summary>
     public async Task<bool> ApplyDesignAsync(string glamourerData, ushort objectIndex = 0, GlamourerApplyFlag flags = GlamourerApplyFlag.All)
     {
-        if (glamourerUsable == false)
+        if (IsGlamourerUsable == false)
             return false;
 
         return await Plugin.RunOnFramework(() =>
         {
             try
             {
-                var result = applyState.Invoke(glamourerData, objectIndex, 0, ConvertGlamourerToApplFlags(flags));
+                var result = _applyState.Invoke(glamourerData, objectIndex, 0, ConvertGlamourerToApplyFlags(flags));
                 Plugin.Log.Verbose($"[Glamourer::ApplyState] {result} for {objectIndex}");
                 return result == GlamourerApiEc.Success;
             }
@@ -130,21 +129,18 @@ public class GlamourerAccessor : IDisposable
     /// </summary>
     public async Task<string?> GetDesignAsync(ushort objectIndex = 0)
     {
-        if (glamourerUsable == false)
+        if (IsGlamourerUsable == false)
             return string.Empty;
 
         return await Plugin.RunOnFramework(() =>
         {
             try
             {
-                var (result, data) = getStateBase64.Invoke(objectIndex, MareLockCode);
+                var (result, data) = _getStateBase64.Invoke(objectIndex, MareLockCode);
                 Plugin.Log.Verbose($"[Glamourer::GetStateBase64] {result} for {objectIndex} with data {data}");
 
                 if (result is GlamourerApiEc.InvalidKey)
-                {
-                    var (resultNoMare, dataNoMare) = getStateBase64.Invoke(objectIndex);
-                    Plugin.Log.Verbose($"[Glamourer::GetStateBase64] {resultNoMare} for {objectIndex} with data {dataNoMare}");
-                }
+                    Plugin.Log.Warning("[Glamourer::GetStateBase64] Could not get design.");
 
                 return data;
             }
@@ -161,8 +157,8 @@ public class GlamourerAccessor : IDisposable
     /// </summary>
     public void Dispose()
     {
-        periodicGlamourerTest.Elapsed -= PeriodicCheckApi;
-        periodicGlamourerTest.Dispose();
+        _periodicGlamourerTest.Elapsed -= PeriodicCheckApi;
+        _periodicGlamourerTest.Dispose();
 
         GC.SuppressFinalize(this);
     }
@@ -176,19 +172,19 @@ public class GlamourerAccessor : IDisposable
             var glamourerPlugin = Plugin.PluginInterface.InstalledPlugins.FirstOrDefault(plugin => string.Equals(plugin.InternalName, "Glamourer", StringComparison.OrdinalIgnoreCase));
             if (glamourerPlugin == null)
             {
-                glamourerUsable = false;
+                IsGlamourerUsable = false;
                 return;
             }
 
             // Test if plugin can be invoked
-            var glamourerVersion = apiVersion.Invoke();
+            var glamourerVersion = _apiVersion.Invoke();
             if (glamourerVersion.Major != RequiredMajorVersion || glamourerVersion.Minor < RequiredMinorVersion)
             {
-                glamourerUsable = false;
+                IsGlamourerUsable = false;
                 return;
             }
 
-            glamourerUsable = true;
+            IsGlamourerUsable = true;
         }
         catch (Exception ex)
         {
@@ -201,7 +197,7 @@ public class GlamourerAccessor : IDisposable
     /// AetherRemote implemented them additively. The flags must be switched.
     /// There is a chance this is also just a bug. Who knows! I certainly don't.
     /// </summary>
-    private static ApplyFlag ConvertGlamourerToApplFlags(GlamourerApplyFlag flags)
+    private static ApplyFlag ConvertGlamourerToApplyFlags(GlamourerApplyFlag flags)
     {
         var finalizedFlags = ApplyFlag.Once;
         if (flags.HasFlag(GlamourerApplyFlag.Customization)) finalizedFlags |= ApplyFlag.Equipment;

@@ -17,17 +17,17 @@ public class DashboardTab : ITab
     private static readonly Vector2 LoginButtonSize = new(50, 0);
 
     // Injected
-    private readonly ClientDataManager clientDataManager;
-    private readonly NetworkProvider networkProvider;
+    private readonly ClientDataManager _clientDataManager;
+    private readonly NetworkProvider _networkProvider;
 
-    private string secretInputText;
+    private string _secretInputText;
 
     public DashboardTab(ClientDataManager clientDataManager, NetworkProvider networkProvider)
     {
-        this.clientDataManager = clientDataManager;
-        this.networkProvider = networkProvider;
+        _clientDataManager = clientDataManager;
+        _networkProvider = networkProvider;
 
-        secretInputText = Plugin.Configuration.Secret;
+        _secretInputText = Plugin.Configuration.Secret;
 
         if (Plugin.Configuration.AutoLogin)
             Login();
@@ -35,43 +35,40 @@ public class DashboardTab : ITab
 
     public void Draw()
     {
-        if (ImGui.BeginTabItem("Dashboard"))
+        if (ImGui.BeginTabItem("Dashboard") == false) return;
+        if (ImGui.BeginChild("DashboardArea", Vector2.Zero, true))
         {
-            if (ImGui.BeginChild("DashboardArea", Vector2.Zero, true))
-            {
-                var state = networkProvider.State;
-                var color = networkProvider.Connected
-                    ? ImGuiColors.ParsedGreen
-                    : state == HubConnectionState.Disconnected ? ImGuiColors.DPSRed : ImGuiColors.DalamudYellow;
+            var state = _networkProvider.State;
+            var color = _networkProvider.Connected
+                ? ImGuiColors.ParsedGreen
+                : state == HubConnectionState.Disconnected ? ImGuiColors.DPSRed : ImGuiColors.DalamudYellow;
 
-                if (state == HubConnectionState.Connected)
-                    DrawConnectedMenu();
-                else
-                    DrawDisconnectedMenu(state);
+            if (state is HubConnectionState.Connected)
+                DrawConnectedMenu();
+            else
+                DrawDisconnectedMenu(state);
 
-                // Connection Status
-                ImGui.SetCursorPosY(ImGui.GetWindowHeight() - ImGui.GetStyle().WindowPadding.Y - ImGui.GetFontSize());
-                ImGui.Text("Server Status:");
-                ImGui.SameLine();
-                ImGui.TextColored(color, state.ToString());
+            // Connection Status
+            ImGui.SetCursorPosY(ImGui.GetWindowHeight() - ImGui.GetStyle().WindowPadding.Y - ImGui.GetFontSize());
+            ImGui.Text("Server Status:");
+            ImGui.SameLine();
+            ImGui.TextColored(color, state.ToString());
 
-                // Plugin Version
-                ImGui.SameLine();
-                var version = $"{Plugin.Stage} {Plugin.Version}";
-                var versionWidth = ImGui.CalcTextSize(version).X;
-                ImGui.SetCursorPosX(ImGui.GetWindowWidth() - versionWidth - ImGui.GetStyle().WindowPadding.X);
-                ImGui.Text(version);
+            // Plugin Version
+            ImGui.SameLine();
+            var version = $"{Plugin.Stage} {Plugin.Version}";
+            var versionWidth = ImGui.CalcTextSize(version).X;
+            ImGui.SetCursorPosX(ImGui.GetWindowWidth() - versionWidth - ImGui.GetStyle().WindowPadding.X);
+            ImGui.Text(version);
 
-                ImGui.EndChild();
-            }
-
-            ImGui.EndTabItem();
+            ImGui.EndChild();
         }
+
+        ImGui.EndTabItem();
     }
 
     private void DrawConnectedMenu()
     {
-        var shouldProcessDisconnect = false;
         SharedUserInterfaces.PushBigFont();
 
         var width = ImGui.GetWindowWidth();
@@ -80,7 +77,7 @@ public class DashboardTab : ITab
 
         ImGui.SetCursorPos(new Vector2(width - fontSize - windowPadding.X, windowPadding.Y));
         if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Plug, new Vector2(fontSize, fontSize)))
-            shouldProcessDisconnect = true;
+            _ = _networkProvider.Disconnect();
 
         SharedUserInterfaces.PopBigFont();
         SharedUserInterfaces.Tooltip("Disconnect");
@@ -89,10 +86,10 @@ public class DashboardTab : ITab
         ImGui.SetCursorPosY(windowPadding.Y);
         SharedUserInterfaces.TextCentered("My Friend Code");
 
-        var friendCode = clientDataManager.FriendCode ?? "Fetching...";
+        var friendCode = _clientDataManager.FriendCode ?? "Fetching...";
         var friendCodeSize = ImGui.CalcTextSize(friendCode);
 
-        ImGui.SetCursorPosX((width / 2) - (friendCodeSize.X / 2));
+        ImGui.SetCursorPosX(width / 2 - friendCodeSize.X / 2);
         ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.ParsedOrange);
 
         if (ImGui.Selectable(friendCode, false, ImGuiSelectableFlags.None, friendCodeSize))
@@ -102,34 +99,30 @@ public class DashboardTab : ITab
 
         SharedUserInterfaces.PopBigFont();
         SharedUserInterfaces.Tooltip("Copy to Clipboard");
-
-        if (shouldProcessDisconnect)
-            _ = networkProvider.Disconnect();
     }
 
     private void DrawDisconnectedMenu(HubConnectionState state)
     {
-        var isConnecting = state == HubConnectionState.Connecting || state == HubConnectionState.Reconnecting;
+        var isConnecting = state is HubConnectionState.Connecting or HubConnectionState.Reconnecting;
         SharedUserInterfaces.DisableIf(isConnecting, () =>
         {
-            var shouldSave = false;
             var shouldLogin = false;
             var width = ImGui.GetWindowWidth();
             var height = ImGui.GetWindowHeight();
 
             SharedUserInterfaces.BigTextCentered("Aether Remote", ImGuiColors.ParsedOrange);
 
-            ImGui.SetCursorPosY((height / 2) - (ImGui.GetFontSize() * 2));
+            ImGui.SetCursorPosY(height / 2 - ImGui.GetFontSize() * 2);
 
-            var centerTextX = (width / 2) - (LoginElementsWidth / 2);
+            var centerTextX = width / 2 - LoginElementsWidth / 2.0f;
             ImGui.SetCursorPosX(centerTextX);
             ImGui.SetNextItemWidth(LoginElementsWidth);
-            if (ImGui.InputTextWithHint("##Login", "Secret", ref secretInputText, 60, ImGuiInputTextFlags.EnterReturnsTrue))
+            if (ImGui.InputTextWithHint("##Login", "Secret", ref _secretInputText, 60, ImGuiInputTextFlags.EnterReturnsTrue))
                 shouldLogin = true;
 
             ImGui.SetCursorPosX(centerTextX);
             if (ImGui.Checkbox("Auto Login", ref Plugin.Configuration.AutoLogin))
-                shouldSave = true;
+                Plugin.Configuration.Save();
 
             ImGui.SameLine();
 
@@ -137,15 +130,10 @@ public class DashboardTab : ITab
             if (ImGui.Button("Login", LoginButtonSize))
                 shouldLogin = true;
 
-            if (shouldSave)
-                Plugin.Configuration.Save();
-
-            if (shouldLogin)
-            {
-                Plugin.Configuration.Secret = secretInputText;
-                Plugin.Configuration.Save();
-                Login();
-            }
+            if (shouldLogin == false) return;
+            Plugin.Configuration.Secret = _secretInputText;
+            Plugin.Configuration.Save();
+            Login();
         });
     }
 
@@ -155,7 +143,7 @@ public class DashboardTab : ITab
         if (string.IsNullOrEmpty(Plugin.Configuration.Secret))
             return;
 
-        _ = networkProvider.Connect(Plugin.Configuration.Secret);
+        _ = _networkProvider.Connect(Plugin.Configuration.Secret);
     }
 
     public void Dispose() => GC.SuppressFinalize(this);

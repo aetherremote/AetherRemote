@@ -12,7 +12,7 @@ public class EmoteProvider
     /// <summary>
     /// List containing all the current emote alias in the game.
     /// </summary>
-    public List<string> Emotes { get; private set; }
+    public List<string> Emotes { get; }
 
     /// <summary>
     /// <inheritdoc cref="EmoteProvider"/>
@@ -26,13 +26,13 @@ public class EmoteProvider
         for (uint i = 0; i < emoteSheet.RowCount; i++)
         {
             var emote = emoteSheet.GetRow(i);
-            if (emote == null) continue;
+            if (emote is null) continue;
 
-            var command = emote?.TextCommand?.Value?.Command?.ToString();
+            var command = emote.TextCommand?.Value?.Command?.ToString();
             if (command.IsNullOrEmpty()) continue;
             Emotes.Add(command[1..]);
 
-            var shortCommand = emote?.TextCommand?.Value?.ShortCommand?.ToString();
+            var shortCommand = emote.TextCommand?.Value?.ShortCommand?.ToString();
             if (shortCommand.IsNullOrEmpty()) continue;
             Emotes.Add(shortCommand[1..]);
         }

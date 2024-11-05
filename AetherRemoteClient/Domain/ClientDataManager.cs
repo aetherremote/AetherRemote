@@ -20,12 +20,12 @@ public class ClientDataManager
     /// <summary>
     /// Local Client's Friends List
     /// </summary>
-    public FriendsList FriendsList;
+    public readonly FriendsList FriendsList;
 
     /// <summary>
     /// Local Client's Targets
     /// </summary>
-    public TargetManager TargetManager;
+    public readonly TargetManager TargetManager;
 
     /// <summary>
     /// <inheritdoc cref="ClientDataManager"/>
@@ -34,19 +34,15 @@ public class ClientDataManager
     {
         FriendCode = null;
         SafeMode = false;
-        FriendsList = new();
-        TargetManager = new();
+        FriendsList = new FriendsList();
+        TargetManager = new TargetManager();
 
-#pragma warning disable CS0162
-        if (Plugin.DeveloperMode)
-        {
-            FriendCode = "Dev Mode";
-            FriendsList.CreateFriend("Friend1", false);
-            FriendsList.CreateFriend("Friend2", true, UserPermissions.Speak | UserPermissions.Emote | UserPermissions.CWL6 | UserPermissions.Shout | UserPermissions.Equipment);
-            FriendsList.CreateFriend("Friend3", true);
-            FriendsList.CreateFriend("Friend4", false);
-            FriendsList.CreateFriend("Friend5", false);
-        }
-#pragma warning restore CS0162
+        if (Plugin.DeveloperMode == false) return;
+        FriendCode = "Dev Mode";
+        FriendsList.CreateFriend("Friend1", false);
+        FriendsList.CreateFriend("Friend2", true, UserPermissions.Speak | UserPermissions.Emote | UserPermissions.CWL6 | UserPermissions.Shout | UserPermissions.Equipment);
+        FriendsList.CreateFriend("Friend3", true);
+        FriendsList.CreateFriend("Friend4", false);
+        FriendsList.CreateFriend("Friend5", false);
     }
 }

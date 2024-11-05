@@ -14,18 +14,22 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 
-#pragma warning disable CS0162
-
 namespace AetherRemoteClient.Providers;
 
 /// <summary>
 /// Provisions a connection to the server and exposes methods to interact with the server
 /// </summary>
-public class NetworkProvider : IDisposable
+public class NetworkProvider(ActionQueueProvider actionQueueProvider,
+    ClientDataManager clientDataManager,
+    EmoteProvider emoteProvider,
+    GlamourerAccessor glamourerAccessor,
+    HistoryLogManager historyLogManager,
+    ModSwapManager modSwapManager,
+    WorldProvider worldProvider) : IDisposable
 {
 #if DEBUG
-    private const string HubUrl = "https://localhost:5006/primaryHub";
-    private const string PostUrl = "https://localhost:5006/api/auth/login";
+    private const string HubUrl = "https://foxitsvc.com:5006/primaryHub";
+    private const string PostUrl = "https://foxitsvc.com:5006/api/auth/login";
 #else
     private const string HubUrl = "https://foxitsvc.com:5006/primaryHub";
     private const string PostUrl = "https://foxitsvc.com:5006/api/auth/login";
@@ -35,71 +39,41 @@ public class NetworkProvider : IDisposable
     private const GlamourerApplyFlag CustomizationFlags = GlamourerApplyFlag.Once | GlamourerApplyFlag.Customization;
     private const GlamourerApplyFlag EquipmentFlags = GlamourerApplyFlag.Once | GlamourerApplyFlag.Equipment;
 
-    // Inject
-    private readonly ActionQueueProvider actionQueueProvider;
-    private readonly ClientDataManager clientDataManager;
-    private readonly EmoteProvider emoteProvider;
-    private readonly GlamourerAccessor glamourerAccessor;
-    private readonly HistoryLogManager historyLogManager;
-    private readonly ModSwapManager modSwapManager;
-    private readonly WorldProvider worldProvider;
-
     // Instantiated
-    private HubConnection? connection = null;
-
-    /// <summary>
-    /// <inheritdoc cref="NetworkProvider"/>
-    /// </summary>
-    public NetworkProvider(
-        ActionQueueProvider actionQueueProvider,
-        ClientDataManager clientDataManager,
-        EmoteProvider emoteProvider,
-        GlamourerAccessor glamourerAccessor,
-        HistoryLogManager historyLogManager,
-        ModSwapManager modSwapManager,
-        WorldProvider worldProvider)
-    {
-        this.actionQueueProvider = actionQueueProvider;
-        this.clientDataManager = clientDataManager;
-        this.emoteProvider = emoteProvider;
-        this.glamourerAccessor = glamourerAccessor;
-        this.historyLogManager = historyLogManager;
-        this.modSwapManager = modSwapManager;
-        this.worldProvider = worldProvider;
-    }
+    private HubConnection? _connection;
 
     /// <summary>
     /// Is there a connection to the server
     /// </summary>
-    public bool Connected => connection is not null && connection.State == HubConnectionState.Connected;
+    public bool Connected => _connection?.State is HubConnectionState.Connected;
 
     /// <summary>
     /// The current state of the server connection
     /// </summary>
-    public HubConnectionState State => connection is not null ? connection.State : HubConnectionState.Disconnected;
+    public HubConnectionState State => _connection?.State ?? HubConnectionState.Disconnected;
 
     /// <summary>
     /// Invokes a method on the server hub
     /// </summary>
-    public async Task<U> InvokeCommand<T, U>(string commandName, T request)
+    public async Task<TU> InvokeCommand<T, TU>(string commandName, T request)
     {
-        if (connection is null)
+        if (_connection is null)
         {
             Plugin.Log.Warning($"Cannot invoke commands while server is disconnected");
-            return Activator.CreateInstance<U>();
+            return Activator.CreateInstance<TU>();
         }
 
         try
         {
             Plugin.Log.Verbose($"[{commandName}] Request: {request}");
-            var response = await connection.InvokeAsync<U>(commandName, request);
+            var response = await _connection.InvokeAsync<TU>(commandName, request);
             Plugin.Log.Verbose($"[{commandName}] Response: {response}");
             return response;
         }
         catch (Exception ex)
         {
             Plugin.Log.Error($"Exception while invoking command: {ex}");
-            return Activator.CreateInstance<U>();
+            return Activator.CreateInstance<TU>();
         }
     }
 
@@ -111,23 +85,20 @@ public class NetworkProvider : IDisposable
         if (Plugin.DeveloperMode)
             return;
 
-        if (connection != null)
+        if (_connection is not null)
             await Disconnect().ConfigureAwait(false);
 
         var token = await GetToken(secret).ConfigureAwait(false);
-        if (token == null) return;
+        if (token is null) return;
 
         try
         {
-            connection = new HubConnectionBuilder().WithUrl(HubUrl, options =>
+            _connection = new HubConnectionBuilder().WithUrl(HubUrl, options =>
             {
-                options.AccessTokenProvider = async () =>
-                {
-                    return await Task.FromResult(token).ConfigureAwait(false);
-                };
+                options.AccessTokenProvider = async () => await Task.FromResult(token).ConfigureAwait(false);
             }).Build();
 
-            await connection.StartAsync().ConfigureAwait(false);
+            await _connection.StartAsync().ConfigureAwait(false);
         }
         catch (Exception ex)
         {
@@ -136,44 +107,43 @@ public class NetworkProvider : IDisposable
             return;
         }
 
-        if (connection.State != HubConnectionState.Connected)
+        if (_connection.State is not HubConnectionState.Connected)
         {
             _ = CleanUp();
             return;
         }
 
         // Server Events
-        connection.Closed += ServerConnectionClosed;
+        _connection.Closed += ServerConnectionClosed;
 
         // Handle Events
-        connection.On(Network.Commands.UpdateOnlineStatus, (UpdateOnlineStatusCommand command) => { HandleOnlineStatus(command); });
-        connection.On(Network.Commands.UpdateLocalPermissions, (UpdateLocalPermissionsCommand command) => { HandleLocalPermissions(command); });
-        connection.On(Network.Commands.Emote, (EmoteCommand command) => { HandleEmote(command); });
-        connection.On(Network.Commands.Speak, (SpeakCommand command) => { HandleSpeak(command); });
-        connection.On(Network.Commands.Transform, (TransformCommand command) => { _ = HandleTransform(command); });
-        connection.On(Network.Commands.BodySwap, (BodySwapCommand command) => { _ = HandleBodySwap(command); });
-        connection.On(Network.Commands.Revert, (RevertCommand command) => { HandleRevert(command); });
+        _connection.On(Network.Commands.UpdateOnlineStatus,         (UpdateOnlineStatusCommand command) => { HandleOnlineStatus(command); });
+        _connection.On(Network.Commands.UpdateLocalPermissions,     (UpdateLocalPermissionsCommand command) => { HandleLocalPermissions(command); });
+        _connection.On(Network.Commands.Emote,                      (EmoteCommand command) => { HandleEmote(command); });
+        _connection.On(Network.Commands.Speak,                      (SpeakCommand command) => { HandleSpeak(command); });
+        _connection.On(Network.Commands.Transform,                  (TransformCommand command) => { _ = HandleTransform(command); });
+        _connection.On(Network.Commands.BodySwap,                   (BodySwapCommand command) => { _ = HandleBodySwap(command); });
+        _connection.On(Network.Commands.Revert,                     (RevertCommand command) => { HandleRevert(command); });
 
         // Query Events
-        connection.On(Network.BodySwapQuery, async (BodySwapQueryRequest request) => await HandleBodySwapQuery(request));
+        _connection.On(Network.BodySwapQuery,                       async (BodySwapQueryRequest request) => await HandleBodySwapQuery(request));
 
         // Retrieve user detail
         await RequestUserDetails();
     }
 
-    private async Task<bool> RequestUserDetails()
+    private async Task RequestUserDetails()
     {
         var request = new LoginDetailsRequest();
         var response = await InvokeCommand<LoginDetailsRequest, LoginDetailsResponse>(Network.LoginDetails, request);
         if (response.Success == false)
         {
             Plugin.Log.Warning($"Unable to retrieve login details: {response.Message}");
-            return false;
+            return;
         }
 
         clientDataManager.FriendCode = response.FriendCode;
         clientDataManager.FriendsList.ConvertServerPermissionsToLocal(response.PermissionsGrantedToOthers, response.PermissionsGrantedByOthers);
-        return true;
     }
 
     /// <summary>
@@ -193,11 +163,11 @@ public class NetworkProvider : IDisposable
     /// </summary>
     private async Task CleanUp()
     {
-        if (connection is not null)
+        if (_connection is not null)
         {
-            connection.Closed -= ServerConnectionClosed;
-            await connection.DisposeAsync();
-            connection = null;
+            _connection.Closed -= ServerConnectionClosed;
+            await _connection.DisposeAsync();
+            _connection = null;
         }
 
         clientDataManager.FriendCode = null;
@@ -212,19 +182,16 @@ public class NetworkProvider : IDisposable
             using var client = new HttpClient();
             var payload = new StringContent(JsonSerializer.Serialize(secret), Encoding.UTF8, "application/json");
             var post = await client.PostAsync(PostUrl, payload).ConfigureAwait(false);
-            if (post.IsSuccessStatusCode == false)
+            if (post.IsSuccessStatusCode) return await post.Content.ReadAsStringAsync().ConfigureAwait(false);
+            
+            var errorMessage = post.StatusCode switch
             {
-                var errorMessage = post.StatusCode switch
-                {
-                    System.Net.HttpStatusCode.Unauthorized => "Unable to connect, invalid secret. Please register in the discord or reach out for assistance.",
-                    _ => $"Post was unsuccessful. Status Code: {post.StatusCode}"
-                };
+                System.Net.HttpStatusCode.Unauthorized => "Unable to connect, invalid secret. Please register in the discord or reach out for assistance.",
+                _ => $"Post was unsuccessful. Status Code: {post.StatusCode}"
+            };
 
-                Plugin.Log.Warning(errorMessage);
-                return null;
-            }
-
-            return await post.Content.ReadAsStringAsync().ConfigureAwait(false);
+            Plugin.Log.Warning(errorMessage);
+            return null;
         }
         catch (HttpRequestException ex)
         {
@@ -246,7 +213,7 @@ public class NetworkProvider : IDisposable
 
     private void HandleOnlineStatus(UpdateOnlineStatusCommand command)
     {
-        Plugin.Log.Verbose(command.ToString());
+        Plugin.Log.Verbose($"{command}");
         clientDataManager.FriendsList.UpdateFriendOnlineStatus(command.FriendCode, command.Online);
         clientDataManager.FriendsList.UpdateLocalPermissions(command.FriendCode, command.Permissions);
     }
@@ -259,7 +226,7 @@ public class NetworkProvider : IDisposable
 
     private void HandleEmote(EmoteCommand command)
     {
-        Plugin.Log.Verbose(command.ToString());
+        Plugin.Log.Verbose($"{command}");
 
         var noteOrFriendCode = command.SenderFriendCode;
         var friend = clientDataManager.FriendsList.FindFriend(command.SenderFriendCode);
@@ -291,7 +258,7 @@ public class NetworkProvider : IDisposable
 
     private void HandleRevert(RevertCommand command)
     {
-        Plugin.Log.Verbose(command.ToString());
+        Plugin.Log.Verbose($"{command}");
 
         var noteOrFriendCode = command.SenderFriendCode;
         var friend = clientDataManager.FriendsList.FindFriend(command.SenderFriendCode);
@@ -317,19 +284,27 @@ public class NetworkProvider : IDisposable
             return;
         }
 
-        if (command.RevertType == RevertType.Automation)
-            _ = glamourerAccessor.RevertToAutomation();
-        else if (command.RevertType == RevertType.Game)
-            _ = glamourerAccessor.RevertToGame();
+        switch (command.RevertType)
+        {
+            case RevertType.Automation:
+                _ = glamourerAccessor.RevertToAutomation();
+                break;
+            case RevertType.Game:
+                _ = glamourerAccessor.RevertToGame();
+                break;
+            case RevertType.None:
+            default:
+                break;    
+        }
     }
 
     private void HandleSpeak(SpeakCommand command)
     {
-        Plugin.Log.Verbose(command.ToString());
+        Plugin.Log.Verbose($"{command}");
 
         var noteOrFriendCode = command.SenderFriendCode;
         var friend = clientDataManager.FriendsList.FindFriend(command.SenderFriendCode);
-        if (friend == null)
+        if (friend is null)
         {
             var message = HistoryLog.NotFriends("Speak", noteOrFriendCode);
             Plugin.Log.Information(message);
@@ -337,6 +312,7 @@ public class NetworkProvider : IDisposable
             return;
         }
 
+        // TODO: Add the extra data here from request if it is a LS or CWL
         if (PermissionChecker.HasValidSpeakPermissions(command.ChatMode, friend.PermissionsGrantedToFriend) == false)
         {
             var message = HistoryLog.LackingPermissions("Speak", noteOrFriendCode);
@@ -345,10 +321,10 @@ public class NetworkProvider : IDisposable
             return;
         }
 
-        if (command.ChatMode == ChatMode.Tell)
+        if (command.ChatMode is ChatMode.Tell)
         {
             var split = command.Extra?.Split('@');
-            if(split == null || split.Length != 2 || worldProvider.IsValidWorld(split[1]) == false)
+            if(split is not { Length: 2 } || worldProvider.IsValidWorld(split[1]) == false)
             {
                 var message = HistoryLog.InvalidData("Speak", noteOrFriendCode);
                 Plugin.Log.Warning(message);
@@ -361,7 +337,7 @@ public class NetworkProvider : IDisposable
 
     private async Task HandleTransform(TransformCommand command)
     {
-        Plugin.Log.Verbose(command.ToString());
+        Plugin.Log.Verbose($"{command}");
 
         var noteOrFriendCode = command.SenderFriendCode;
         var friend = clientDataManager.FriendsList.FindFriend(command.SenderFriendCode);
@@ -456,16 +432,17 @@ public class NetworkProvider : IDisposable
 
     private async Task<BodySwapQueryResponse> HandleBodySwapQuery(BodySwapQueryRequest request)
     {
-        Plugin.Log.Verbose(request.ToString());
+        Plugin.Log.Verbose($"{request}");
 
+        // TODO: Hook this into configuration
         var noteOrFriendCode = request.SenderFriendCode;
         var friend = clientDataManager.FriendsList.FindFriend(request.SenderFriendCode);
-        if (friend == null)
+        if (friend is null)
         {
             var message = HistoryLog.NotFriends("Body Swap Query", noteOrFriendCode);
             Plugin.Log.Information(message);
             historyLogManager.LogHistory(message);
-            return new();
+            return new BodySwapQueryResponse();
         }
 
         if (PermissionChecker.HasValidTransformPermissions(GlamourerApplyFlag.All, friend.PermissionsGrantedToFriend) == false)
@@ -473,29 +450,22 @@ public class NetworkProvider : IDisposable
             var message = HistoryLog.LackingPermissions("Body Swap Query", noteOrFriendCode);
             Plugin.Log.Information(message);
             historyLogManager.LogHistory(message);
-            return new();
+            return new BodySwapQueryResponse();
         }
 
         var characterData = await glamourerAccessor.GetDesignAsync();
-        if (characterData == null)
+        if (characterData is null)
         {
             Plugin.Log.Warning($"{noteOrFriendCode} attempted to scan your body for a swap, but the scan failed");
-            return new();
-        }
-
-        // We only need name if we intend to swap mods
-        if (request.SwapMods)
-        {
-            var characterName = Plugin.ClientState.LocalPlayer?.Name.ToString();
-            if (characterName == null)
-            {
-                Plugin.Log.Warning($"{noteOrFriendCode} attempted to scan your body for a swap, but you don't have a body to scan");
-                return new BodySwapQueryResponse();
-            }
-
-            return new BodySwapQueryResponse(characterName, characterData);
+            return new BodySwapQueryResponse();
         }
         
-        return new BodySwapQueryResponse(null, characterData);
+        if (request.SwapMods == false) return new BodySwapQueryResponse(null, characterData);
+        
+        var characterName = Plugin.ClientState.LocalPlayer?.Name.ToString();
+        if (characterName is not null) return new BodySwapQueryResponse(characterName, characterData);
+        
+        Plugin.Log.Warning($"{noteOrFriendCode} attempted to scan your body for a swap, but you don't have a body to scan");
+        return new BodySwapQueryResponse();
     }
 }

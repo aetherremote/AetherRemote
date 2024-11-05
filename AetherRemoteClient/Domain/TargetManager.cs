@@ -19,24 +19,21 @@ public class TargetManager
     /// </summary>
     public bool SingleSelectionMode
     {
-        get { return singleSelectionMode; }
+        get => _singleSelectionMode;
         set
         {
-            singleSelectionMode = value;
-            if (singleSelectionMode)
-            {
-                if (Targets.Count <= 1)
-                    return;
+            _singleSelectionMode = value;
+            if (_singleSelectionMode == false) return;
+            if (Targets.Count <= 1) return;
 
-                var kvp = Targets.First();
-                Targets.Clear();
-                Targets[kvp.Key] = kvp.Value;
-            }
+            var kvp = Targets.First();
+            Targets.Clear();
+            Targets[kvp.Key] = kvp.Value;
         }
     }
 
     // Internal value
-    private bool singleSelectionMode = true;
+    private bool _singleSelectionMode = true;
 
     /// <summary>
     /// Returns if friend code is selected
@@ -49,10 +46,9 @@ public class TargetManager
     public void ToggleSelect(Friend friend)
     {
         var friendCode = friend.FriendCode;
-        if (singleSelectionMode)
+        if (_singleSelectionMode)
         {
-            if (Targets.TryGetValue(friendCode, out var _))
-                return;
+            if (Targets.TryGetValue(friendCode, out _))  return;
 
             Targets.Clear();
             Targets[friendCode] = friend;
@@ -60,7 +56,7 @@ public class TargetManager
         else
         {
             if (Targets.ContainsKey(friendCode))
-                Targets.TryRemove(friendCode, out var _);
+                Targets.TryRemove(friendCode, out _);
             else
                 Targets.TryAdd(friendCode, friend);
         }
@@ -69,7 +65,7 @@ public class TargetManager
     /// <summary>
     /// Deselects friend from target list
     /// </summary>
-    public void Deselect(string friendCode) => Targets.TryRemove(friendCode, out var _);
+    public void Deselect(string friendCode) => Targets.TryRemove(friendCode, out _);
 
     /// <summary>
     /// Deselects all friend codes
