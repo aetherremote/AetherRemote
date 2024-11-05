@@ -311,9 +311,12 @@ public class NetworkProvider(ActionQueueProvider actionQueueProvider,
             historyLogManager.LogHistory(message);
             return;
         }
-
-        // TODO: Add the extra data here from request if it is a LS or CWL
-        if (PermissionChecker.HasValidSpeakPermissions(command.ChatMode, friend.PermissionsGrantedToFriend) == false)
+        
+        var linkshellResult = 0;
+        if (command.ChatMode is ChatMode.Linkshell or ChatMode.CrossworldLinkshell)
+            linkshellResult = int.TryParse(command.Extra ?? string.Empty, out var linkshellNumber) ? linkshellNumber : linkshellResult;
+        
+        if (PermissionChecker.HasValidSpeakPermissions(command.ChatMode, friend.PermissionsGrantedToFriend, linkshellResult) == false)
         {
             var message = HistoryLog.LackingPermissions("Speak", noteOrFriendCode);
             Plugin.Log.Information(message);
