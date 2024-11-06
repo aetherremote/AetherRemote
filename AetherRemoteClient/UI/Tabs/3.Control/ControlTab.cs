@@ -62,6 +62,7 @@ public class ControlTab : ITab
 
         clientDataManager.FriendsList.OnFriendDeleted += HandleFriendDeleted;
         clientDataManager.FriendsList.OnFriendsListCleared += HandleFriendsListCleared;
+        clientDataManager.FriendsList.OnFriendOnlineStatusChanged += HandleFriendOnlineStatusChanged;
     }
 
     public void Draw()
@@ -242,6 +243,12 @@ public class ControlTab : ITab
     {
         _lockCurrentTargets = false;
     }
+    
+    private void HandleFriendOnlineStatusChanged(object? sender, FriendOnlineStatusChangedEventArgs e)
+    {
+        if(e.Friend.Online == false)
+            _clientDataManager.TargetManager.Deselect(e.Friend.FriendCode);
+    }
 
     private static bool FilterFriends(Friend friend, string searchTerm)
     {
@@ -256,6 +263,7 @@ public class ControlTab : ITab
     {
         _clientDataManager.FriendsList.OnFriendDeleted -= HandleFriendDeleted;
         _clientDataManager.FriendsList.OnFriendsListCleared -= HandleFriendsListCleared;
+        _clientDataManager.FriendsList.OnFriendOnlineStatusChanged -= HandleFriendOnlineStatusChanged;
 
         _commandLockoutManager.Dispose();
         

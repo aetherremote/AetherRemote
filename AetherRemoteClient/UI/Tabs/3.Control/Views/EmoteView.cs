@@ -21,6 +21,9 @@ public class EmoteView(
     HistoryLogManager historyLogManager,
     NetworkProvider networkProvider) : IControlTabView
 {
+    // Const
+    private Vector2 _emotePadding = new(4, 4);
+    
     // Instantiated
     private readonly EmoteManager _emoteManager = new(clientDataManager, commandLockoutManager, emoteProvider, historyLogManager, networkProvider);
     private readonly ListFilter<string> _emoteSearchFilter = new(emoteProvider.Emotes, FilterEmote);
@@ -50,7 +53,7 @@ public class EmoteView(
             SharedUserInterfaces.PermissionsWarning(friendsMissingPermissions);
         }
 
-        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(4, 4));
+        ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, _emotePadding);
         SharedUserInterfaces.ComboWithFilter("EmoteSelector", "Emote", ref _emoteManager.Emote, 200, _emoteSearchFilter);
         ImGui.PopStyleVar();
 

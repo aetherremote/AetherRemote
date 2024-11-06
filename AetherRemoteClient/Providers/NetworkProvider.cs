@@ -28,8 +28,8 @@ public class NetworkProvider(ActionQueueProvider actionQueueProvider,
     WorldProvider worldProvider) : IDisposable
 {
 #if DEBUG
-    private const string HubUrl = "https://foxitsvc.com:5006/primaryHub";
-    private const string PostUrl = "https://foxitsvc.com:5006/api/auth/login";
+    private const string HubUrl = "https://localhost.com:5006/primaryHub";
+    private const string PostUrl = "https://localhost.com:5006/api/auth/login";
 #else
     private const string HubUrl = "https://foxitsvc.com:5006/primaryHub";
     private const string PostUrl = "https://foxitsvc.com:5006/api/auth/login";
@@ -169,6 +169,8 @@ public class NetworkProvider(ActionQueueProvider actionQueueProvider,
             await _connection.DisposeAsync();
             _connection = null;
         }
+
+        await modSwapManager.RemoveAllCollections();
 
         clientDataManager.FriendCode = null;
         clientDataManager.FriendsList.Clear();

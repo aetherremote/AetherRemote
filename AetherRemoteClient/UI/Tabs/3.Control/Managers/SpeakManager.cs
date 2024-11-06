@@ -58,6 +58,7 @@ public class SpeakManager(
 
             Plugin.Log.Information(logMessage);
             historyLogManager.LogHistory(logMessage);
+            Message = string.Empty;
         }
         else
         {

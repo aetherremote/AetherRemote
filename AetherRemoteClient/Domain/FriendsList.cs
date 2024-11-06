@@ -1,6 +1,5 @@
 using AetherRemoteClient.Domain.Events;
 using AetherRemoteCommon.Domain;
-using Dalamud.Interface.Animation.EasingFunctions;
 using System;
 using System.Collections.Generic;
 
@@ -25,6 +24,11 @@ public class FriendsList
     /// Fired when the friends list is cleared
     /// </summary>
     public event EventHandler<FriendsListDeletedEventArgs>? OnFriendsListCleared;
+
+    /// <summary>
+    /// Fired when a friend's online status changes
+    /// </summary>
+    public event EventHandler<FriendOnlineStatusChangedEventArgs>? OnFriendOnlineStatusChanged; 
 
     /// <summary>
     /// Converts a permission map from the server into friends list format
@@ -94,6 +98,7 @@ public class FriendsList
             return;
 
         friend.Online = online;
+        OnFriendOnlineStatusChanged?.Invoke(this, new FriendOnlineStatusChangedEventArgs(friend, online));
     }
 
     /// <summary>

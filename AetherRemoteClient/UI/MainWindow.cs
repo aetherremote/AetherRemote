@@ -62,19 +62,18 @@ public class MainWindow : Window, IDisposable
 
     public override void Draw()
     {
-        if (ImGui.BeginTabBar("AetherRemoteMainTabBar"))
+        if (ImGui.BeginTabBar("AetherRemoteMainTabBar") == false) return;
+        
+        _dashboardTab.Draw();
+        if (_networkProvider.Connected || Plugin.DeveloperMode)
         {
-            _dashboardTab.Draw();
-            if (_networkProvider.Connected || Plugin.DeveloperMode)
-            {
-                _friendsTab.Draw();
-                _controlTab.Draw();
-                _residualAetherTab.Draw();
-                _historyTab.Draw();
-            }
-            _settingsTab.Draw();
-            ImGui.EndTabBar();
+            _friendsTab.Draw();
+            _controlTab.Draw();
+            _residualAetherTab.Draw();
+            _historyTab.Draw();
         }
+        _settingsTab.Draw();
+        ImGui.EndTabBar();
     }
 
     public void Dispose()
