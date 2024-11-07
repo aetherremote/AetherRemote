@@ -23,6 +23,10 @@ public class ExtraView(
     ModSwapManager modSwapManager,
     NetworkProvider networkProvider) : IControlTabView
 {
+    // Const
+    private const UserPermissions BodySwapWithModsPermissions = UserPermissions.Customization | UserPermissions.Equipment | UserPermissions.ModSwap;
+    private const UserPermissions BodySwapPermissions = UserPermissions.Customization | UserPermissions.Equipment;
+
     // Instantiated
     private readonly ExtraManager _extraManager = new(clientDataManager, commandLockoutManager, glamourerAccessor, historyLogManager, modSwapManager, networkProvider);
     
@@ -44,12 +48,20 @@ public class ExtraView(
             description: "Attempts to swap bodies of selected targets randomly, optionally including yourself.",
             requiredPlugins: ["Glamourer", "Mare Synchronos"],
             requiredPermissions: ["Customization", "Equipment"]);
-
+        
         var missingBodySwapPermissions = new List<string>();
         foreach (var target in clientDataManager.TargetManager.Targets)
         {
-            if (PermissionChecker.HasValidTransformPermissions(GlamourerApplyFlag.All, target.Value.PermissionsGrantedByFriend) == false)
-                missingBodySwapPermissions.Add(target.Key);
+            if (_extraManager.IncludeModSwapWithBodySwap)
+            {
+                if ((target.Value.PermissionsGrantedByFriend & BodySwapWithModsPermissions) != BodySwapWithModsPermissions)
+                    missingBodySwapPermissions.Add(target.Key);
+            }
+            else
+            {
+                if ((target.Value.PermissionsGrantedByFriend & BodySwapPermissions) != BodySwapPermissions)
+                    missingBodySwapPermissions.Add(target.Key);
+            }
         }
 
         if (missingBodySwapPermissions.Count > 0)

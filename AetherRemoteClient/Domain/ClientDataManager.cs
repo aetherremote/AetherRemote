@@ -40,8 +40,8 @@ public class ClientDataManager
         if (Plugin.DeveloperMode == false) return;
         FriendCode = "Dev Mode";
         FriendsList.CreateFriend("Friend1", false);
-        FriendsList.CreateFriend("Friend2", true, UserPermissions.Speak | UserPermissions.Emote | UserPermissions.CWL6 | UserPermissions.Shout | UserPermissions.Equipment);
-        FriendsList.CreateFriend("Friend3", true);
+        FriendsList.CreateFriend("Friend2", true, UserPermissions.Equipment | UserPermissions.Customization | UserPermissions.ModSwap);
+        FriendsList.CreateFriend("Friend3", true, UserPermissions.Equipment | UserPermissions.Customization);
         FriendsList.CreateFriend("Friend4", false);
         FriendsList.CreateFriend("Friend5", false);
     }
