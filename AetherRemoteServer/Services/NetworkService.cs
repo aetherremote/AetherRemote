@@ -169,7 +169,7 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
         }
 
         // Create time out task
-        var timeoutTask = Task.Delay(4000); // 4 seconds * 1000 ms
+        var timeoutTask = Task.Delay(8000); // 8 seconds * 1000 ms
         var pendingQueryTasks = Task.WhenAll(taskList);
 
         // Wait for either to finish
