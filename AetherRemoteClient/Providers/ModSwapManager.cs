@@ -18,9 +18,9 @@ public class ModSwapManager(PenumbraAccessor penumbraAccessor)
     /// <summary>
     /// Check if there is a currently applied change
     /// </summary>
-    public bool ActiveChanges => _currentBodySwapCollection != Guid.Empty;
+    public bool ActiveChanges => _currentModSwapCollection != Guid.Empty;
 
-    private Guid _currentBodySwapCollection = Guid.Empty;
+    private Guid _currentModSwapCollection = Guid.Empty;
 
     public async Task<ModSwapErrorCode> SwapMods(string targetCharacterName)
     {
@@ -63,14 +63,14 @@ public class ModSwapManager(PenumbraAccessor penumbraAccessor)
 
         var meta = await penumbraAccessor.CallGetMetaManipulations(index).ConfigureAwait(false);
 
-        var guid = await penumbraAccessor.CallCreateTemporaryCollection(TemporaryCollectionName).ConfigureAwait(false);
-        if (guid == Guid.Empty)
+        _currentModSwapCollection = await penumbraAccessor.CallCreateTemporaryCollection(TemporaryCollectionName).ConfigureAwait(false);
+        if (_currentModSwapCollection == Guid.Empty)
         {
             Plugin.Log.Verbose($"[ModSwapManager] Unable to create temporary collection");
             return ModSwapErrorCode.EmptyGuid;
         }
 
-        var modResult = await penumbraAccessor.CallAddTemporaryMod(TemporaryModName, guid, paths, meta, Priority).ConfigureAwait(false);
+        var modResult = await penumbraAccessor.CallAddTemporaryMod(TemporaryModName, _currentModSwapCollection, paths, meta, Priority).ConfigureAwait(false);
         if (modResult == false)
         {
             Plugin.Log.Verbose($"[ModSwapManager] Unable to add temporary mod");
@@ -85,29 +85,29 @@ public class ModSwapManager(PenumbraAccessor penumbraAccessor)
             return ModSwapErrorCode.NoLocalPlayer;
         }
 
-        if (await penumbraAccessor.CallAssignTemporaryCollection(guid, 0, true).ConfigureAwait(false) == false)
+        if (await penumbraAccessor.CallAssignTemporaryCollection(_currentModSwapCollection, 0, true).ConfigureAwait(false) == false)
         {
             Plugin.Log.Verbose($"[ModSwapManager] Could not assign collection");
+            await RemoveAllCollections();
             return ModSwapErrorCode.CouldNotAssignCollection;
         }
 
-        Plugin.Log.Verbose($"[ModSwapManager] Setting collection to be {guid}");
-        _currentBodySwapCollection = guid;
+        Plugin.Log.Verbose($"[ModSwapManager] Setting collection to be {_currentModSwapCollection}");
         return ModSwapErrorCode.Success;
     }
 
     public async Task RemoveAllCollections()
     {
         Plugin.Log.Verbose("[Mod Swap] [Remove All Collections] Beginning");
-        if (_currentBodySwapCollection == Guid.Empty)
+        if (_currentModSwapCollection == Guid.Empty)
         {
             Plugin.Log.Verbose("[Mod Swap] [Remove All Collections] Nothing to remove");
             return;
         }
 
-        await penumbraAccessor.CallRemoveTemporaryMod(TemporaryModName, _currentBodySwapCollection, Priority);
-        await penumbraAccessor.CallDeleteTemporaryCollection(_currentBodySwapCollection);
-        _currentBodySwapCollection = Guid.Empty;
+        await penumbraAccessor.CallRemoveTemporaryMod(TemporaryModName, _currentModSwapCollection, Priority);
+        await penumbraAccessor.CallDeleteTemporaryCollection(_currentModSwapCollection);
+        _currentModSwapCollection = Guid.Empty;
     }
 
     public enum ModSwapErrorCode

@@ -117,7 +117,7 @@ public sealed class Plugin : IDalamudPlugin
             MainWindow.IsOpen = true;
     }
 
-    public void Dispose()
+    public async void Dispose()
     {
         GlamourerAccessor.Dispose();
 
@@ -126,6 +126,8 @@ public sealed class Plugin : IDalamudPlugin
         MainWindow.Dispose();
         WindowSystem.RemoveAllWindows();
         CommandManager.RemoveHandler(CommandName);
+        
+        await ModSwapManager.RemoveAllCollections();
 
         PluginInterface.UiBuilder.Draw -= DrawUi;
         PluginInterface.UiBuilder.OpenMainUi -= OpenMainUi;
