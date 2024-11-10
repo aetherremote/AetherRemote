@@ -27,7 +27,6 @@ public static class Network
     {
         public const string CreateOrUpdate = "CreateOrUpdatePermissions";
         public const string Delete = "DeletePermissions";
-        public const string Get = "GetPermissions";
     }
 
     public const string LoginDetails = "LoginDetails";

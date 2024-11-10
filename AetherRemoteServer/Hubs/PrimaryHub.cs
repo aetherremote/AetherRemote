@@ -72,14 +72,6 @@ public class PrimaryHub(NetworkService network, ILogger<PrimaryHub> logger) : Hu
         return await network.DeletePermissions(FriendCode, request);
     }
 
-    [HubMethodName(Network.Permissions.Get)]
-    [Authorize(Policy = "Administrator")]
-    public async Task<GetPermissionsResponse> GetPermissions(GetPermissionsRequest request)
-    {
-        logger.LogInformation("{Request}", request);
-        return await network.GetPermissions(FriendCode, request);
-    }
-
     [HubMethodName(Network.Commands.BodySwap)]
     public async Task<BodySwapResponse> BodySwap(BodySwapRequest request)
     {

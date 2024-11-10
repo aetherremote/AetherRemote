@@ -9,8 +9,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AetherRemoteServer", "Aethe
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AetherRemoteCommon", "AetherRemoteCommon\AetherRemoteCommon.csproj", "{D53DD637-ED93-4127-8D2F-5D86C0AD6320}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AetherRemoteTests", "AetherRemoteServerTests\AetherRemoteTests.csproj", "{927A4A3B-EAEB-4921-946B-516A1676B858}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AetherRemoteInterface", "AetherRemoteInterface\AetherRemoteInterface.csproj", "{2768F530-C7CD-47B1-AAA9-8B525AC96E03}"
 EndProject
 Global
@@ -60,18 +58,6 @@ Global
 		{D53DD637-ED93-4127-8D2F-5D86C0AD6320}.Release|ARM64.Build.0 = Release|Any CPU
 		{D53DD637-ED93-4127-8D2F-5D86C0AD6320}.Release|x64.ActiveCfg = Release|Any CPU
 		{D53DD637-ED93-4127-8D2F-5D86C0AD6320}.Release|x64.Build.0 = Release|Any CPU
-		{927A4A3B-EAEB-4921-946B-516A1676B858}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{927A4A3B-EAEB-4921-946B-516A1676B858}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{927A4A3B-EAEB-4921-946B-516A1676B858}.Debug|ARM64.ActiveCfg = Debug|Any CPU
-		{927A4A3B-EAEB-4921-946B-516A1676B858}.Debug|ARM64.Build.0 = Debug|Any CPU
-		{927A4A3B-EAEB-4921-946B-516A1676B858}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{927A4A3B-EAEB-4921-946B-516A1676B858}.Debug|x64.Build.0 = Debug|Any CPU
-		{927A4A3B-EAEB-4921-946B-516A1676B858}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{927A4A3B-EAEB-4921-946B-516A1676B858}.Release|Any CPU.Build.0 = Release|Any CPU
-		{927A4A3B-EAEB-4921-946B-516A1676B858}.Release|ARM64.ActiveCfg = Release|Any CPU
-		{927A4A3B-EAEB-4921-946B-516A1676B858}.Release|ARM64.Build.0 = Release|Any CPU
-		{927A4A3B-EAEB-4921-946B-516A1676B858}.Release|x64.ActiveCfg = Release|Any CPU
-		{927A4A3B-EAEB-4921-946B-516A1676B858}.Release|x64.Build.0 = Release|Any CPU
 		{2768F530-C7CD-47B1-AAA9-8B525AC96E03}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{2768F530-C7CD-47B1-AAA9-8B525AC96E03}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2768F530-C7CD-47B1-AAA9-8B525AC96E03}.Debug|ARM32.ActiveCfg = Debug|Any CPU

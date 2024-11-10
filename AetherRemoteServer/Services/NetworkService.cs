@@ -102,15 +102,6 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
     }
 
     /// <summary>
-    /// Gets all of the permissions a user has defined for others
-    /// </summary>
-    public async Task<GetPermissionsResponse> GetPermissions(string friendCode, GetPermissionsRequest request)
-    {
-        var permissions = await databaseService.GetPermissions(friendCode);
-        return new GetPermissionsResponse(true, permissions, string.Empty);
-    }
-
-    /// <summary>
     /// Handles querying body data, and issuing body swap commands to all target friend codes
     /// </summary>
     public async Task<BodySwapResponse> BodySwap(string friendCode, BodySwapRequest request, IHubCallerClients clients)

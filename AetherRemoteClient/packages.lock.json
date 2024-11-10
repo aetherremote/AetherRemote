@@ -24,12 +24,6 @@
           "Microsoft.AspNetCore.SignalR.Client.Core": "8.0.10"
         }
       },
-      "Microsoft.NET.ILLink.Tasks": {
-        "type": "Direct",
-        "requested": "[8.0.8, )",
-        "resolved": "8.0.8",
-        "contentHash": "P8wR6MUWwYXIjPJuBaZgo5zlI/GWI6QEAo6NyVIbPefa9CCkohYu7dP2rD/mrqnjEqfRHyl+h9VZrDoGpELqYg=="
-      },
       "Penumbra.Api": {
         "type": "Direct",
         "requested": "[5.3.0, )",
@@ -177,7 +171,6 @@
           "MessagePack": "[2.5.187, )"
         }
       }
-    },
-    "net8.0-windows7.0/linux-x64": {}
+    }
   }
 }
