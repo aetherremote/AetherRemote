@@ -28,8 +28,8 @@ public class NetworkProvider(ActionQueueProvider actionQueueProvider,
     WorldProvider worldProvider) : IDisposable
 {
 #if DEBUG
-    private const string HubUrl = "https://localhost.com:5006/primaryHub";
-    private const string PostUrl = "https://localhost.com:5006/api/auth/login";
+    private const string HubUrl = "https://localhost:5006/primaryHub";
+    private const string PostUrl = "https://localhost:5006/api/auth/login";
 #else
     private const string HubUrl = "https://foxitsvc.com:5006/primaryHub";
     private const string PostUrl = "https://foxitsvc.com:5006/api/auth/login";
@@ -59,7 +59,7 @@ public class NetworkProvider(ActionQueueProvider actionQueueProvider,
     {
         if (_connection is null)
         {
-            Plugin.Log.Warning($"Cannot invoke commands while server is disconnected");
+            Plugin.Log.Warning("Cannot invoke commands while server is disconnected");
             return Activator.CreateInstance<TU>();
         }
 
@@ -182,7 +182,8 @@ public class NetworkProvider(ActionQueueProvider actionQueueProvider,
         try
         {
             using var client = new HttpClient();
-            var payload = new StringContent(JsonSerializer.Serialize(secret), Encoding.UTF8, "application/json");
+            var raw = new LoginRequest(secret, Plugin.Version);
+            var payload = new StringContent(JsonSerializer.Serialize(raw), Encoding.UTF8, "application/json");
             var post = await client.PostAsync(PostUrl, payload).ConfigureAwait(false);
             if (post.IsSuccessStatusCode) return await post.Content.ReadAsStringAsync().ConfigureAwait(false);
             

@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using AetherRemoteCommon.Domain.Network;
 
 namespace AetherRemoteServer.Authentication;
 
@@ -13,21 +14,24 @@ namespace AetherRemoteServer.Authentication;
 [Route("api/[controller]")]
 public class AuthController(ILogger<AuthController> logger, ServerConfiguration config, DatabaseService db) : ControllerBase
 {
-    // Inject
-    private readonly ILogger<AuthController> logger = logger;
-    private readonly ServerConfiguration config = config;
-    private readonly DatabaseService db = db;
-
+    private readonly Version _expectedVersion = new(1, 0, 1, 2);
+    
     [AllowAnonymous]
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] string secret)
+    public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
-        var user = await db.GetUser(secret, DatabaseService.QueryUserType.Secret);
-        if (user == null) return Unauthorized("You are not registered");
+        if (request.Version != _expectedVersion)
+        {
+            logger.LogInformation("Version: {Version}", request.Version);
+            return BadRequest("Version Mismatch");
+        }
+
+        var user = await db.GetUser(request.Secret, DatabaseService.QueryUserType.Secret);
+        if (user is null) return Unauthorized("You are not registered");
 
         var token = GenerateJwtToken(
         [
-            new(AuthClaimTypes.FriendCode, user.Value.FriendCode)
+            new Claim(AuthClaimTypes.FriendCode, user.Value.FriendCode)
         ]);
 
         return Ok(token.RawData);
