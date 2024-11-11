@@ -1,3 +1,4 @@
+using System.Text.Json;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Permissions.V2;
 using AetherRemoteServer.Services;
@@ -14,9 +15,8 @@ public static class ConversionToV2
     private const string FriendCodeParam = "@FriendCode";
     private const string TargetFriendCodeParam = "@TargetFriendCode";
     
-    private const string PrimaryPermissionsParam = "@PrimaryPermissions";
-    private const string LinkshellPermissionsParam = "@LinkshellPermissions";
-
+    private const string PermissionsParam = "@Permissions";
+    private const string VersionParam = "@Version";
     public static async Task MigratePermissions(SqliteConnection db, ILogger<DatabaseService> logger)
     {
         await using var friendshipCommandV2 = db.CreateCommand();
@@ -25,8 +25,8 @@ public static class ConversionToV2
                  CREATE TABLE IF NOT EXISTS {PermissionsTableV2} (
                      UserFriendCode TEXT NOT NULL,
                      TargetFriendCode TEXT NOT NULL,
-                     PrimaryPermissions INTEGER NOT NULL,
-                     LinkshellPermissions INTEGER NOT NULL,
+                     Version INTEGER NOT NULL,
+                     Permissions TEXT NOT NULL,
                      PRIMARY KEY (UserFriendCode, TargetFriendCode),
                      FOREIGN KEY (UserFriendCode) REFERENCES {ValidUsersTable}(FriendCode),
                      FOREIGN KEY (TargetFriendCode) REFERENCES {ValidUsersTable}(FriendCode)
@@ -89,16 +89,19 @@ public static class ConversionToV2
                 
                 logger.LogInformation("Converting {OldPerms} to {NewPerms} and {NewerPerms}", userPermissions, primaryPermissions, linkshellPermissions);
 
+                var final = new PermissionsV2(primaryPermissions, linkshellPermissions);
+                var text = JsonSerializer.Serialize(final);
+                
                 await using var insert = db.CreateCommand();
                 insert.CommandText =
                     $"""
-                         INSERT INTO {PermissionsTableV2} (UserFriendCode, TargetFriendCode, PrimaryPermissions, LinkshellPermissions) values 
-                         ({FriendCodeParam}, {TargetFriendCodeParam}, {PrimaryPermissionsParam}, {LinkshellPermissionsParam})
+                         INSERT INTO {PermissionsTableV2} (UserFriendCode, TargetFriendCode, Version, Permissions) values 
+                         ({FriendCodeParam}, {TargetFriendCodeParam}, {VersionParam}, {PermissionsParam})
                      """;
                 insert.Parameters.AddWithValue(FriendCodeParam, user);
                 insert.Parameters.AddWithValue(TargetFriendCodeParam, target);
-                insert.Parameters.AddWithValue(PrimaryPermissionsParam, (int)primaryPermissions);
-                insert.Parameters.AddWithValue(LinkshellPermissionsParam, (int)linkshellPermissions);
+                insert.Parameters.AddWithValue(VersionParam, DatabaseService.PermissionVersion);
+                insert.Parameters.AddWithValue(PermissionsParam, text);
                 
                 await insert.ExecuteNonQueryAsync();
                 logger.LogInformation("Successfully updated");

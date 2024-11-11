@@ -22,6 +22,9 @@ public class DatabaseService : IDisposable
     private const string IsAdminParam = "@IsAdmin";
     private const string IdentifierParam = "@Identifier";
 
+    // Schema
+    public const int PermissionVersion = 2;
+    
     // Injected
     private readonly ILogger<DatabaseService> logger;
 
@@ -58,6 +61,8 @@ public class DatabaseService : IDisposable
 
         // Add debug accounts
         _ = CreateOrUpdateUser("adminFriendCode", config.AdminAccountSecret, true);
+
+        // _ = ConversionToV2.MigratePermissions(db, logger);
     }
 
     /// <summary>
