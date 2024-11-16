@@ -89,18 +89,18 @@ public static class ConversionToV2
                 
                 logger.LogInformation("Converting {OldPerms} to {NewPerms} and {NewerPerms}", userPermissions, primaryPermissions, linkshellPermissions);
 
-                var final = new PermissionsV2(primaryPermissions, linkshellPermissions);
+                var final = new UserPermissionsV2(primaryPermissions, linkshellPermissions);
                 var text = JsonSerializer.Serialize(final);
                 
                 await using var insert = db.CreateCommand();
                 insert.CommandText =
                     $"""
-                         INSERT INTO {PermissionsTableV2} (UserFriendCode, TargetFriendCode, Version, Permissions) values 
+                         INSERT OR REPLACE INTO {PermissionsTableV2} (UserFriendCode, TargetFriendCode, Version, Permissions) values 
                          ({FriendCodeParam}, {TargetFriendCodeParam}, {VersionParam}, {PermissionsParam})
                      """;
                 insert.Parameters.AddWithValue(FriendCodeParam, user);
                 insert.Parameters.AddWithValue(TargetFriendCodeParam, target);
-                insert.Parameters.AddWithValue(VersionParam, DatabaseService.PermissionVersion);
+                insert.Parameters.AddWithValue(VersionParam, DatabaseService.CurrentPermissionConfigurationVersion);
                 insert.Parameters.AddWithValue(PermissionsParam, text);
                 
                 await insert.ExecuteNonQueryAsync();

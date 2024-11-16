@@ -1,4 +1,4 @@
-using AetherRemoteCommon.Domain;
+using AetherRemoteCommon.Domain.Permissions.V2;
 
 namespace AetherRemoteClient.Domain;
 
@@ -40,9 +40,12 @@ public class ClientDataManager
         if (Plugin.DeveloperMode == false) return;
         FriendCode = "Dev Mode";
         FriendsList.CreateFriend("Friend1", false);
-        FriendsList.CreateFriend("Friend2", true, UserPermissions.Equipment | UserPermissions.Customization | UserPermissions.ModSwap);
-        FriendsList.CreateFriend("Friend3", true, UserPermissions.Equipment | UserPermissions.Customization);
+        FriendsList.CreateFriend("Friend2", true);
+        FriendsList.CreateFriend("Friend3", true);
         FriendsList.CreateFriend("Friend4", false);
         FriendsList.CreateFriend("Friend5", false);
+
+        const PrimaryPermissionsV2 primaryPermissions = PrimaryPermissionsV2.Customization;
+        FriendsList.UpdateLocalPermissions("Friend2", new UserPermissionsV2(primaryPermissions));
     }
 }

@@ -13,6 +13,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using AetherRemoteCommon.Domain.Permissions.V2;
 
 namespace AetherRemoteClient.Providers;
 
@@ -241,7 +242,7 @@ public class NetworkProvider(ActionQueueProvider actionQueueProvider,
             return;
         }
 
-        if (PermissionChecker.HasValidEmotePermissions(friend.PermissionsGrantedToFriend) == false)
+        if (friend.PermissionsGrantedToFriend.Primary.HasFlag(PrimaryPermissionsV2.Emote) is false)
         {
             var message = HistoryLog.LackingPermissions("Emote", noteOrFriendCode);
             Plugin.Log.Information(message);
@@ -273,7 +274,8 @@ public class NetworkProvider(ActionQueueProvider actionQueueProvider,
             return;
         }
 
-        if (PermissionChecker.HasAnyTransformPermissions(friend.PermissionsGrantedToFriend) == false)
+        // TODO: Confirm this is correct
+        if ((friend.PermissionsGrantedToFriend.Primary & (PrimaryPermissionsV2.Customization | PrimaryPermissionsV2.Equipment)) == 0)
         {
             var message = HistoryLog.LackingPermissions("Revert", noteOrFriendCode);
             Plugin.Log.Information(message);
@@ -347,7 +349,7 @@ public class NetworkProvider(ActionQueueProvider actionQueueProvider,
 
         var noteOrFriendCode = command.SenderFriendCode;
         var friend = clientDataManager.FriendsList.FindFriend(command.SenderFriendCode);
-        if (friend == null)
+        if (friend is null)
         {
             var message = HistoryLog.NotFriends("Transform", noteOrFriendCode);
             Plugin.Log.Information(message);
@@ -355,9 +357,21 @@ public class NetworkProvider(ActionQueueProvider actionQueueProvider,
             return;
         }
 
-        if (PermissionChecker.HasValidTransformPermissions(command.ApplyFlags, friend.PermissionsGrantedToFriend) == false)
+        // Check permissions for customize
+        if (command.ApplyFlags.HasFlag(GlamourerApplyFlag.Customization) &&
+            friend.PermissionsGrantedToFriend.Primary.HasFlag(PrimaryPermissionsV2.Customization) is false)
         {
-            var message = HistoryLog.LackingPermissions("Transform", noteOrFriendCode);
+            var message = HistoryLog.LackingPermissions("Transform - Customization", noteOrFriendCode);
+            Plugin.Log.Information(message);
+            historyLogManager.LogHistory(message);
+            return;
+        }
+
+        // Check permissions for equipment
+        if (command.ApplyFlags.HasFlag(GlamourerApplyFlag.Equipment) &&
+            friend.PermissionsGrantedToFriend.Primary.HasFlag(PrimaryPermissionsV2.Equipment) is false)
+        {
+            var message = HistoryLog.LackingPermissions("Transform - Equipment", noteOrFriendCode);
             Plugin.Log.Information(message);
             historyLogManager.LogHistory(message);
             return;
@@ -391,7 +405,7 @@ public class NetworkProvider(ActionQueueProvider actionQueueProvider,
 
         var noteOrFriendCode = command.SenderFriendCode;
         var friend = clientDataManager.FriendsList.FindFriend(command.SenderFriendCode);
-        if (friend == null)
+        if (friend is null)
         {
             var message = HistoryLog.NotFriends("Body Swap", noteOrFriendCode);
             Plugin.Log.Information(message);
@@ -399,7 +413,7 @@ public class NetworkProvider(ActionQueueProvider actionQueueProvider,
             return;
         }
 
-        if (PermissionChecker.HasValidTransformPermissions(GlamourerApplyFlag.All, friend.PermissionsGrantedToFriend) == false)
+        if (friend.PermissionsGrantedToFriend.Primary.HasFlag(PrimaryPermissionsV2.BodySwap) is false)
         {
             var message = HistoryLog.LackingPermissions("Body Swap", noteOrFriendCode);
             Plugin.Log.Information(message);
@@ -416,7 +430,7 @@ public class NetworkProvider(ActionQueueProvider actionQueueProvider,
         // CharacterName will only be present if we are expecting to swap mods
         if (command.CharacterName is not null)
         {
-            if (friend.PermissionsGrantedToFriend.HasFlag(UserPermissions.ModSwap) == false)
+            if (friend.PermissionsGrantedToFriend.Primary.HasFlag(PrimaryPermissionsV2.Mods) is false)
             {
                 var message = HistoryLog.LackingPermissions("Mod Swap", noteOrFriendCode);
                 Plugin.Log.Information(message);
@@ -451,7 +465,7 @@ public class NetworkProvider(ActionQueueProvider actionQueueProvider,
             return new BodySwapQueryResponse();
         }
 
-        if (PermissionChecker.HasValidTransformPermissions(GlamourerApplyFlag.All, friend.PermissionsGrantedToFriend) == false)
+        if (friend.PermissionsGrantedToFriend.Primary.HasFlag(PrimaryPermissionsV2.BodySwap) is false)
         {
             var message = HistoryLog.LackingPermissions("Body Swap Query", noteOrFriendCode);
             Plugin.Log.Information(message);

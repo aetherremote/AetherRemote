@@ -46,7 +46,7 @@ public sealed class Plugin : IDalamudPlugin
 #else
     public const bool DeveloperMode = false;
 #endif
-
+    
     /// <summary>
     /// Internal plugin stage
     /// </summary>

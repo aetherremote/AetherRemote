@@ -1,7 +1,7 @@
 using AetherRemoteClient.Domain.Events;
-using AetherRemoteCommon.Domain;
 using System;
 using System.Collections.Generic;
+using AetherRemoteCommon.Domain.Permissions.V2;
 
 namespace AetherRemoteClient.Domain;
 
@@ -34,8 +34,8 @@ public class FriendsList
     /// Converts a permission map from the server into friends list format
     /// </summary>
     public void ConvertServerPermissionsToLocal(
-        Dictionary<string, UserPermissions>? permissionsGrantedToOthers,
-        Dictionary<string, UserPermissions>? permissionsGrantedByOthers)
+        Dictionary<string, UserPermissionsV2>? permissionsGrantedToOthers,
+        Dictionary<string, UserPermissionsV2>? permissionsGrantedByOthers)
     {
         if (permissionsGrantedToOthers == null || permissionsGrantedByOthers == null)
             return;
@@ -51,11 +51,11 @@ public class FriendsList
     /// <summary>
     /// Creates a <see cref="Friend"/> and adds them to the friends list
     /// </summary>
-    public void CreateFriend(string friendCode, bool online, UserPermissions permissionsGrantedByFriend = UserPermissions.None)
+    public void CreateFriend(string friendCode, bool online)
     {
         var existing = FindFriend(friendCode);
         if (existing == null)
-            Friends.Add(new Friend(friendCode, online, UserPermissions.None, permissionsGrantedByFriend));
+            Friends.Add(new Friend(friendCode, online, new UserPermissionsV2(), new UserPermissionsV2()));
     }
 
     /// <summary>
@@ -104,7 +104,7 @@ public class FriendsList
     /// <summary>
     /// Updates the permissions another <see cref="Friend"/> gives the user
     /// </summary>
-    public void UpdateLocalPermissions(string friendCode, UserPermissions permissions)
+    public void UpdateLocalPermissions(string friendCode, UserPermissionsV2 permissions)
     {
         var friend = FindFriend(friendCode);
         if (friend == null)

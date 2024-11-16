@@ -25,7 +25,7 @@ public class PrimaryHub(NetworkService network, ILogger<PrimaryHub> logger) : Hu
     /// <summary>
     /// Extracts FriendCode from claims
     /// </summary>
-    public string FriendCode => Context?.User?.Claims.FirstOrDefault(claim => string.Equals(claim.Type, AuthClaimTypes.FriendCode, StringComparison.Ordinal))?.Value ?? throw new Exception("FriendCode not present in claims");
+    private string FriendCode => Context?.User?.Claims.FirstOrDefault(claim => string.Equals(claim.Type, AuthClaimTypes.FriendCode, StringComparison.Ordinal))?.Value ?? throw new Exception("FriendCode not present in claims");
 
     [HubMethodName(Network.User.CreateOrUpdate)]
     [Authorize(Policy = "Administrator")]
@@ -107,17 +107,17 @@ public class PrimaryHub(NetworkService network, ILogger<PrimaryHub> logger) : Hu
         return await network.Revert(FriendCode, request, Clients);
     }
 
-    public override Task OnConnectedAsync()
+    public override async Task OnConnectedAsync()
     {
-        network.UpdateOnlineStatus(FriendCode, true, Clients);
-        ActiveUserConnections[FriendCode] = new(Context.ConnectionId);
-        return base.OnConnectedAsync();
+        await network.UpdateOnlineStatus(FriendCode, true, Clients);
+        ActiveUserConnections[FriendCode] = new User(Context.ConnectionId);
+        await base.OnConnectedAsync();
     }
 
-    public override Task OnDisconnectedAsync(Exception? exception)
+    public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        network.UpdateOnlineStatus(FriendCode, false, Clients);
+        await network.UpdateOnlineStatus(FriendCode, false, Clients);
         ActiveUserConnections.Remove(FriendCode, out _);
-        return base.OnDisconnectedAsync(exception);
+        await base.OnDisconnectedAsync(exception);
     }
 }

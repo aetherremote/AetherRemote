@@ -3,6 +3,7 @@ using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.CommonGlamourerApplyType;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Commands;
+using AetherRemoteCommon.Domain.Permissions.V2;
 using AetherRemoteServer.Hubs;
 using Microsoft.AspNetCore.SignalR;
 
@@ -10,10 +11,6 @@ namespace AetherRemoteServer.Services;
 
 public class NetworkService(DatabaseService databaseService, ILogger<NetworkService> logger)
 {
-    // Injected
-    private readonly DatabaseService databaseService = databaseService;
-    private readonly ILogger<NetworkService> logger = logger;
-
     // Random implementation for Derangement operations
     private static readonly Random Random = new();
 
@@ -23,7 +20,7 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
     public async Task<CreateOrUpdateUserResponse> CreateOrUpdateUser(CreateOrUpdateUserRequest request)
     {
         var result = await databaseService.CreateOrUpdateUser(request.FriendCode, request.Secret, request.IsAdmin);
-        return new CreateOrUpdateUserResponse(result == 1);
+        return new CreateOrUpdateUserResponse(result is 1);
     }
 
     /// <summary>
@@ -32,7 +29,7 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
     public async Task<DeleteUserResponse> DeleteUser(DeleteUserRequest request)
     {
         var result = await databaseService.DeleteUser(request.FriendCode);
-        return new DeleteUserResponse(result == 1);
+        return new DeleteUserResponse(result is 1);
     }
 
     /// <summary>
@@ -41,7 +38,7 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
     public async Task<GetUserResponse> GetUser(GetUserRequest request)
     {
         var result = await databaseService.GetUser(request.FriendCode);
-        return new GetUserResponse(result != null, "", result?.FriendCode, result?.Secret, result?.IsAdmin);
+        return new GetUserResponse(result is not null, "", result?.FriendCode, result?.Secret, result?.IsAdmin);
     }
 
     /// <summary>
@@ -50,10 +47,10 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
     public async Task<LoginDetailsResponse> LoginDetails(string friendCode, LoginDetailsRequest request)
     {
         var permissionsGrantedToOthers = await databaseService.GetPermissions(friendCode);
-        var permissionsGrantedByOthers = new Dictionary<string, UserPermissions>();
+        var permissionsGrantedByOthers = new Dictionary<string, UserPermissionsV2>();
         foreach(var kvp in permissionsGrantedToOthers)
         {
-            if (PrimaryHub.ActiveUserConnections.ContainsKey(kvp.Key) == false)
+            if (PrimaryHub.ActiveUserConnections.ContainsKey(kvp.Key) is false)
                 continue;
 
             var permissionsGrantedByFriendToOthers = await databaseService.GetPermissions(kvp.Key);
@@ -89,7 +86,7 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
             }
         }
 
-        return new CreateOrUpdatePermissionsResponse(rows == 1, online, message);
+        return new CreateOrUpdatePermissionsResponse(rows is 1, online, message);
     }
 
     /// <summary>
@@ -98,7 +95,7 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
     public async Task<DeletePermissionsResponse> DeletePermissions(string friendCode, DeletePermissionsRequest request)
     {
         var (rows, message) = await databaseService.DeletePermissions(friendCode, request.TargetCode);
-        return new DeletePermissionsResponse(rows == 1, message);
+        return new DeletePermissionsResponse(rows is 1, message);
     }
 
     /// <summary>
@@ -107,14 +104,14 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
     public async Task<BodySwapResponse> BodySwap(string friendCode, BodySwapRequest request, IHubCallerClients clients)
     {
         if (IsUserSpamming(friendCode))
-            return new(false, null, null, "Spamming! Slow down!");
+            return new BodySwapResponse(false, null, null, "Spamming! Slow down!");
 
         if (request.TargetFriendCodes.Count < 2)
         {
-            if (request.CharacterData is null || request.TargetFriendCodes.Count == 0)
-                return new(false, null, null, "Minimum targets not met.");
-            else if (request.TargetFriendCodes[0] == friendCode)
-                return new(false, null, null, "Cannot bodyswap with just yourself");
+            if (request.CharacterData is null || request.TargetFriendCodes.Count is 0)
+                return new BodySwapResponse(false, null, null, "Minimum targets not met.");
+            if (request.TargetFriendCodes[0] == friendCode)
+                return new BodySwapResponse(false, null, null, "Cannot body swap with just yourself");
         }
 
         var cancellationToken = new CancellationTokenSource();
@@ -123,25 +120,24 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
         for (var i = 0; i < request.TargetFriendCodes.Count; i++)
         {
             // Target not online
-            if (PrimaryHub.ActiveUserConnections.TryGetValue(request.TargetFriendCodes[i], out var targetUser) == false)
+            if (PrimaryHub.ActiveUserConnections.TryGetValue(request.TargetFriendCodes[i], out var targetUser) is false)
             {
-                cancellationToken.Cancel();
-                return new(false, null, null, "One or more target friends are offline");
+                await cancellationToken.CancelAsync();
+                return new BodySwapResponse(false, null, null, "One or more target friends are offline");
             }
 
             // Not friends with
             var targetPermissions = await databaseService.GetPermissions(request.TargetFriendCodes[i]);
             if (targetPermissions.TryGetValue(friendCode, out var permissionsGrantedToFriendCode) == false)
             {
-                cancellationToken.Cancel();
-                return new(false, null, null, "You are not friends with all your targets");
+                await cancellationToken.CancelAsync();
+                return new BodySwapResponse(false, null, null, "You are not friends with all your targets");
             }
 
-            // Has valid transform permissions
-            if (PermissionChecker.HasValidTransformPermissions(GlamourerApplyFlag.Customization | GlamourerApplyFlag.Equipment, permissionsGrantedToFriendCode) == false)
+            if (permissionsGrantedToFriendCode.Primary.HasFlag(PrimaryPermissionsV2.BodySwap) is false)
             {
-                cancellationToken.Cancel();
-                return new(false, null, null, "You do not have valid permissions with all your friends");
+                await cancellationToken.CancelAsync();
+                return new BodySwapResponse(false, null, null, "You do not have valid permissions with all your friends");
             }
 
             try
@@ -153,22 +149,22 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
             }
             catch (Exception ex)
             {
-                cancellationToken.Cancel();
+                await cancellationToken.CancelAsync();
                 logger.LogError("Exception while querying body data: {Exception}", ex);
-                return new(false, null, null, ex.Message);
+                return new BodySwapResponse(false, null, null, ex.Message);
             }
         }
 
         // Create time out task
-        var timeoutTask = Task.Delay(8000); // 8 seconds * 1000 ms
+        var timeoutTask = Task.Delay(8000, cancellationToken.Token); // 8 seconds * 1000 ms
         var pendingQueryTasks = Task.WhenAll(taskList);
 
         // Wait for either to finish
         var resultingTask = await Task.WhenAny(pendingQueryTasks, timeoutTask);
         if (resultingTask == timeoutTask)
         {
-            cancellationToken.Cancel();
-            return new(false, null, null, "Body swap timed out");
+            await cancellationToken.CancelAsync();
+            return new BodySwapResponse(false, null, null, "Body swap timed out");
         }
 
         // WhenAny should take care of this, but just in case...
@@ -176,13 +172,12 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
 
         // Convert them in the order we sent the requests
         var bodyData = new List<BodyData>();
-        for (var i = 0; i < queryResponses.Length; i++)
+        foreach (var response in queryResponses) // This was changed into a foreach. If there are problems, revert to for
         {
-            var response = queryResponses[i];
             if (response.CharacterData is null || (request.SwapMods && response.CharacterName is null))
             {
-                cancellationToken.Cancel();
-                return new(false, null, null, "One or more targets are unable to swap bodies at this time");
+                await cancellationToken.CancelAsync();
+                return new BodySwapResponse(false, null, null, "One or more targets are unable to swap bodies at this time");
             }
 
             bodyData.Add(new BodyData(response.CharacterName, response.CharacterData));
@@ -201,13 +196,13 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
                 // Issue new body data 
                 var data = derangedBodyData[i];
                 var command = new BodySwapCommand(friendCode, data.CharacterName, data.CharacterData);
-                _ = clients.Client(connectionIds[i]).SendAsync(Network.Commands.BodySwap, command);
+                _ = clients.Client(connectionIds[i]).SendAsync(Network.Commands.BodySwap, command, cancellationToken: cancellationToken.Token);
             }
             catch (Exception ex)
             {
-                cancellationToken.Cancel();
+                await cancellationToken.CancelAsync();
                 logger.LogError("Exception while sending body data: {Exception}", ex);
-                return new(false, null, null, ex.Message);
+                return new BodySwapResponse(false, null, null, ex.Message);
             }
         }
 
@@ -219,29 +214,29 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
     }
 
     /// <summary>
-    /// Handles issueing emote commands to all target friend codes
+    /// Handles issuing emote commands to all target friend codes
     /// </summary>
     public async Task<EmoteResponse> Emote(string friendCode, EmoteRequest request, IHubCallerClients clients)
     {
         if (IsUserSpamming(friendCode))
-            return new(false, "Spamming! Slow down!");
+            return new EmoteResponse(false, "Spamming! Slow down!");
 
         if (request.TargetFriendCodes.Count > Constraints.MaximumTargetsForInGameOperations)
-            return new(false, $"You may only target up to {Constraints.MaximumTargetsForInGameOperations} friends for commands that affect the game");
+            return new EmoteResponse(false, $"You may only target up to {Constraints.MaximumTargetsForInGameOperations} friends for commands that affect the game");
 
         foreach (var targetFriendCode in request.TargetFriendCodes)
         {
             // Target not online
-            if (PrimaryHub.ActiveUserConnections.TryGetValue(targetFriendCode, out var targetUser) == false)
+            if (PrimaryHub.ActiveUserConnections.TryGetValue(targetFriendCode, out var targetUser) is false)
                 continue;
 
             // Not friends with
             var targetPermissions = await databaseService.GetPermissions(targetFriendCode);
-            if (targetPermissions.TryGetValue(friendCode, out var permissionsGrantedToFriendCode) == false)
+            if (targetPermissions.TryGetValue(friendCode, out var permissionsGrantedToFriendCode) is false)
                 continue;
 
             // Has valid transform permissions
-            if (PermissionChecker.HasValidEmotePermissions(permissionsGrantedToFriendCode) == false)
+            if (permissionsGrantedToFriendCode.Primary.HasFlag(PrimaryPermissionsV2.Emote) is false)
                 continue;
 
             try
@@ -256,34 +251,34 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
         }
 
         PrimaryHub.ActiveUserConnections[friendCode].LastAction = DateTime.Now;
-        return new(true);
+        return new EmoteResponse(true);
     }
 
     /// <summary>
-    /// Handles issueing speak commands to all target friend codes
+    /// Handles issuing speak commands to all target friend codes
     /// </summary>
     public async Task<SpeakResponse> Speak(string friendCode, SpeakRequest request, IHubCallerClients clients)
     {
         if (IsUserSpamming(friendCode))
-            return new(false, "Spamming! Slow down!");
+            return new SpeakResponse(false, "Spamming! Slow down!");
 
         if (request.TargetFriendCodes.Count > Constraints.MaximumTargetsForInGameOperations)
-            return new(false, $"You may only target up to {Constraints.MaximumTargetsForInGameOperations} friends for commands that affect the game");
+            return new SpeakResponse(false, $"You may only target up to {Constraints.MaximumTargetsForInGameOperations} friends for commands that affect the game");
 
         foreach (var targetFriendCode in request.TargetFriendCodes)
         {
             // Target not online
-            if (PrimaryHub.ActiveUserConnections.TryGetValue(targetFriendCode, out var targetUser) == false)
+            if (PrimaryHub.ActiveUserConnections.TryGetValue(targetFriendCode, out var targetUser) is false)
                 continue;
 
             // Not friends with
             var targetPermissions = await databaseService.GetPermissions(targetFriendCode);
-            if (targetPermissions.TryGetValue(friendCode, out var permissionsGrantedToFriendCode) == false)
+            if (targetPermissions.TryGetValue(friendCode, out var permissionsGrantedToFriendCode) is false)
                 continue;
 
             // Has valid transform permissions
             var linkshellNumber = ParseLinkshellNumber(request.Extra);
-            if (PermissionChecker.HasValidSpeakPermissions(request.ChatMode, permissionsGrantedToFriendCode, linkshellNumber) == false)
+            if (PermissionChecker.HasValidSpeakPermissions(request.ChatMode, permissionsGrantedToFriendCode, linkshellNumber) is false)
                 continue;
 
             try
@@ -298,7 +293,7 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
         }
 
         PrimaryHub.ActiveUserConnections[friendCode].LastAction = DateTime.Now;
-        return new(true);
+        return new SpeakResponse(true);
     }
 
     /// <summary>
@@ -307,21 +302,27 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
     public async Task<TransformResponse> Transform(string friendCode, TransformRequest request, IHubCallerClients clients)
     {
         if (IsUserSpamming(friendCode))
-            return new(false, "Spamming! Slow down!");
+            return new TransformResponse(false, "Spamming! Slow down!");
 
         foreach (var targetFriendCode in request.TargetFriendCodes)
         {
             // Target not online
-            if (PrimaryHub.ActiveUserConnections.TryGetValue(targetFriendCode, out var targetUser) == false)
+            if (PrimaryHub.ActiveUserConnections.TryGetValue(targetFriendCode, out var targetUser) is false)
                 continue;
 
             // Not friends with
             var targetPermissions = await databaseService.GetPermissions(targetFriendCode);
-            if (targetPermissions.TryGetValue(friendCode, out var permissionsGrantedToFriendCode) == false)
+            if (targetPermissions.TryGetValue(friendCode, out var permissionsGrantedToFriendCode) is false)
                 continue;
 
-            // Has valid transform permissions
-            if (PermissionChecker.HasValidTransformPermissions(request.ApplyType, permissionsGrantedToFriendCode) == false)
+            // TODO: No logging
+            if (request.ApplyType.HasFlag(GlamourerApplyFlag.Customization) &&
+                permissionsGrantedToFriendCode.Primary.HasFlag(PrimaryPermissionsV2.Customization) is false)
+                continue;
+
+            // TODO: No logging
+            if (request.ApplyType.HasFlag(GlamourerApplyFlag.Equipment) &&
+                permissionsGrantedToFriendCode.Primary.HasFlag(PrimaryPermissionsV2.Equipment) is false)
                 continue;
 
             try
@@ -336,27 +337,28 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
         }
 
         PrimaryHub.ActiveUserConnections[friendCode].LastAction = DateTime.Now;
-        return new(true);
+        return new TransformResponse(true);
     }
 
     public async Task<RevertResponse> Revert(string friendCode, RevertRequest request, IHubCallerClients clients)
     {
         if (IsUserSpamming(friendCode))
-            return new(false, "Spamming! Slow down!");
+            return new RevertResponse(false, "Spamming! Slow down!");
 
         foreach (var targetFriendCode in request.TargetFriendCodes)
         {
             // Target not online
-            if (PrimaryHub.ActiveUserConnections.TryGetValue(targetFriendCode, out var targetUser) == false)
+            if (PrimaryHub.ActiveUserConnections.TryGetValue(targetFriendCode, out var targetUser) is false)
                 continue;
 
             // Not friends with
             var targetPermissions = await databaseService.GetPermissions(targetFriendCode);
-            if (targetPermissions.TryGetValue(friendCode, out var permissionsGrantedToFriendCode) == false)
+            if (targetPermissions.TryGetValue(friendCode, out var permissionsGrantedToFriendCode) is false)
                 continue;
 
-            // Has valid transform permissions
-            if (PermissionChecker.HasAnyTransformPermissions(permissionsGrantedToFriendCode) == false)
+            // Needs at least one perms
+            if (permissionsGrantedToFriendCode.Primary.HasFlag(PrimaryPermissionsV2.Customization) is false &&
+                permissionsGrantedToFriendCode.Primary.HasFlag(PrimaryPermissionsV2.Equipment) is false)
                 continue;
 
             try
@@ -371,23 +373,24 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
         }
 
         PrimaryHub.ActiveUserConnections[friendCode].LastAction = DateTime.Now;
-        return new(true);
+        return new RevertResponse(true);
     }
 
     /// <summary>
     /// Update all the users who are defined in user's permissions that user's online status has changed
     /// </summary>
-    public async void UpdateOnlineStatus(string friendCode, bool online, IHubCallerClients clients)
+    public async Task UpdateOnlineStatus(string friendCode, bool online, IHubCallerClients clients)
     {
         var permissionsGrantedToOthers = await databaseService.GetPermissions(friendCode).ConfigureAwait(false);
         foreach (var kvp in permissionsGrantedToOthers)
         {
-            if (PrimaryHub.ActiveUserConnections.TryGetValue(kvp.Key, out var user) == false)
+            if (PrimaryHub.ActiveUserConnections.TryGetValue(kvp.Key, out var user) is false)
                 continue;
 
             try
             {
-                var request = new UpdateOnlineStatusCommand(friendCode, online, online ? kvp.Value : UserPermissions.None);
+                // TODO: Should this error?
+                var request = new UpdateOnlineStatusCommand(friendCode, online, online ? kvp.Value : new UserPermissionsV2());
                 _ = clients.Client(user.ConnectionId).SendAsync(Network.Commands.UpdateOnlineStatus, request);
             }
             catch (Exception ex)
@@ -420,11 +423,15 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
     /// </summary>
     private static List<T> Derange<T>(List<T> input)
     {
-        if (input.Count < 2) // No Swap
-            return input;
-
-        if (input.Count == 2) // Quick Swap
-            return [input[1], input[0]];
+        switch (input.Count)
+        {
+            // No Swap
+            case < 2:
+                return input;
+            // Quick Swap
+            case 2:
+                return [input[1], input[0]];
+        }
 
         var result = new List<T>(input);
         var n = result.Count;
@@ -440,14 +447,14 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
 
             for (var i = 0; i < n; i++)
             {
-                if (EqualityComparer<T>.Default.Equals(result[i], input[i]))
-                {
-                    deranged = false;
-                    break;
-                }
+                if (EqualityComparer<T>.Default.Equals(result[i], input[i]) is false)
+                    continue;
+                
+                deranged = false;
+                break;
             }
         }
-        while (deranged == false);
+        while (deranged is false);
 
         return result;
     }

@@ -1,10 +1,12 @@
+using AetherRemoteCommon.Domain.Permissions.V2;
+
 namespace AetherRemoteCommon.Domain.Network;
 
 public struct LoginDetailsRequest
 {
     public LoginDetailsRequest() { }
 
-    public override readonly string ToString()
+    public readonly override string ToString()
     {
         var sb = new AetherRemoteStringBuilder("LoginDetailsRequest");
         return sb.ToString();
@@ -16,14 +18,14 @@ public struct LoginDetailsResponse
     public bool Success { get; set; }
     public string Message { get; set; }
     public string? FriendCode { get; set; }
-    public Dictionary<string, UserPermissions>? PermissionsGrantedToOthers { get; set; }
-    public Dictionary<string, UserPermissions>? PermissionsGrantedByOthers { get; set; }
+    public Dictionary<string, UserPermissionsV2>? PermissionsGrantedToOthers { get; set; }
+    public Dictionary<string, UserPermissionsV2>? PermissionsGrantedByOthers { get; set; }
 
     public LoginDetailsResponse(
         bool success, string? 
         friendCode = null, 
-        Dictionary<string, UserPermissions>? permissionsGrantedToOthers = null,
-        Dictionary<string, UserPermissions>? permissionsGrantedByOthers = null,
+        Dictionary<string, UserPermissionsV2>? permissionsGrantedToOthers = null,
+        Dictionary<string, UserPermissionsV2>? permissionsGrantedByOthers = null,
         string message = "")
     {
         Success = success;
@@ -33,7 +35,7 @@ public struct LoginDetailsResponse
         PermissionsGrantedByOthers = permissionsGrantedByOthers;
     }
 
-    public override readonly string ToString()
+    public readonly override string ToString()
     {
         var sb = new AetherRemoteStringBuilder("LoginDetailsResponse");
         sb.AddVariable("Success", Success);

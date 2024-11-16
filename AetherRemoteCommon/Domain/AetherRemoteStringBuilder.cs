@@ -1,103 +1,66 @@
-using AetherRemoteCommon.Domain.CommonChatMode;
-using AetherRemoteCommon.Domain.CommonGlamourerApplyType;
 using System.Text;
+using AetherRemoteCommon.Domain.Permissions.V2;
 
 namespace AetherRemoteCommon.Domain;
 
 public class AetherRemoteStringBuilder
 {
-    private readonly StringBuilder sb;
-    private int count = 0;
-
+    private readonly StringBuilder _sb;
+    private int _count;
+    
     /// <summary>
     /// Wrapper class designed to ease formatting for objects in ToString methods
     /// </summary>
     public AetherRemoteStringBuilder(string name)
     {
-        sb = new StringBuilder();
-        sb.Append(name);
-        sb.Append('[');
+        _sb = new StringBuilder();
+        _sb.Append(name);
+        _sb.Append('[');
     }
 
+    /// <summary>
+    /// Extension for <see cref="string"/>
+    /// </summary>
     public void AddVariable(string name, string? value)
     {
-        sb.Append(name);
-        sb.Append('=');
-        sb.Append(value ?? "\"\"");
-        sb.Append(',');
-        count++;
+        _sb.Append(name);
+        _sb.Append('=');
+        _sb.Append(value ?? "\"\"");
+        _sb.Append(',');
+        _count++;
     }
-
+    
     /// <summary>
     /// Extension for <see cref="bool"/>
     /// </summary>
-    public void AddVariable(string name, bool value)
-    {
-        AddVariable(name, value.ToString());
-    }
-
-    /// <summary>
-    /// Extension for <see cref="bool?"/>
-    /// </summary>
-    public void AddVariable(string name, bool? value)
-    {
-        AddVariable(name, value.ToString());
-    }
+    public void AddVariable(string name, bool? value) => AddVariable(name, value.ToString());
 
     /// <summary>
     /// Extension for <see cref="List{String}"/>
     /// </summary>
-    public void AddVariable(string name, List<string> values)
-    {
-        AddVariable(name, string.Join(", ", values));
-    }
+    public void AddVariable(string name, List<string> values) => AddVariable(name, string.Join(", ", values));
 
     /// <summary>
     /// Extension for <see cref="HashSet{String}"/>
     /// </summary>
-    public void AddVariable(string name, HashSet<string>? values)
-    {
-        AddVariable(name, string.Join(", ", values ?? []));
-    }
+    public void AddVariable(string name, HashSet<string>? values) => AddVariable(name, string.Join(", ", values ?? []));
 
     /// <summary>
-    /// Extension for <see cref="GlamourerApplyFlag"/>
+    /// Extension for <see cref="Enum"/>
     /// </summary>
-    public void AddVariable(string name, GlamourerApplyFlag value)
-    {
-        AddVariable(name, value.ToString());
-    }
+    public void AddVariable<T>(string name, T value) where T : Enum => AddVariable(name, value.ToString());
+    
+    /// <summary>
+    /// Extension for <see cref="UserPermissionsV2"/>
+    /// </summary>
+    public void AddVariable(string name, UserPermissionsV2 value) => AddVariable(name, value.ToString());
 
     /// <summary>
-    /// Extension for <see cref="ChatMode"/>
+    /// Extension for <see cref="UserPermissionsV2"/>
     /// </summary>
-    public void AddVariable(string name, ChatMode value)
+    public void AddVariable(string name, Dictionary<string, UserPermissionsV2>? value)
     {
-        AddVariable(name, value.ToString());
-    }
-
-    /// <summary>
-    /// Extension for <see cref="UserPermissions"/>
-    /// </summary>
-    public void AddVariable(string name, UserPermissions value)
-    {
-        AddVariable(name, value.ToString());
-    }
-
-    /// <summary>
-    /// Extension for <see cref="UserPermissions"/>
-    /// </summary>
-    public void AddVariable(string name, RevertType value)
-    {
-        AddVariable(name, value.ToString());
-    }
-
-    /// <summary>
-    /// Extension for <see cref="UserPermissions"/>
-    /// </summary>
-    public void AddVariable(string name, Dictionary<string, UserPermissions>? value)
-    {
-        if (value == null)
+        if (value is null)
         {
             AddVariable(name, "[]");
             return;
@@ -125,9 +88,10 @@ public class AetherRemoteStringBuilder
 
     public override string ToString()
     {
-        if (count > 0)
-            sb.Length--;
-        sb.Append(']');
-        return sb.ToString();
+        if (_count > 0)
+            _sb.Length--;
+        
+        _sb.Append(']');
+        return _sb.ToString();
     }
 }

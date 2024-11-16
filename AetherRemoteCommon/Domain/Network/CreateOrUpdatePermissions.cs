@@ -1,17 +1,19 @@
+using AetherRemoteCommon.Domain.Permissions.V2;
+
 namespace AetherRemoteCommon.Domain.Network;
 
 public struct CreateOrUpdatePermissionsRequest
 {
     public string TargetCode { get; set; }
-    public UserPermissions Permissions { get; set; }
+    public UserPermissionsV2 Permissions { get; set; }
 
-    public CreateOrUpdatePermissionsRequest(string targetCode, UserPermissions permissions)
+    public CreateOrUpdatePermissionsRequest(string targetCode, UserPermissionsV2 permissions)
     {
         TargetCode = targetCode;
         Permissions = permissions;
     }
 
-    public override readonly string ToString()
+    public readonly override string ToString()
     {
         var sb = new AetherRemoteStringBuilder("CreateOrUpdatePermissionsRequest");
         sb.AddVariable("TargetCode", TargetCode);

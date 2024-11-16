@@ -11,6 +11,7 @@ using AetherRemoteClient.UI.Tabs.Modules;
 using AetherRemoteCommon;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.CommonGlamourerApplyType;
+using AetherRemoteCommon.Domain.Permissions.V2;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using ImGuiNET;
@@ -48,13 +49,19 @@ public class TransformationView(
         foreach (var target in clientDataManager.TargetManager.Targets)
         {
             var glamourerApplyFlags = GlamourerApplyFlag.Once
-            | (_transformationManager.ApplyCustomization ? GlamourerApplyFlag.Customization : 0)
-            | (_transformationManager.ApplyEquipment ? GlamourerApplyFlag.Equipment : 0);
+                                      | (_transformationManager.ApplyCustomization ? GlamourerApplyFlag.Customization : 0)
+                                      | (_transformationManager.ApplyEquipment ? GlamourerApplyFlag.Equipment : 0);
 
             if (glamourerApplyFlags == GlamourerApplyFlag.Once)
                 glamourerApplyFlags = CustomizationAndEquipmentFlags;
+            
+            var friendMissingPermission = 
+                glamourerApplyFlags.HasFlag(GlamourerApplyFlag.Customization) &&
+                target.Value.PermissionsGrantedByFriend.Primary.HasFlag(PrimaryPermissionsV2.Customization) is false || 
+                glamourerApplyFlags.HasFlag(GlamourerApplyFlag.Equipment) &&
+                target.Value.PermissionsGrantedByFriend.Primary.HasFlag(PrimaryPermissionsV2.Equipment) is false;
 
-            if (PermissionChecker.HasValidTransformPermissions(glamourerApplyFlags, target.Value.PermissionsGrantedByFriend) == false)
+            if (friendMissingPermission)
                 friendsMissingPermissions.Add(target.Key);
         }
 

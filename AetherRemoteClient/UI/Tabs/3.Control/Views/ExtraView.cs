@@ -5,13 +5,12 @@ using AetherRemoteClient.Domain.UI;
 using AetherRemoteClient.Providers;
 using AetherRemoteClient.UI.Tabs.Managers;
 using AetherRemoteClient.UI.Tabs.Modules;
-using AetherRemoteCommon.Domain;
-using AetherRemoteCommon.Domain.CommonGlamourerApplyType;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
+using AetherRemoteCommon.Domain.Permissions.V2;
 
 namespace AetherRemoteClient.UI.Tabs.Views;
 
@@ -23,10 +22,6 @@ public class ExtraView(
     ModSwapManager modSwapManager,
     NetworkProvider networkProvider) : IControlTabView
 {
-    // Const
-    private const UserPermissions BodySwapWithModsPermissions = UserPermissions.Customization | UserPermissions.Equipment | UserPermissions.ModSwap;
-    private const UserPermissions BodySwapPermissions = UserPermissions.Customization | UserPermissions.Equipment;
-
     // Instantiated
     private readonly ExtraManager _extraManager = new(clientDataManager, commandLockoutManager, glamourerAccessor, historyLogManager, modSwapManager, networkProvider);
     
@@ -52,14 +47,15 @@ public class ExtraView(
         var missingBodySwapPermissions = new List<string>();
         foreach (var target in clientDataManager.TargetManager.Targets)
         {
+            // TODO: Make sure these work
             if (_extraManager.IncludeModSwapWithBodySwap)
             {
-                if ((target.Value.PermissionsGrantedByFriend & BodySwapWithModsPermissions) != BodySwapWithModsPermissions)
+                if ((target.Value.PermissionsGrantedByFriend.Primary & (PrimaryPermissionsV2.BodySwap | PrimaryPermissionsV2.Mods)) == 0)
                     missingBodySwapPermissions.Add(target.Key);
             }
             else
             {
-                if ((target.Value.PermissionsGrantedByFriend & BodySwapPermissions) != BodySwapPermissions)
+                if (target.Value.PermissionsGrantedByFriend.Primary.HasFlag(PrimaryPermissionsV2.BodySwap) is false)
                     missingBodySwapPermissions.Add(target.Key);
             }
         }
@@ -91,7 +87,7 @@ public class ExtraView(
         var missingTwinningPermissions = new List<string>();
         foreach (var target in clientDataManager.TargetManager.Targets)
         {
-            if (PermissionChecker.HasValidTransformPermissions(GlamourerApplyFlag.All, target.Value.PermissionsGrantedByFriend) == false)
+            if (target.Value.PermissionsGrantedByFriend.Primary.HasFlag(PrimaryPermissionsV2.Twinning) is false)
                 missingTwinningPermissions.Add(target.Key);
         }
 

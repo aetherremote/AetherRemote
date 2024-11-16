@@ -3,7 +3,6 @@ using AetherRemoteClient.Domain.Events;
 using AetherRemoteClient.Domain.UI;
 using AetherRemoteClient.Providers;
 using AetherRemoteCommon;
-using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Network;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
@@ -12,6 +11,7 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Threading.Tasks;
+using AetherRemoteCommon.Domain.Permissions.V2;
 
 namespace AetherRemoteClient.UI.Tabs.Friends;
 
@@ -33,13 +33,14 @@ public class FriendsTab : ITab
     private readonly ListFilter<Friend> _friendListFilter;
 
     // Input text reference for adding a friend
-    private string _addFriendInputText = "";
-    private string _searchInputText = "";
+    private string _addFriendInputText = string.Empty;
+    private string _searchInputText = string.Empty;
 
     // Focused Friend
     private Friend? _focusedFriend;
     private string _focusedFriendNote = string.Empty;
-    private bool[] _focusedPermissions = ConvertUserPermissionsToBooleans(UserPermissions.None);
+    private bool[] _focusedPermissionPrimary = ConvertPermissionsToBooleans(PrimaryPermissionsV2.None);
+    private bool[] _focusedPermissionLinkshell = ConvertPermissionsToBooleans(LinkshellPermissionsV2.None);
 
     // Processes
     private bool _shouldProcessAddFriend, _shouldProcessDeleteFriend, _shouldProcessSaveFriend;
@@ -171,13 +172,13 @@ public class FriendsTab : ITab
             if (ImGui.BeginTable("GeneralPermissionsTable", 2))
             {
                 ImGui.TableNextColumn();
-                ImGui.Checkbox("Allow Speak", ref _focusedPermissions[GetBitPosition(UserPermissions.Speak)]);
+                ImGui.Checkbox("Allow Speak", ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Speak)]);
                 ImGui.SameLine();
                 SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
                 SharedUserInterfaces.Tooltip("Allows friend to say things as you");
 
                 ImGui.TableNextColumn();
-                ImGui.Checkbox("Allow Emotes", ref _focusedPermissions[GetBitPosition(UserPermissions.Emote)]);
+                ImGui.Checkbox("Allow Emotes", ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Emote)]);
                 ImGui.SameLine();
                 SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
                 SharedUserInterfaces.Tooltip("Allows friend to make you emote");
@@ -188,7 +189,7 @@ public class FriendsTab : ITab
             ImGui.Separator();
             SharedUserInterfaces.TextCentered("Channel Permissions");
 
-            SharedUserInterfaces.DisableIf(_focusedPermissions[GetBitPosition(UserPermissions.Speak)] == false, () =>
+            SharedUserInterfaces.DisableIf(_focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Speak)] == false, () =>
             {
                 ImGui.SameLine(ImGui.GetWindowSize().X - (ImGui.GetStyle().WindowPadding.X * 2) - (SmallButtonSize.X * 2));
                 if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Check, SmallButtonSize)) SetAllChannelPermissions(true);
@@ -200,34 +201,34 @@ public class FriendsTab : ITab
 
                 if (ImGui.BeginTable("SpeakPermissionsTable", 3))
                 {
-                    ImGui.TableNextColumn(); ImGui.Checkbox("Say", ref _focusedPermissions[GetBitPosition(UserPermissions.Say)]);
-                    ImGui.TableNextColumn(); ImGui.Checkbox("Yell", ref _focusedPermissions[GetBitPosition(UserPermissions.Yell)]);
-                    ImGui.TableNextColumn(); ImGui.Checkbox("Shout", ref _focusedPermissions[GetBitPosition(UserPermissions.Shout)]);
-                    ImGui.TableNextColumn(); ImGui.Checkbox("Tell", ref _focusedPermissions[GetBitPosition(UserPermissions.Tell)]);
-                    ImGui.TableNextColumn(); ImGui.Checkbox("Party", ref _focusedPermissions[GetBitPosition(UserPermissions.Party)]);
-                    ImGui.TableNextColumn(); ImGui.Checkbox("Alliance", ref _focusedPermissions[GetBitPosition(UserPermissions.Alliance)]);
-                    ImGui.TableNextColumn(); ImGui.Checkbox("Free Company", ref _focusedPermissions[GetBitPosition(UserPermissions.FreeCompany)]);
-                    ImGui.TableNextColumn(); ImGui.Checkbox("PVP Team", ref _focusedPermissions[GetBitPosition(UserPermissions.PvPTeam)]);
+                    ImGui.TableNextColumn(); ImGui.Checkbox("Say", ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Say)]);
+                    ImGui.TableNextColumn(); ImGui.Checkbox("Yell", ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Yell)]);
+                    ImGui.TableNextColumn(); ImGui.Checkbox("Shout", ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Shout)]);
+                    ImGui.TableNextColumn(); ImGui.Checkbox("Tell", ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Tell)]);
+                    ImGui.TableNextColumn(); ImGui.Checkbox("Party", ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Party)]);
+                    ImGui.TableNextColumn(); ImGui.Checkbox("Alliance", ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Alliance)]);
+                    ImGui.TableNextColumn(); ImGui.Checkbox("Free Company", ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.FreeCompany)]);
+                    ImGui.TableNextColumn(); ImGui.Checkbox("PVP Team", ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.PvPTeam)]);
                     ImGui.EndTable();
                 }
 
                 ImGui.Text("Linkshell");
                 for (var i = 0; i < 7; i++)
                 {
-                    ImGui.Checkbox($"{i + 1}##LS", ref _focusedPermissions[GetBitPosition(UserPermissions.LS1) + i]);
+                    ImGui.Checkbox($"{i + 1}##LS", ref _focusedPermissionLinkshell[GetBitPosition(LinkshellPermissionsV2.Ls1) + i]);
                     ImGui.SameLine();
                 }
 
-                ImGui.Checkbox("8##LS", ref _focusedPermissions[GetBitPosition(UserPermissions.LS8)]);
+                ImGui.Checkbox("8##LS", ref _focusedPermissionLinkshell[GetBitPosition(LinkshellPermissionsV2.Ls8)]);
 
                 ImGui.Text("Cross-world Linkshells");
                 for (var i = 0; i < 7; i++)
                 {
-                    ImGui.Checkbox($"{i + 1}##CWL", ref _focusedPermissions[GetBitPosition(UserPermissions.CWL1) + i]);
+                    ImGui.Checkbox($"{i + 1}##CWL", ref _focusedPermissionLinkshell[GetBitPosition(LinkshellPermissionsV2.Cwl1) + i]);
                     ImGui.SameLine();
                 }
 
-                ImGui.Checkbox("8##CWL", ref _focusedPermissions[GetBitPosition(UserPermissions.CWL8)]);
+                ImGui.Checkbox("8##CWL", ref _focusedPermissionLinkshell[GetBitPosition(LinkshellPermissionsV2.Cwl8)]);
             });
 
             ImGui.Separator();
@@ -236,19 +237,19 @@ public class FriendsTab : ITab
             if (ImGui.BeginTable("GlamourerPermissionsTable", 2))
             {
                 ImGui.TableNextColumn();
-                ImGui.Checkbox("Allow Customization", ref _focusedPermissions[GetBitPosition(UserPermissions.Customization)]);
+                ImGui.Checkbox("Allow Customization", ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Customization)]);
                 ImGui.SameLine();
                 SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
                 SharedUserInterfaces.Tooltip("Allows friend to change your appearance");
 
                 ImGui.TableNextColumn();
-                ImGui.Checkbox("Allow Equipment", ref _focusedPermissions[GetBitPosition(UserPermissions.Equipment)]);
+                ImGui.Checkbox("Allow Equipment", ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Equipment)]);
                 ImGui.SameLine();
                 SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
                 SharedUserInterfaces.Tooltip("Allows friend to change your outfit");
 
                 ImGui.TableNextColumn();
-                ImGui.Checkbox("Allow Mod Swaps", ref _focusedPermissions[GetBitPosition(UserPermissions.ModSwap)]);
+                ImGui.Checkbox("Allow Mod Swaps", ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Mods)]);
                 ImGui.SameLine();
                 SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
                 SharedUserInterfaces.Tooltip("Allows your mods to be swapped during body swap and twinning commands.");
@@ -288,7 +289,9 @@ public class FriendsTab : ITab
         {
             _focusedFriend = friend;
             _focusedFriendNote = friendNote ?? string.Empty;
-            _focusedPermissions = ConvertUserPermissionsToBooleans(friend.PermissionsGrantedToFriend);
+
+            _focusedPermissionPrimary = ConvertPermissionsToBooleans(friend.PermissionsGrantedToFriend.Primary);
+            _focusedPermissionLinkshell = ConvertPermissionsToBooleans(friend.PermissionsGrantedToFriend.Linkshell);
         }
 
         if (onlineStatus == false) ImGui.PopStyleColor();
@@ -326,7 +329,9 @@ public class FriendsTab : ITab
         Plugin.Configuration.Save();
 
         // Convert permissions back to UserPermissions
-        var permissions = ConvertBooleansToUserPermissions(_focusedPermissions);
+        var primaryPermissions = ConvertBooleansToPermissions<PrimaryPermissionsV2>(_focusedPermissionPrimary);
+        var linkshellPermissions = ConvertBooleansToPermissions<LinkshellPermissionsV2>(_focusedPermissionLinkshell);
+        var permissions = new UserPermissionsV2(primaryPermissions, linkshellPermissions);
         var (success, online) = await CreateOrUpdateFriend(_focusedFriend.FriendCode, permissions).ConfigureAwait(false);
         if (success)
         {
@@ -336,11 +341,11 @@ public class FriendsTab : ITab
         }
     }
 
-    private async Task<(bool, bool)> CreateOrUpdateFriend(string friendCode, UserPermissions permissions = UserPermissions.None)
+    private async Task<(bool, bool)> CreateOrUpdateFriend(string friendCode, UserPermissionsV2? permissions = null)
     {
         if (Plugin.DeveloperMode) return (true, true);
 
-        var request = new CreateOrUpdatePermissionsRequest(friendCode, permissions);
+        var request = new CreateOrUpdatePermissionsRequest(friendCode, permissions ?? new UserPermissionsV2());
         var response = await _networkProvider.InvokeCommand<CreateOrUpdatePermissionsRequest, CreateOrUpdatePermissionsResponse>(Network.Permissions.CreateOrUpdate, request);
         if (response.Success == false)
             Plugin.Log.Warning($"Unable to add friend {friendCode}. {response.Message}");
@@ -385,7 +390,8 @@ public class FriendsTab : ITab
     {
         _focusedFriend = null;
         _focusedFriendNote = string.Empty;
-        _focusedPermissions = [];
+        _focusedPermissionPrimary = [];
+        _focusedPermissionLinkshell = [];
     }
 
     /// <summary>
@@ -393,8 +399,11 @@ public class FriendsTab : ITab
     /// </summary>
     private void SetAllChannelPermissions(bool enabled)
     {
-        for(var i = GetBitPosition(UserPermissions.Say); i < GetBitPosition(UserPermissions.CWL8) + 1; i++)
-            _focusedPermissions[i] = enabled;
+        for(var i = GetBitPosition(PrimaryPermissionsV2.Say); i < GetBitPosition(PrimaryPermissionsV2.Echo) + 1; i++)
+            _focusedPermissionPrimary[i] = enabled;
+        
+        for(var i = GetBitPosition(LinkshellPermissionsV2.Ls1); i < GetBitPosition(LinkshellPermissionsV2.Cwl8) + 1; i++)
+            _focusedPermissionLinkshell[i] = enabled;
     }
 
     /// <summary>
@@ -406,43 +415,47 @@ public class FriendsTab : ITab
         if (_focusedFriendNote != (Plugin.Configuration.Notes.TryGetValue(_focusedFriend.FriendCode, out var note) ? note : string.Empty))
             return true;
 
-        var permissions = ConvertBooleansToUserPermissions(_focusedPermissions);
-        return permissions != _focusedFriend.PermissionsGrantedToFriend;
+        var primaryPermissions = ConvertBooleansToPermissions<PrimaryPermissionsV2>(_focusedPermissionPrimary);
+        var linkshellPermissions = ConvertBooleansToPermissions<LinkshellPermissionsV2>(_focusedPermissionLinkshell);
+        return primaryPermissions != _focusedFriend.PermissionsGrantedToFriend.Primary && linkshellPermissions != _focusedFriend.PermissionsGrantedToFriend.Linkshell;
     }
 
     /// <summary>
-    /// ImGui UI Elements do not support bit masks. We must convert to an array of booleans.
+    /// Converts permissions into a list of booleans used with ImGui
     /// </summary>
-    private static bool[] ConvertUserPermissionsToBooleans(UserPermissions permissions)
+    private static bool[] ConvertPermissionsToBooleans<T>(T permissions) where T : Enum
     {
-        var length = Enum.GetValues(typeof(UserPermissions)).Length;
+        var length = Enum.GetValues(typeof(T)).Length;
         var result = new bool[length];
-        for(var i = 0; i < length; i++)
-            result[i] = ((int)permissions & (1 << i)) != 0;
+        var permissionInteger = Convert.ToInt32(permissions);
+        for (var i = 0; i < length; i++)
+            result[i] = (permissionInteger & (1 << i)) != 0;
 
         return result;
     }
-
+    
     /// <summary>
-    /// This method undoes the conversion of <see cref="ConvertUserPermissionsToBooleans"/>
+    /// Converts the local ImGui boolean array back to permissions
     /// </summary>
-    private static UserPermissions ConvertBooleansToUserPermissions(bool[] permissions)
-    {
-        var result = UserPermissions.None;
+    private static T ConvertBooleansToPermissions<T>(bool[] permissions) where T : Enum
+    { 
+        var result = 0;
         for (var i = 0; i < permissions.Length; i++)
+        {
             if (permissions[i])
-                result |= (UserPermissions)(1 << i);
-
-        return result;
+                result |= 1 << i;
+        }
+        
+        return (T)Enum.ToObject(typeof(T), result);
     }
 
     /// <summary>
-    /// Given a permission, calculate what position it would be in the boolean list returned by <see cref="ConvertUserPermissionsToBooleans"/>
+    /// Given a permission, calculate what position it would be in the boolean list returned by <see cref="ConvertPermissionsToBooleans{T}"/>
     /// </summary>
-    private static int GetBitPosition(UserPermissions permission)
+    private static int GetBitPosition<T>(T permissions) where T : Enum
     {
         var position = 0;
-        var value = (int)permission;
+        var value = Convert.ToInt32(permissions);
 
         while (value > 1)
         {

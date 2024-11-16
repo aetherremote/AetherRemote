@@ -24,5 +24,7 @@ public enum PrimaryPermissionsV2
     // Transformation Permissions
     Customization = 1 << 11,
     Equipment = 1 << 12,
-    Mods = 1 << 13
+    Mods = 1 << 13,
+    BodySwap = 1 << 14,
+    Twinning = 1 << 15
 }
