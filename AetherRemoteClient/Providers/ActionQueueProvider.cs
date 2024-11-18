@@ -5,6 +5,7 @@ using AetherRemoteCommon.Domain.CommonChatMode;
 using System;
 using System.Collections.Concurrent;
 using System.Text;
+using AetherRemoteClient.Uncategorized;
 
 namespace AetherRemoteClient.Providers;
 
@@ -24,7 +25,7 @@ public class ActionQueueProvider(Chat chat, HistoryLogManager historyLogManager)
 
     private void Process(IChatAction action)
     {
-        if (Plugin.ClientState.LocalPlayer is null)
+        if (GameObjectManager.LocalPlayerExists() is false)
             return;
 
         // TODO: Revisit this
@@ -47,7 +48,7 @@ public class ActionQueueProvider(Chat chat, HistoryLogManager historyLogManager)
     /// </summary>
     public void Update()
     {
-        if (_queue.IsEmpty || Plugin.ClientState.LocalPlayer is null)
+        if (_queue.IsEmpty || GameObjectManager.LocalPlayerExists() is false)
             return;
 
         var now = DateTime.Now;
@@ -114,7 +115,7 @@ public class ActionQueueProvider(Chat chat, HistoryLogManager historyLogManager)
         {
             ChatMode.Say => $"/{(extra == "1" ? "em" : "say")} {message}",
             ChatMode.Linkshell => $"/l{extra} {message}",
-            ChatMode.CrossworldLinkshell => $"/cwl{extra} {message}",
+            ChatMode.CrossWorldLinkshell => $"/cwl{extra} {message}",
             ChatMode.Tell => $"/t {extra} {message}",
             _ => $"/{channel.Command()} {message}",
         };
@@ -122,7 +123,7 @@ public class ActionQueueProvider(Chat chat, HistoryLogManager historyLogManager)
         public readonly string BuildLog() => channel switch
         {
             ChatMode.Linkshell => $"{sender} made you say \"{message}\" in {channel.Beautify()} {extra}.",
-            ChatMode.CrossworldLinkshell => $"{sender} made you say \"{message}\" in {channel.Beautify()} {extra}.",
+            ChatMode.CrossWorldLinkshell => $"{sender} made you say \"{message}\" in {channel.Beautify()} {extra}.",
             ChatMode.Tell => $"{sender} made you say \"{message}\" to {extra} in a tell.",
             _ => $"{sender} made you say \"{message}\" in {channel.Beautify()} chat.",
         };

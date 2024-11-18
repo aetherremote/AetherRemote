@@ -13,6 +13,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using AetherRemoteClient.Uncategorized;
 using AetherRemoteCommon.Domain.Permissions.V2;
 
 namespace AetherRemoteClient.Providers;
@@ -155,8 +156,15 @@ public class NetworkProvider(ActionQueueProvider actionQueueProvider,
 
     public async void Dispose()
     {
-        await CleanUp();
-        GC.SuppressFinalize(this);
+        try
+        {
+            await CleanUp();
+            GC.SuppressFinalize(this);
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.Information($"Exception occured during NetworkProvider dispose, {ex}");
+        }
     }
 
     /// <summary>
@@ -283,7 +291,7 @@ public class NetworkProvider(ActionQueueProvider actionQueueProvider,
             return;
         }
 
-        if (Plugin.ClientState.LocalPlayer is null)
+        if (GameObjectManager.LocalPlayerExists() is false)
         {
             Plugin.Log.Warning($"{noteOrFriendCode} tried to revert you, but you do not have a body to revert");
             return;
@@ -318,7 +326,7 @@ public class NetworkProvider(ActionQueueProvider actionQueueProvider,
         }
         
         var linkshellResult = 0;
-        if (command.ChatMode is ChatMode.Linkshell or ChatMode.CrossworldLinkshell)
+        if (command.ChatMode is ChatMode.Linkshell or ChatMode.CrossWorldLinkshell)
             linkshellResult = int.TryParse(command.Extra ?? string.Empty, out var linkshellNumber) ? linkshellNumber : linkshellResult;
         
         if (PermissionChecker.HasValidSpeakPermissions(command.ChatMode, friend.PermissionsGrantedToFriend, linkshellResult) == false)
@@ -377,7 +385,7 @@ public class NetworkProvider(ActionQueueProvider actionQueueProvider,
             return;
         }
 
-        if (Plugin.ClientState.LocalPlayer is null)
+        if (GameObjectManager.LocalPlayerExists() is false)
         {
             Plugin.Log.Warning($"{noteOrFriendCode} tried to transform you, but you do not have a body to transform");
             return;
@@ -421,7 +429,7 @@ public class NetworkProvider(ActionQueueProvider actionQueueProvider,
             return;
         }
 
-        if (Plugin.ClientState.LocalPlayer is null)
+        if (GameObjectManager.LocalPlayerExists() is false)
         {
             Plugin.Log.Warning($"{noteOrFriendCode} attempted to swap your body, but you don't have a body to swap");
             return;
@@ -481,8 +489,8 @@ public class NetworkProvider(ActionQueueProvider actionQueueProvider,
         }
         
         if (request.SwapMods == false) return new BodySwapQueryResponse(null, characterData);
-        
-        var characterName = Plugin.ClientState.LocalPlayer?.Name.ToString();
+
+        var characterName = GameObjectManager.GetLocalPlayerName();
         if (characterName is not null) return new BodySwapQueryResponse(characterName, characterData);
         
         Plugin.Log.Warning($"{noteOrFriendCode} attempted to scan your body for a swap, but you don't have a body to scan");

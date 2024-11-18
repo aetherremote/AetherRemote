@@ -7,6 +7,7 @@ using AetherRemoteCommon.Domain.CommonGlamourerApplyType;
 using AetherRemoteCommon.Domain.Network.Commands;
 using System.Linq;
 using System.Threading.Tasks;
+using AetherRemoteClient.Uncategorized;
 
 namespace AetherRemoteClient.UI.Tabs.Managers;
 
@@ -26,7 +27,7 @@ public class ExtraManager(
     public async Task Twinning()
     {
         if (Plugin.DeveloperMode) return;
-        if (Plugin.ClientState.LocalPlayer is null)
+        if (GameObjectManager.LocalPlayerExists() is false)
         {
             Plugin.Log.Warning("[Twinning] Failure, no local body");
             return;
@@ -78,7 +79,7 @@ public class ExtraManager(
         string? characterName = null;
         if (swapMods)
         {
-            characterName = Plugin.ClientState.LocalPlayer?.Name.ToString();
+            characterName = GameObjectManager.GetLocalPlayerName();
             if (characterName is null)
             {
                 Plugin.Log.Warning("[Body Swap] Failure, no local body");

@@ -4,6 +4,7 @@ using AetherRemoteClient.Accessors.Glamourer;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Log;
 using AetherRemoteClient.Providers;
+using AetherRemoteClient.Uncategorized;
 using AetherRemoteCommon;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.CommonGlamourerApplyType;
@@ -97,7 +98,8 @@ public class TransformationManager(
     
     public async Task CopyMyGlamourerDataAsync()
     {
-        if (Plugin.ClientState.LocalPlayer is null)
+        // TODO: Logging
+        if (GameObjectManager.LocalPlayerExists() is false)
             return;
 
         GlamourerData = await glamourerAccessor.GetDesignAsync().ConfigureAwait(false) ?? string.Empty;
@@ -105,9 +107,11 @@ public class TransformationManager(
 
     public async Task CopyTargetGlamourerData()
     {
-        if (Plugin.TargetManager.Target is null)
+        // TODO: Logging
+        var target = GameObjectManager.GetTargetPlayerObjectIndex();
+        if (target is null)
             return;
 
-        GlamourerData = await glamourerAccessor.GetDesignAsync(Plugin.TargetManager.Target.ObjectIndex).ConfigureAwait(false) ?? string.Empty;
+        GlamourerData = await glamourerAccessor.GetDesignAsync(target.Value).ConfigureAwait(false) ?? string.Empty;
     }
 }

@@ -21,7 +21,7 @@ public static class PermissionChecker
             ChatMode.FreeCompany => permissions.Primary.HasFlag(PrimaryPermissionsV2.FreeCompany),
             ChatMode.PvPTeam => permissions.Primary.HasFlag(PrimaryPermissionsV2.PvPTeam),
             ChatMode.Linkshell => HasValidLinkshellPermissions(linkshellNumber, permissions),
-            ChatMode.CrossworldLinkshell => HasValidCrossWorldLinkshellPermissions(linkshellNumber, permissions),
+            ChatMode.CrossWorldLinkshell => HasValidCrossWorldLinkshellPermissions(linkshellNumber, permissions),
             _ => false
         };
     }

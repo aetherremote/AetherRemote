@@ -14,22 +14,15 @@ namespace AetherRemoteClient.Domain.UI;
 /// </summary>
 public class SharedUserInterfaces
 {
-    public static readonly Vector4 HoveredColorTheme = ImGuiColors.ParsedOrange - new Vector4(0.2f, 0.2f, 0.2f, 0);
-    public static readonly Vector4 SelectedColorTheme = ImGuiColors.ParsedOrange;
+    private const ImGuiWindowFlags PopupWindowFlags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize;
+    private const ImGuiWindowFlags ComboWithFilterFlags = PopupWindowFlags | ImGuiWindowFlags.ChildWindow;
 
-    public static readonly ImGuiWindowFlags PopupWindowFlags =
-        ImGuiWindowFlags.NoTitleBar |
-        ImGuiWindowFlags.NoMove |
-        ImGuiWindowFlags.NoResize;
-
-    private static readonly ImGuiWindowFlags ComboWithFilterFlags = PopupWindowFlags | ImGuiWindowFlags.ChildWindow;
-
-    private static IFontHandle? BigFont;
-    private static bool BigFontBuilt = false;
+    private static IFontHandle? _bigFont;
+    private static bool _bigFontBuilt;
     private const int BigFontSize = 40;
 
-    private static IFontHandle? MediumFont;
-    private static bool MediumFontBuilt = false;
+    private static IFontHandle? _mediumFont;
+    private static bool _mediumFontBuilt;
     private const int MediumFontSize = 24;
 
     /// <summary>
@@ -46,29 +39,25 @@ public class SharedUserInterfaces
     /// <param name="tip"></param>
     public static void Tooltip(string tip)
     {
-        if (ImGui.IsItemHovered())
-        {
-            ImGui.BeginTooltip();
-            ImGui.Text(tip);
-            ImGui.EndTooltip();
-        }
+        if (ImGui.IsItemHovered() is false) return;
+        ImGui.BeginTooltip();
+        ImGui.Text(tip);
+        ImGui.EndTooltip();
     }
 
     /// <summary>
     /// Draws a tool tip for the last hovered ImGui component
     /// </summary>
-    /// <param name="tip"></param>
+    /// <param name="tips"></param>
     public static void Tooltip(string[] tips)
     {
-        if (ImGui.IsItemHovered())
+        if (ImGui.IsItemHovered() is false) return;
+        ImGui.BeginTooltip();
+        foreach (var tip in tips)
         {
-            ImGui.BeginTooltip();
-            foreach (var tip in tips)
-            {
-                ImGui.Text(tip);
-            }
-            ImGui.EndTooltip();
+            ImGui.Text(tip);
         }
+        ImGui.EndTooltip();
     }
 
     /// <summary>
@@ -105,29 +94,23 @@ public class SharedUserInterfaces
     /// <summary>
     /// Draws text using the medium font with optional color.
     /// </summary>
-    public static void MediumText(string text, Vector4? color = null)
-    {
-        FontText(text, MediumFont, MediumFontBuilt, color);
-    }
+    public static void MediumText(string text, Vector4? color = null) 
+        => FontText(text, _mediumFont, _mediumFontBuilt, color);
 
     /// <summary>
     /// Draws text using the default font, centered, with optional color.
     /// </summary>
-    public static void TextCentered(string text, Vector4? color = null, Vector2? offset = null)
-    {
-        FontTextCentered(text, null, false, offset, color);
-    }
+    public static void TextCentered(string text, Vector4? color = null, Vector2? offset = null) 
+        => FontTextCentered(text, null, false, offset, color);
 
     /// <summary>
     /// Draws text using the big font, centered, with optional color.
     /// </summary>
-    public static void BigTextCentered(string text, Vector4? color = null, Vector2? offset = null)
-    {
-        FontTextCentered(text, BigFont, BigFontBuilt, offset, color);
-    }
+    public static void BigTextCentered(string text, Vector4? color = null, Vector2? offset = null) 
+        => FontTextCentered(text, _bigFont, _bigFontBuilt, offset, color);
 
-    public static void PushBigFont() { BigFont?.Push(); }
-    public static void PopBigFont() { BigFont?.Pop(); }
+    public static void PushBigFont() => _bigFont?.Push();
+    public static void PopBigFont() => _bigFont?.Pop();
 
     public static void ComboWithFilter(
         string id,
@@ -141,7 +124,7 @@ public class SharedUserInterfaces
         var comboFilterId = $"##{id}-ComboFilter";
         var popupName = $"##{id}-ComboFilterPopup";
 
-        var _sizeY = (20 * Math.Min(filterHelper.List.Count, 10)) + ImGui.GetStyle().WindowPadding.Y;
+        var sizeY = (20 * Math.Min(filterHelper.List.Count, 10)) + ImGui.GetStyle().WindowPadding.Y;
 
         ImGui.SetNextItemWidth(width);
         if (ImGui.InputTextWithHint(comboFilterId, hint, ref choice, 100))
@@ -154,28 +137,26 @@ public class SharedUserInterfaces
         if (isInputTextActivated && ImGui.IsPopupOpen(popupName) == false)
             ImGui.OpenPopup(popupName);
 
-        var _x = ImGui.GetItemRectMin().X;
-        var _y = ImGui.GetCursorPosY() + ImGui.GetWindowPos().Y;
-        ImGui.SetNextWindowPos(new Vector2(_x, _y));
-        ImGui.SetNextWindowSize(new Vector2(itemWidth, _sizeY));
+        var x = ImGui.GetItemRectMin().X;
+        var y = ImGui.GetCursorPosY() + ImGui.GetWindowPos().Y;
+        ImGui.SetNextWindowPos(new Vector2(x, y));
+        ImGui.SetNextWindowSize(new Vector2(itemWidth, sizeY));
 
-        if (ImGui.BeginPopup(popupName, comboFilterFlags))
+        if (ImGui.BeginPopup(popupName, comboFilterFlags) is false) return;
+        foreach (var option in filterHelper.List)
         {
-            foreach (var option in filterHelper.List)
-            {
-                if (ImGui.Selectable(option))
-                    choice = option;
-            }
-
-            if (isInputTextActive == false && ImGui.IsWindowFocused() == false)
-                ImGui.CloseCurrentPopup();
-
-            ImGui.EndPopup();
+            if (ImGui.Selectable(option))
+                choice = option;
         }
+
+        if (isInputTextActive == false && ImGui.IsWindowFocused() is false)
+            ImGui.CloseCurrentPopup();
+
+        ImGui.EndPopup();
     }
 
     /// <summary>
-    /// Wraps a predicate around <see cref="ImGui.BeginDisabled"/> and <see cref="ImGui.EndDisabled"/>
+    /// Wraps a predicate around <see cref="ImGui.BeginDisabled()"/> and <see cref="ImGui.EndDisabled"/>
     /// </summary>
     public static void DisableIf(bool condition, Action action)
     {
@@ -210,22 +191,20 @@ public class SharedUserInterfaces
         Icon(FontAwesomeIcon.ExclamationTriangle);
         ImGui.PopStyleColor();
 
-        if (ImGui.IsItemHovered())
+        if (ImGui.IsItemHovered() is false) return;
+        ImGui.BeginTooltip();
+        ImGui.Text("Inadequate permissions!");
+        ImGui.Separator();
+        foreach (var friend in friendsMissingPermissions)
         {
-            ImGui.BeginTooltip();
-            ImGui.Text("Inadequate permissions!");
-            ImGui.Separator();
-            foreach (var friend in friendsMissingPermissions)
-            {
-                Plugin.Configuration.Notes.TryGetValue(friend, out var note);
-                ImGui.Text(note ?? friend);
-            }
-            ImGui.EndTooltip();
+            Plugin.Configuration.Notes.TryGetValue(friend, out var note);
+            ImGui.Text(note ?? friend);
         }
+        ImGui.EndTooltip();
     }
 
     /// <summary>
-    /// Creates a description on the object before this call outlining a brief explaination and requirements
+    /// Creates a description on the object before this call outlining a brief explanation and requirements
     /// </summary>
     public static void CommandDescription(
         string description,
@@ -233,38 +212,36 @@ public class SharedUserInterfaces
         string[]? requiredPermissions = null,
         string[]? optionalPermissions = null)
     {
-        if (ImGui.IsItemHovered())
+        if (ImGui.IsItemHovered() is false) return;
+        ImGui.BeginTooltip();
+
+        ImGui.TextColored(ImGuiColors.ParsedOrange, "[Description]");
+        ImGui.Text(description);
+
+        ImGui.Separator();
+
+        if (requiredPlugins is not null)
         {
-            ImGui.BeginTooltip();
-
-            ImGui.TextColored(ImGuiColors.ParsedOrange, "[Description]");
-            ImGui.Text(description);
-
-            ImGui.Separator();
-
-            if (requiredPlugins is not null)
-            {
-                ImGui.TextColored(ImGuiColors.ParsedOrange, "[Required Plugins]");
-                foreach(var plugin in requiredPlugins)
-                    ImGui.BulletText(plugin);
-            }
-
-            if (requiredPermissions is not null)
-            {
-                ImGui.TextColored(ImGuiColors.ParsedOrange, "[Required Permissions]");
-                foreach (var permissions in requiredPermissions)
-                    ImGui.BulletText(permissions);
-            }
-
-            if (optionalPermissions is not null)
-            {
-                ImGui.TextColored(ImGuiColors.ParsedOrange, "[Optional Permissions]");
-                foreach (var permissions in optionalPermissions)
-                    ImGui.BulletText(permissions);
-            }
-
-            ImGui.EndTooltip();
+            ImGui.TextColored(ImGuiColors.ParsedOrange, "[Required Plugins]");
+            foreach(var plugin in requiredPlugins)
+                ImGui.BulletText(plugin);
         }
+
+        if (requiredPermissions is not null)
+        {
+            ImGui.TextColored(ImGuiColors.ParsedOrange, "[Required Permissions]");
+            foreach (var permissions in requiredPermissions)
+                ImGui.BulletText(permissions);
+        }
+
+        if (optionalPermissions is not null)
+        {
+            ImGui.TextColored(ImGuiColors.ParsedOrange, "[Optional Permissions]");
+            foreach (var permissions in optionalPermissions)
+                ImGui.BulletText(permissions);
+        }
+
+        ImGui.EndTooltip();
     }
 
     /// <summary>
@@ -299,10 +276,10 @@ public class SharedUserInterfaces
         if (fontBuilt) font?.Pop();
     }
 
-    // Grab whatever the default dalamud font is, and make a medium version, and a big version of it
-    private async Task BuildDefaultFontExtraSizes()
+    // Grab whatever the default Dalamud font is, and make a medium version, and a big version of it
+    private static async Task BuildDefaultFontExtraSizes()
     {
-        BigFont = Plugin.PluginInterface.UiBuilder.FontAtlas.NewDelegateFontHandle(toolkit =>
+        _bigFont = Plugin.PluginInterface.UiBuilder.FontAtlas.NewDelegateFontHandle(toolkit =>
         {
             toolkit.OnPreBuild(preBuild =>
             {
@@ -310,7 +287,7 @@ public class SharedUserInterfaces
             });
         });
 
-        MediumFont = Plugin.PluginInterface.UiBuilder.FontAtlas.NewDelegateFontHandle(toolkit =>
+        _mediumFont = Plugin.PluginInterface.UiBuilder.FontAtlas.NewDelegateFontHandle(toolkit =>
         {
             toolkit.OnPreBuild(preBuild =>
             {
@@ -318,11 +295,11 @@ public class SharedUserInterfaces
             });
         });
 
-        await BigFont.WaitAsync();
-        await MediumFont.WaitAsync();
+        await _bigFont.WaitAsync();
+        await _mediumFont.WaitAsync();
         await Plugin.PluginInterface.UiBuilder.FontAtlas.BuildFontsAsync();
 
-        BigFontBuilt = true;
-        MediumFontBuilt = true;
+        _bigFontBuilt = true;
+        _mediumFontBuilt = true;
     }
 }

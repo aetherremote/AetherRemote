@@ -10,7 +10,7 @@ public enum ChatMode
     Alliance,
     FreeCompany,
     Linkshell,
-    CrossworldLinkshell,
+    CrossWorldLinkshell,
     NoviceNetwork,
     PvPTeam,
 }
@@ -29,7 +29,7 @@ public static class ChatModeTranslator
             ChatMode.Alliance => chatMode.ToString(),
             ChatMode.Linkshell => "LS",
             ChatMode.FreeCompany => "Free Company",
-            ChatMode.CrossworldLinkshell => "CWLS",
+            ChatMode.CrossWorldLinkshell => "CWLS",
             ChatMode.NoviceNetwork => "Novice Network",
             ChatMode.PvPTeam => "PvP Team",
             _ => chatMode.ToString()
@@ -48,7 +48,7 @@ public static class ChatModeTranslator
             ChatMode.Alliance => "a",
             ChatMode.FreeCompany => "fc",
             ChatMode.Linkshell => "l",
-            ChatMode.CrossworldLinkshell => "cwl",
+            ChatMode.CrossWorldLinkshell => "cwl",
             ChatMode.NoviceNetwork => "n",
             ChatMode.PvPTeam => "pt",
             _ => throw new NotImplementedException()

@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using AetherRemoteClient.Uncategorized;
 
 namespace AetherRemoteClient.Providers;
 
@@ -30,9 +31,9 @@ public class ModSwapManager(PenumbraAccessor penumbraAccessor)
 
         var index = await Plugin.RunOnFramework(() =>
         {
-            for (ushort i = 0; i < Plugin.ObjectTable.Length; i++)
+            for (ushort i = 0; i < GameObjectManager.GetObjectTableLength() ; i++)
             {
-                if (Plugin.ObjectTable[i]?.Name.TextValue != targetCharacterName) continue;
+                if (GameObjectManager.GetObjectTableItem(i)?.Name.TextValue != targetCharacterName) continue;
                 Plugin.Log.Verbose($"[ModSwapManager] Found index {i} for {targetCharacterName}");
                 return i;
             }
@@ -78,14 +79,14 @@ public class ModSwapManager(PenumbraAccessor penumbraAccessor)
             return ModSwapErrorCode.ModAddError;
         } 
 
-        if (Plugin.ClientState.LocalPlayer is null)
+        if (GameObjectManager.LocalPlayerExists() is false)
         {
             Plugin.Log.Verbose($"[ModSwapManager] No local player present");
             await RemoveAllCollections();
             return ModSwapErrorCode.NoLocalPlayer;
         }
 
-        if (await penumbraAccessor.CallAssignTemporaryCollection(_currentModSwapCollection, 0, true).ConfigureAwait(false) == false)
+        if (await penumbraAccessor.CallAssignTemporaryCollection(_currentModSwapCollection).ConfigureAwait(false) == false)
         {
             Plugin.Log.Verbose($"[ModSwapManager] Could not assign collection");
             await RemoveAllCollections();

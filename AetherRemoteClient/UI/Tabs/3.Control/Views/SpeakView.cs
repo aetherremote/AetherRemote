@@ -7,6 +7,7 @@ using AetherRemoteClient.Domain.UI;
 using AetherRemoteClient.Providers;
 using AetherRemoteClient.UI.Tabs.Managers;
 using AetherRemoteClient.UI.Tabs.Modules;
+using AetherRemoteClient.Uncategorized;
 using AetherRemoteCommon;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.CommonChatMode;
@@ -106,13 +107,13 @@ public class SpeakView(
             case ChatMode.Tell:
                 ImGui.SetCursorPosX(additionalArgumentsOffset);
                 if (SharedUserInterfaces.IconButton(FontAwesomeIcon.User))
-                    _speakManager.SetTellTargetFor(Plugin.ClientState.LocalPlayer);
+                    _speakManager.SetTellTargetFor(GameObjectManager.GetLocalPlayer());
 
                 SharedUserInterfaces.Tooltip("Copy my name");
                 ImGui.SameLine();
 
                 if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Crosshairs))
-                    _speakManager.SetTellTargetFor(Plugin.TargetManager.Target);
+                    _speakManager.SetTellTargetFor(GameObjectManager.GetTargetPlayer());
 
                 SharedUserInterfaces.Tooltip("Copy my target's name");
                 ImGui.SameLine();
@@ -128,7 +129,7 @@ public class SpeakView(
                 break;
 
             case ChatMode.Linkshell:
-            case ChatMode.CrossworldLinkshell:
+            case ChatMode.CrossWorldLinkshell:
                 ImGui.SetCursorPosX(additionalArgumentsOffset);
                 ImGui.SetCursorPosX(style.WindowPadding.X * 2 + style.FramePadding.X * 2 + ImGui.GetFontSize());
 

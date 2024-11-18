@@ -34,7 +34,7 @@ public class SpeakManager(
         
         var extra = ChatMode switch
         {
-            ChatMode.Linkshell or ChatMode.CrossworldLinkshell => LinkshellNumber.ToString(),
+            ChatMode.Linkshell or ChatMode.CrossWorldLinkshell => LinkshellNumber.ToString(),
             ChatMode.Tell => $"{TellTargetName}@{TellTargetWorld}",
             ChatMode.Say => UseEmoteInsteadOfSay.ToString(),
             _ => null
@@ -51,7 +51,7 @@ public class SpeakManager(
             var logMessage = ChatMode switch
             {
                 ChatMode.Linkshell => $"You issued {targetNames} to say \"{Message}\" in LS{extra}.",
-                ChatMode.CrossworldLinkshell => $"You issued {targetNames} to say \"{Message}\" in CWL{extra}.",
+                ChatMode.CrossWorldLinkshell => $"You issued {targetNames} to say \"{Message}\" in CWL{extra}.",
                 ChatMode.Tell => $"You issued {targetNames} to say \"{Message}\" in a tell to {extra}",
                 _ => $"You issued {targetNames} to say \"{Message}\" in {ChatMode.Beautify()} chat",
             };
