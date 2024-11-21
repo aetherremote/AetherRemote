@@ -71,7 +71,8 @@ public class FriendsTab : ITab
         {
             // Draw the settings area beside the search bar using the remaining space
             ImGui.SetNextItemWidth(MainWindow.FriendListSize.X);
-            if (ImGui.InputTextWithHint("##SearchFriendListInputText", "Search", ref _searchInputText, Constraints.FriendNicknameCharLimit))
+            if (ImGui.InputTextWithHint("##SearchFriendListInputText", "Search", ref _searchInputText,
+                    Constraints.FriendNicknameCharLimit))
                 _friendListFilter.UpdateSearchTerm(_searchInputText);
 
             // Save the cursor at the bottom of the search input text before calling ImGui.SameLine for use later
@@ -115,10 +116,12 @@ public class FriendsTab : ITab
 
                 ImGui.EndChild();
             }
+
             ImGui.PopStyleVar();
 
             ImGui.SetNextItemWidth(MainWindow.FriendListSize.X);
-            if (ImGui.InputTextWithHint("##FriendCodeInputText", "Friend Code", ref _addFriendInputText, Constraints.FriendCodeCharLimit, ImGuiInputTextFlags.EnterReturnsTrue))
+            if (ImGui.InputTextWithHint("##FriendCodeInputText", "Friend Code", ref _addFriendInputText,
+                    Constraints.FriendCodeCharLimit, ImGuiInputTextFlags.EnterReturnsTrue))
                 _shouldProcessAddFriend = true;
 
             if (ImGui.Button("Add Friend", MainWindow.FriendListSize))
@@ -139,7 +142,8 @@ public class FriendsTab : ITab
             SharedUserInterfaces.PushBigFont();
             var windowCenter = new Vector2(ImGui.GetWindowSize().X / 2, ImGui.GetWindowSize().Y / 2);
             var selectFriendButtonSize = ImGui.CalcTextSize("Select Friend");
-            var cursorPos = new Vector2(windowCenter.X - (selectFriendButtonSize.X / 2), windowCenter.Y - selectFriendButtonSize.Y);
+            var cursorPos = new Vector2(windowCenter.X - (selectFriendButtonSize.X / 2),
+                windowCenter.Y - selectFriendButtonSize.Y);
             ImGui.SetCursorPos(cursorPos);
             ImGui.Text("Select Friend");
             SharedUserInterfaces.PopBigFont();
@@ -159,102 +163,169 @@ public class FriendsTab : ITab
 
             ImGui.PopStyleVar();
             SharedUserInterfaces.Tooltip("Delete Friend");
-
+            
             ImGui.SetNextItemWidth(MainWindow.FriendListSize.X);
-            ImGui.InputTextWithHint("Note##EditingFriendCode", "Note", ref _focusedFriendNote, Constraints.FriendCodeCharLimit);
+            ImGui.InputTextWithHint("Note##EditingFriendCode", "Note", ref _focusedFriendNote,
+                Constraints.FriendCodeCharLimit);
             ImGui.SameLine();
             SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
             SharedUserInterfaces.Tooltip("A note or 'nickname' to more easily identify a friend");
 
-            ImGui.Separator();
-            SharedUserInterfaces.TextCentered("General Permissions");
+            SharedUserInterfaces.MediumText("Permissions", ImGuiColors.ParsedOrange);
 
-            if (ImGui.BeginTable("GeneralPermissionsTable", 2))
+            if (ImGui.BeginTabBar("FriendPermissionTabBar") is false) return;
+            if (ImGui.BeginTabItem("Speak"))
             {
-                ImGui.TableNextColumn();
-                ImGui.Checkbox("Allow Speak", ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Speak)]);
-                ImGui.SameLine();
-                SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
-                SharedUserInterfaces.Tooltip("Allows friend to say things as you");
+                SharedUserInterfaces.TextCentered("General Permissions");
 
-                ImGui.TableNextColumn();
-                ImGui.Checkbox("Allow Emotes", ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Emote)]);
-                ImGui.SameLine();
-                SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
-                SharedUserInterfaces.Tooltip("Allows friend to make you emote");
-
-                ImGui.EndTable();
-            }
-
-            ImGui.Separator();
-            SharedUserInterfaces.TextCentered("Channel Permissions");
-
-            SharedUserInterfaces.DisableIf(_focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Speak)] == false, () =>
-            {
-                ImGui.SameLine(ImGui.GetWindowSize().X - (ImGui.GetStyle().WindowPadding.X * 2) - (SmallButtonSize.X * 2));
-                if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Check, SmallButtonSize)) SetAllChannelPermissions(true);
-                SharedUserInterfaces.Tooltip("Allow All");
-
-                ImGui.SameLine();
-                if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Ban, SmallButtonSize)) SetAllChannelPermissions(false);
-                SharedUserInterfaces.Tooltip("Disallow All");
-
-                if (ImGui.BeginTable("SpeakPermissionsTable", 3))
+                if (ImGui.BeginTable("GeneralPermissionsTable", 2))
                 {
-                    ImGui.TableNextColumn(); ImGui.Checkbox("Say", ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Say)]);
-                    ImGui.TableNextColumn(); ImGui.Checkbox("Yell", ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Yell)]);
-                    ImGui.TableNextColumn(); ImGui.Checkbox("Shout", ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Shout)]);
-                    ImGui.TableNextColumn(); ImGui.Checkbox("Tell", ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Tell)]);
-                    ImGui.TableNextColumn(); ImGui.Checkbox("Party", ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Party)]);
-                    ImGui.TableNextColumn(); ImGui.Checkbox("Alliance", ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Alliance)]);
-                    ImGui.TableNextColumn(); ImGui.Checkbox("Free Company", ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.FreeCompany)]);
-                    ImGui.TableNextColumn(); ImGui.Checkbox("PVP Team", ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.PvPTeam)]);
+                    ImGui.TableNextColumn();
+                    ImGui.Checkbox("Allow Speak",
+                        ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Speak)]);
+                    ImGui.SameLine();
+                    SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
+                    SharedUserInterfaces.Tooltip("Allows friend to say things as you");
+
+                    ImGui.TableNextColumn();
+                    ImGui.Checkbox("Allow Emotes",
+                        ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Emote)]);
+                    ImGui.SameLine();
+                    SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
+                    SharedUserInterfaces.Tooltip("Allows friend to make you emote");
+
                     ImGui.EndTable();
                 }
 
-                ImGui.Text("Linkshell");
-                for (var i = 0; i < 7; i++)
-                {
-                    ImGui.Checkbox($"{i + 1}##LS", ref _focusedPermissionLinkshell[GetBitPosition(LinkshellPermissionsV2.Ls1) + i]);
-                    ImGui.SameLine();
-                }
+                ImGui.Separator();
+                SharedUserInterfaces.TextCentered("Channel Permissions");
 
-                ImGui.Checkbox("8##LS", ref _focusedPermissionLinkshell[GetBitPosition(LinkshellPermissionsV2.Ls8)]);
+                SharedUserInterfaces.DisableIf(
+                    _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Speak)] == false, () =>
+                    {
+                        ImGui.SameLine(ImGui.GetWindowSize().X - (ImGui.GetStyle().WindowPadding.X * 2) -
+                                       (SmallButtonSize.X * 2));
+                        if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Check, SmallButtonSize))
+                            SetAllChannelPermissions(true);
+                        SharedUserInterfaces.Tooltip("Allow All");
 
-                ImGui.Text("Cross-world Linkshells");
-                for (var i = 0; i < 7; i++)
-                {
-                    ImGui.Checkbox($"{i + 1}##CWL", ref _focusedPermissionLinkshell[GetBitPosition(LinkshellPermissionsV2.Cwl1) + i]);
-                    ImGui.SameLine();
-                }
+                        ImGui.SameLine();
+                        if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Ban, SmallButtonSize))
+                            SetAllChannelPermissions(false);
+                        SharedUserInterfaces.Tooltip("Disallow All");
 
-                ImGui.Checkbox("8##CWL", ref _focusedPermissionLinkshell[GetBitPosition(LinkshellPermissionsV2.Cwl8)]);
-            });
+                        if (ImGui.BeginTable("SpeakPermissionsTable", 3))
+                        {
+                            ImGui.TableNextColumn();
+                            ImGui.Checkbox("Say",
+                                ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Say)]);
+                            ImGui.TableNextColumn();
+                            ImGui.Checkbox("Yell",
+                                ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Yell)]);
+                            ImGui.TableNextColumn();
+                            ImGui.Checkbox("Shout",
+                                ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Shout)]);
+                            ImGui.TableNextColumn();
+                            ImGui.Checkbox("Tell",
+                                ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Tell)]);
+                            ImGui.TableNextColumn();
+                            ImGui.Checkbox("Party",
+                                ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Party)]);
+                            ImGui.TableNextColumn();
+                            ImGui.Checkbox("Alliance",
+                                ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Alliance)]);
+                            ImGui.TableNextColumn();
+                            ImGui.Checkbox("Free Company",
+                                ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.FreeCompany)]);
+                            ImGui.TableNextColumn();
+                            ImGui.Checkbox("PVP Team",
+                                ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.PvPTeam)]);
+                            ImGui.EndTable();
+                        }
 
-            ImGui.Separator();
-            SharedUserInterfaces.TextCentered("Glamourer Permissions");
+                        ImGui.Text("Linkshell");
+                        for (var i = 0; i < 7; i++)
+                        {
+                            ImGui.Checkbox($"{i + 1}##LS",
+                                ref _focusedPermissionLinkshell[GetBitPosition(LinkshellPermissionsV2.Ls1) + i]);
+                            ImGui.SameLine();
+                        }
 
-            if (ImGui.BeginTable("GlamourerPermissionsTable", 2))
+                        ImGui.Checkbox("8##LS",
+                            ref _focusedPermissionLinkshell[GetBitPosition(LinkshellPermissionsV2.Ls8)]);
+
+                        ImGui.Text("Cross-world Linkshells");
+                        for (var i = 0; i < 7; i++)
+                        {
+                            ImGui.Checkbox($"{i + 1}##CWL",
+                                ref _focusedPermissionLinkshell[GetBitPosition(LinkshellPermissionsV2.Cwl1) + i]);
+                            ImGui.SameLine();
+                        }
+
+                        ImGui.Checkbox("8##CWL",
+                            ref _focusedPermissionLinkshell[GetBitPosition(LinkshellPermissionsV2.Cwl8)]);
+                    });
+
+
+                ImGui.EndTabItem();
+            }
+
+            if (ImGui.BeginTabItem("Transformation"))
             {
-                ImGui.TableNextColumn();
-                ImGui.Checkbox("Allow Customization", ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Customization)]);
-                ImGui.SameLine();
-                SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
-                SharedUserInterfaces.Tooltip("Allows friend to change your appearance");
+                SharedUserInterfaces.TextCentered("Glamourer Permissions");
 
-                ImGui.TableNextColumn();
-                ImGui.Checkbox("Allow Equipment", ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Equipment)]);
-                ImGui.SameLine();
-                SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
-                SharedUserInterfaces.Tooltip("Allows friend to change your outfit");
+                if (ImGui.BeginTable("GlamourerPermissionsTable", 2))
+                {
+                    ImGui.TableNextColumn();
+                    ImGui.Checkbox("Allow Customization",
+                        ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Customization)]);
+                    ImGui.SameLine();
+                    SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
+                    SharedUserInterfaces.Tooltip("Allows friend to change your appearance");
 
-                ImGui.TableNextColumn();
-                ImGui.Checkbox("Allow Mod Swaps", ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Mods)]);
-                ImGui.SameLine();
-                SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
-                SharedUserInterfaces.Tooltip("Allows your mods to be swapped during body swap and twinning commands.");
+                    ImGui.TableNextColumn();
+                    ImGui.Checkbox("Allow Equipment",
+                        ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Equipment)]);
+                    ImGui.SameLine();
+                    SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
+                    SharedUserInterfaces.Tooltip("Allows friend to change your outfit");
 
-                ImGui.EndTable();
+                    ImGui.TableNextColumn();
+                    ImGui.Checkbox("Allow Body Swap",
+                        ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.BodySwap)]);
+                    ImGui.SameLine();
+                    SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
+                    SharedUserInterfaces.Tooltip("Allows friend to swap your body");
+
+                    ImGui.TableNextColumn();
+                    ImGui.Checkbox("Allow Twinning",
+                        ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Twinning)]);
+                    ImGui.SameLine();
+                    SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
+                    SharedUserInterfaces.Tooltip("Allows friend to turn you into them");
+
+                    ImGui.TableNextColumn();
+                    ImGui.Checkbox("Allow Mod Swaps",
+                        ref _focusedPermissionPrimary[GetBitPosition(PrimaryPermissionsV2.Mods)]);
+                    ImGui.SameLine();
+                    SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
+                    SharedUserInterfaces.Tooltip(
+                        "Allows your mods to be swapped during body swap and twinning commands.");
+
+                    ImGui.EndTable();
+                }
+
+                ImGui.EndTabItem();
+            }
+
+            if (ImGui.BeginTabItem("Collections"))
+            {
+                SharedUserInterfaces.PushBigFont();
+                ImGui.SetCursorPosY(ImGui.GetWindowHeight() / 2);
+                SharedUserInterfaces.TextCentered("Work in Progress");
+                SharedUserInterfaces.PopBigFont();
+                SharedUserInterfaces.TextCentered("See discord for road map", ImGuiColors.DalamudGrey);
+                ImGui.EndTabItem();
             }
 
             var saveButtonPosition = ImGui.GetWindowSize() - ImGui.GetStyle().WindowPadding - RoundButtonSize;
@@ -267,11 +338,14 @@ public class FriendsTab : ITab
 
             if (PendingChanges())
             {
-                ImGui.SetCursorPosY(ImGui.GetWindowHeight() - ImGui.GetFontSize() - ImGui.GetStyle().WindowPadding.Y);
+                ImGui.SetCursorPosY(
+                    ImGui.GetWindowHeight() - ImGui.GetFontSize() - ImGui.GetStyle().WindowPadding.Y);
                 SharedUserInterfaces.TextCentered("You have pending changes!", ImGuiColors.DalamudOrange);
             }
 
             ImGui.PopStyleVar();
+                
+            ImGui.EndTabBar();
         }
     }
 
@@ -336,11 +410,12 @@ public class FriendsTab : ITab
             Primary = primaryPermissions,
             Linkshell = linkshellPermissions,
         };
-        
-        var (success, online) = await CreateOrUpdateFriend(_focusedFriend.FriendCode, permissions).ConfigureAwait(false);
+
+        var (success, online) =
+            await CreateOrUpdateFriend(_focusedFriend.FriendCode, permissions).ConfigureAwait(false);
         if (success is false)
             return;
-        
+
         // Only set locally if success on server
         _focusedFriend.Online = online;
         _focusedFriend.PermissionsGrantedToFriend = permissions;
@@ -351,7 +426,9 @@ public class FriendsTab : ITab
         if (Plugin.DeveloperMode) return (true, true);
 
         var request = new CreateOrUpdatePermissionsRequest(friendCode, permissions ?? new UserPermissionsV2());
-        var response = await _networkProvider.InvokeCommand<CreateOrUpdatePermissionsRequest, CreateOrUpdatePermissionsResponse>(Network.Permissions.CreateOrUpdate, request);
+        var response =
+            await _networkProvider.InvokeCommand<CreateOrUpdatePermissionsRequest, CreateOrUpdatePermissionsResponse>(
+                Network.Permissions.CreateOrUpdate, request);
         if (response.Success == false)
             Plugin.Log.Warning($"Unable to add friend {friendCode}. {response.Message}");
 
@@ -375,7 +452,9 @@ public class FriendsTab : ITab
         if (Plugin.DeveloperMode) return true;
 
         var request = new DeletePermissionsRequest(friend.FriendCode);
-        var response = await _networkProvider.InvokeCommand<DeletePermissionsRequest, DeletePermissionsResponse>(Network.Permissions.Delete, request);
+        var response =
+            await _networkProvider.InvokeCommand<DeletePermissionsRequest, DeletePermissionsResponse>(
+                Network.Permissions.Delete, request);
         if (response.Success == false)
             Plugin.Log.Warning($"Unable to delete friend {friend.FriendCode}. {response.Message}");
 
@@ -404,10 +483,10 @@ public class FriendsTab : ITab
     /// </summary>
     private void SetAllChannelPermissions(bool enabled)
     {
-        for(var i = GetBitPosition(PrimaryPermissionsV2.Say); i < GetBitPosition(PrimaryPermissionsV2.Echo) + 1; i++)
+        for (var i = GetBitPosition(PrimaryPermissionsV2.Say); i < GetBitPosition(PrimaryPermissionsV2.Echo) + 1; i++)
             _focusedPermissionPrimary[i] = enabled;
-        
-        for(var i = GetBitPosition(LinkshellPermissionsV2.Ls1); i < GetBitPosition(LinkshellPermissionsV2.Cwl8) + 1; i++)
+
+        for (var i = GetBitPosition(LinkshellPermissionsV2.Ls1); i < GetBitPosition(LinkshellPermissionsV2.Cwl8) + 1; i++)
             _focusedPermissionLinkshell[i] = enabled;
     }
 
@@ -417,12 +496,15 @@ public class FriendsTab : ITab
     private bool PendingChanges()
     {
         if (_focusedFriend is null) return false;
-        if (_focusedFriendNote != (Plugin.Configuration.Notes.TryGetValue(_focusedFriend.FriendCode, out var note) ? note : string.Empty))
+        if (_focusedFriendNote != (Plugin.Configuration.Notes.TryGetValue(_focusedFriend.FriendCode, out var note)
+                ? note
+                : string.Empty))
             return true;
 
         var primaryPermissions = ConvertBooleansToPermissions<PrimaryPermissionsV2>(_focusedPermissionPrimary);
         var linkshellPermissions = ConvertBooleansToPermissions<LinkshellPermissionsV2>(_focusedPermissionLinkshell);
-        return primaryPermissions != _focusedFriend.PermissionsGrantedToFriend.Primary && linkshellPermissions != _focusedFriend.PermissionsGrantedToFriend.Linkshell;
+        return primaryPermissions != _focusedFriend.PermissionsGrantedToFriend.Primary || 
+               linkshellPermissions != _focusedFriend.PermissionsGrantedToFriend.Linkshell;
     }
 
     /// <summary>
@@ -438,19 +520,19 @@ public class FriendsTab : ITab
 
         return result;
     }
-    
+
     /// <summary>
     /// Converts the local ImGui boolean array back to permissions
     /// </summary>
     private static T ConvertBooleansToPermissions<T>(bool[] permissions) where T : Enum
-    { 
+    {
         var result = 0;
         for (var i = 0; i < permissions.Length; i++)
         {
             if (permissions[i])
                 result |= 1 << i;
         }
-        
+
         return (T)Enum.ToObject(typeof(T), result);
     }
 

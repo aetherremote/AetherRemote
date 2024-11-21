@@ -22,6 +22,9 @@ public class ExtraView(
     ModSwapManager modSwapManager,
     NetworkProvider networkProvider) : IControlTabView
 {
+    // Const
+    private const PrimaryPermissionsV2 BodySwapWithModsPermissions = PrimaryPermissionsV2.BodySwap | PrimaryPermissionsV2.Mods;
+    
     // Instantiated
     private readonly ExtraManager _extraManager = new(clientDataManager, commandLockoutManager, glamourerAccessor, historyLogManager, modSwapManager, networkProvider);
     
@@ -47,10 +50,9 @@ public class ExtraView(
         var missingBodySwapPermissions = new List<string>();
         foreach (var target in clientDataManager.TargetManager.Targets)
         {
-            // TODO: Make sure these work
             if (_extraManager.IncludeModSwapWithBodySwap)
             {
-                if ((target.Value.PermissionsGrantedByFriend.Primary & (PrimaryPermissionsV2.BodySwap | PrimaryPermissionsV2.Mods)) == 0)
+                if ((target.Value.PermissionsGrantedByFriend.Primary & BodySwapWithModsPermissions) != BodySwapWithModsPermissions)
                     missingBodySwapPermissions.Add(target.Key);
             }
             else

@@ -16,7 +16,7 @@ public class GlamourerAccessor : IDisposable
     // Const
     private const int RequiredMajorVersion = 1;
     private const int RequiredMinorVersion = 3;
-    private const int TestApiIntervalInSeconds = 30;
+    private const int TestApiIntervalInSeconds = 60;
 
     // When Mare updates a local glamourer profile, it locks to prevent local tampering
     // Unfortunately, we need this key to unlock the profile to get the state.
@@ -158,6 +158,7 @@ public class GlamourerAccessor : IDisposable
     public void Dispose()
     {
         _periodicGlamourerTest.Elapsed -= PeriodicCheckApi;
+        _periodicGlamourerTest.Stop();
         _periodicGlamourerTest.Dispose();
 
         GC.SuppressFinalize(this);

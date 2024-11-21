@@ -14,7 +14,7 @@ namespace AetherRemoteClient.Accessors.Penumbra;
 public class PenumbraAccessor : IDisposable
 {
     // Const
-    private const int TestApiIntervalInSeconds = 30;
+    private const int TestApiIntervalInSeconds = 60;
 
     // Penumbra API
     private readonly AddTemporaryMod _addTemporaryMod;
@@ -268,6 +268,7 @@ public class PenumbraAccessor : IDisposable
     public void Dispose()
     {
         _periodicPenumbraTest.Elapsed -= PeriodicCheckApi;
+        _periodicPenumbraTest.Stop();
         _periodicPenumbraTest.Dispose();
 
         GC.SuppressFinalize(this);

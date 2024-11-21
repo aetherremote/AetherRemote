@@ -50,7 +50,7 @@ public sealed class Plugin : IDalamudPlugin
     /// the server is invoked
     /// </summary>
 #if DEBUG
-    public const bool DeveloperMode = false;
+    public const bool DeveloperMode = true;
 #else
     public const bool DeveloperMode = false;
 #endif
@@ -131,6 +131,7 @@ public sealed class Plugin : IDalamudPlugin
 
     public async void Dispose()
     {
+        PenumbraAccessor.Dispose();
         GlamourerAccessor.Dispose();
 
         NetworkProvider.Dispose();
