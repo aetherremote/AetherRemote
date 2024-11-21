@@ -15,6 +15,7 @@ using Dalamud.Plugin.Services;
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
+using AetherRemoteClient.Managers;
 
 namespace AetherRemoteClient;
 
@@ -49,7 +50,7 @@ public sealed class Plugin : IDalamudPlugin
     /// the server is invoked
     /// </summary>
 #if DEBUG
-    public const bool DeveloperMode = true;
+    public const bool DeveloperMode = false;
 #else
     public const bool DeveloperMode = false;
 #endif
@@ -70,6 +71,7 @@ public sealed class Plugin : IDalamudPlugin
     private HistoryLogManager HistoryLogManager { get; }
     private ModSwapManager ModSwapManager { get; }
     private SharedUserInterfaces SharedUserInterfaces { get; init; }
+    private NetworkManager NetworkManager { get; }
 
     // Accessors
     private GlamourerAccessor GlamourerAccessor { get; }
@@ -104,7 +106,10 @@ public sealed class Plugin : IDalamudPlugin
         ActionQueueProvider = new ActionQueueProvider(Chat, HistoryLogManager);
         EmoteProvider = new EmoteProvider();
         WorldProvider = new WorldProvider();
-        NetworkProvider = new NetworkProvider(ActionQueueProvider, ClientDataManager, EmoteProvider, GlamourerAccessor, HistoryLogManager, ModSwapManager, WorldProvider);
+        NetworkProvider = new NetworkProvider(ClientDataManager, ModSwapManager);
+        
+        // Manager
+        NetworkManager = new NetworkManager(ActionQueueProvider, ClientDataManager, EmoteProvider, GlamourerAccessor, HistoryLogManager, ModSwapManager, NetworkProvider, WorldProvider);
 
         // Windows
         WindowSystem = new WindowSystem("AetherRemote");

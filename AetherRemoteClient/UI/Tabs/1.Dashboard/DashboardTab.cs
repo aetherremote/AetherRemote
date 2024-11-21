@@ -143,7 +143,7 @@ public class DashboardTab : ITab
         if (string.IsNullOrEmpty(Plugin.Configuration.Secret))
             return;
 
-        _ = _networkProvider.Connect(Plugin.Configuration.Secret);
+        _ = _networkProvider.Connect();
     }
 
     public void Dispose() => GC.SuppressFinalize(this);
