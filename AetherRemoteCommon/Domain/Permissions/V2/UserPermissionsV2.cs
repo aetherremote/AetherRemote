@@ -1,9 +1,9 @@
 namespace AetherRemoteCommon.Domain.Permissions.V2;
 
-public class UserPermissionsV2(PrimaryPermissionsV2? primary = null, LinkshellPermissionsV2? linkshell = null)
+public class UserPermissionsV2
 {
-    public PrimaryPermissionsV2 Primary { get; set; } = primary ?? PrimaryPermissionsV2.None;
-    public LinkshellPermissionsV2 Linkshell { get; set; } = linkshell ?? LinkshellPermissionsV2.None;
+    public PrimaryPermissionsV2 Primary { get; set; } = PrimaryPermissionsV2.None;
+    public LinkshellPermissionsV2 Linkshell { get; set; } = LinkshellPermissionsV2.None;
 
     public override string ToString()
     {

@@ -89,7 +89,11 @@ public static class ConversionToV2
                 
                 logger.LogInformation("Converting {OldPerms} to {NewPerms} and {NewerPerms}", userPermissions, primaryPermissions, linkshellPermissions);
 
-                var final = new UserPermissionsV2(primaryPermissions, linkshellPermissions);
+                var final = new UserPermissionsV2
+                {
+                    Primary = primaryPermissions,
+                    Linkshell = linkshellPermissions
+                };
                 var text = JsonSerializer.Serialize(final);
                 
                 await using var insert = db.CreateCommand();

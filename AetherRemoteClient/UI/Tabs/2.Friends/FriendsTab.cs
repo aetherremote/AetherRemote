@@ -331,14 +331,19 @@ public class FriendsTab : ITab
         // Convert permissions back to UserPermissions
         var primaryPermissions = ConvertBooleansToPermissions<PrimaryPermissionsV2>(_focusedPermissionPrimary);
         var linkshellPermissions = ConvertBooleansToPermissions<LinkshellPermissionsV2>(_focusedPermissionLinkshell);
-        var permissions = new UserPermissionsV2(primaryPermissions, linkshellPermissions);
-        var (success, online) = await CreateOrUpdateFriend(_focusedFriend.FriendCode, permissions).ConfigureAwait(false);
-        if (success)
+        var permissions = new UserPermissionsV2
         {
-            // Only set locally if success on server
-            _focusedFriend.Online = online;
-            _focusedFriend.PermissionsGrantedToFriend = permissions;
-        }
+            Primary = primaryPermissions,
+            Linkshell = linkshellPermissions,
+        };
+        
+        var (success, online) = await CreateOrUpdateFriend(_focusedFriend.FriendCode, permissions).ConfigureAwait(false);
+        if (success is false)
+            return;
+        
+        // Only set locally if success on server
+        _focusedFriend.Online = online;
+        _focusedFriend.PermissionsGrantedToFriend = permissions;
     }
 
     private async Task<(bool, bool)> CreateOrUpdateFriend(string friendCode, UserPermissionsV2? permissions = null)

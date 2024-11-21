@@ -46,6 +46,9 @@ public class ClientDataManager
         FriendsList.CreateFriend("Friend5", false);
 
         const PrimaryPermissionsV2 primaryPermissions = PrimaryPermissionsV2.Customization;
-        FriendsList.UpdateLocalPermissions("Friend2", new UserPermissionsV2(primaryPermissions));
+        FriendsList.UpdateLocalPermissions("Friend2", new UserPermissionsV2
+        {
+            Primary = primaryPermissions
+        });
     }
 }
