@@ -49,7 +49,7 @@ public sealed class Plugin : IDalamudPlugin
     /// the server is invoked
     /// </summary>
 #if DEBUG
-    public const bool DeveloperMode = false;
+    public const bool DeveloperMode = true;
 #else
     public const bool DeveloperMode = false;
 #endif

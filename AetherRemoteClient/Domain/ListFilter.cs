@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using Lumina.Excel.GeneratedSheets;
 
 namespace AetherRemoteClient.Domain;
 
