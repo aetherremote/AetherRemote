@@ -12,7 +12,7 @@ namespace AetherRemoteClient.Providers;
 /// <summary>
 /// Queues actions on the main XIV thread.
 /// </summary>
-public class ActionQueueProvider(Chat chat, HistoryLogManager historyLogManager)
+public class ActionQueueProvider(ChatProvider chatProvider, HistoryLogManager historyLogManager)
 {
     private const int MinProcessTime = 6000;
     private const int MaxProcessTime = 10000;
@@ -36,7 +36,7 @@ public class ActionQueueProvider(Chat chat, HistoryLogManager historyLogManager)
             return;
         }
 
-        chat.SendMessage(finalizedChatCommand);
+        chatProvider.SendMessage(finalizedChatCommand);
 
         var message = action.BuildLog();
         Plugin.Log.Information(message);

@@ -50,7 +50,7 @@ public sealed class Plugin : IDalamudPlugin
     /// the server is invoked
     /// </summary>
 #if DEBUG
-    public const bool DeveloperMode = true;
+    public const bool DeveloperMode = false;
 #else
     public const bool DeveloperMode = false;
 #endif
@@ -66,7 +66,7 @@ public sealed class Plugin : IDalamudPlugin
     public static readonly Version Version = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0, 0);
 
     // Instantiated
-    private Chat Chat { get; }
+    private ChatProvider ChatProvider { get; }
     private ClientDataManager ClientDataManager { get; }
     private HistoryLogManager HistoryLogManager { get; }
     private ModSwapManager ModSwapManager { get; }
@@ -96,17 +96,17 @@ public sealed class Plugin : IDalamudPlugin
         PenumbraAccessor = new PenumbraAccessor();
 
         // Instantiate
-        Chat = new Chat();
+        ChatProvider = new ChatProvider(); // Should be a provider
         ClientDataManager = new ClientDataManager();
-        HistoryLogManager = new HistoryLogManager();
+        HistoryLogManager = new HistoryLogManager(); // Should be a provider
         ModSwapManager = new ModSwapManager(PenumbraAccessor);
         SharedUserInterfaces = new SharedUserInterfaces();
 
         // Providers
-        ActionQueueProvider = new ActionQueueProvider(Chat, HistoryLogManager);
+        ActionQueueProvider = new ActionQueueProvider(ChatProvider, HistoryLogManager); // Should be a manager
         EmoteProvider = new EmoteProvider();
         WorldProvider = new WorldProvider();
-        NetworkProvider = new NetworkProvider(ClientDataManager, ModSwapManager);
+        NetworkProvider = new NetworkProvider(ClientDataManager, ModSwapManager); // Should extrapolate the methods out into the manager
         
         // Manager
         NetworkManager = new NetworkManager(ActionQueueProvider, ClientDataManager, EmoteProvider, GlamourerAccessor, HistoryLogManager, ModSwapManager, NetworkProvider, WorldProvider);
