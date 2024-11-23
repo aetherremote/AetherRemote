@@ -1,13 +1,13 @@
-using AetherRemoteCommon.Domain.Permissions.V2;
+using AetherRemoteCommon.Domain.Permissions;
 
 namespace AetherRemoteCommon.Domain.Network.Commands;
 
 public struct UpdateLocalPermissionsCommand
 {
     public string FriendCode { get; set; }
-    public UserPermissionsV2 PermissionsGrantedToUser { get; set; }
+    public UserPermissions PermissionsGrantedToUser { get; set; }
 
-    public UpdateLocalPermissionsCommand(string friendCode, UserPermissionsV2 permissionsGrantedToUser)
+    public UpdateLocalPermissionsCommand(string friendCode, UserPermissions permissionsGrantedToUser)
     {
         FriendCode = friendCode;
         PermissionsGrantedToUser = permissionsGrantedToUser;

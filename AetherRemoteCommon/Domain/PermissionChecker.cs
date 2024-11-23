@@ -1,42 +1,42 @@
 using AetherRemoteCommon.Domain.CommonChatMode;
-using AetherRemoteCommon.Domain.Permissions.V2;
+using AetherRemoteCommon.Domain.Permissions;
 
 namespace AetherRemoteCommon.Domain;
 
 public static class PermissionChecker
 {
-    public static bool HasValidSpeakPermissions(ChatMode chatMode, UserPermissionsV2 permissions, int linkshellNumber)
+    public static bool HasValidSpeakPermissions(ChatMode chatMode, UserPermissions permissions, int linkshellNumber)
     {
-        if (permissions.Primary.HasFlag(PrimaryPermissionsV2.Speak) is false)
+        if (permissions.Primary.HasFlag(PrimaryPermissions.Speak) is false)
             return false;
 
         return chatMode switch
         {
-            ChatMode.Say => permissions.Primary.HasFlag(PrimaryPermissionsV2.Say),
-            ChatMode.Yell => permissions.Primary.HasFlag(PrimaryPermissionsV2.Yell),
-            ChatMode.Shout => permissions.Primary.HasFlag(PrimaryPermissionsV2.Shout),
-            ChatMode.Tell => permissions.Primary.HasFlag(PrimaryPermissionsV2.Tell),
-            ChatMode.Party => permissions.Primary.HasFlag(PrimaryPermissionsV2.Party),
-            ChatMode.Alliance => permissions.Primary.HasFlag(PrimaryPermissionsV2.Alliance),
-            ChatMode.FreeCompany => permissions.Primary.HasFlag(PrimaryPermissionsV2.FreeCompany),
-            ChatMode.PvPTeam => permissions.Primary.HasFlag(PrimaryPermissionsV2.PvPTeam),
+            ChatMode.Say => permissions.Primary.HasFlag(PrimaryPermissions.Say),
+            ChatMode.Yell => permissions.Primary.HasFlag(PrimaryPermissions.Yell),
+            ChatMode.Shout => permissions.Primary.HasFlag(PrimaryPermissions.Shout),
+            ChatMode.Tell => permissions.Primary.HasFlag(PrimaryPermissions.Tell),
+            ChatMode.Party => permissions.Primary.HasFlag(PrimaryPermissions.Party),
+            ChatMode.Alliance => permissions.Primary.HasFlag(PrimaryPermissions.Alliance),
+            ChatMode.FreeCompany => permissions.Primary.HasFlag(PrimaryPermissions.FreeCompany),
+            ChatMode.PvPTeam => permissions.Primary.HasFlag(PrimaryPermissions.PvPTeam),
             ChatMode.Linkshell => HasValidLinkshellPermissions(linkshellNumber, permissions),
             ChatMode.CrossWorldLinkshell => HasValidCrossWorldLinkshellPermissions(linkshellNumber, permissions),
             _ => false
         };
     }
 
-    private static bool HasValidLinkshellPermissions(int linkshellNumber, UserPermissionsV2 permissions)
+    private static bool HasValidLinkshellPermissions(int linkshellNumber, UserPermissions permissions)
     {
         if (linkshellNumber is < 1 or > 8) return false;
-        var linkshellPermission = (int)LinkshellPermissionsV2.Ls1 << (linkshellNumber - 1);
-        return permissions.Linkshell.HasFlag((LinkshellPermissionsV2)linkshellPermission);
+        var linkshellPermission = (int)LinkshellPermissions.Ls1 << (linkshellNumber - 1);
+        return permissions.Linkshell.HasFlag((LinkshellPermissions)linkshellPermission);
     }
 
-    private static bool HasValidCrossWorldLinkshellPermissions(int linkshellNumber, UserPermissionsV2 permissions)
+    private static bool HasValidCrossWorldLinkshellPermissions(int linkshellNumber, UserPermissions permissions)
     {
         if (linkshellNumber is < 1 or > 8) return false;
-        var linkshellPermission = (int)LinkshellPermissionsV2.Cwl1 << (linkshellNumber - 1);
-        return permissions.Linkshell.HasFlag((LinkshellPermissionsV2)linkshellPermission);
+        var linkshellPermission = (int)LinkshellPermissions.Cwl1 << (linkshellNumber - 1);
+        return permissions.Linkshell.HasFlag((LinkshellPermissions)linkshellPermission);
     }
 }

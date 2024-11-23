@@ -1,5 +1,5 @@
 using AetherRemoteCommon.Domain;
-using AetherRemoteCommon.Domain.Permissions.V2;
+using AetherRemoteCommon.Domain.Permissions;
 
 namespace AetherRemoteClient.Domain;
 
@@ -10,8 +10,8 @@ public class Friend
 {
     public readonly string FriendCode;
     public bool Online;
-    public UserPermissionsV2 PermissionsGrantedToFriend;
-    public UserPermissionsV2 PermissionsGrantedByFriend;
+    public UserPermissions PermissionsGrantedToFriend;
+    public UserPermissions PermissionsGrantedByFriend;
     
     /// <summary>
     /// <inheritdoc cref="Friend"/>
@@ -19,13 +19,13 @@ public class Friend
     public Friend(
         string friendCode, 
         bool online = false, 
-        UserPermissionsV2? permissionsGrantedToFriend = null, 
-        UserPermissionsV2? permissionsGrantedByFriend = null)
+        UserPermissions? permissionsGrantedToFriend = null, 
+        UserPermissions? permissionsGrantedByFriend = null)
     {
         FriendCode = friendCode;
         Online = online;
-        PermissionsGrantedToFriend = permissionsGrantedToFriend ?? new UserPermissionsV2();
-        PermissionsGrantedByFriend = permissionsGrantedByFriend ?? new UserPermissionsV2();
+        PermissionsGrantedToFriend = permissionsGrantedToFriend ?? new UserPermissions();
+        PermissionsGrantedByFriend = permissionsGrantedByFriend ?? new UserPermissions();
     }
 
     public override string ToString()

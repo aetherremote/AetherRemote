@@ -11,7 +11,7 @@ using AetherRemoteClient.UI.Tabs.Modules;
 using AetherRemoteCommon;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.CommonGlamourerApplyType;
-using AetherRemoteCommon.Domain.Permissions.V2;
+using AetherRemoteCommon.Domain.Permissions;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using ImGuiNET;
@@ -57,9 +57,9 @@ public class TransformationView(
             
             var friendMissingPermission = 
                 glamourerApplyFlags.HasFlag(GlamourerApplyFlag.Customization) &&
-                target.Value.PermissionsGrantedByFriend.Primary.HasFlag(PrimaryPermissionsV2.Customization) is false || 
+                target.Value.PermissionsGrantedByFriend.Primary.HasFlag(PrimaryPermissions.Customization) is false || 
                 glamourerApplyFlags.HasFlag(GlamourerApplyFlag.Equipment) &&
-                target.Value.PermissionsGrantedByFriend.Primary.HasFlag(PrimaryPermissionsV2.Equipment) is false;
+                target.Value.PermissionsGrantedByFriend.Primary.HasFlag(PrimaryPermissions.Equipment) is false;
 
             if (friendMissingPermission)
                 friendsMissingPermissions.Add(target.Key);

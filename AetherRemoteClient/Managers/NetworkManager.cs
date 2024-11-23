@@ -12,7 +12,7 @@ using AetherRemoteCommon.Domain.CommonChatMode;
 using AetherRemoteCommon.Domain.CommonGlamourerApplyType;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Commands;
-using AetherRemoteCommon.Domain.Permissions.V2;
+using AetherRemoteCommon.Domain.Permissions;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace AetherRemoteClient.Managers;
@@ -100,7 +100,7 @@ public class NetworkManager : IDisposable
             return;
         }
 
-        if (friend.PermissionsGrantedToFriend.Primary.HasFlag(PrimaryPermissionsV2.Emote) is false)
+        if (friend.PermissionsGrantedToFriend.Primary.HasFlag(PrimaryPermissions.Emote) is false)
         {
             var message = HistoryLog.LackingPermissions("Emote", noteOrFriendCode);
             Plugin.Log.Warning(message);
@@ -175,7 +175,7 @@ public class NetworkManager : IDisposable
 
         // Check permissions for customize
         if (command.ApplyFlags.HasFlag(GlamourerApplyFlag.Customization) &&
-            friend.PermissionsGrantedToFriend.Primary.HasFlag(PrimaryPermissionsV2.Customization) is false)
+            friend.PermissionsGrantedToFriend.Primary.HasFlag(PrimaryPermissions.Customization) is false)
         {
             var message = HistoryLog.LackingPermissions("Transform - Customization", noteOrFriendCode);
             Plugin.Log.Information(message);
@@ -185,7 +185,7 @@ public class NetworkManager : IDisposable
 
         // Check permissions for equipment
         if (command.ApplyFlags.HasFlag(GlamourerApplyFlag.Equipment) &&
-            friend.PermissionsGrantedToFriend.Primary.HasFlag(PrimaryPermissionsV2.Equipment) is false)
+            friend.PermissionsGrantedToFriend.Primary.HasFlag(PrimaryPermissions.Equipment) is false)
         {
             var message = HistoryLog.LackingPermissions("Transform - Equipment", noteOrFriendCode);
             Plugin.Log.Information(message);
@@ -230,7 +230,7 @@ public class NetworkManager : IDisposable
         }
 
         // TODO: Confirm this is correct
-        if ((friend.PermissionsGrantedToFriend.Primary & (PrimaryPermissionsV2.Customization | PrimaryPermissionsV2.Equipment)) == 0)
+        if ((friend.PermissionsGrantedToFriend.Primary & (PrimaryPermissions.Customization | PrimaryPermissions.Equipment)) == 0)
         {
             var message = HistoryLog.LackingPermissions("Revert", noteOrFriendCode);
             Plugin.Log.Information(message);
@@ -272,7 +272,7 @@ public class NetworkManager : IDisposable
             return;
         }
 
-        if (friend.PermissionsGrantedToFriend.Primary.HasFlag(PrimaryPermissionsV2.BodySwap) is false)
+        if (friend.PermissionsGrantedToFriend.Primary.HasFlag(PrimaryPermissions.BodySwap) is false)
         {
             var message = HistoryLog.LackingPermissions("Body Swap", noteOrFriendCode);
             Plugin.Log.Information(message);
@@ -289,7 +289,7 @@ public class NetworkManager : IDisposable
         // CharacterName will only be present if we are expecting to swap mods
         if (command.CharacterName is not null)
         {
-            if (friend.PermissionsGrantedToFriend.Primary.HasFlag(PrimaryPermissionsV2.Mods) is false)
+            if (friend.PermissionsGrantedToFriend.Primary.HasFlag(PrimaryPermissions.Mods) is false)
             {
                 var message = HistoryLog.LackingPermissions("Mod Swap", noteOrFriendCode);
                 Plugin.Log.Information(message);
@@ -324,7 +324,7 @@ public class NetworkManager : IDisposable
             return new BodySwapQueryResponse();
         }
 
-        if (friend.PermissionsGrantedToFriend.Primary.HasFlag(PrimaryPermissionsV2.BodySwap) is false)
+        if (friend.PermissionsGrantedToFriend.Primary.HasFlag(PrimaryPermissions.BodySwap) is false)
         {
             var message = HistoryLog.LackingPermissions("Body Swap Query", noteOrFriendCode);
             Plugin.Log.Information(message);

@@ -10,7 +10,8 @@ using Dalamud.Interface.Colors;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
-using AetherRemoteCommon.Domain.Permissions.V2;
+using AetherRemoteCommon.Domain;
+using AetherRemoteCommon.Domain.Permissions;
 
 namespace AetherRemoteClient.UI.Tabs.Views;
 
@@ -23,7 +24,7 @@ public class ExtraView(
     NetworkProvider networkProvider) : IControlTabView
 {
     // Const
-    private const PrimaryPermissionsV2 BodySwapWithModsPermissions = PrimaryPermissionsV2.BodySwap | PrimaryPermissionsV2.Mods;
+    private const PrimaryPermissions BodySwapWithModsPermissions = PrimaryPermissions.BodySwap | PrimaryPermissions.Mods;
     
     // Instantiated
     private readonly ExtraManager _extraManager = new(clientDataManager, commandLockoutManager, glamourerAccessor, historyLogManager, modSwapManager, networkProvider);
@@ -57,7 +58,7 @@ public class ExtraView(
             }
             else
             {
-                if (target.Value.PermissionsGrantedByFriend.Primary.HasFlag(PrimaryPermissionsV2.BodySwap) is false)
+                if (target.Value.PermissionsGrantedByFriend.Primary.HasFlag(PrimaryPermissions.BodySwap) is false)
                     missingBodySwapPermissions.Add(target.Key);
             }
         }
@@ -89,7 +90,7 @@ public class ExtraView(
         var missingTwinningPermissions = new List<string>();
         foreach (var target in clientDataManager.TargetManager.Targets)
         {
-            if (target.Value.PermissionsGrantedByFriend.Primary.HasFlag(PrimaryPermissionsV2.Twinning) is false)
+            if (target.Value.PermissionsGrantedByFriend.Primary.HasFlag(PrimaryPermissions.Twinning) is false)
                 missingTwinningPermissions.Add(target.Key);
         }
 

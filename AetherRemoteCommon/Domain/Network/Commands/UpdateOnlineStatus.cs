@@ -1,4 +1,4 @@
-using AetherRemoteCommon.Domain.Permissions.V2;
+using AetherRemoteCommon.Domain.Permissions;
 
 namespace AetherRemoteCommon.Domain.Network.Commands;
 
@@ -6,9 +6,9 @@ public struct UpdateOnlineStatusCommand
 {
     public string FriendCode { get; set; }
     public bool Online { get; set; }
-    public UserPermissionsV2 Permissions { get; set; }
+    public UserPermissions Permissions { get; set; }
 
-    public UpdateOnlineStatusCommand(string friendCode, bool online, UserPermissionsV2 permissions)
+    public UpdateOnlineStatusCommand(string friendCode, bool online, UserPermissions permissions)
     {
         FriendCode = friendCode;
         Online = online;

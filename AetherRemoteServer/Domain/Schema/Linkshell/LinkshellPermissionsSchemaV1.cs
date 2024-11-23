@@ -1,7 +1,7 @@
-namespace AetherRemoteCommon.Domain.Permissions.V2;
+namespace AetherRemoteServer.Domain.Schema.Linkshell;
 
 [Flags]
-public enum LinkshellPermissionsV2
+public enum LinkshellPermissionsSchemaV1
 {
     // No Permissions
     None = 0,

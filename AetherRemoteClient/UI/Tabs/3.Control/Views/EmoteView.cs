@@ -7,7 +7,8 @@ using AetherRemoteClient.Domain.UI;
 using AetherRemoteClient.Providers;
 using AetherRemoteClient.UI.Tabs.Managers;
 using AetherRemoteClient.UI.Tabs.Modules;
-using AetherRemoteCommon.Domain.Permissions.V2;
+using AetherRemoteCommon.Domain;
+using AetherRemoteCommon.Domain.Permissions;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using ImGuiNET;
@@ -42,7 +43,7 @@ public class EmoteView(
         var friendsMissingPermissions = new List<string>();
         foreach (var target in clientDataManager.TargetManager.Targets)
         {
-            if (target.Value.PermissionsGrantedByFriend.Primary.HasFlag(PrimaryPermissionsV2.Emote) is false)
+            if (target.Value.PermissionsGrantedByFriend.Primary.HasFlag(PrimaryPermissions.Emote) is false)
                 friendsMissingPermissions.Add(target.Key);
         }
 

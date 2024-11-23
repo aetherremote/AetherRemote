@@ -1,5 +1,4 @@
-using System.Text.Json;
-using AetherRemoteCommon.Domain.Permissions.V2;
+using AetherRemoteCommon.Domain.Permissions;
 using AetherRemoteServer.Domain;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.Caching.Memory;
@@ -13,20 +12,20 @@ public class DatabaseService : IDisposable
 {
     // Tables
     private const string ValidUsersTable = "ValidUsersTable";
-   // private const string PermissionsTable = "PermissionsTable";
-    private const string PermissionsTableV2 = "PermissionsTableV2";
+    private const string PermissionsTable = "PermissionsTable";
 
     // Params
     private const string SecretParam = "@Secret";
     private const string FriendCodeParam = "@FriendCode";
-    private const string TargetFriendCodeParam = "@TargetFriendCode";
-    private const string PermissionsParam = "@Permissions";
     private const string IsAdminParam = "@IsAdmin";
-    private const string IdentifierParam = "@Identifier";
+    private const string TargetFriendCodeParam = "@TargetFriendCode";
     private const string VersionParam = "@Version";
+    private const string PrimaryPermissionsParam = "@PrimaryPermissions";
+    private const string LinkshellPermissionsParam = "@LinkshellPermissions";
+    private const string IdentifierParam = "@Identifier";
 
     // Schema
-    public const int CurrentPermissionConfigurationVersion = 2;
+    private const int CurrentPermissionConfigurationVersion = 2;
     
     // Injected
     private readonly ILogger<DatabaseService> _logger;
@@ -154,20 +153,19 @@ public class DatabaseService : IDisposable
     /// <summary>
     /// Creates or updates permissions for specified target
     /// </summary>
-    public async Task<(int, string)> CreateOrUpdatePermissions(string friendCode, string targetFriendCode, UserPermissionsV2 permissions)
+    public async Task<(int, string)> CreateOrUpdatePermissions(string friendCode, string targetFriendCode, UserPermissions permissions)
     {
-        var deserializedPermissions = JsonSerializer.Serialize(permissions);
-        
         await using var command = _db.CreateCommand();
         command.CommandText =
            $"""
-                INSERT OR REPLACE INTO {PermissionsTableV2} (UserFriendCode, TargetFriendCode, Version, Permissions)
-                    values ({FriendCodeParam}, {TargetFriendCodeParam}, {VersionParam}, {PermissionsParam})
+                INSERT OR REPLACE INTO {PermissionsTable} (UserFriendCode, TargetFriendCode, Version, PrimaryPermissions, LinkshellPermissions)
+                    values ({FriendCodeParam}, {TargetFriendCodeParam}, {VersionParam}, {PrimaryPermissionsParam}, {LinkshellPermissionsParam})
             """;
         command.Parameters.AddWithValue(FriendCodeParam, friendCode);
         command.Parameters.AddWithValue(TargetFriendCodeParam, targetFriendCode);
         command.Parameters.AddWithValue(VersionParam, CurrentPermissionConfigurationVersion);
-        command.Parameters.AddWithValue(PermissionsParam, deserializedPermissions);
+        command.Parameters.AddWithValue(PrimaryPermissionsParam, permissions.Primary);
+        command.Parameters.AddWithValue(LinkshellPermissionsParam, permissions.Linkshell);
 
         try
         {
@@ -186,16 +184,16 @@ public class DatabaseService : IDisposable
     /// <summary>
     /// Gets all permissions user has granted to others
     /// </summary>
-    public async Task<Dictionary<string, UserPermissionsV2>> GetPermissions(string friendCode)
+    public async Task<Dictionary<string, UserPermissions>> GetPermissions(string friendCode)
     {
-        if (_permissionsCache.TryGetValue(friendCode, out Dictionary<string, UserPermissionsV2>? cachedPermissions))
+        if (_permissionsCache.TryGetValue(friendCode, out Dictionary<string, UserPermissions>? cachedPermissions))
             return cachedPermissions ?? [];
 
         await using var command = _db.CreateCommand();
-        command.CommandText = $"SELECT TargetFriendCode, Version, Permissions FROM {PermissionsTableV2} WHERE UserFriendCode={FriendCodeParam}";
+        command.CommandText = $"SELECT TargetFriendCode, Version, PrimaryPermissions, LinkshellPermissions FROM {PermissionsTable} WHERE UserFriendCode={FriendCodeParam}";
         command.Parameters.AddWithValue(FriendCodeParam, friendCode);
 
-        var result = new Dictionary<string, UserPermissionsV2>();
+        var result = new Dictionary<string, UserPermissions>();
         try
         {
             await using var reader = await command.ExecuteReaderAsync();
@@ -203,19 +201,14 @@ public class DatabaseService : IDisposable
             {
                 var targetFriendCode = reader.GetString(0);
                 var version = reader.GetInt32(1);
-                var json = reader.GetString(2);
+                var primary = reader.GetInt32(2);
+                var linkshell = reader.GetInt32(3);
 
                 // If there are more than one version, make sure proper upgrading occurs
                 var permissions = version switch
                 {
-                    _ => JsonSerializer.Deserialize<UserPermissionsV2>(json),
+                    _ => new UserPermissions((PrimaryPermissions)primary, (LinkshellPermissions)linkshell)
                 };
-                
-                if (permissions is null)
-                {
-                    _logger.LogWarning("Json could not be parsed for {FriendCode}'s permissions for {TargetFriendCode}!", friendCode, targetFriendCode);
-                    permissions = new UserPermissionsV2();
-                }
                 
                 result.Add(targetFriendCode, permissions);
             }
@@ -236,7 +229,7 @@ public class DatabaseService : IDisposable
     public async Task<(int, string)> DeletePermissions(string friendCode, string targetFriend)
     {
         await using var command = _db.CreateCommand();
-        command.CommandText = $"DELETE FROM {PermissionsTableV2} WHERE UserFriendCode={FriendCodeParam} AND TargetFriendCode={TargetFriendCodeParam}";
+        command.CommandText = $"DELETE FROM {PermissionsTable} WHERE UserFriendCode={FriendCodeParam} AND TargetFriendCode={TargetFriendCodeParam}";
         command.Parameters.AddWithValue(FriendCodeParam, friendCode);
         command.Parameters.AddWithValue(TargetFriendCodeParam, targetFriend);
 
@@ -260,7 +253,7 @@ public class DatabaseService : IDisposable
     {
         // Must delete permissions table before valid users to preserve foreign key constraint
         using var permissionsDeleteCommand = _db.CreateCommand();
-        permissionsDeleteCommand.CommandText = $"DELETE FROM {PermissionsTableV2}";
+        permissionsDeleteCommand.CommandText = $"DELETE FROM {PermissionsTable}";
         permissionsDeleteCommand.ExecuteNonQuery();
 
         using var validUserDeleteCommand = _db.CreateCommand();
@@ -312,11 +305,12 @@ public class DatabaseService : IDisposable
         using var friendshipCommand = _db.CreateCommand();
         friendshipCommand.CommandText =
             $"""
-                 CREATE TABLE IF NOT EXISTS {PermissionsTableV2} (
+                 CREATE TABLE IF NOT EXISTS {PermissionsTable} (
                      UserFriendCode TEXT NOT NULL,
                      TargetFriendCode TEXT NOT NULL,
                      Version INTEGER NOT NULL,
-                     Permissions TEXT NOT NULL,
+                     PrimaryPermissions INTEGER NOT NULL,
+                     LinkshellPermissions INTEGER NOT NULL,
                      PRIMARY KEY (UserFriendCode, TargetFriendCode),
                      FOREIGN KEY (UserFriendCode) REFERENCES {ValidUsersTable}(FriendCode),
                      FOREIGN KEY (TargetFriendCode) REFERENCES {ValidUsersTable}(FriendCode)

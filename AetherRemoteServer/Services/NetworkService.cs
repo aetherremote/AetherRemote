@@ -3,7 +3,7 @@ using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.CommonGlamourerApplyType;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Commands;
-using AetherRemoteCommon.Domain.Permissions.V2;
+using AetherRemoteCommon.Domain.Permissions;
 using AetherRemoteServer.Hubs;
 using Microsoft.AspNetCore.SignalR;
 
@@ -47,7 +47,7 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
     public async Task<LoginDetailsResponse> LoginDetails(string friendCode, LoginDetailsRequest request)
     {
         var permissionsGrantedToOthers = await databaseService.GetPermissions(friendCode);
-        var permissionsGrantedByOthers = new Dictionary<string, UserPermissionsV2>();
+        var permissionsGrantedByOthers = new Dictionary<string, UserPermissions>();
         foreach(var kvp in permissionsGrantedToOthers)
         {
             if (PrimaryHub.ActiveUserConnections.ContainsKey(kvp.Key) is false)
@@ -134,7 +134,7 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
                 return new BodySwapResponse(false, null, null, "You are not friends with all your targets");
             }
 
-            if (permissionsGrantedToFriendCode.Primary.HasFlag(PrimaryPermissionsV2.BodySwap) is false)
+            if (permissionsGrantedToFriendCode.Primary.HasFlag(PrimaryPermissions.BodySwap) is false)
             {
                 await cancellationToken.CancelAsync();
                 return new BodySwapResponse(false, null, null, "You do not have valid permissions with all your friends");
@@ -236,7 +236,7 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
                 continue;
 
             // Has valid transform permissions
-            if (permissionsGrantedToFriendCode.Primary.HasFlag(PrimaryPermissionsV2.Emote) is false)
+            if (permissionsGrantedToFriendCode.Primary.HasFlag(PrimaryPermissions.Emote) is false)
                 continue;
 
             try
@@ -317,12 +317,12 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
 
             // TODO: No logging
             if (request.ApplyType.HasFlag(GlamourerApplyFlag.Customization) &&
-                permissionsGrantedToFriendCode.Primary.HasFlag(PrimaryPermissionsV2.Customization) is false)
+                permissionsGrantedToFriendCode.Primary.HasFlag(PrimaryPermissions.Customization) is false)
                 continue;
 
             // TODO: No logging
             if (request.ApplyType.HasFlag(GlamourerApplyFlag.Equipment) &&
-                permissionsGrantedToFriendCode.Primary.HasFlag(PrimaryPermissionsV2.Equipment) is false)
+                permissionsGrantedToFriendCode.Primary.HasFlag(PrimaryPermissions.Equipment) is false)
                 continue;
 
             try
@@ -357,8 +357,8 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
                 continue;
 
             // Needs at least one perms
-            if (permissionsGrantedToFriendCode.Primary.HasFlag(PrimaryPermissionsV2.Customization) is false &&
-                permissionsGrantedToFriendCode.Primary.HasFlag(PrimaryPermissionsV2.Equipment) is false)
+            if (permissionsGrantedToFriendCode.Primary.HasFlag(PrimaryPermissions.Customization) is false &&
+                permissionsGrantedToFriendCode.Primary.HasFlag(PrimaryPermissions.Equipment) is false)
                 continue;
 
             try
@@ -390,7 +390,7 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
             try
             {
                 // TODO: Should this error?
-                var request = new UpdateOnlineStatusCommand(friendCode, online, online ? kvp.Value : new UserPermissionsV2());
+                var request = new UpdateOnlineStatusCommand(friendCode, online, online ? kvp.Value : new UserPermissions());
                 _ = clients.Client(user.ConnectionId).SendAsync(Network.Commands.UpdateOnlineStatus, request);
             }
             catch (Exception ex)

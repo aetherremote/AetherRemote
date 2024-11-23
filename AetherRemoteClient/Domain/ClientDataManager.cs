@@ -1,4 +1,5 @@
-using AetherRemoteCommon.Domain.Permissions.V2;
+using AetherRemoteCommon.Domain;
+using AetherRemoteCommon.Domain.Permissions;
 
 namespace AetherRemoteClient.Domain;
 
@@ -45,11 +46,11 @@ public class ClientDataManager
         FriendsList.CreateFriend("Friend4", false);
         FriendsList.CreateFriend("Friend5", false);
 
-        const PrimaryPermissionsV2 primaryPermissions = PrimaryPermissionsV2.Customization |
-                                                        PrimaryPermissionsV2.BodySwap | 
-                                                        PrimaryPermissionsV2.Mods;
+        const PrimaryPermissions primaryPermissions = PrimaryPermissions.Customization |
+                                                      PrimaryPermissions.BodySwap | 
+                                                      PrimaryPermissions.Mods;
         
-        FriendsList.UpdateLocalPermissions("Friend2", new UserPermissionsV2
+        FriendsList.UpdateLocalPermissions("Friend2", new UserPermissions
         {
             Primary = primaryPermissions
         });

@@ -1,13 +1,13 @@
-using AetherRemoteCommon.Domain.Permissions.V2;
+using AetherRemoteCommon.Domain.Permissions;
 
 namespace AetherRemoteCommon.Domain.Network;
 
 public struct CreateOrUpdatePermissionsRequest
 {
     public string TargetCode { get; set; }
-    public UserPermissionsV2 Permissions { get; set; }
+    public UserPermissions Permissions { get; set; }
 
-    public CreateOrUpdatePermissionsRequest(string targetCode, UserPermissionsV2 permissions)
+    public CreateOrUpdatePermissionsRequest(string targetCode, UserPermissions permissions)
     {
         TargetCode = targetCode;
         Permissions = permissions;

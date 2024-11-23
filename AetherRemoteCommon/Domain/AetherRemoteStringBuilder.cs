@@ -1,5 +1,5 @@
 using System.Text;
-using AetherRemoteCommon.Domain.Permissions.V2;
+using AetherRemoteCommon.Domain.Permissions;
 
 namespace AetherRemoteCommon.Domain;
 
@@ -51,14 +51,14 @@ public class AetherRemoteStringBuilder
     public void AddVariable<T>(string name, T value) where T : Enum => AddVariable(name, value.ToString());
     
     /// <summary>
-    /// Extension for <see cref="UserPermissionsV2"/>
+    /// Extension for <see cref="UserPermissions"/>
     /// </summary>
-    public void AddVariable(string name, UserPermissionsV2 value) => AddVariable(name, value.ToString());
+    public void AddVariable(string name, UserPermissions value) => AddVariable(name, value.ToString());
 
     /// <summary>
-    /// Extension for <see cref="UserPermissionsV2"/>
+    /// Extension for <see cref="UserPermissions"/>
     /// </summary>
-    public void AddVariable(string name, Dictionary<string, UserPermissionsV2>? value)
+    public void AddVariable(string name, Dictionary<string, UserPermissions>? value)
     {
         if (value is null)
         {

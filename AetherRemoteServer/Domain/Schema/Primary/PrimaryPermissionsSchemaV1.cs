@@ -1,7 +1,7 @@
-namespace AetherRemoteCommon.Domain.Permissions.V2;
+namespace AetherRemoteServer.Domain.Schema.Primary;
 
 [Flags]
-public enum PrimaryPermissionsV2
+public enum PrimaryPermissionsSchemaV1
 {
     // No Permissions
     None = 0,
