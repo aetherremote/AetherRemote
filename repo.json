@@ -11,7 +11,7 @@
             "chat",
             "customization"
         ],
-        "DalamudApiLevel": 10,
+        "DalamudApiLevel": 11,
         "LoadPriority": 0,
         "IconUrl": "https://raw.githubusercontent.com/aetherremote/AetherRemote/main/Images/icon.jpg",
         "Punchline": "Control other player's speech, emotes, and appearance.",
