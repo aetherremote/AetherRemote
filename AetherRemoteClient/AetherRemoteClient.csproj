@@ -5,7 +5,7 @@
     <PropertyGroup>
         <Authors></Authors>
         <Company></Company>
-        <Version>1.1.0.1</Version>
+        <Version>1.1.0.2</Version>
         <Description></Description>
         <Copyright></Copyright>
         <PackageProjectUrl>https://github.com/aetherremote/AetherRemote</PackageProjectUrl>
@@ -27,7 +27,7 @@
         <PackageReference Include="Glamourer.Api" Version="2.2.0" />
         <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.10" />
         <PackageReference Include="Penumbra.Api" Version="5.3.0" />
-        <PackageReference Update="DalamudPackager" Version="11.0.0" />
+        <PackageReference Include="DalamudPackager" Version="11.0.0" />
     </ItemGroup>
 
     <ItemGroup>
