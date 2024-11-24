@@ -23,15 +23,15 @@ public class NetworkProvider : IDisposable
     
     // Injected
     private readonly ClientDataManager _clientDataManager;
-    private readonly ModSwapManager _modSwapManager;
+    private readonly ModManager _modManager;
 
     // Instantiated
     private readonly HubConnection _connection;
     
-    public NetworkProvider(ClientDataManager clientDataManager, ModSwapManager modSwapManager)
+    public NetworkProvider(ClientDataManager clientDataManager, ModManager modManager)
     {
         _clientDataManager = clientDataManager;
-        _modSwapManager = modSwapManager;
+        _modManager = modManager;
         _connection = new HubConnectionBuilder().WithUrl(HubUrl, options =>
         {
             options.AccessTokenProvider = async () => await GetToken().ConfigureAwait(false);
@@ -210,7 +210,7 @@ public class NetworkProvider : IDisposable
     // Fired when disconnecting from the server
     private async Task ServerConnectionClosed(Exception? arg)
     {
-        await _modSwapManager.RemoveAllCollections();
+        await _modManager.RemoveAllCollections();
         _clientDataManager.FriendCode = null;
         _clientDataManager.FriendsList.Clear();
         _clientDataManager.TargetManager.Clear();

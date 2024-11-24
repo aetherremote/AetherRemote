@@ -48,7 +48,7 @@ public class ControlTab : ITab
         EmoteProvider emoteProvider,
         GlamourerAccessor glamourerAccessor,
         HistoryLogManager historyLogManager,
-        ModSwapManager modSwapManager,
+        ModManager modManager,
         NetworkProvider networkProvider,
         WorldProvider worldProvider)
     {
@@ -58,7 +58,7 @@ public class ControlTab : ITab
         _speakView = new SpeakView(clientDataManager, _commandLockoutManager, historyLogManager, networkProvider, worldProvider);
         _emoteView = new EmoteView(clientDataManager, _commandLockoutManager, emoteProvider, historyLogManager, networkProvider);
         _transformationView = new TransformationView(clientDataManager, _commandLockoutManager, glamourerAccessor, historyLogManager, networkProvider);
-        _extraView = new ExtraView(clientDataManager, _commandLockoutManager, glamourerAccessor, historyLogManager, modSwapManager, networkProvider);
+        _extraView = new ExtraView(clientDataManager, _commandLockoutManager, glamourerAccessor, historyLogManager, modManager, networkProvider);
 
         clientDataManager.FriendsList.OnFriendDeleted += HandleFriendDeleted;
         clientDataManager.FriendsList.OnFriendsListCleared += HandleFriendsListCleared;

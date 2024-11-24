@@ -32,7 +32,7 @@ public class NetworkManager : IDisposable
     private readonly EmoteProvider _emoteProvider;
     private readonly GlamourerAccessor _glamourerAccessor;
     private readonly HistoryLogManager _historyLogManager;
-    private readonly ModSwapManager _modSwapManager;
+    private readonly ModManager _modManager;
     private readonly NetworkProvider _networkProvider;
     private readonly WorldProvider _worldProvider;
     
@@ -50,7 +50,7 @@ public class NetworkManager : IDisposable
         EmoteProvider emoteProvider,
         GlamourerAccessor glamourerAccessor,
         HistoryLogManager historyLogManager,
-        ModSwapManager modSwapManager,
+        ModManager modManager,
         NetworkProvider networkProvider,
         WorldProvider worldProvider)
     {
@@ -59,7 +59,7 @@ public class NetworkManager : IDisposable
         _emoteProvider = emoteProvider;
         _glamourerAccessor = glamourerAccessor;
         _historyLogManager = historyLogManager;
-        _modSwapManager = modSwapManager;
+        _modManager = modManager;
         _networkProvider = networkProvider;
         _worldProvider = worldProvider;
         
@@ -297,7 +297,7 @@ public class NetworkManager : IDisposable
                 return;
             }
 
-            await _modSwapManager.SwapMods(command.CharacterName);
+            await _modManager.GetAndSetTargetMods(command.CharacterName);
         }
 
         var result = await _glamourerAccessor.ApplyDesignAsync(command.CharacterData);

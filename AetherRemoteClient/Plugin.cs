@@ -69,7 +69,7 @@ public sealed class Plugin : IDalamudPlugin
     private ChatProvider ChatProvider { get; }
     private ClientDataManager ClientDataManager { get; }
     private HistoryLogManager HistoryLogManager { get; }
-    private ModSwapManager ModSwapManager { get; }
+    private ModManager ModManager { get; }
     private SharedUserInterfaces SharedUserInterfaces { get; init; }
     private NetworkManager NetworkManager { get; }
 
@@ -99,21 +99,21 @@ public sealed class Plugin : IDalamudPlugin
         ChatProvider = new ChatProvider(); // Should be a provider
         ClientDataManager = new ClientDataManager();
         HistoryLogManager = new HistoryLogManager(); // Should be a provider
-        ModSwapManager = new ModSwapManager(PenumbraAccessor);
+        ModManager = new ModManager(PenumbraAccessor, GlamourerAccessor);
         SharedUserInterfaces = new SharedUserInterfaces();
 
         // Providers
         ActionQueueProvider = new ActionQueueProvider(ChatProvider, HistoryLogManager); // Should be a manager
         EmoteProvider = new EmoteProvider();
         WorldProvider = new WorldProvider();
-        NetworkProvider = new NetworkProvider(ClientDataManager, ModSwapManager); // Should extrapolate the methods out into the manager
+        NetworkProvider = new NetworkProvider(ClientDataManager, ModManager); // Should extrapolate the methods out into the manager
         
         // Manager
-        NetworkManager = new NetworkManager(ActionQueueProvider, ClientDataManager, EmoteProvider, GlamourerAccessor, HistoryLogManager, ModSwapManager, NetworkProvider, WorldProvider);
+        NetworkManager = new NetworkManager(ActionQueueProvider, ClientDataManager, EmoteProvider, GlamourerAccessor, HistoryLogManager, ModManager, NetworkProvider, WorldProvider);
 
         // Windows
         WindowSystem = new WindowSystem("AetherRemote");
-        MainWindow = new MainWindow(ActionQueueProvider, ClientDataManager, EmoteProvider, GlamourerAccessor, HistoryLogManager, ModSwapManager, NetworkProvider, WorldProvider);
+        MainWindow = new MainWindow(ActionQueueProvider, ClientDataManager, EmoteProvider, GlamourerAccessor, HistoryLogManager, ModManager, NetworkProvider, WorldProvider);
         WindowSystem.AddWindow(MainWindow);
 
         CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
@@ -140,7 +140,8 @@ public sealed class Plugin : IDalamudPlugin
         WindowSystem.RemoveAllWindows();
         CommandManager.RemoveHandler(CommandName);
         
-        await ModSwapManager.RemoveAllCollections();
+        await ModManager.RemoveAllCollections();
+        ModManager.Dispose();
 
         PluginInterface.UiBuilder.Draw -= DrawUi;
         PluginInterface.UiBuilder.OpenMainUi -= OpenMainUi;

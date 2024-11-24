@@ -5,6 +5,9 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
+using AetherRemoteClient.Domain.Events;
+using FFXIVClientStructs.FFXIV.Client.Game.Object;
+using Glamourer.Api.Helpers;
 
 namespace AetherRemoteClient.Accessors.Glamourer;
 
@@ -23,16 +26,19 @@ public class GlamourerAccessor : IDisposable
     // https://github.com/Penumbra-Sync/client/blob/main/MareSynchronos/Interop/Ipc/IpcCallerGlamourer.cs#L31
     private const uint MareLockCode = 0x6D617265;
 
+    // Check Glamourer Api
+    private readonly Timer _periodicGlamourerTest;
+    
     // Glamourer Api
     private readonly ApiVersion _apiVersion;
     private readonly ApplyState _applyState;
     private readonly GetStateBase64 _getStateBase64;
     private readonly RevertState _revertState;
     private readonly RevertToAutomation _revertToAutomation;
-
-    private readonly Timer _periodicGlamourerTest;
-
-    // Glamourer Installed?
+    
+    // Glamourer Events
+    public event EventHandler<GlamourerStateChangedEventArgs>? LocalPlayerResetOrReapply;
+    private readonly EventSubscriber<IntPtr, StateChangeType> _stateChangedWithType;
 
     /// <summary>
     /// <inheritdoc cref="GlamourerAccessor"/>
@@ -50,7 +56,31 @@ public class GlamourerAccessor : IDisposable
         _periodicGlamourerTest.Elapsed += PeriodicCheckApi;
         _periodicGlamourerTest.Start();
 
+        _stateChangedWithType = StateChangedWithType.Subscriber(Plugin.PluginInterface);
+        _stateChangedWithType.Event += OnGlamourerStateChanged;
+        
         CheckApi();
+    }
+    
+    /// <summary>
+    /// Event fired when a glamourer state is changed. Will re-fire an event if the change is a Reset or Reapply and
+    /// it is caused by the player.
+    /// </summary>
+    private unsafe void OnGlamourerStateChanged(IntPtr objectIndexPointer, StateChangeType stateChangeType)
+    {
+        try
+        {
+            if (stateChangeType is not (StateChangeType.Reset or StateChangeType.Reapply))
+                return;
+            
+            var objectIndex = (GameObject*)objectIndexPointer;
+            if (objectIndex->ObjectIndex is 0)
+                LocalPlayerResetOrReapply?.Invoke(this, new GlamourerStateChangedEventArgs());
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Warning($"[Glamourer::StateChangedWithType] Exception while processing glamourer state change event: {e}");
+        }
     }
 
     /// <summary>
@@ -160,6 +190,9 @@ public class GlamourerAccessor : IDisposable
         _periodicGlamourerTest.Elapsed -= PeriodicCheckApi;
         _periodicGlamourerTest.Stop();
         _periodicGlamourerTest.Dispose();
+        
+        _stateChangedWithType.Event -= OnGlamourerStateChanged;
+        _stateChangedWithType.Disable();
 
         GC.SuppressFinalize(this);
     }

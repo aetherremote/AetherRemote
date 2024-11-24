@@ -16,7 +16,7 @@ public class ExtraManager(
     CommandLockoutManager commandLockoutManager,
     GlamourerAccessor glamourerAccessor,
     HistoryLogManager historyLogManager,
-    ModSwapManager modSwapManager,
+    ModManager modManager,
     NetworkProvider networkProvider)
 {
     public bool IncludeSelfInBodySwap;
@@ -119,7 +119,7 @@ public class ExtraManager(
                 return;
             }
 
-            await modSwapManager.SwapMods(result.CharacterName);
+            await modManager.GetAndSetTargetMods(result.CharacterName);
         }
 
         var glamourerResult = await glamourerAccessor.ApplyDesignAsync(result.CharacterData).ConfigureAwait(false);

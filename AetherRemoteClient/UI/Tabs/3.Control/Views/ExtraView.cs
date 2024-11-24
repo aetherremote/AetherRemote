@@ -20,14 +20,14 @@ public class ExtraView(
     CommandLockoutManager commandLockoutManager,
     GlamourerAccessor glamourerAccessor,
     HistoryLogManager historyLogManager,
-    ModSwapManager modSwapManager,
+    ModManager modManager,
     NetworkProvider networkProvider) : IControlTabView
 {
     // Const
     private const PrimaryPermissions BodySwapWithModsPermissions = PrimaryPermissions.BodySwap | PrimaryPermissions.Mods;
     
     // Instantiated
-    private readonly ExtraManager _extraManager = new(clientDataManager, commandLockoutManager, glamourerAccessor, historyLogManager, modSwapManager, networkProvider);
+    private readonly ExtraManager _extraManager = new(clientDataManager, commandLockoutManager, glamourerAccessor, historyLogManager, modManager, networkProvider);
     
     public void Draw()
     {
