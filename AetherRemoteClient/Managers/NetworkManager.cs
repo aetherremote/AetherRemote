@@ -70,6 +70,7 @@ public class NetworkManager : IDisposable
         _connectionSubscribers.Add(networkProvider.RegisterHandler<TransformCommand>(Network.Commands.Transform, HandleTransform));
         _connectionSubscribers.Add(networkProvider.RegisterHandler<RevertCommand>(Network.Commands.Revert, HandleRevert));
         _connectionSubscribers.Add(networkProvider.RegisterHandler<BodySwapCommand>(Network.Commands.BodySwap, HandleBodySwap));
+        _connectionSubscribers.Add(networkProvider.RegisterHandler<TwinningCommand>(Network.Commands.Twinning, HandleTwinning));
         _connectionSubscribers.Add(networkProvider.RegisterHandlerAsync<BodySwapQueryRequest, BodySwapQueryResponse>(Network.BodySwapQuery, HandleBodySwapQuery));
     }
     
@@ -215,6 +216,56 @@ public class NetworkManager : IDisposable
         }
     }
     
+    private async Task HandleTwinning(TwinningCommand command)
+    {
+        Plugin.Log.Verbose($"{command}");
+        
+        var noteOrFriendCode =  Plugin.Configuration.Notes.TryGetValue(command.SenderFriendCode, out var note) ? note : command.SenderFriendCode;
+        var friend = _clientDataManager.FriendsList.FindFriend(command.SenderFriendCode);
+        if (friend is null)
+        {
+            var message = HistoryLog.NotFriends("Twinning", noteOrFriendCode);
+            Plugin.Log.Information(message);
+            _historyLogManager.LogHistory(message);
+            return;
+        }
+
+        if (friend.PermissionsGrantedToFriend.Primary.HasFlag(PrimaryPermissions.Twinning) is false)
+        {
+            var message = HistoryLog.LackingPermissions("Twinning", noteOrFriendCode);
+            Plugin.Log.Information(message);
+            _historyLogManager.LogHistory(message);
+            return;
+        }
+        
+        if (GameObjectManager.LocalPlayerExists() is false)
+        {
+            Plugin.Log.Warning($"{noteOrFriendCode} attempted to twin you, but you don't have a body to swap");
+            return;
+        }
+
+        if (command.CharacterName is not null)
+        {
+            if (friend.PermissionsGrantedToFriend.Primary.HasFlag(PrimaryPermissions.Mods) is false)
+            {
+                var message = HistoryLog.LackingPermissions("Twinning - Mod Swap", noteOrFriendCode);
+                Plugin.Log.Information(message);
+                _historyLogManager.LogHistory(message);
+                return;
+            }
+
+            await _modManager.GetAndSetTargetMods(command.CharacterName);
+        }
+        
+        var result = await _glamourerAccessor.ApplyDesignAsync(command.CharacterData);
+        if (result)
+        {
+            var message = $"{noteOrFriendCode} twinned you";
+            Plugin.Log.Information(message);
+            _historyLogManager.LogHistoryGlamourer(message, command.CharacterData);
+        }
+    }
+    
     private void HandleRevert(RevertCommand command)
     {
         Plugin.Log.Verbose($"{command}");
@@ -291,7 +342,7 @@ public class NetworkManager : IDisposable
         {
             if (friend.PermissionsGrantedToFriend.Primary.HasFlag(PrimaryPermissions.Mods) is false)
             {
-                var message = HistoryLog.LackingPermissions("Mod Swap", noteOrFriendCode);
+                var message = HistoryLog.LackingPermissions("Body Swap - Mod Swap", noteOrFriendCode);
                 Plugin.Log.Information(message);
                 _historyLogManager.LogHistory(message);
                 return;

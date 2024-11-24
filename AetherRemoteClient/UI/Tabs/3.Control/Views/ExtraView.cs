@@ -25,6 +25,7 @@ public class ExtraView(
 {
     // Const
     private const PrimaryPermissions BodySwapWithModsPermissions = PrimaryPermissions.BodySwap | PrimaryPermissions.Mods;
+    private const PrimaryPermissions TwinningWithModsPermissions = PrimaryPermissions.Twinning | PrimaryPermissions.Mods;
     
     // Instantiated
     private readonly ExtraManager _extraManager = new(clientDataManager, commandLockoutManager, glamourerAccessor, historyLogManager, modManager, networkProvider);
@@ -90,8 +91,16 @@ public class ExtraView(
         var missingTwinningPermissions = new List<string>();
         foreach (var target in clientDataManager.TargetManager.Targets)
         {
-            if (target.Value.PermissionsGrantedByFriend.Primary.HasFlag(PrimaryPermissions.Twinning) is false)
-                missingTwinningPermissions.Add(target.Key);
+            if (_extraManager.IncludeModSwapWithTwinning)
+            {
+                if ((target.Value.PermissionsGrantedByFriend.Primary & TwinningWithModsPermissions) != TwinningWithModsPermissions)
+                    missingTwinningPermissions.Add(target.Key);
+            }
+            else
+            {
+                if (target.Value.PermissionsGrantedByFriend.Primary.HasFlag(PrimaryPermissions.Twinning) is false)
+                    missingTwinningPermissions.Add(target.Key);
+            }
         }
 
         if (missingTwinningPermissions.Count > 0)
@@ -100,10 +109,7 @@ public class ExtraView(
             SharedUserInterfaces.PermissionsWarning(missingTwinningPermissions);
         }
         
-        ImGui.BeginDisabled();
         ImGui.Checkbox("Swap Mods##TwinningSwapMods", ref _extraManager.IncludeModSwapWithTwinning);
-        ImGui.EndDisabled();
-        
         SharedUserInterfaces.Tooltip(["Should the mods of the people being targeted be swapped as well?", "WARNING - HIGHLY EXPERIMENTAL"]);
     }
 

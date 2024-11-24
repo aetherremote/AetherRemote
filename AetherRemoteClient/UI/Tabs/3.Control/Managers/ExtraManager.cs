@@ -40,12 +40,23 @@ public class ExtraManager(
             return;
         }
 
+        string? characterName = null;
+        if (IncludeModSwapWithTwinning)
+        {
+            characterName = GameObjectManager.GetLocalPlayerName();
+            if (characterName is null)
+            {
+                Plugin.Log.Warning("[Twinning] Failure, no local body");
+                return;
+            }
+        }
+
         commandLockoutManager.Lock();
 
         var targets = clientDataManager.TargetManager.Targets.Keys.ToList();
-        var request = new TransformRequest(targets, characterData, GlamourerApplyFlag.All);
-        var result = await networkProvider.InvokeCommand<TransformRequest, TransformResponse>(Network.Commands.Transform, request).ConfigureAwait(false);
-        if (result.Success == false)
+        var request = new TwinningRequest(targets, characterData, characterName);
+        var result = await networkProvider.InvokeCommand<TwinningRequest, TwinningResponse>(Network.Commands.Twinning, request).ConfigureAwait(false);
+        if (result.Success is false)
             Plugin.Log.Warning($"[Twinning] Failure, {result.Message}");
 
         // TODO Logging

@@ -14,6 +14,7 @@ public static class Network
         public const string UpdateOnlineStatus = "UpdateOnlineStatusCommand";
         public const string UpdateLocalPermissions = "UpdateLocalPermissionsCommand";
         public const string Revert = "RevertCommand";
+        public const string Twinning = "TwinningCommand";
     }
 
     public static class User

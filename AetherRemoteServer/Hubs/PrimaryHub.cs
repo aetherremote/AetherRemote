@@ -99,6 +99,13 @@ public class PrimaryHub(NetworkService network, ILogger<PrimaryHub> logger) : Hu
         logger.LogInformation("{Request}", request);
         return await network.Transform(FriendCode, request, Clients);
     }
+    
+    [HubMethodName(Network.Commands.Twinning)]
+    public async Task<TwinningResponse> Twinning(TwinningRequest request)
+    {
+        logger.LogInformation("{Request}", request);
+        return await network.Twinning(FriendCode, request, Clients);
+    }
 
     [HubMethodName(Network.Commands.Revert)]
     public async Task<RevertResponse> Revert(RevertRequest request)

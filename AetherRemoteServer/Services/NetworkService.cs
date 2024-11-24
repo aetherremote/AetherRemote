@@ -340,6 +340,44 @@ public class NetworkService(DatabaseService databaseService, ILogger<NetworkServ
         return new TransformResponse(true);
     }
 
+    public async Task<TwinningResponse> Twinning(string friendCode, TwinningRequest request, IHubCallerClients clients)
+    {
+        if (IsUserSpamming(friendCode))
+            return new TwinningResponse(false, "Spamming! Slow down!");
+
+        foreach (var targetFriendCode in request.TargetFriendCodes)
+        {
+            // Target not online
+            if (PrimaryHub.ActiveUserConnections.TryGetValue(targetFriendCode, out var targetUser) is false)
+                continue;
+
+            // Not friends with
+            var targetPermissions = await databaseService.GetPermissions(targetFriendCode);
+            if (targetPermissions.TryGetValue(friendCode, out var permissionsGrantedToFriendCode) is false)
+                continue;
+            
+            // Lacking Permissions
+            if (permissionsGrantedToFriendCode.Primary.HasFlag(PrimaryPermissions.Twinning) is false)
+                continue;
+            if (request.CharacterName is not null &&
+                permissionsGrantedToFriendCode.Primary.HasFlag(PrimaryPermissions.Mods) is false)
+                continue;
+            
+            try
+            {
+                var command = new TwinningCommand(friendCode, request.CharacterData, request.CharacterName);
+                _ = clients.Client(targetUser.ConnectionId).SendAsync(Network.Commands.Twinning, command);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Exception sending revert command to {targetFriendCode}! {ex.Message}");
+            }
+        }
+        
+        PrimaryHub.ActiveUserConnections[friendCode].LastAction = DateTime.Now;
+        return new TwinningResponse(true);
+    }
+
     public async Task<RevertResponse> Revert(string friendCode, RevertRequest request, IHubCallerClients clients)
     {
         if (IsUserSpamming(friendCode))
