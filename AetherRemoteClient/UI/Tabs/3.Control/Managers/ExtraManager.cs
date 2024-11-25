@@ -15,7 +15,7 @@ public class ExtraManager(
     ClientDataManager clientDataManager,
     CommandLockoutManager commandLockoutManager,
     GlamourerAccessor glamourerAccessor,
-    HistoryLogManager historyLogManager,
+    HistoryLogProvider historyLogProvider,
     ModManager modManager,
     NetworkProvider networkProvider)
 {

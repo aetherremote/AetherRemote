@@ -30,11 +30,11 @@ public class MainWindow : Window, IDisposable
     private readonly SettingsTab _settingsTab;
 
     public MainWindow(
-        ActionQueueProvider actionQueueProvider,
+        ActionQueueManager actionQueueManager,
         ClientDataManager clientDataManager,
         EmoteProvider emoteProvider,
         GlamourerAccessor glamourerAccessor,
-        HistoryLogManager historyLogManager,
+        HistoryLogProvider historyLogProvider,
         ModManager modManager,
         NetworkProvider networkProvider,
         WorldProvider worldProvider
@@ -50,9 +50,9 @@ public class MainWindow : Window, IDisposable
 
         _dashboardTab = new DashboardTab(clientDataManager, networkProvider);
         _friendsTab = new FriendsTab(clientDataManager, networkProvider);
-        _controlTab = new ControlTab(clientDataManager, emoteProvider, glamourerAccessor, historyLogManager, modManager, networkProvider, worldProvider);
-        _historyTab = new HistoryTab(historyLogManager);
-        _settingsTab = new SettingsTab(actionQueueProvider, clientDataManager);
+        _controlTab = new ControlTab(clientDataManager, emoteProvider, glamourerAccessor, historyLogProvider, modManager, networkProvider, worldProvider);
+        _historyTab = new HistoryTab(historyLogProvider);
+        _settingsTab = new SettingsTab(actionQueueManager, clientDataManager);
     }
 
     public override void Draw()

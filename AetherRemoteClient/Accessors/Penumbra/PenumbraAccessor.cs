@@ -1,10 +1,10 @@
-using Penumbra.Api.Enums;
-using Penumbra.Api.IpcSubscribers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
+using Penumbra.Api.Enums;
+using Penumbra.Api.IpcSubscribers;
 
 namespace AetherRemoteClient.Accessors.Penumbra;
 
@@ -96,7 +96,7 @@ public class PenumbraAccessor : IDisposable
                 }
             });
         }
-            
+
         Plugin.Log.Warning("[Penumbra::CreateTemporaryCollection] Penumbra is not installed!");
         return Guid.Empty;
     }
@@ -123,7 +123,7 @@ public class PenumbraAccessor : IDisposable
                 }
             });
         }
-            
+
         Plugin.Log.Warning("[Penumbra::CreateTemporaryCollection] Penumbra is not installed!");
         return false;
     }
@@ -150,7 +150,7 @@ public class PenumbraAccessor : IDisposable
                 }
             });
         }
-           
+
         Plugin.Log.Warning("[Penumbra::GetMetaManipulations] Penumbra is not installed!");
         return string.Empty;
     }
@@ -158,7 +158,8 @@ public class PenumbraAccessor : IDisposable
     /// <summary>
     /// <inheritdoc cref="AddTemporaryMod"/>
     /// </summary>
-    public async Task<bool> CallAddTemporaryMod(string tag, Guid collectionGuid, Dictionary<string, string> modifiedPaths, string meta, int priority = 0)
+    public async Task<bool> CallAddTemporaryMod(string tag, Guid collectionGuid,
+        Dictionary<string, string> modifiedPaths, string meta, int priority = 0)
     {
         if (_penumbraUsable)
         {
@@ -167,7 +168,8 @@ public class PenumbraAccessor : IDisposable
                 try
                 {
                     var result = _addTemporaryMod.Invoke(tag, collectionGuid, modifiedPaths, meta, priority);
-                    Plugin.Log.Verbose($"[Penumbra::AddTemporaryMod] {result} for {tag} - {collectionGuid} - {priority}");
+                    Plugin.Log.Verbose(
+                        $"[Penumbra::AddTemporaryMod] {result} for {tag} - {collectionGuid} - {priority}");
                     return result == PenumbraApiEc.Success;
                 }
                 catch (Exception ex)
@@ -177,7 +179,7 @@ public class PenumbraAccessor : IDisposable
                 }
             });
         }
-            
+
         Plugin.Log.Warning("[Penumbra::AddTemporaryMod] Penumbra is not installed!");
         return false;
     }
@@ -212,7 +214,8 @@ public class PenumbraAccessor : IDisposable
     /// <summary>
     /// <inheritdoc cref="AssignTemporaryCollection"/>
     /// </summary>
-    public async Task<bool> CallAssignTemporaryCollection(Guid collectionGuid, int actorIndex = 0, bool forceAssignment = true)
+    public async Task<bool> CallAssignTemporaryCollection(Guid collectionGuid, int actorIndex = 0,
+        bool forceAssignment = true)
     {
         if (_penumbraUsable)
         {
@@ -221,7 +224,8 @@ public class PenumbraAccessor : IDisposable
                 try
                 {
                     var result = _assignTemporaryCollection.Invoke(collectionGuid, actorIndex, forceAssignment);
-                    Plugin.Log.Verbose($"[Penumbra::AssignTemporaryCollection] {result} for {collectionGuid} - {actorIndex}");
+                    Plugin.Log.Verbose(
+                        $"[Penumbra::AssignTemporaryCollection] {result} for {collectionGuid} - {actorIndex}");
                     return result == PenumbraApiEc.Success;
                 }
                 catch (Exception ex)
@@ -231,19 +235,21 @@ public class PenumbraAccessor : IDisposable
                 }
             });
         }
-           
+
         Plugin.Log.Warning("[Penumbra::AssignTemporaryCollection] Penumbra is not installed!");
         return false;
     }
 
     private void PeriodicCheckApi(object? sender, ElapsedEventArgs e) => CheckApi();
+
     private void CheckApi()
     {
         try
         {
             // Test if plugin installed
-            var penumbraPlugin = Plugin.PluginInterface.InstalledPlugins.FirstOrDefault(plugin => string.Equals(plugin.InternalName, "Penumbra", StringComparison.OrdinalIgnoreCase));
-            if (penumbraPlugin == null)
+            var penumbraPlugin = Plugin.PluginInterface.InstalledPlugins.FirstOrDefault(plugin =>
+                string.Equals(plugin.InternalName, "Penumbra", StringComparison.OrdinalIgnoreCase));
+            if (penumbraPlugin is null)
             {
                 _penumbraUsable = false;
                 return;

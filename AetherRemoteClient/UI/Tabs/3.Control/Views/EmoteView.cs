@@ -19,14 +19,14 @@ public class EmoteView(
     ClientDataManager clientDataManager,
     CommandLockoutManager commandLockoutManager,
     EmoteProvider emoteProvider,
-    HistoryLogManager historyLogManager,
+    HistoryLogProvider historyLogProvider,
     NetworkProvider networkProvider) : IControlTabView
 {
     // Const
     private Vector2 _emotePadding = new(4, 4);
     
     // Instantiated
-    private readonly EmoteManager _emoteManager = new(clientDataManager, commandLockoutManager, emoteProvider, historyLogManager, networkProvider);
+    private readonly EmoteManager _emoteManager = new(clientDataManager, commandLockoutManager, emoteProvider, historyLogProvider, networkProvider);
     private readonly ListFilter<string> _emoteSearchFilter = new(emoteProvider.Emotes, FilterEmote);
     
     public void Draw()

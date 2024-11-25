@@ -8,10 +8,10 @@ using System.Numerics;
 
 namespace AetherRemoteClient.UI.Tabs.History;
 
-public class HistoryTab(HistoryLogManager historyLogManager) : ITab
+public class HistoryTab(HistoryLogProvider historyLogProvider) : ITab
 {
     // Instantiated
-    private readonly ListFilter<AbstractHistoryLog> _historyLogSearchFilter = new(historyLogManager.History, FilterHistoryLogs);
+    private readonly ListFilter<AbstractHistoryLog> _historyLogSearchFilter = new(historyLogProvider.History, FilterHistoryLogs);
     private string _searchTerm = string.Empty;
 
     public void Draw()
@@ -26,7 +26,7 @@ public class HistoryTab(HistoryLogManager historyLogManager) : ITab
 
             ImGui.SameLine();
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.TrashAlt))
-                historyLogManager.Clear();
+                historyLogProvider.Clear();
 
             SharedUserInterfaces.Tooltip("Clear all the current logs.");
 

@@ -1,4 +1,7 @@
-using AetherRemoteCommon.Domain;
+using System;
+using AetherRemoteClient.Providers;
+using AetherRemoteCommon;
+using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Permissions;
 
 namespace AetherRemoteClient.Domain;
@@ -6,8 +9,11 @@ namespace AetherRemoteClient.Domain;
 /// <summary>
 /// Responsible for managing all local client data such as friend code, friend list, etc.
 /// </summary>
-public class ClientDataManager
+public class ClientDataManager : IDisposable
 {
+    // Injected
+    private readonly NetworkProvider _networkProvider;
+
     /// <summary>
     /// Local Client's Friend Code
     /// </summary>
@@ -31,14 +37,18 @@ public class ClientDataManager
     /// <summary>
     /// <inheritdoc cref="ClientDataManager"/>
     /// </summary>
-    public ClientDataManager()
+    public ClientDataManager(NetworkProvider networkProvider)
     {
         FriendCode = null;
         SafeMode = false;
         FriendsList = new FriendsList();
         TargetManager = new TargetManager();
 
-        if (Plugin.DeveloperMode == false) return;
+        _networkProvider = networkProvider;
+        _networkProvider.ServerConnected += OnServerConnected;
+        _networkProvider.ServerDisconnected += OnServerDisconnected;
+
+        if (Plugin.DeveloperMode is false) return;
         FriendCode = "Dev Mode";
         FriendsList.CreateFriend("Friend1", false);
         FriendsList.CreateFriend("Friend2", true);
@@ -47,12 +57,51 @@ public class ClientDataManager
         FriendsList.CreateFriend("Friend5", false);
 
         const PrimaryPermissions primaryPermissions = PrimaryPermissions.Customization |
-                                                      PrimaryPermissions.BodySwap | 
+                                                      PrimaryPermissions.BodySwap |
                                                       PrimaryPermissions.Mods;
-        
+
         FriendsList.UpdateLocalPermissions("Friend2", new UserPermissions
         {
             Primary = primaryPermissions
         });
+    }
+
+    private async void OnServerConnected(object? sender, EventArgs e)
+    {
+        try
+        {
+            var request = new LoginDetailsRequest();
+            var response =
+                await _networkProvider.InvokeCommand<LoginDetailsRequest, LoginDetailsResponse>(Network.LoginDetails,
+                    request);
+
+            if (response.Success is false)
+            {
+                Plugin.Log.Warning($"Unable to retrieve login details: {response.Message}");
+                return;
+            }
+
+            FriendCode = response.FriendCode;
+            FriendsList.ConvertServerPermissionsToLocal(response.PermissionsGrantedToOthers,
+                response.PermissionsGrantedByOthers);
+        }
+        catch (Exception exception)
+        {
+            Plugin.Log.Error($"[ClientDataManager] Exception on getting login details: {exception}");
+        }
+    }
+
+    private void OnServerDisconnected(object? sender, EventArgs e)
+    {
+        FriendCode = null;
+        FriendsList.Clear();
+        TargetManager.Clear();
+    }
+
+    public void Dispose()
+    {
+        _networkProvider.ServerConnected -= OnServerConnected;
+        _networkProvider.ServerDisconnected -= OnServerDisconnected;
+        GC.SuppressFinalize(this);
     }
 }

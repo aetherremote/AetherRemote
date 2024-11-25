@@ -3,13 +3,14 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
-using AetherRemoteClient.Domain;
-using AetherRemoteCommon;
 using AetherRemoteCommon.Domain.Network;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace AetherRemoteClient.Providers;
 
+/// <summary>
+/// Provides a connection and methods to invoke hub methods on the SignalR server
+/// </summary>
 public class NetworkProvider : IDisposable
 {
     
@@ -21,17 +22,29 @@ public class NetworkProvider : IDisposable
     private const string PostUrl = "https://foxitsvc.com:5006/api/auth/login";
 #endif
     
-    // Injected
-    private readonly ClientDataManager _clientDataManager;
-    private readonly ModManager _modManager;
-
     // Instantiated
     private readonly HubConnection _connection;
+
+    /// <summary>
+    /// Event fired when the connection to the server is established
+    /// </summary>
+    public event EventHandler? ServerConnected;
     
-    public NetworkProvider(ClientDataManager clientDataManager, ModManager modManager)
+    /// <summary>
+    /// Event fired when the connection to the server is lost
+    /// </summary>
+    public event EventHandler? ServerDisconnected;
+    
+    /// <summary>
+    /// Check if we are connected to the server
+    /// </summary>
+    public bool Connected => _connection.State is HubConnectionState.Connected;
+    
+    /// <summary>
+    /// <inheritdoc cref="NetworkProvider"/>
+    /// </summary>
+    public NetworkProvider()
     {
-        _clientDataManager = clientDataManager;
-        _modManager = modManager;
         _connection = new HubConnectionBuilder().WithUrl(HubUrl, options =>
         {
             options.AccessTokenProvider = async () => await GetToken().ConfigureAwait(false);
@@ -98,20 +111,9 @@ public class NetworkProvider : IDisposable
 
         // Server State Events
         _connection.Closed += ServerConnectionClosed;
-
-        // Retrieve user detail
-        await RequestUserDetails();
+        ServerConnected?.Invoke(this, EventArgs.Empty);
     }
-
-    /// <summary>
-    /// Disconnects from the server
-    /// </summary>
-    public async Task Disconnect()
-    {
-        await _connection.StopAsync();
-        _connection.Closed -= ServerConnectionClosed;
-    }
-
+    
     /// <summary>
     /// Registers a handler for signalr methods being invoked from the server
     /// </summary>
@@ -119,7 +121,7 @@ public class NetworkProvider : IDisposable
     {
         return _connection.On(methodName, handler);
     }
-
+    
     /// <summary>
     /// <inheritdoc cref="RegisterHandler{T}(string, Action{T})"/>
     /// </summary>
@@ -135,31 +137,20 @@ public class NetworkProvider : IDisposable
     {
         return _connection.On(methodName, handler);
     }
-    
+
     /// <summary>
-    /// Check if we are connected to the server
+    /// Disconnects from the server
     /// </summary>
-    public bool Connected => _connection.State is HubConnectionState.Connected;
+    public async Task Disconnect()
+    {
+        await _connection.StopAsync();
+        _connection.Closed -= ServerConnectionClosed;
+    }
     
     /// <summary>
     /// Get the connection status to the server
     /// </summary>
     public HubConnectionState State => _connection.State;
-
-    private async Task RequestUserDetails()
-    {
-        var request = new LoginDetailsRequest();
-        var response = await InvokeCommand<LoginDetailsRequest, LoginDetailsResponse>(Network.LoginDetails, request);
-        if (response.Success is false)
-        {
-            Plugin.Log.Warning($"Unable to retrieve login details: {response.Message}");
-            return;
-        }
-
-        _clientDataManager.FriendCode = response.FriendCode;
-        _clientDataManager.FriendsList.ConvertServerPermissionsToLocal(response.PermissionsGrantedToOthers,
-            response.PermissionsGrantedByOthers);
-    }
     
     /// <summary>
     /// Sends a POST to the login server to get a JWT Token
@@ -208,12 +199,10 @@ public class NetworkProvider : IDisposable
     }
     
     // Fired when disconnecting from the server
-    private async Task ServerConnectionClosed(Exception? arg)
+    private Task ServerConnectionClosed(Exception? arg)
     {
-        await _modManager.RemoveAllCollections();
-        _clientDataManager.FriendCode = null;
-        _clientDataManager.FriendsList.Clear();
-        _clientDataManager.TargetManager.Clear();
+        ServerDisconnected?.Invoke(this, EventArgs.Empty);
+        return Task.CompletedTask;
     }
 
     /// <summary>

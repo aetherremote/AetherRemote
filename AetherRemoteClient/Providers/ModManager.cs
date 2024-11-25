@@ -22,20 +22,18 @@ public class ModManager : IDisposable
     // Injected
     private readonly PenumbraAccessor _penumbraAccessor;
     private readonly GlamourerAccessor _glamourerAccessor;
+    private readonly NetworkProvider _networkProvider;
     
-    public ModManager(PenumbraAccessor penumbraAccessor, GlamourerAccessor glamourerAccessor)
+    public ModManager(PenumbraAccessor penumbraAccessor, GlamourerAccessor glamourerAccessor, NetworkProvider networkProvider)
     {
         _penumbraAccessor = penumbraAccessor;
         _glamourerAccessor = glamourerAccessor;
-
+        _networkProvider = networkProvider;
+        
         _glamourerAccessor.LocalPlayerResetOrReapply += OnLocalPlayerResetOrReapply;
+        _networkProvider.ServerDisconnected += OnServerDisconnect;
     }
-
-    /// <summary>
-    /// Check if there is a currently applied change
-    /// </summary>
-    public bool ActiveChanges => _currentModSwapCollection != Guid.Empty;
-
+    
     private Guid _currentModSwapCollection = Guid.Empty;
     
     /// <summary>
@@ -44,7 +42,7 @@ public class ModManager : IDisposable
     public async Task GetAndSetTargetMods(string targetCharacterName)
     {
         Plugin.Log.Verbose("[ModManager] Begin Swap");
-        if (ActiveChanges)
+        if (_currentModSwapCollection != Guid.Empty)
         {
             Plugin.Log.Verbose("[ModManager] Active connection present, removing");
             await RemoveAllCollections();
@@ -145,10 +143,23 @@ public class ModManager : IDisposable
             Plugin.Log.Warning($"Failed to handle OnLocalPlayerResetOrReapply: {exception}");
         }
     }
+    
+    private async void OnServerDisconnect(object? sender, EventArgs e)
+    {
+        try
+        {
+            await RemoveAllCollections();
+        }
+        catch (Exception exception)
+        {
+            Plugin.Log.Warning($"[ModManager] Exception while handling server disconnect: {exception}");
+        }
+    }
 
     public void Dispose()
     {
         _glamourerAccessor.LocalPlayerResetOrReapply -= OnLocalPlayerResetOrReapply;
+        _networkProvider.ServerDisconnected -= OnServerDisconnect;
         GC.SuppressFinalize(this);
     }
 }

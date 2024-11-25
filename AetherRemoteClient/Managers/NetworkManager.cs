@@ -27,11 +27,11 @@ public class NetworkManager : IDisposable
     private const GlamourerApplyFlag EquipmentFlags = GlamourerApplyFlag.Once | GlamourerApplyFlag.Equipment;
     
     // Instantiate
-    private readonly ActionQueueProvider _actionQueueProvider;
+    private readonly ActionQueueManager _actionQueueManager;
     private readonly ClientDataManager _clientDataManager;
     private readonly EmoteProvider _emoteProvider;
     private readonly GlamourerAccessor _glamourerAccessor;
-    private readonly HistoryLogManager _historyLogManager;
+    private readonly HistoryLogProvider _historyLogProvider;
     private readonly ModManager _modManager;
     private readonly NetworkProvider _networkProvider;
     private readonly WorldProvider _worldProvider;
@@ -45,20 +45,20 @@ public class NetworkManager : IDisposable
     /// <inheritdoc cref="NetworkManager"/>
     /// </summary>
     public NetworkManager(
-        ActionQueueProvider actionQueueProvider,
+        ActionQueueManager actionQueueManager,
         ClientDataManager clientDataManager,
         EmoteProvider emoteProvider,
         GlamourerAccessor glamourerAccessor,
-        HistoryLogManager historyLogManager,
+        HistoryLogProvider historyLogProvider,
         ModManager modManager,
         NetworkProvider networkProvider,
         WorldProvider worldProvider)
     {
-        _actionQueueProvider = actionQueueProvider;
+        _actionQueueManager = actionQueueManager;
         _clientDataManager = clientDataManager;
         _emoteProvider = emoteProvider;
         _glamourerAccessor = glamourerAccessor;
-        _historyLogManager = historyLogManager;
+        _historyLogProvider = historyLogProvider;
         _modManager = modManager;
         _networkProvider = networkProvider;
         _worldProvider = worldProvider;
@@ -97,7 +97,7 @@ public class NetworkManager : IDisposable
         {
             var message = HistoryLog.NotFriends("Emote", noteOrFriendCode);
             Plugin.Log.Warning(message);
-            _historyLogManager.LogHistory(message);
+            _historyLogProvider.LogHistory(message);
             return;
         }
 
@@ -105,7 +105,7 @@ public class NetworkManager : IDisposable
         {
             var message = HistoryLog.LackingPermissions("Emote", noteOrFriendCode);
             Plugin.Log.Warning(message);
-            _historyLogManager.LogHistory(message);
+            _historyLogProvider.LogHistory(message);
             return;
         }
 
@@ -113,11 +113,11 @@ public class NetworkManager : IDisposable
         {
             var message = HistoryLog.InvalidData("Emote", noteOrFriendCode);
             Plugin.Log.Warning(message);
-            _historyLogManager.LogHistory(message);
+            _historyLogProvider.LogHistory(message);
             return;
         }
         
-        _actionQueueProvider.EnqueueEmoteAction(command.SenderFriendCode, command.Emote, command.DisplayLogMessage);
+        _actionQueueManager.EnqueueEmoteAction(command.SenderFriendCode, command.Emote, command.DisplayLogMessage);
     }
     
     private void HandleSpeak(SpeakCommand command)
@@ -130,7 +130,7 @@ public class NetworkManager : IDisposable
         {
             var message = HistoryLog.NotFriends("Speak", noteOrFriendCode);
             Plugin.Log.Information(message);
-            _historyLogManager.LogHistory(message);
+            _historyLogProvider.LogHistory(message);
             return;
         }
 
@@ -142,7 +142,7 @@ public class NetworkManager : IDisposable
         {
             var message = HistoryLog.LackingPermissions("Speak", noteOrFriendCode);
             Plugin.Log.Information(message);
-            _historyLogManager.LogHistory(message);
+            _historyLogProvider.LogHistory(message);
             return;
         }
 
@@ -157,7 +157,7 @@ public class NetworkManager : IDisposable
             }
         }
 
-        _actionQueueProvider.EnqueueSpeakAction(command.SenderFriendCode, command.Message, command.ChatMode, command.Extra);
+        _actionQueueManager.EnqueueSpeakAction(command.SenderFriendCode, command.Message, command.ChatMode, command.Extra);
     }
     
     private async Task HandleTransform(TransformCommand command)
@@ -170,7 +170,7 @@ public class NetworkManager : IDisposable
         {
             var message = HistoryLog.NotFriends("Transform", noteOrFriendCode);
             Plugin.Log.Information(message);
-            _historyLogManager.LogHistory(message);
+            _historyLogProvider.LogHistory(message);
             return;
         }
 
@@ -180,7 +180,7 @@ public class NetworkManager : IDisposable
         {
             var message = HistoryLog.LackingPermissions("Transform - Customization", noteOrFriendCode);
             Plugin.Log.Information(message);
-            _historyLogManager.LogHistory(message);
+            _historyLogProvider.LogHistory(message);
             return;
         }
 
@@ -190,7 +190,7 @@ public class NetworkManager : IDisposable
         {
             var message = HistoryLog.LackingPermissions("Transform - Equipment", noteOrFriendCode);
             Plugin.Log.Information(message);
-            _historyLogManager.LogHistory(message);
+            _historyLogProvider.LogHistory(message);
             return;
         }
 
@@ -212,7 +212,7 @@ public class NetworkManager : IDisposable
             };
 
             Plugin.Log.Information(message);
-            _historyLogManager.LogHistoryGlamourer(message, command.GlamourerData);
+            _historyLogProvider.LogHistoryGlamourer(message, command.GlamourerData);
         }
     }
     
@@ -226,7 +226,7 @@ public class NetworkManager : IDisposable
         {
             var message = HistoryLog.NotFriends("Twinning", noteOrFriendCode);
             Plugin.Log.Information(message);
-            _historyLogManager.LogHistory(message);
+            _historyLogProvider.LogHistory(message);
             return;
         }
 
@@ -234,7 +234,7 @@ public class NetworkManager : IDisposable
         {
             var message = HistoryLog.LackingPermissions("Twinning", noteOrFriendCode);
             Plugin.Log.Information(message);
-            _historyLogManager.LogHistory(message);
+            _historyLogProvider.LogHistory(message);
             return;
         }
         
@@ -250,7 +250,7 @@ public class NetworkManager : IDisposable
             {
                 var message = HistoryLog.LackingPermissions("Twinning - Mod Swap", noteOrFriendCode);
                 Plugin.Log.Information(message);
-                _historyLogManager.LogHistory(message);
+                _historyLogProvider.LogHistory(message);
                 return;
             }
 
@@ -262,7 +262,7 @@ public class NetworkManager : IDisposable
         {
             var message = $"{noteOrFriendCode} twinned you";
             Plugin.Log.Information(message);
-            _historyLogManager.LogHistoryGlamourer(message, command.CharacterData);
+            _historyLogProvider.LogHistoryGlamourer(message, command.CharacterData);
         }
     }
     
@@ -276,7 +276,7 @@ public class NetworkManager : IDisposable
         {
             var message = HistoryLog.NotFriends("Revert", noteOrFriendCode);
             Plugin.Log.Information(message);
-            _historyLogManager.LogHistory(message);
+            _historyLogProvider.LogHistory(message);
             return;
         }
 
@@ -285,7 +285,7 @@ public class NetworkManager : IDisposable
         {
             var message = HistoryLog.LackingPermissions("Revert", noteOrFriendCode);
             Plugin.Log.Information(message);
-            _historyLogManager.LogHistory(message);
+            _historyLogProvider.LogHistory(message);
             return;
         }
 
@@ -319,7 +319,7 @@ public class NetworkManager : IDisposable
         {
             var message = HistoryLog.NotFriends("Body Swap", noteOrFriendCode);
             Plugin.Log.Information(message);
-            _historyLogManager.LogHistory(message);
+            _historyLogProvider.LogHistory(message);
             return;
         }
 
@@ -327,7 +327,7 @@ public class NetworkManager : IDisposable
         {
             var message = HistoryLog.LackingPermissions("Body Swap", noteOrFriendCode);
             Plugin.Log.Information(message);
-            _historyLogManager.LogHistory(message);
+            _historyLogProvider.LogHistory(message);
             return;
         }
 
@@ -344,7 +344,7 @@ public class NetworkManager : IDisposable
             {
                 var message = HistoryLog.LackingPermissions("Body Swap - Mod Swap", noteOrFriendCode);
                 Plugin.Log.Information(message);
-                _historyLogManager.LogHistory(message);
+                _historyLogProvider.LogHistory(message);
                 return;
             }
 
@@ -356,7 +356,7 @@ public class NetworkManager : IDisposable
         {
             var message = $"{noteOrFriendCode} swapped your body with {command.SenderFriendCode}'s body";
             Plugin.Log.Information(message);
-            _historyLogManager.LogHistoryGlamourer(message, command.CharacterData);
+            _historyLogProvider.LogHistoryGlamourer(message, command.CharacterData);
         }
     }
 
@@ -371,7 +371,7 @@ public class NetworkManager : IDisposable
         {
             var message = HistoryLog.NotFriends("Body Swap Query", noteOrFriendCode);
             Plugin.Log.Information(message);
-            _historyLogManager.LogHistory(message);
+            _historyLogProvider.LogHistory(message);
             return new BodySwapQueryResponse();
         }
 
@@ -379,7 +379,7 @@ public class NetworkManager : IDisposable
         {
             var message = HistoryLog.LackingPermissions("Body Swap Query", noteOrFriendCode);
             Plugin.Log.Information(message);
-            _historyLogManager.LogHistory(message);
+            _historyLogProvider.LogHistory(message);
             return new BodySwapQueryResponse();
         }
 

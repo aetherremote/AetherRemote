@@ -16,7 +16,7 @@ public class TransformationManager(
     ClientDataManager clientDataManager,
     CommandLockoutManager commandLockoutManager,
     GlamourerAccessor glamourerAccessor,
-    HistoryLogManager historyLogManager,
+    HistoryLogProvider historyLogProvider,
     NetworkProvider networkProvider)
 {
     // Const
@@ -58,7 +58,7 @@ public class TransformationManager(
             };
 
             Plugin.Log.Information(logMessage);
-            historyLogManager.LogHistoryGlamourer(logMessage, GlamourerData);
+            historyLogProvider.LogHistoryGlamourer(logMessage, GlamourerData);
 
             // Reset glamourer data
             GlamourerData = string.Empty;
@@ -88,7 +88,7 @@ public class TransformationManager(
             };
 
             Plugin.Log.Information(logMessage);
-            historyLogManager.LogHistory(logMessage);
+            historyLogProvider.LogHistory(logMessage);
         }
         else
         {

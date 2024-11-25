@@ -68,7 +68,7 @@ public sealed class Plugin : IDalamudPlugin
     // Instantiated
     private ChatProvider ChatProvider { get; }
     private ClientDataManager ClientDataManager { get; }
-    private HistoryLogManager HistoryLogManager { get; }
+    private HistoryLogProvider HistoryLogProvider { get; }
     private ModManager ModManager { get; }
     private SharedUserInterfaces SharedUserInterfaces { get; init; }
     private NetworkManager NetworkManager { get; }
@@ -78,7 +78,7 @@ public sealed class Plugin : IDalamudPlugin
     private PenumbraAccessor PenumbraAccessor { get; }
 
     // Providers
-    private ActionQueueProvider ActionQueueProvider { get; }
+    private ActionQueueManager ActionQueueManager { get; }
     private EmoteProvider EmoteProvider { get; }
     private NetworkProvider NetworkProvider { get; }
     private WorldProvider WorldProvider { get; }
@@ -95,25 +95,26 @@ public sealed class Plugin : IDalamudPlugin
         GlamourerAccessor = new GlamourerAccessor();
         PenumbraAccessor = new PenumbraAccessor();
 
-        // Instantiate
-        ChatProvider = new ChatProvider(); // Should be a provider
-        ClientDataManager = new ClientDataManager();
-        HistoryLogManager = new HistoryLogManager(); // Should be a provider
-        ModManager = new ModManager(PenumbraAccessor, GlamourerAccessor);
+        // Manager
+        
         SharedUserInterfaces = new SharedUserInterfaces();
 
         // Providers
-        ActionQueueProvider = new ActionQueueProvider(ChatProvider, HistoryLogManager); // Should be a manager
+        HistoryLogProvider = new HistoryLogProvider();
+        ChatProvider = new ChatProvider();
         EmoteProvider = new EmoteProvider();
         WorldProvider = new WorldProvider();
-        NetworkProvider = new NetworkProvider(ClientDataManager, ModManager); // Should extrapolate the methods out into the manager
+        NetworkProvider = new NetworkProvider();
         
         // Manager
-        NetworkManager = new NetworkManager(ActionQueueProvider, ClientDataManager, EmoteProvider, GlamourerAccessor, HistoryLogManager, ModManager, NetworkProvider, WorldProvider);
-
+        ActionQueueManager = new ActionQueueManager(ChatProvider, HistoryLogProvider);
+        ClientDataManager = new ClientDataManager(NetworkProvider);
+        ModManager = new ModManager(PenumbraAccessor, GlamourerAccessor, NetworkProvider);
+        NetworkManager = new NetworkManager(ActionQueueManager, ClientDataManager, EmoteProvider, GlamourerAccessor, HistoryLogProvider, ModManager, NetworkProvider, WorldProvider);
+        
         // Windows
         WindowSystem = new WindowSystem("AetherRemote");
-        MainWindow = new MainWindow(ActionQueueProvider, ClientDataManager, EmoteProvider, GlamourerAccessor, HistoryLogManager, ModManager, NetworkProvider, WorldProvider);
+        MainWindow = new MainWindow(ActionQueueManager, ClientDataManager, EmoteProvider, GlamourerAccessor, HistoryLogProvider, ModManager, NetworkProvider, WorldProvider);
         WindowSystem.AddWindow(MainWindow);
 
         CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
@@ -142,6 +143,8 @@ public sealed class Plugin : IDalamudPlugin
         
         await ModManager.RemoveAllCollections();
         ModManager.Dispose();
+        
+        ClientDataManager.Dispose();
 
         PluginInterface.UiBuilder.Draw -= DrawUi;
         PluginInterface.UiBuilder.OpenMainUi -= OpenMainUi;
@@ -155,7 +158,7 @@ public sealed class Plugin : IDalamudPlugin
     private void DrawUi()
     {
         // This way we can ensure all updates are taking place on the main thread
-        ActionQueueProvider.Update();
+        ActionQueueManager.Update();
 
         WindowSystem.Draw();
     }

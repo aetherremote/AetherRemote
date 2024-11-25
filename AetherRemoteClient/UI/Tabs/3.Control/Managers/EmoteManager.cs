@@ -12,7 +12,7 @@ public class EmoteManager(
     ClientDataManager clientDataManager, 
     CommandLockoutManager commandLockoutManager,
     EmoteProvider emoteProvider, 
-    HistoryLogManager historyLogManager, 
+    HistoryLogProvider historyLogProvider, 
     NetworkProvider networkProvider)
 {
     // Variables - Emote
@@ -33,7 +33,7 @@ public class EmoteManager(
         {
             var message = $"You issued {string.Join(", ", targets)} to do the {Emote} emote";
             Plugin.Log.Information(message);
-            historyLogManager.LogHistory(message);
+            historyLogProvider.LogHistory(message);
         }
         else
         {

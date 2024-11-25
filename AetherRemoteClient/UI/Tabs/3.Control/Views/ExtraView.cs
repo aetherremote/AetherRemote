@@ -19,7 +19,7 @@ public class ExtraView(
     ClientDataManager clientDataManager,
     CommandLockoutManager commandLockoutManager,
     GlamourerAccessor glamourerAccessor,
-    HistoryLogManager historyLogManager,
+    HistoryLogProvider historyLogProvider,
     ModManager modManager,
     NetworkProvider networkProvider) : IControlTabView
 {
@@ -28,7 +28,7 @@ public class ExtraView(
     private const PrimaryPermissions TwinningWithModsPermissions = PrimaryPermissions.Twinning | PrimaryPermissions.Mods;
     
     // Instantiated
-    private readonly ExtraManager _extraManager = new(clientDataManager, commandLockoutManager, glamourerAccessor, historyLogManager, modManager, networkProvider);
+    private readonly ExtraManager _extraManager = new(clientDataManager, commandLockoutManager, glamourerAccessor, historyLogProvider, modManager, networkProvider);
     
     public void Draw()
     {

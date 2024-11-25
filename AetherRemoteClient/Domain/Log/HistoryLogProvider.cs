@@ -5,7 +5,7 @@ namespace AetherRemoteClient.Domain.Log;
 /// <summary>
 /// Manages all log history of outgoing and incoming commands
 /// </summary>
-public class HistoryLogManager
+public class HistoryLogProvider
 {
     /// <summary>
     /// A list of all log history

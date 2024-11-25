@@ -8,7 +8,7 @@ using System.Numerics;
 
 namespace AetherRemoteClient.UI.Tabs.Settings;
 
-public class SettingsTab(ActionQueueProvider actionQueueProvider, ClientDataManager clientDataManager) : ITab
+public class SettingsTab(ActionQueueManager actionQueueManager, ClientDataManager clientDataManager) : ITab
 {
     public void Draw()
     {
@@ -22,7 +22,7 @@ public class SettingsTab(ActionQueueProvider actionQueueProvider, ClientDataMana
 
             SharedUserInterfaces.MediumText("Emergency Actions");
             if (ImGui.Button("Clear Action Queue"))
-                actionQueueProvider.Clear();
+                actionQueueManager.Clear();
 
             SharedUserInterfaces.Tooltip(
             [
@@ -48,7 +48,7 @@ public class SettingsTab(ActionQueueProvider actionQueueProvider, ClientDataMana
             ImGui.PushStyleColor(ImGuiCol.Button, color);
             if (ImGui.Button(buttonText, new Vector2(120, 0)))
             {
-                actionQueueProvider.Clear();
+                actionQueueManager.Clear();
                 clientDataManager.SafeMode = !clientDataManager.SafeMode;
             }
             ImGui.PopStyleColor();

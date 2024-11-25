@@ -14,7 +14,7 @@ namespace AetherRemoteClient.UI.Tabs.Managers;
 public class SpeakManager(
     ClientDataManager clientDataManager,
     CommandLockoutManager commandLockoutManager,
-    HistoryLogManager historyLogManager,
+    HistoryLogProvider historyLogProvider,
     NetworkProvider networkProvider,
     WorldProvider worldProvider)
 {
@@ -57,7 +57,7 @@ public class SpeakManager(
             };
 
             Plugin.Log.Information(logMessage);
-            historyLogManager.LogHistory(logMessage);
+            historyLogProvider.LogHistory(logMessage);
             Message = string.Empty;
         }
         else

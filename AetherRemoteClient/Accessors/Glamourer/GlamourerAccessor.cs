@@ -1,13 +1,13 @@
-using AetherRemoteCommon.Domain.CommonGlamourerApplyType;
-using Glamourer.Api.Enums;
-using Glamourer.Api.IpcSubscribers;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
 using AetherRemoteClient.Domain.Events;
+using AetherRemoteCommon.Domain.CommonGlamourerApplyType;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
+using Glamourer.Api.Enums;
 using Glamourer.Api.Helpers;
+using Glamourer.Api.IpcSubscribers;
 
 namespace AetherRemoteClient.Accessors.Glamourer;
 
@@ -28,17 +28,21 @@ public class GlamourerAccessor : IDisposable
 
     // Check Glamourer Api
     private readonly Timer _periodicGlamourerTest;
-    
+
     // Glamourer Api
     private readonly ApiVersion _apiVersion;
     private readonly ApplyState _applyState;
     private readonly GetStateBase64 _getStateBase64;
     private readonly RevertState _revertState;
     private readonly RevertToAutomation _revertToAutomation;
-    
+
     // Glamourer Events
-    public event EventHandler<GlamourerStateChangedEventArgs>? LocalPlayerResetOrReapply;
     private readonly EventSubscriber<IntPtr, StateChangeType> _stateChangedWithType;
+
+    /// <summary>
+    /// Event fired when the local player's character is reverted to game or automation
+    /// </summary>
+    public event EventHandler<GlamourerStateChangedEventArgs>? LocalPlayerResetOrReapply;
 
     /// <summary>
     /// <inheritdoc cref="GlamourerAccessor"/>
@@ -58,10 +62,10 @@ public class GlamourerAccessor : IDisposable
 
         _stateChangedWithType = StateChangedWithType.Subscriber(Plugin.PluginInterface);
         _stateChangedWithType.Event += OnGlamourerStateChanged;
-        
+
         CheckApi();
     }
-    
+
     /// <summary>
     /// Event fired when a glamourer state is changed. Will re-fire an event if the change is a Reset or Reapply and
     /// it is caused by the player.
@@ -72,14 +76,15 @@ public class GlamourerAccessor : IDisposable
         {
             if (stateChangeType is not (StateChangeType.Reset or StateChangeType.Reapply))
                 return;
-            
+
             var objectIndex = (GameObject*)objectIndexPointer;
             if (objectIndex->ObjectIndex is 0)
                 LocalPlayerResetOrReapply?.Invoke(this, new GlamourerStateChangedEventArgs());
         }
         catch (Exception e)
         {
-            Plugin.Log.Warning($"[Glamourer::StateChangedWithType] Exception while processing glamourer state change event: {e}");
+            Plugin.Log.Warning(
+                $"[Glamourer::StateChangedWithType] Exception while processing glamourer state change event: {e}");
         }
     }
 
@@ -133,7 +138,8 @@ public class GlamourerAccessor : IDisposable
     /// <summary>
     /// Applies a given design to an object index
     /// </summary>
-    public async Task<bool> ApplyDesignAsync(string glamourerData, ushort objectIndex = 0, GlamourerApplyFlag flags = GlamourerApplyFlag.All)
+    public async Task<bool> ApplyDesignAsync(string glamourerData, ushort objectIndex = 0,
+        GlamourerApplyFlag flags = GlamourerApplyFlag.All)
     {
         if (IsGlamourerUsable == false)
             return false;
@@ -159,7 +165,7 @@ public class GlamourerAccessor : IDisposable
     /// </summary>
     public async Task<string?> GetDesignAsync(ushort objectIndex = 0)
     {
-        if (IsGlamourerUsable == false)
+        if (IsGlamourerUsable is false)
             return string.Empty;
 
         return await Plugin.RunOnFramework(() =>
@@ -190,7 +196,7 @@ public class GlamourerAccessor : IDisposable
         _periodicGlamourerTest.Elapsed -= PeriodicCheckApi;
         _periodicGlamourerTest.Stop();
         _periodicGlamourerTest.Dispose();
-        
+
         _stateChangedWithType.Event -= OnGlamourerStateChanged;
         _stateChangedWithType.Disable();
 
@@ -198,13 +204,15 @@ public class GlamourerAccessor : IDisposable
     }
 
     private void PeriodicCheckApi(object? sender, ElapsedEventArgs e) => CheckApi();
+
     private void CheckApi()
     {
         try
         {
             // Test if plugin installed
-            var glamourerPlugin = Plugin.PluginInterface.InstalledPlugins.FirstOrDefault(plugin => string.Equals(plugin.InternalName, "Glamourer", StringComparison.OrdinalIgnoreCase));
-            if (glamourerPlugin == null)
+            var glamourerPlugin = Plugin.PluginInterface.InstalledPlugins.FirstOrDefault(plugin =>
+                string.Equals(plugin.InternalName, "Glamourer", StringComparison.OrdinalIgnoreCase));
+            if (glamourerPlugin is null)
             {
                 IsGlamourerUsable = false;
                 return;
@@ -212,7 +220,7 @@ public class GlamourerAccessor : IDisposable
 
             // Test if plugin can be invoked
             var glamourerVersion = _apiVersion.Invoke();
-            if (glamourerVersion.Major != RequiredMajorVersion || glamourerVersion.Minor < RequiredMinorVersion)
+            if (glamourerVersion.Major is not RequiredMajorVersion || glamourerVersion.Minor < RequiredMinorVersion)
             {
                 IsGlamourerUsable = false;
                 return;

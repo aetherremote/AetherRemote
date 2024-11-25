@@ -47,7 +47,7 @@ public class ControlTab : ITab
         ClientDataManager clientDataManager,
         EmoteProvider emoteProvider,
         GlamourerAccessor glamourerAccessor,
-        HistoryLogManager historyLogManager,
+        HistoryLogProvider historyLogProvider,
         ModManager modManager,
         NetworkProvider networkProvider,
         WorldProvider worldProvider)
@@ -55,10 +55,10 @@ public class ControlTab : ITab
         _clientDataManager = clientDataManager;
         _friendListFilter = new ListFilter<Friend>(clientDataManager.FriendsList.Friends, FilterFriends);
         
-        _speakView = new SpeakView(clientDataManager, _commandLockoutManager, historyLogManager, networkProvider, worldProvider);
-        _emoteView = new EmoteView(clientDataManager, _commandLockoutManager, emoteProvider, historyLogManager, networkProvider);
-        _transformationView = new TransformationView(clientDataManager, _commandLockoutManager, glamourerAccessor, historyLogManager, networkProvider);
-        _extraView = new ExtraView(clientDataManager, _commandLockoutManager, glamourerAccessor, historyLogManager, modManager, networkProvider);
+        _speakView = new SpeakView(clientDataManager, _commandLockoutManager, historyLogProvider, networkProvider, worldProvider);
+        _emoteView = new EmoteView(clientDataManager, _commandLockoutManager, emoteProvider, historyLogProvider, networkProvider);
+        _transformationView = new TransformationView(clientDataManager, _commandLockoutManager, glamourerAccessor, historyLogProvider, networkProvider);
+        _extraView = new ExtraView(clientDataManager, _commandLockoutManager, glamourerAccessor, historyLogProvider, modManager, networkProvider);
 
         clientDataManager.FriendsList.OnFriendDeleted += HandleFriendDeleted;
         clientDataManager.FriendsList.OnFriendsListCleared += HandleFriendsListCleared;

@@ -22,7 +22,7 @@ public class TransformationView(
     ClientDataManager clientDataManager,
     CommandLockoutManager commandLockoutManager,
     GlamourerAccessor glamourerAccessor,
-    HistoryLogManager historyLogManager,
+    HistoryLogProvider historyLogProvider,
     NetworkProvider networkProvider) : IControlTabView
 {
     // Const
@@ -30,7 +30,7 @@ public class TransformationView(
     private const GlamourerApplyFlag CustomizationAndEquipmentFlags = GlamourerApplyFlag.Once | GlamourerApplyFlag.Customization | GlamourerApplyFlag.Equipment;
     
     // Instantiated
-    private readonly TransformationManager _transformationManager = new(clientDataManager, commandLockoutManager, glamourerAccessor, historyLogManager, networkProvider);
+    private readonly TransformationManager _transformationManager = new(clientDataManager, commandLockoutManager, glamourerAccessor, historyLogProvider, networkProvider);
     
     public void Draw()
     {

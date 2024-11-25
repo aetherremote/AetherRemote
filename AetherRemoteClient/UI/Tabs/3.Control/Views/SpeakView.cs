@@ -20,7 +20,7 @@ namespace AetherRemoteClient.UI.Tabs.Views;
 public class SpeakView(
     ClientDataManager clientDataManager,
     CommandLockoutManager commandLockoutManager,
-    HistoryLogManager historyLogManager,
+    HistoryLogProvider historyLogProvider,
     NetworkProvider networkProvider,
     WorldProvider worldProvider) : IControlTabView
 {
@@ -28,7 +28,7 @@ public class SpeakView(
     private static readonly Vector2 SendButtonSize = new(40, 0);
     
     // Instantiated
-    private readonly SpeakManager _speakManager = new(clientDataManager, commandLockoutManager, historyLogManager, networkProvider, worldProvider);
+    private readonly SpeakManager _speakManager = new(clientDataManager, commandLockoutManager, historyLogProvider, networkProvider, worldProvider);
     private readonly ListFilter<string> _worldNameFilter = new(worldProvider.WorldNames, FilterWorldName);
     
     public void Draw()
