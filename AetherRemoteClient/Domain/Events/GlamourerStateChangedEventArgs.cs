@@ -2,6 +2,7 @@ using System;
 
 namespace AetherRemoteClient.Domain.Events;
 
-public class GlamourerStateChangedEventArgs : EventArgs
-{
-}
+/// <summary>
+///     Event data for when the glamourer state has changed meaningfully 
+/// </summary>
+public class GlamourerStateChangedEventArgs : EventArgs;

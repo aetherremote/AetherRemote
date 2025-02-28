@@ -3,6 +3,6 @@ using System;
 namespace AetherRemoteClient.Domain.Events;
 
 /// <summary>
-/// Event signalling the friends list has been cleared
+///     Event data for when the friend's list was entirely deleted
 /// </summary>
 public class FriendsListDeletedEventArgs : EventArgs;

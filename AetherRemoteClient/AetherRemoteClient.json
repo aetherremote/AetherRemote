@@ -1,14 +1,14 @@
 {
-    "Author": "Mora",
-    "Name": "Aether Remote",
-    "Punchline": "Control other player's speech, emotes, and appearance.",
-    "Description": "This plugin allows you and your friends to control each other, and optionally allows even more control utilizing glamourer & mare",
-    "InternalName": "AetherRemoteClient",
-    "ApplicableVersion": "any",
-    "Tags": [
-        "chat",
-        "customization"
-    ],
-    "IconUrl": "https://raw.githubusercontent.com/aetherremote/AetherRemote/main/images/icon.jpg",
-    "RepoUrl": "https://github.com/aetherremote/AetherRemote"
+  "Author": "Mora",
+  "Name": "Aether Remote",
+  "Punchline": "Control other player's speech, emotes, and appearance.",
+  "Description": "This plugin allows you and your friends to control each other, and optionally allows even more control utilizing glamourer & mare",
+  "InternalName": "AetherRemoteClient",
+  "ApplicableVersion": "any",
+  "Tags": [
+    "chat",
+    "customization"
+  ],
+  "IconUrl": "https://raw.githubusercontent.com/aetherremote/AetherRemote/main/images/icon.jpg",
+  "RepoUrl": "https://github.com/aetherremote/AetherRemote"
 }

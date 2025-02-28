@@ -1,130 +1,103 @@
-using AetherRemoteCommon;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Domain.Network.Commands;
 using AetherRemoteServer.Authentication;
-using AetherRemoteServer.Domain;
-using AetherRemoteServer.Services;
+using AetherRemoteServer.Managers;
+using AetherRemoteServer.Registries;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
-using System.Collections.Concurrent;
 
 namespace AetherRemoteServer.Hubs;
 
 [Authorize]
-public class PrimaryHub(NetworkService network, ILogger<PrimaryHub> logger) : Hub
+public class PrimaryHub(
+    ConnectedClientsManager connectedClientsManager,
+    HubRequestHandlerRegistry handlerRegistry,
+    ILogger<PrimaryHub> logger) : Hub
 {
-    // Injected
-    private readonly NetworkService network = network;
-    private readonly ILogger<PrimaryHub> logger = logger;
-
     /// <summary>
-    /// Maps online FriendCode to ConnectionId
+    ///     Friend Code obtained from authenticated token claims
     /// </summary>
-    public static readonly ConcurrentDictionary<string, User> ActiveUserConnections = [];
+    private string FriendCode =>
+        Context.User?.Claims
+            .FirstOrDefault(claim => string.Equals(claim.Type, AuthClaimTypes.FriendCode, StringComparison.Ordinal))
+            ?.Value ?? throw new Exception("FriendCode not present in claims");
 
-    /// <summary>
-    /// Extracts FriendCode from claims
-    /// </summary>
-    private string FriendCode => Context?.User?.Claims.FirstOrDefault(claim => string.Equals(claim.Type, AuthClaimTypes.FriendCode, StringComparison.Ordinal))?.Value ?? throw new Exception("FriendCode not present in claims");
-
-    [HubMethodName(Network.User.CreateOrUpdate)]
-    [Authorize(Policy = "Administrator")]
-    public async Task<CreateOrUpdateUserResponse> CreateOrUpdateUser(CreateOrUpdateUserRequest request)
+    [HubMethodName(HubMethod.AddFriend)]
+    public async Task<AddFriendResponse> AddFriend(AddFriendRequest request)
     {
         logger.LogInformation("{Request}", request);
-        return await network.CreateOrUpdateUser(request);
+        return await handlerRegistry.AddFriendHandler.Handle(FriendCode, request);
     }
 
-    [HubMethodName(Network.User.Delete)]
-    [Authorize(Policy = "Administrator")]
-    public async Task<DeleteUserResponse> DeleteUser(DeleteUserRequest request)
-    {
-        logger.LogInformation("{Request}", request);
-        return await network.DeleteUser(request);
-    }
-
-    [HubMethodName(Network.User.Get)]
-    [Authorize(Policy = "Administrator")]
-    public async Task<GetUserResponse> GetUser(GetUserRequest request)
-    {
-        logger.LogInformation("{Request}", request);
-        return await network.GetUser(request);
-    }
-
-    [HubMethodName(Network.LoginDetails)]
-    public async Task<LoginDetailsResponse> LoginDetails(LoginDetailsRequest request)
-    {
-        logger.LogInformation("{Request}", request);
-        return await network.LoginDetails(FriendCode, request);
-    }
-
-    [HubMethodName(Network.Permissions.CreateOrUpdate)]
-    public async Task<CreateOrUpdatePermissionsResponse> CreateOrUpdatePermissions(CreateOrUpdatePermissionsRequest request)
-    {
-        logger.LogInformation("{Request}", request);
-        return await network.CreateOrUpdatePermissions(FriendCode, request, Clients);
-    }
-
-    [HubMethodName(Network.Permissions.Delete)]
-    public async Task<DeletePermissionsResponse> DeletePermissions(DeletePermissionsRequest request)
-    {
-        logger.LogInformation("{Request}", request);
-        return await network.DeletePermissions(FriendCode, request);
-    }
-
-    [HubMethodName(Network.Commands.BodySwap)]
+    [HubMethodName(HubMethod.BodySwap)]
     public async Task<BodySwapResponse> BodySwap(BodySwapRequest request)
     {
         logger.LogInformation("{Request}", request);
-        return await network.BodySwap(FriendCode, request, Clients);
+        return await handlerRegistry.BodySwapHandler.Handle(FriendCode, request, Clients);
     }
 
-    [HubMethodName(Network.Commands.Emote)]
-    public async Task<EmoteResponse> Emote(EmoteRequest request)
+    [HubMethodName(HubMethod.Emote)]
+    public async Task<BaseResponse> Emote(EmoteRequest request)
     {
         logger.LogInformation("{Request}", request);
-        return await network.Emote(FriendCode, request, Clients);
+        return await handlerRegistry.EmoteHandler.Handle(FriendCode, request, Clients);
     }
 
-    [HubMethodName(Network.Commands.Speak)]
-    public async Task<SpeakResponse> Speak(SpeakRequest request)
+    [HubMethodName(HubMethod.GetAccountData)]
+    public async Task<GetAccountDataResponse> GetAccountData(GetAccountDataRequest request)
     {
-        logger.LogInformation("{Request}", request);
-        return await network.Speak(FriendCode, request, Clients);
+        return await handlerRegistry.GetAccountDataHandler.Handle(FriendCode, request);
     }
 
-    [HubMethodName(Network.Commands.Transform)]
-    public async Task<TransformResponse> Transform(TransformRequest request)
+    [HubMethodName(HubMethod.RemoveFriend)]
+    public async Task<BaseResponse> RemoveFriend(RemoveFriendRequest request)
     {
         logger.LogInformation("{Request}", request);
-        return await network.Transform(FriendCode, request, Clients);
-    }
-    
-    [HubMethodName(Network.Commands.Twinning)]
-    public async Task<TwinningResponse> Twinning(TwinningRequest request)
-    {
-        logger.LogInformation("{Request}", request);
-        return await network.Twinning(FriendCode, request, Clients);
+        return await handlerRegistry.RemoveFriendHandler.Handle(FriendCode, request);
     }
 
-    [HubMethodName(Network.Commands.Revert)]
-    public async Task<RevertResponse> Revert(RevertRequest request)
+    [HubMethodName(HubMethod.Speak)]
+    public async Task<BaseResponse> Speak(SpeakRequest request)
     {
         logger.LogInformation("{Request}", request);
-        return await network.Revert(FriendCode, request, Clients);
+        return await handlerRegistry.SpeakHandler.Handle(FriendCode, request, Clients);
     }
 
+    [HubMethodName(HubMethod.Transform)]
+    public async Task<BaseResponse> Transform(TransformRequest request)
+    {
+        logger.LogInformation("{Request}", request);
+        return await handlerRegistry.TransformHandler.Handle(FriendCode, request, Clients);
+    }
+
+    [HubMethodName(HubMethod.Twinning)]
+    public async Task<BaseResponse> Twinning(TwinningRequest request)
+    {
+        logger.LogInformation("{Request}", request);
+        return await handlerRegistry.TwinningHandler.Handle(FriendCode, request, Clients);
+    }
+
+    [HubMethodName(HubMethod.UpdateFriend)]
+    public async Task<BaseResponse> UpdateFriend(UpdateFriendRequest request)
+    {
+        logger.LogInformation("{Request}", request);
+        return await handlerRegistry.UpdateFriendHandler.Handle(FriendCode, request, Clients);
+    }
+
+    /// <summary>
+    ///     Handles when a client connects to the hub
+    /// </summary>
     public override async Task OnConnectedAsync()
     {
-        await network.UpdateOnlineStatus(FriendCode, true, Clients);
-        ActiveUserConnections[FriendCode] = new User(Context.ConnectionId);
+        await connectedClientsManager.ProcessFriendOnlineStatusChange(FriendCode, true, Context, Clients);
         await base.OnConnectedAsync();
     }
 
+    /// <summary>
+    ///     Handles when a client disconnects from the hub
+    /// </summary>
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        await network.UpdateOnlineStatus(FriendCode, false, Clients);
-        ActiveUserConnections.Remove(FriendCode, out _);
+        await connectedClientsManager.ProcessFriendOnlineStatusChange(FriendCode, false, Context, Clients);
         await base.OnDisconnectedAsync(exception);
     }
 }

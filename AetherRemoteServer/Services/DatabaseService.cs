@@ -1,20 +1,19 @@
-using AetherRemoteCommon.Domain.Permissions;
+using System.Text.Json;
+using AetherRemoteCommon.Domain;
+using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteServer.Domain;
 using Microsoft.Data.Sqlite;
-using Microsoft.Extensions.Caching.Memory;
 
 namespace AetherRemoteServer.Services;
 
 /// <summary>
-/// Provides methods to interact with and query the database
+///     Provides methods for interacting with the underlying Sqlite3 database
 /// </summary>
-public class DatabaseService : IDisposable
+public class DatabaseService
 {
-    // Tables
+    // Constants
     private const string ValidUsersTable = "ValidUsersTable";
     private const string PermissionsTable = "PermissionsTable";
-
-    // Params
     private const string SecretParam = "@Secret";
     private const string FriendCodeParam = "@FriendCode";
     private const string IsAdminParam = "@IsAdmin";
@@ -22,25 +21,21 @@ public class DatabaseService : IDisposable
     private const string VersionParam = "@Version";
     private const string PrimaryPermissionsParam = "@PrimaryPermissions";
     private const string LinkshellPermissionsParam = "@LinkshellPermissions";
-    private const string IdentifierParam = "@Identifier";
-
-    // Schema
     private const int CurrentPermissionConfigurationVersion = 2;
-    
+
     // Injected
     private readonly ILogger<DatabaseService> _logger;
 
     // Instantiated
     private readonly SqliteConnection _db;
-    private readonly MemoryCache _userCache;
-    private readonly MemoryCache _permissionsCache;
+    private readonly TypedMemoryCache<User> _userCache;
+    private readonly TypedMemoryCache<FriendPermissions> _permissionsCache;
 
     /// <summary>
-    /// <inheritdoc cref="DatabaseService"/>
+    ///     <inheritdoc cref="DatabaseService"/>
     /// </summary>
-    public DatabaseService(ServerConfiguration config, ILogger<DatabaseService> logger)
+    public DatabaseService(ILogger<DatabaseService> logger)
     {
-        // Injected
         _logger = logger;
 
         // Db file check
@@ -55,142 +50,206 @@ public class DatabaseService : IDisposable
         // Open Db
         _db = new SqliteConnection($"Data Source={path}");
         _db.Open();
-        _userCache = new MemoryCache(new MemoryCacheOptions());
-        _permissionsCache = new MemoryCache(new MemoryCacheOptions());
+        _userCache = new TypedMemoryCache<User>();
+        _permissionsCache = new TypedMemoryCache<FriendPermissions>();
 
         // Table validation
-        ValidateDbTables();
-
-        // Add debug accounts
-        _ = CreateOrUpdateUser("adminFriendCode", config.AdminAccountSecret, true);
+        InitializeDbTables();
     }
 
     /// <summary>
-    /// Creates or updates a user from the valid user table
+    ///     Creates a new user entry in the valid users table
     /// </summary>
-    public async Task<int> CreateOrUpdateUser(string friendCode, string secret, bool isAdmin)
+    public async Task<bool> CreateUser(string friendCode, string secret, bool isAdmin)
     {
         await using var command = _db.CreateCommand();
         command.CommandText =
-           $"""
-                INSERT OR REPLACE INTO {ValidUsersTable} (FriendCode, Secret, IsAdmin)
-                    values ({FriendCodeParam}, {SecretParam}, {IsAdminParam})
-            """;
+            $"""
+                INSERT INTO {ValidUsersTable} (FriendCode, Secret, IsAdmin) 
+                VALUES ({FriendCodeParam}, {SecretParam}, {IsAdminParam})
+             """;
         command.Parameters.AddWithValue(FriendCodeParam, friendCode);
         command.Parameters.AddWithValue(SecretParam, secret);
         command.Parameters.AddWithValue(IsAdminParam, isAdmin ? 1 : 0);
 
         try
         {
-            // Update cache
-            var rows = await command.ExecuteNonQueryAsync();
-            if (rows > 0) _userCache.Set(friendCode, new UserDb(friendCode, secret, isAdmin));
-            return rows;
+            var success = await command.ExecuteNonQueryAsync() is 1;
+            if (success)
+                _userCache.Set(friendCode, new User(friendCode, secret, isAdmin));
+
+            return success;
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
-            _logger.LogWarning("Unable to create or update data for friend code {FriendCode}, {Exception}", friendCode, ex);
-            return 0;
+            _logger.LogWarning("Unable to create user {FriendCode} {Secret} {IsAdmin}, {Exception}", friendCode, secret,
+                isAdmin, e.Message);
+            return false;
         }
     }
 
     /// <summary>
-    /// Deletes a user from the valid users table
+    ///     Gets a user entry from the valid users table by friend code
     /// </summary>
-    public async Task<int> DeleteUser(string friendCode)
+    public async Task<User?> GetUserByFriendCode(string friendCode)
     {
+        if (_userCache.Get(friendCode) is { } cachedUser)
+            return cachedUser;
+
         await using var command = _db.CreateCommand();
-        command.CommandText = $"DELETE FROM {ValidUsersTable} WHERE FriendCode={FriendCodeParam}";
+        command.CommandText = $"SELECT * FROM {ValidUsersTable} WHERE FriendCode = {FriendCodeParam}";
         command.Parameters.AddWithValue(FriendCodeParam, friendCode);
 
         try
         {
-            // Update cache
-            var rows = await command.ExecuteNonQueryAsync();
-            if (rows > 0) _userCache.Remove(friendCode);
-            return rows;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogWarning("Unable to delete user {FriendCode}, {Exception}", friendCode, ex);
-            return 0;
-        }
-    }
-
-    /// <summary>
-    /// Retrieves a user from the user database. By default, will search by friend code.
-    /// </summary>
-    public async Task<UserDb?> GetUser(string identifier, QueryUserType type = QueryUserType.FriendCode)
-    {
-        // Check if FriendCode identifier is cached
-        if (type == QueryUserType.FriendCode && _userCache.TryGetValue(identifier, out UserDb cachedUser))
-            return cachedUser;
-
-        await using var command = _db.CreateCommand();
-        command.CommandText = $"SELECT * FROM {ValidUsersTable} WHERE {type}={IdentifierParam}";
-        command.Parameters.AddWithValue(IdentifierParam, identifier);
-
-        try
-        {
             await using var reader = await command.ExecuteReaderAsync();
-            if (await reader.ReadAsync() == false) return null;
+            if (await reader.ReadAsync() is false)
+                return null;
 
-            var friendCode = reader.GetString(0);
             var secret = reader.GetString(1);
-            var isAdmin = reader.GetInt32(2) == 1;
+            var isAdmin = reader.GetInt32(2) is 1;
+            var user = new User(friendCode, secret, isAdmin);
+            _userCache.Set(friendCode, user);
 
-            var user = new UserDb(friendCode, secret, isAdmin);
-            if (type == QueryUserType.FriendCode) _userCache.Set(identifier, user);
             return user;
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
-            _logger.LogWarning("Unable to retrieve UserDb by {Type}: {Identifier}, {Exception}", type, identifier, ex);
+            _logger.LogWarning("Unable to get user by friend code for {FriendCode}, {Exception}", friendCode,
+                e.Message);
             return null;
         }
     }
 
     /// <summary>
-    /// Creates or updates permissions for specified target
+    ///     Gets a user entry from the valid users table by secret 
     /// </summary>
-    public async Task<(int, string)> CreateOrUpdatePermissions(string friendCode, string targetFriendCode, UserPermissions permissions)
+    public async Task<User?> GetUserBySecret(string secret)
     {
         await using var command = _db.CreateCommand();
-        command.CommandText =
-           $"""
-                INSERT OR REPLACE INTO {PermissionsTable} (UserFriendCode, TargetFriendCode, Version, PrimaryPermissions, LinkshellPermissions)
-                    values ({FriendCodeParam}, {TargetFriendCodeParam}, {VersionParam}, {PrimaryPermissionsParam}, {LinkshellPermissionsParam})
-            """;
-        command.Parameters.AddWithValue(FriendCodeParam, friendCode);
-        command.Parameters.AddWithValue(TargetFriendCodeParam, targetFriendCode);
-        command.Parameters.AddWithValue(VersionParam, CurrentPermissionConfigurationVersion);
-        command.Parameters.AddWithValue(PrimaryPermissionsParam, permissions.Primary);
-        command.Parameters.AddWithValue(LinkshellPermissionsParam, permissions.Linkshell);
+        command.CommandText = $"SELECT * FROM {ValidUsersTable} WHERE Secret = {SecretParam}";
+        command.Parameters.AddWithValue(SecretParam, secret);
 
         try
         {
-            // Update cache
-            var rows = await command.ExecuteNonQueryAsync();
-            if (rows > 0) _permissionsCache.Remove(friendCode); // Lazy implementation
-            return (rows, string.Empty);
+            await using var reader = await command.ExecuteReaderAsync();
+            if (await reader.ReadAsync() is false)
+                return null;
+
+            var friendCode = reader.GetString(0);
+            var isAdmin = reader.GetInt32(2) is 1;
+            return new User(friendCode, secret, isAdmin);
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
-            _logger.LogWarning("Unable to create or update permissions for {FriendCode}, {Exception}", friendCode, ex);
-            return (0, ex.Message);
+            _logger.LogWarning("Unable to get user by secret for {Secret}, {Exception}", secret, e.Message);
+            return null;
         }
     }
 
     /// <summary>
-    /// Gets all permissions user has granted to others
+    ///     Deletes a user entry from the valid users table
     /// </summary>
-    public async Task<Dictionary<string, UserPermissions>> GetPermissions(string friendCode)
+    public async Task<int> DeleteUser(string friendCode)
     {
-        if (_permissionsCache.TryGetValue(friendCode, out Dictionary<string, UserPermissions>? cachedPermissions))
-            return cachedPermissions ?? [];
+        await using var command = _db.CreateCommand();
+        command.CommandText = $"DELETE FROM {ValidUsersTable} WHERE FriendCode = {FriendCodeParam}";
+        command.Parameters.AddWithValue(FriendCodeParam, friendCode);
+
+        try
+        {
+            var rows = await command.ExecuteNonQueryAsync();
+            if (rows is 1)
+                _userCache.Remove(friendCode);
+
+            return rows;
+        }
+        catch (Exception e)
+        {
+            _logger.LogWarning("Unable to delete user by friend code for {FriendCode}, {Exception}", friendCode,
+                e.Message);
+            return 0;
+        }
+    }
+
+    /// <summary>
+    ///     Creates an empty set of permissions between sender and target friend codes
+    /// </summary>
+    public async Task<bool> CreatePermissions(string senderFriendCode, string targetFriendCode)
+    {
+        await using var command = _db.CreateCommand();
+        command.CommandText =
+            $"""
+                 INSERT INTO {PermissionsTable} (UserFriendCode, TargetFriendCode, Version, PrimaryPermissions, LinkshellPermissions)
+                 VALUES ({FriendCodeParam}, {TargetFriendCodeParam}, {VersionParam}, {PrimaryPermissionsParam}, {LinkshellPermissionsParam})
+             """;
+        command.Parameters.AddWithValue(FriendCodeParam, senderFriendCode);
+        command.Parameters.AddWithValue(TargetFriendCodeParam, targetFriendCode);
+        command.Parameters.AddWithValue(VersionParam, CurrentPermissionConfigurationVersion);
+        command.Parameters.AddWithValue(PrimaryPermissionsParam, PrimaryPermissions.None);
+        command.Parameters.AddWithValue(LinkshellPermissionsParam, LinkshellPermissions.None);
+
+        try
+        {
+            return await command.ExecuteNonQueryAsync() is 1;
+        }
+        catch (Exception e)
+        {
+            _logger.LogWarning("Unable to create {FriendCode}'s permissions for {TargetFriendCode}, {Exception}",
+                senderFriendCode, targetFriendCode, e.Message);
+            return false;
+        }
+    }
+
+    /// <summary>
+    ///     Updates a set of permissions between sender and target friend codes
+    /// </summary>
+    public async Task<bool> UpdatePermissions(string senderFriendCode, string targetFriendCode,
+        UserPermissions permissions)
+    {
+        await using var command = _db.CreateCommand();
+        command.CommandText =
+            $"""
+                 UPDATE {PermissionsTable} 
+                 SET PrimaryPermissions = {PrimaryPermissionsParam}, LinkshellPermissions = {LinkshellPermissionsParam} 
+                 WHERE UserFriendCode = {FriendCodeParam} AND TargetFriendCode = {TargetFriendCodeParam}
+             """;
+        command.Parameters.AddWithValue(PrimaryPermissionsParam, permissions.Primary);
+        command.Parameters.AddWithValue(LinkshellPermissionsParam, permissions.Linkshell);
+        command.Parameters.AddWithValue(FriendCodeParam, senderFriendCode);
+        command.Parameters.AddWithValue(TargetFriendCodeParam, targetFriendCode);
+
+        try
+        {
+            var success = await command.ExecuteNonQueryAsync() is 1;
+            if (success)
+                _permissionsCache.Remove(senderFriendCode);
+
+            return success;
+        }
+        catch (Exception e)
+        {
+            _logger.LogWarning("Unable to update {FriendCode}'s permissions for {TargetFriendCode}, {Exception}",
+                senderFriendCode, targetFriendCode, e.Message);
+            return false;
+        }
+    }
+
+    /// <summary>
+    ///     Gets all the permissions sender has granted to others
+    /// </summary>
+    public async Task<FriendPermissions> GetPermissions(string friendCode)
+    {
+        if (_permissionsCache.Get(friendCode) is { } cachedPermissions)
+            return cachedPermissions;
 
         await using var command = _db.CreateCommand();
-        command.CommandText = $"SELECT TargetFriendCode, Version, PrimaryPermissions, LinkshellPermissions FROM {PermissionsTable} WHERE UserFriendCode={FriendCodeParam}";
+        command.CommandText =
+            $"""
+                SELECT TargetFriendCode, Version, PrimaryPermissions, LinkshellPermissions 
+                FROM {PermissionsTable} 
+                WHERE UserFriendCode={FriendCodeParam}
+             """;
         command.Parameters.AddWithValue(FriendCodeParam, friendCode);
 
         var result = new Dictionary<string, UserPermissions>();
@@ -204,106 +263,83 @@ public class DatabaseService : IDisposable
                 var primary = reader.GetInt32(2);
                 var linkshell = reader.GetInt32(3);
 
-                // If there are more than one version, make sure proper upgrading occurs
                 var permissions = version switch
                 {
-                    _ => new UserPermissions((PrimaryPermissions)primary, (LinkshellPermissions)linkshell)
+                    _ => new UserPermissions
+                        { Primary = (PrimaryPermissions)primary, Linkshell = (LinkshellPermissions)linkshell }
                 };
-                
+
                 result.Add(targetFriendCode, permissions);
             }
 
-            _permissionsCache.Set(friendCode, result);
-            return result;
+            var friendPermissions = new FriendPermissions { Permissions = result };
+            _permissionsCache.Set(friendCode, friendPermissions);
+            return friendPermissions;
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
-            _logger.LogWarning("Unable to retrieve permission list for friend code {FriendCode}, {Exception}", friendCode, ex.Message);
-            return [];
+            _logger.LogWarning("Unable to get permissions for {FriendCode}, {Exception}", friendCode, e.Message);
+            return new FriendPermissions();
         }
     }
 
     /// <summary>
-    /// Deletes the permissions a user has set for another 
+    ///     Deletes a set of permissions between sender and target friend code
     /// </summary>
-    public async Task<(int, string)> DeletePermissions(string friendCode, string targetFriend)
+    public async Task<bool> DeletePermissions(string senderFriendCode, string targetFriendCode)
     {
         await using var command = _db.CreateCommand();
-        command.CommandText = $"DELETE FROM {PermissionsTable} WHERE UserFriendCode={FriendCodeParam} AND TargetFriendCode={TargetFriendCodeParam}";
-        command.Parameters.AddWithValue(FriendCodeParam, friendCode);
-        command.Parameters.AddWithValue(TargetFriendCodeParam, targetFriend);
+        command.CommandText =
+            $"""
+                DELETE FROM {PermissionsTable} 
+                WHERE UserFriendCode={FriendCodeParam} AND TargetFriendCode={TargetFriendCodeParam}
+             """;
+        command.Parameters.AddWithValue(FriendCodeParam, senderFriendCode);
+        command.Parameters.AddWithValue(TargetFriendCodeParam, targetFriendCode);
 
         try
         {
-            var rows = await command.ExecuteNonQueryAsync();
-            if (rows > 0) _permissionsCache.Remove(friendCode);
-            return (rows, string.Empty);
+            var rows = await command.ExecuteNonQueryAsync() is 1;
+            if (rows)
+                _permissionsCache.Remove(senderFriendCode);
+
+            return rows;
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
-            _logger.LogWarning("Unable to delete permissions for friend code {FriendCode}, {Exception}", friendCode, ex);
-            return (0, ex.Message);
+            _logger.LogWarning("Unable to delete {FriendCode}'s permissions for {TargetFriendCode}, {Exception}",
+                senderFriendCode, targetFriendCode, e);
+            return false;
         }
     }
 
-    /// <summary>
-    /// Clears all table data and cache data
-    /// </summary>
-    public void ClearTables()
+    private void InitializeDbTables()
     {
-        // Must delete permissions table before valid users to preserve foreign key constraint
-        using var permissionsDeleteCommand = _db.CreateCommand();
-        permissionsDeleteCommand.CommandText = $"DELETE FROM {PermissionsTable}";
-        permissionsDeleteCommand.ExecuteNonQuery();
+        using var initializerValidUsersTable = _db.CreateCommand();
+        initializerValidUsersTable.CommandText =
+            $"""
+                 CREATE TABLE IF NOT EXISTS {ValidUsersTable} (
+                     FriendCode TEXT PRIMARY KEY,
+                     Secret TEXT NOT NULL UNIQUE,
+                     IsAdmin INTEGER NOT NULL
+                 )
+             """;
 
-        using var validUserDeleteCommand = _db.CreateCommand();
-        validUserDeleteCommand.CommandText = $"DELETE FROM {ValidUsersTable}";
-        validUserDeleteCommand.ExecuteNonQuery();
-
-        _userCache.Clear();
-        _permissionsCache.Clear();
-    }
-
-    /// <summary>
-    /// How should <see cref="GetUser"/> search for a user?
-    /// </summary>
-    [Flags]
-    public enum QueryUserType
-    {
-        FriendCode = 1 << 0,
-        Secret = 1 << 1
-    }
-
-    /// <summary>
-    /// Makes sure all tables exist, and if they don't create them
-    /// </summary>
-    private void ValidateDbTables()
-    {
-        using var validationCommand = _db.CreateCommand();
-        validationCommand.CommandText =
-           $"""
-                CREATE TABLE IF NOT EXISTS {ValidUsersTable} (
-                    FriendCode TEXT PRIMARY KEY,
-                    Secret TEXT NOT NULL UNIQUE,
-                    IsAdmin INTEGER NOT NULL
-                )
-            """;
-
-        validationCommand.ExecuteNonQuery();
+        initializerValidUsersTable.ExecuteNonQuery();
 
         /*
-         * This can be slightly confusing at first
-         * 
+         * This can be slightly confusing at first.
+         *
          * The idea is that this table contains a mapping of
          * user A to user B as the primary key, and then the
          * permissions that user A is granting to user B as
          * an integer that is converted to UserPermissions.
-         * 
+         *
          * The absence of permissions from user A to user B
          * means that user A has not added user B.
          */
-        using var friendshipCommand = _db.CreateCommand();
-        friendshipCommand.CommandText =
+        using var initializePermissionsTable = _db.CreateCommand();
+        initializePermissionsTable.CommandText =
             $"""
                  CREATE TABLE IF NOT EXISTS {PermissionsTable} (
                      UserFriendCode TEXT NOT NULL,
@@ -317,13 +353,22 @@ public class DatabaseService : IDisposable
                  )
              """;
 
-        friendshipCommand.ExecuteNonQuery();
+        initializePermissionsTable.ExecuteNonQuery();
     }
 
-    public void Dispose()
+    /// <summary>
+    /// Executes a db query to get a user from the ValidUsers table. This can throw an exception.
+    /// </summary>
+    private static async Task<User?> ExecuteGetUserQuery(SqliteCommand command)
     {
-        _db.Close();
-        _db.Dispose();
-        GC.SuppressFinalize(this);
+        await using var reader = await command.ExecuteReaderAsync();
+        if (await reader.ReadAsync() is false)
+            return null;
+
+        var friendCode = reader.GetString(0);
+        var secret = reader.GetString(1);
+        var isAdmin = reader.GetInt32(2) is 1;
+
+        return new User(friendCode, secret, isAdmin);
     }
 }
