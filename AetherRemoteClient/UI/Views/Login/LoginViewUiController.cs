@@ -15,6 +15,9 @@ public class LoginViewUiController(NetworkService networkService)
     {
         try
         {
+            Plugin.Configuration.Secret = Secret;
+            Plugin.Configuration.Save();
+            
             await networkService.StartAsync();
         }
         catch (Exception)

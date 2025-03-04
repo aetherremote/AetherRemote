@@ -220,6 +220,7 @@ public sealed class Plugin : IDalamudPlugin
      *  Damy
      *  Delilah
      *  Dub
+     *  Etche
      *  Eleanora
      *  Ferra
      *  Kaga
