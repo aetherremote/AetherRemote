@@ -45,7 +45,8 @@ public class MoodlesViewUi(
         {
             SharedUserInterfaces.MediumText("Quick Actions");
 
-            SharedUserInterfaces.IconButton(FontAwesomeIcon.Paste, IconSize);
+            if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Paste, IconSize))
+                _controller.Moodle = ImGui.GetClipboardText();
             SharedUserInterfaces.Tooltip("Paste moodle data from your clipboard");
         });
         

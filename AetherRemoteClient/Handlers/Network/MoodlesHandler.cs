@@ -56,7 +56,7 @@ public class MoodlesHandler(
             return;
         }
 
-        // Lacking permissions for body swap
+        // Lacking permissions for moodles
         if (friend.PermissionsGrantedToFriend.Has(PrimaryPermissions.Moodles) is false)
         {
             logService.LackingPermissions("Moodles", friend.NoteOrFriendCode);
@@ -94,24 +94,25 @@ public class MoodlesHandler(
                 return;
             }
 
-            // Indicate if the client does not have moodles, testing purposes for now
-            if (existingMoodlesBase64String.Length is 0)
+            // Make a list of moodles
+            var moodles = new List<MyStatus>();
+
+            // If the client already has moodles, deserialize those and add to it
+            if (existingMoodlesBase64String.Length is not 0)
             {
-                Plugin.Log.Warning("Target does not have any moodles or moodles returned empty string");
+                // Convert the moodle list from a string to byte array
+                var bytesMoodles = Convert.FromBase64String(existingMoodlesBase64String);
+
+                // Deserialize the byte array into a moodle list
+                moodles = MemoryPackSerializer.Deserialize<List<MyStatus>>(bytesMoodles, _serializerOptions);
+                if (moodles is null)
+                {
+                    Plugin.Log.Warning("[MoodlesHandler] Existing moodles deserialization failed, aborting");
+                    logService.Custom($"{friend.NoteOrFriendCode} tried to apply a moodle but failed unexpectedly");
+                    return;
+                }
             }
-
-            // Convert the moodle list from a string to byte array
-            var bytesMoodles = Convert.FromBase64String(existingMoodlesBase64String);
-
-            // Deserialize the byte array into a moodle list
-            var moodles = MemoryPackSerializer.Deserialize<List<MyStatus>>(bytesMoodles, _serializerOptions);
-            if (moodles is null)
-            {
-                Plugin.Log.Warning("[MoodlesHandler] Existing moodles deserialization failed, aborting");
-                logService.Custom($"{friend.NoteOrFriendCode} tried to apply a moodle but failed unexpectedly");
-                return;
-            }
-
+            
             // Add the new moodle
             moodles.Add(moodle);
 
