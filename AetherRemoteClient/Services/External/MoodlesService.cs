@@ -2,8 +2,6 @@ using System;
 using System.Threading.Tasks;
 using System.Timers;
 using Dalamud.Plugin.Ipc;
-using Moodles.Data;
-using Newtonsoft.Json;
 
 namespace AetherRemoteClient.Services.External;
 

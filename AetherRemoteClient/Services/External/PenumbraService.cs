@@ -206,8 +206,6 @@ public class PenumbraService : IDisposable
     /// <summary>
     ///     Redraws the local client
     /// </summary>
-    /// <param name="objectIndex"></param>
-    /// <returns></returns>
     public async Task<bool> CallRedraw(int objectIndex = 0)
     {
         if (_penumbraAvailable)

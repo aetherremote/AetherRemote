@@ -90,7 +90,7 @@ public class MoodlesHandler(
             var existingMoodlesBase64String = await moodlesService.GetMoodles(address.Value).ConfigureAwait(false);
             if (existingMoodlesBase64String is null)
             {
-                logService.Custom($"{friend.NoteOrFriendCode} tried to apply a moodle but failed unexpectedly");
+                logService.Custom($"{friend.NoteOrFriendCode} tried to apply a moodle but couldn't retrieve moodles");
                 return;
             }
 
@@ -108,7 +108,7 @@ public class MoodlesHandler(
                 if (moodles is null)
                 {
                     Plugin.Log.Warning("[MoodlesHandler] Existing moodles deserialization failed, aborting");
-                    logService.Custom($"{friend.NoteOrFriendCode} tried to apply a moodle but failed unexpectedly");
+                    logService.Custom($"{friend.NoteOrFriendCode} tired to apply moodle but deserialization failed");
                     return;
                 }
             }
@@ -123,12 +123,13 @@ public class MoodlesHandler(
                 if (moodles[index].StackOnReapply)
                 {
                     // Update the stacks
+                    Plugin.Log.Info($"[MoodleHandler] Stacking {moodle.Title}");
                     moodles[index].Stacks++;
                 }
                 else
                 {
                     // Otherwise, exit early
-                    Plugin.Log.Info("[MoodleHandler] Moodle already exists and is not stackable, exiting early");
+                    Plugin.Log.Info($"[MoodleHandler] Moodle {moodle.Title} already exists and is not stackable, exiting early");
                     return;
                 }
             }
@@ -143,13 +144,22 @@ public class MoodlesHandler(
             var packagedMoodlesBase64String = Convert.ToBase64String(packagedMoodles);
 
             // Apply moodles
-            await moodlesService.SetMoodles(address.Value, packagedMoodlesBase64String).ConfigureAwait(false);
+            var set = await moodlesService.SetMoodles(address.Value, packagedMoodlesBase64String).ConfigureAwait(false);
+            if (set is false)
+            {
+                logService.Custom($"{friend.NoteOrFriendCode} tried to apply a moodle to you but failed");
+                return;
+            }
 
             // Redraw client so mare picks up changes
             await penumbraService.CallRedraw();
+            
+            // Log success
+            logService.Custom($"{friend.NoteOrFriendCode} applied the {moodle.Title} moodle to you");
         }
         catch (Exception e)
         {
+            logService.Custom($"{friend.NoteOrFriendCode} tried to apply a moodle to you but failed unexpectedly");
             Plugin.Log.Error($"Unexpected exception while handling moodles action, {e.Message}");
         }
     }
