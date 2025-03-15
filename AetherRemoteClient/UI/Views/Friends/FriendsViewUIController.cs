@@ -159,6 +159,7 @@ public class FriendsViewUiController : IDisposable
         EditingUserPermissions.PvPTeam = allowed;
         EditingUserPermissions.Echo = allowed;
         EditingUserPermissions.ChatEmote = allowed;
+        EditingUserPermissions.Moodles = allowed;
         EditingUserPermissions.Ls1 = allowed;
         EditingUserPermissions.Ls2 = allowed;
         EditingUserPermissions.Ls3 = allowed;

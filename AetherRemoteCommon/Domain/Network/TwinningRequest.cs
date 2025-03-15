@@ -1,3 +1,4 @@
+using AetherRemoteCommon.Domain.Enums;
 using MessagePack;
 
 namespace AetherRemoteCommon.Domain.Network;
@@ -6,5 +7,6 @@ namespace AetherRemoteCommon.Domain.Network;
 public record TwinningRequest : BaseRequest
 {
     public CharacterIdentity Identity { get; set; } = new();
-    public bool SwapMods { get; set; }
+   
+    public CharacterAttributes SwapAttributes { get; set; }
 }

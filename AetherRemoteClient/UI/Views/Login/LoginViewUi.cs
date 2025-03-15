@@ -13,7 +13,7 @@ public class LoginViewUi(NetworkService networkService) : IDrawable
     
     public bool Draw()
     {
-        ImGui.BeginChild("OverridesContent", Vector2.Zero, false, AetherRemoteStyle.ContentFlags);
+        ImGui.BeginChild("LoginContent", Vector2.Zero, false, AetherRemoteStyle.ContentFlags);
         
         ImGui.AlignTextToFramePadding();
         

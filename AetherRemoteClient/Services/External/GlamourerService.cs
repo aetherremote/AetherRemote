@@ -81,7 +81,11 @@ public class GlamourerService : IDisposable
             try
             {
                 var result = _revertState.Invoke(objectIndex);
-                return result is GlamourerApiEc.Success;
+                if (result is GlamourerApiEc.Success)
+                    return true;
+                    
+                Plugin.Log.Warning($"[GlamourerService] [RevertToGame] Unsuccessful for {objectIndex}, {result}");
+                return false;
             }
             catch (Exception ex)
             {
@@ -101,7 +105,11 @@ public class GlamourerService : IDisposable
             try
             {
                 var result = _revertToAutomation.Invoke(objectIndex);
-                return result is GlamourerApiEc.Success;
+                if (result is GlamourerApiEc.Success)
+                    return true;
+                
+                Plugin.Log.Warning($"[GlamourerService] [RevertToAutomation] Unsuccessful for {objectIndex}, {result}");
+                return false;
             }
             catch (Exception ex)
             {
@@ -124,7 +132,12 @@ public class GlamourerService : IDisposable
             try
             {
                 var result = _applyState.Invoke(glamourerData, objectIndex, 0, ConvertGlamourerToApplyFlags2(flags));
-                return result is GlamourerApiEc.Success;
+                
+                if (result is GlamourerApiEc.Success)
+                    return true;
+                
+                Plugin.Log.Warning($"[GlamourerService] [ApplyDesignAsync] Unsuccessful for {objectIndex}, {result}");
+                return false;
             }
             catch (Exception ex)
             {

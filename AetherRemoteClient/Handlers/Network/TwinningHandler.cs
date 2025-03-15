@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using AetherRemoteClient.Domain.Enums;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain.Enums;
@@ -50,8 +49,9 @@ public class TwinningHandler(
             logService.LackingPermissions("Twinning", friend.NoteOrFriendCode);
             return;
         }
-
-        if (action.SwapMods)
+        
+        // If mods are an attribute...
+        if (action.SwapAttributes.HasFlag(CharacterAttributes.Mods))
         {
             // Overriding mods
             if (overrideService.HasActiveOverride(PrimaryPermissions.Mods))
@@ -68,20 +68,33 @@ public class TwinningHandler(
             }
         }
         
+        // If moodles are an attribute...
+        if (action.SwapAttributes.HasFlag(CharacterAttributes.Moodles))
+        {
+            // Overriding mods
+            if (overrideService.HasActiveOverride(PrimaryPermissions.Moodles))
+            {
+                logService.Override("Twinning", friend.NoteOrFriendCode);
+                return;
+            }
+
+            // Lacking permissions for mods
+            if (friend.PermissionsGrantedToFriend.Has(PrimaryPermissions.Moodles) is false)
+            {
+                logService.LackingPermissions("Twinning", friend.NoteOrFriendCode);
+                return;
+            }
+        }
+        
         // Check if local body is present
         if (await Plugin.RunOnFramework(() => Plugin.ClientState.LocalPlayer is null).ConfigureAwait(false))
         { 
             logService.MissingLocalBody("Twinning", friend.NoteOrFriendCode);
             return;
         }
-        
-        // Add attributes from the input
-        var attributes = CharacterAttributes.None;
-        if (action.SwapMods)
-            attributes |= CharacterAttributes.Mods;
 
         // Actually apply glamourer, mods, etc...
-        await modManager.Assimilate(action.Identity.GameObjectName, attributes);
+        await modManager.Assimilate(action.Identity.GameObjectName, action.SwapAttributes);
 
         // Set your new identity
         identityService.Identity = action.Identity.CharacterName;

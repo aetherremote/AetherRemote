@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AetherRemoteClient.Domain.Enums;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
@@ -23,6 +22,7 @@ public class BodySwapViewUiController(
 {
     public bool IncludeSelfInSwap;
     public bool SwapMods;
+    public bool SwapMoodles;
 
     /// <summary>
     ///     Handles the swap button from the Ui
@@ -34,10 +34,16 @@ public class BodySwapViewUiController(
             if (Plugin.ClientState.LocalPlayer is not { } player)
                 return;
 
+            var attributes = CharacterAttributes.None;
+            if (SwapMods)
+                attributes |= CharacterAttributes.Mods;
+            if (SwapMoodles)
+                attributes |= CharacterAttributes.Moodles;
+            
             var input = new BodySwapRequest
             {
-                SwapMods = SwapMods,
                 TargetFriendCodes = friendsListService.Selected.Select(friend => friend.FriendCode).ToList(),
+                SwapAttributes = attributes,
                 Identity = IncludeSelfInSwap
                     ? new CharacterIdentity
                     {
@@ -63,11 +69,6 @@ public class BodySwapViewUiController(
                 {
                     Plugin.NotificationManager.AddNotification(NotificationHelper.Success(
                         "Successfully swapped bodies", string.Empty));
-
-                    // Add attributes from the input
-                    var attributes = CharacterAttributes.None;
-                    if (input.SwapMods)
-                        attributes |= CharacterAttributes.Mods;
                     
                     // Actually apply glamourer, mods, etc...
                     await modManager.Assimilate(response.Identity.GameObjectName, attributes).ConfigureAwait(false);

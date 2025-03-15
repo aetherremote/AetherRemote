@@ -1,25 +1,31 @@
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Services.External;
 using AetherRemoteClient.Utils;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using ImGuiNET;
 
-namespace AetherRemoteClient.UI.Views.Twinning;
+namespace AetherRemoteClient.UI.Views.Moodles;
 
-public class TwinningViewUi(
+public class MoodlesViewUi(
     CommandLockoutService commandLockoutService,
     FriendsListService friendsListService,
-    IdentityService identityService,
-    NetworkService networkService): IDrawable
+    NetworkService networkService) : IDrawable
 {
-    private readonly TwinningViewUiController _controller = new(friendsListService, identityService, networkService);
-    
+    // Const
+    private static readonly Vector2 IconSize = new(32);
+
+    // Instantiated
+    private readonly MoodlesViewUiController _controller = new(friendsListService, networkService);
+
     public bool Draw()
     {
-        ImGui.BeginChild("TwinningContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
-        
+        ImGui.BeginChild("MoodlesContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
+
+        var windowWidthHalf = ImGui.GetWindowWidth() * 0.5f;
+
         if (friendsListService.Selected.Count is 0)
         {
             SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground,
@@ -28,23 +34,19 @@ public class TwinningViewUi(
             ImGui.EndChild();
             return true;
         }
-        
+
         SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
         {
-            SharedUserInterfaces.MediumText("Information");
-            ImGui.TextWrapped(
-                "Twinning must be done in rendering distance of your target(s). You can undo a twinning on yourself by going into the 'Status' tab, or reverting your character in glamourer. ");
+            SharedUserInterfaces.MediumText("Saved Moodles");
+            ImGui.TextColored(ImGuiColors.DalamudGrey, "Coming in a future update");
         });
-        
-        var half = ImGui.GetWindowWidth() * 0.5f;
+
         SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
         {
-            SharedUserInterfaces.MediumText("Options");
-            ImGui.Checkbox("Swap Mods", ref _controller.SwapMods);
-            
-            ImGui.SameLine();
-            ImGui.SetCursorPosX(half);
-            ImGui.Checkbox("Swap Moodles", ref _controller.SwapMoodles);
+            SharedUserInterfaces.MediumText("Quick Actions");
+
+            SharedUserInterfaces.IconButton(FontAwesomeIcon.Paste, IconSize);
+            SharedUserInterfaces.Tooltip("Paste moodle data from your clipboard");
         });
         
         var friendsLackingPermissions = _controller.GetFriendsLackingPermissions();
@@ -60,28 +62,37 @@ public class TwinningViewUi(
                 ImGui.TextWrapped(string.Join(", ", friendsLackingPermissions));
             });
         }
-        
+
         SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
         {
-            SharedUserInterfaces.MediumText("Twinning");
+            SharedUserInterfaces.MediumText("Moodle Data");
 
-            var width = new Vector2(ImGui.GetWindowWidth() - ImGui.GetStyle().WindowPadding.X * 2, 0);
+            var width = (windowWidthHalf - ImGui.GetStyle().WindowPadding.X) * 2;
+            ImGui.SetNextItemWidth(width);
+            var shouldSendMoodle = ImGui.InputTextWithHint("##MoodleData", "Moodle data", ref _controller.Moodle, 5000,
+                ImGuiInputTextFlags.EnterReturnsTrue);
+
+            ImGui.Spacing();
+
             if (commandLockoutService.IsLocked)
             {
                 ImGui.BeginDisabled();
-                ImGui.Button("Twin", width);
+                ImGui.Button("Apply Moodle", new Vector2(width, 0));
                 ImGui.EndDisabled();
             }
             else
             {
-                if (ImGui.Button("Twin", width) is false)
+                if (ImGui.Button("Apply Moodle", new Vector2(width, 0)))
+                    shouldSendMoodle = true;
+
+                if (shouldSendMoodle is false)
                     return;
-                
+
                 commandLockoutService.Lock();
-                _controller.Twin();
+                _controller.SendMoodle();
             }
         });
-        
+
         ImGui.EndChild();
         return true;
     }

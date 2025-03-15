@@ -126,6 +126,12 @@ public class OverridesViewUi(OverrideService overrideService) : IDrawable
 
             ImGui.TextUnformatted("Mod Swapping");
             ImGui.Checkbox("Allow##Mods", ref _controller.Overrides.Mods);
+        });
+        
+        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        {
+            ImGui.TextUnformatted("Moodles");
+            ImGui.Checkbox("Allow##Moodles", ref _controller.Overrides.Moodles);
         }, true, false);
 
         if (_controller.PendingChanges())

@@ -48,6 +48,12 @@ public class PrimaryHub(
         return await handlerRegistry.GetAccountDataHandler.Handle(FriendCode, request);
     }
 
+    [HubMethodName(HubMethod.Moodles)]
+    public async Task<BaseResponse> GetMoodlesAction(MoodlesRequest request)
+    {
+        return await handlerRegistry.MoodlesHandler.Handle(FriendCode, request, Clients);
+    }
+
     [HubMethodName(HubMethod.RemoveFriend)]
     public async Task<BaseResponse> RemoveFriend(RemoveFriendRequest request)
     {

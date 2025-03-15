@@ -1,3 +1,4 @@
+using AetherRemoteCommon.Domain.Enums;
 using MessagePack;
 
 namespace AetherRemoteCommon.Domain.Network;
@@ -6,12 +7,12 @@ namespace AetherRemoteCommon.Domain.Network;
 public record BodySwapRequest : BaseRequest
 {
     /// <summary>
-    ///     Should mods be swapped?
-    /// </summary>
-    public bool SwapMods { get; set; }
-    
-    /// <summary>
     ///     Set this if including self in swap
     /// </summary>
     public CharacterIdentity? Identity { get; set; }
+    
+    /// <summary>
+    ///     Attributes to swap on a character
+    /// </summary>
+    public CharacterAttributes SwapAttributes { get; set; }
 }

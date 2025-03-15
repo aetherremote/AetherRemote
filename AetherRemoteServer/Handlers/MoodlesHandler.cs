@@ -7,24 +7,28 @@ using Microsoft.AspNetCore.SignalR;
 namespace AetherRemoteServer.Handlers;
 
 /// <summary>
-///     Handles the logic for fulfilling a <see cref="TwinningRequest"/>
+///     Handles the logic for fulling a <see cref="MoodlesRequest"/>
 /// </summary>
-public class TwinningHandler(
+public class MoodlesHandler(
     DatabaseService databaseService,
     ConnectedClientsManager connectedClientsManager,
-    ILogger<AddFriendHandler> logger)
+    ILogger<MoodlesHandler> logger)
 {
     /// <summary>
-    ///     Handle the request
+    ///     Handles the request
     /// </summary>
-    public async Task<BaseResponse> Handle(string friendCode, TwinningRequest request, IHubCallerClients clients)
+    public async Task<BaseResponse> Handle(string friendCode, MoodlesRequest request, IHubCallerClients clients)
     {
         if (connectedClientsManager.IsUserExceedingRequestLimit(friendCode))
         {
             logger.LogWarning("{Friend} exceeded request limit", friendCode);
-            return new BaseResponse { Success = false, Message = "Exceeded request limit" };
+            return new BaseResponse
+            {
+                Success = false, 
+                Message = "Exceeded request limit"
+            };
         }
-        
+
         foreach (var target in request.TargetFriendCodes)
         {
             if (connectedClientsManager.ConnectedClients.TryGetValue(target, out var connectedClient) is false)
@@ -32,43 +36,38 @@ public class TwinningHandler(
                 logger.LogInformation("{Issuer} targeted {Target} but they are offline, skipping", friendCode, target);
                 continue;
             }
-
+            
             var targetPermissions = await databaseService.GetPermissions(target);
             if (targetPermissions.Permissions.TryGetValue(friendCode, out var permissionsGranted) is false)
             {
                 logger.LogInformation("{Issuer} targeted {Target} who is not a friend, skipping", friendCode, target);
                 continue;
             }
-
-            if (permissionsGranted.Primary.HasFlag(PrimaryPermissions.Twinning) is false)
+            
+            if (permissionsGranted.Primary.HasFlag(PrimaryPermissions.Moodles) is false)
             {
                 logger.LogInformation("{Issuer} targeted {Target} but lacks permissions, skipping", friendCode, target);
-                continue;
-            }
-            
-            if (request.SwapAttributes.HasFlag(CharacterAttributes.Mods) && permissionsGranted.Primary.HasFlag(PrimaryPermissions.Mods) is false)
-            {
-                logger.LogInformation("{Issuer} targeted {Target} but lacks mod permissions, skipping", friendCode, target);
                 continue;
             }
 
             try
             {
-                var command = new TwinningAction
+                var command = new MoodlesAction
                 {
                     SenderFriendCode = friendCode,
-                    SwapAttributes = request.SwapAttributes,
-                    Identity = request.Identity,
+                    Moodle = request.Moodle
                 };
                 
-                await clients.Client(connectedClient.ConnectionId).SendAsync(HubMethod.Twinning, command);
+                logger.LogInformation("Sending {Moodle} to {FriendCode}", target, request.Moodle);
+                
+                await clients.Client(connectedClient.ConnectionId).SendAsync(HubMethod.Moodles, command);
             }
             catch (Exception e)
             {
                 logger.LogWarning("{Issuer} send action to {Target} failed, {Error}", friendCode, target, e.Message);
             }
         }
-
+        
         return new BaseResponse { Success = true };
     }
 }

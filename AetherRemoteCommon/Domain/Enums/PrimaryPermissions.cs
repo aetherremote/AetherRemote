@@ -30,5 +30,8 @@ public enum PrimaryPermissions
     Equipment = 1 << 12,
     Mods = 1 << 13,
     BodySwap = 1 << 14,
-    Twinning = 1 << 15
+    Twinning = 1 << 15,
+    
+    // Misc
+    Moodles = 1 << 17
 }

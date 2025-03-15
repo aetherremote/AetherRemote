@@ -13,7 +13,7 @@ public class BooleanUserPermissions
     public bool Speak, Emote, Say, Yell, Shout, Tell, Party, Alliance, FreeCompany, PvPTeam, Echo, ChatEmote;
     
     // Misc Permissions
-    public bool Customization, Equipment, Mods, BodySwap, Twinning;
+    public bool Customization, Equipment, Mods, BodySwap, Twinning, Moodles;
     
     // Linkshell Permissions
     public bool Ls1, Ls2, Ls3, Ls4, Ls5, Ls6, Ls7, Ls8, Cwl1, Cwl2, Cwl3, Cwl4, Cwl5, Cwl6, Cwl7, Cwl8;
@@ -43,6 +43,7 @@ public class BooleanUserPermissions
         if (Mods != other.Mods) return false;
         if (BodySwap != other.BodySwap) return false;
         if (Twinning != other.Twinning) return false;
+        if (Moodles != other.Moodles) return false;
         
         // Linkshell Permissions
         if (Ls1 != other.Ls1) return false;
@@ -92,6 +93,7 @@ public class BooleanUserPermissions
             Mods = (permissions.Primary & PrimaryPermissions.Mods) == PrimaryPermissions.Mods,
             BodySwap = (permissions.Primary & PrimaryPermissions.BodySwap) == PrimaryPermissions.BodySwap,
             Twinning = (permissions.Primary & PrimaryPermissions.Twinning) == PrimaryPermissions.Twinning,
+            Moodles = (permissions.Primary & PrimaryPermissions.Moodles) == PrimaryPermissions.Moodles,
             
             // Linkshell Permissions
             Ls1 = (permissions.Linkshell & LinkshellPermissions.Ls1) == LinkshellPermissions.Ls1,
@@ -141,6 +143,7 @@ public class BooleanUserPermissions
         if (permissions.Mods) primary |= PrimaryPermissions.Mods;
         if (permissions.BodySwap) primary |= PrimaryPermissions.BodySwap;
         if (permissions.Twinning) primary |= PrimaryPermissions.Twinning;
+        if (permissions.Moodles) primary |= PrimaryPermissions.Moodles;
         
         // Linkshell Permissions
         if (permissions.Ls1) linkshell |= LinkshellPermissions.Ls1;

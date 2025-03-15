@@ -25,7 +25,7 @@ public class FriendsListComponentUiController(FriendsListService friendsListServ
     /// <summary>
     ///     Filters the friend's list to allow for easier rendering on the UI
     /// </summary>
-    public ListFilter<Friend> FriendListFilter = new(friendsListService.Friends, FilterPredicate);
+    public readonly ListFilter<Friend> FriendListFilter = new(friendsListService.Friends, FilterPredicate);
 
     /// <summary>
     ///     Handles adding a friend to your friends list

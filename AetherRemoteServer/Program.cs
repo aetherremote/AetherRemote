@@ -47,6 +47,7 @@ public class Program
         builder.Services.AddSingleton<BodySwapHandler>();
         builder.Services.AddSingleton<EmoteHandler>();
         builder.Services.AddSingleton<GetAccountDataHandler>();
+        builder.Services.AddSingleton<MoodlesHandler>();
         builder.Services.AddSingleton<RemoveFriendHandler>();
         builder.Services.AddSingleton<SpeakHandler>();
         builder.Services.AddSingleton<TransformHandler>();

@@ -175,6 +175,12 @@ public class FriendsViewUi(FriendsListService friendsListService, NetworkService
 
             ImGui.TextUnformatted("Mod Swapping");
             ImGui.Checkbox("Allow###ModSwapping", ref _controller.EditingUserPermissions.Mods);
+        });
+        
+        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        {
+            ImGui.TextUnformatted("Moodles");
+            ImGui.Checkbox("Allow###Moodles", ref _controller.EditingUserPermissions.Moodles);
         }, true, false);
 
         // Pending Changes

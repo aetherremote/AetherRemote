@@ -1,5 +1,6 @@
+using System;
+using System.Linq;
 using System.Threading.Tasks;
-using AetherRemoteClient.Domain.Enums;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain.Enums;
@@ -50,8 +51,9 @@ public class BodySwapHandler(
             logService.LackingPermissions("Body Swap", friend.NoteOrFriendCode);
             return;
         }
-
-        if (action.SwapMods)
+        
+        // If mods are an attribute...
+        if (action.SwapAttributes.HasFlag(CharacterAttributes.Mods))
         {
             // Overriding mods
             if (overrideService.HasActiveOverride(PrimaryPermissions.Mods))
@@ -68,6 +70,24 @@ public class BodySwapHandler(
             }
         }
         
+        // If moodles are an attribute...
+        if (action.SwapAttributes.HasFlag(CharacterAttributes.Moodles))
+        {
+            // Overriding mods
+            if (overrideService.HasActiveOverride(PrimaryPermissions.Moodles))
+            {
+                logService.Override("Body Swap", friend.NoteOrFriendCode);
+                return;
+            }
+
+            // Lacking permissions for mods
+            if (friend.PermissionsGrantedToFriend.Has(PrimaryPermissions.Moodles) is false)
+            {
+                logService.LackingPermissions("Body Swap", friend.NoteOrFriendCode);
+                return;
+            }
+        }
+        
         // Check if local body is present
         if (await Plugin.RunOnFramework(() => Plugin.ClientState.LocalPlayer is null).ConfigureAwait(false))
         { 
@@ -75,13 +95,8 @@ public class BodySwapHandler(
             return;
         }
         
-        // Add attributes from the input
-        var attributes = CharacterAttributes.None;
-        if (action.SwapMods)
-            attributes |= CharacterAttributes.Mods;
-
         // Actually apply glamourer, mods, etc...
-        if (await modManager.Assimilate(action.Identity.GameObjectName, attributes) is false)
+        if (await modManager.Assimilate(action.Identity.GameObjectName, action.SwapAttributes) is false)
             return;
 
         // Set your new identity

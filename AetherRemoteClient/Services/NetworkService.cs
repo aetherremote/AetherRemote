@@ -198,6 +198,7 @@ public class NetworkService : IDisposable
             var error = response.StatusCode switch
             {
                 HttpStatusCode.Unauthorized => "[NetworkHelper] Unable to authenticate, invalid secret",
+                HttpStatusCode.BadRequest => "[NetworkHelper] Unable to authenticate, outdated client",
                 _ => $"[NetworkHelper] Unable to authenticate, {response.StatusCode}"
             };
 

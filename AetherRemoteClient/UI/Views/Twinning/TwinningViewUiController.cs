@@ -16,6 +16,7 @@ public class TwinningViewUiController(
     NetworkService networkService)
 {
     public bool SwapMods;
+    public bool SwapMoodles;
 
     public async void Twin()
     {
@@ -24,15 +25,21 @@ public class TwinningViewUiController(
             if (Plugin.ClientState.LocalPlayer is not { } player)
                 return;
 
+            var attributes = CharacterAttributes.None;
+            if (SwapMods)
+                attributes |= CharacterAttributes.Mods;
+            if (SwapMoodles)
+                attributes |= CharacterAttributes.Moodles;
+
             var input = new TwinningRequest
             {
                 TargetFriendCodes = friendsListService.Selected.Select(friend => friend.FriendCode).ToList(),
+                SwapAttributes = attributes,
                 Identity = new CharacterIdentity
                 {
                     GameObjectName = player.Name.ToString(),
                     CharacterName = identityService.Identity
                 },
-                SwapMods = SwapMods
             };
 
             var response = await networkService.InvokeAsync<TwinningRequest, BaseResponse>(HubMethod.Twinning, input);

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AetherRemoteClient.Domain.Enums;
 using AetherRemoteClient.Domain.Events;
 using AetherRemoteClient.Services.External;
 using AetherRemoteCommon.Domain.Enums;
@@ -19,14 +18,16 @@ public class ModManager : IDisposable
 
     // Injected
     private readonly GlamourerService _glamourerService;
+    private readonly MoodlesService _moodlesService;
     private readonly PenumbraService _penumbraService;
 
     /// <summary>
     ///     <inheritdoc cref="ModManager"/>
     /// </summary>
-    public ModManager(GlamourerService glamourerService, PenumbraService penumbraService)
+    public ModManager(GlamourerService glamourerService, MoodlesService moodlesService, PenumbraService penumbraService)
     {
         _glamourerService = glamourerService;
+        _moodlesService = moodlesService;
         _penumbraService = penumbraService;
 
         _glamourerService.LocalPlayerResetOrReapply += OnPlayerResetOrReapply;
@@ -48,27 +49,28 @@ public class ModManager : IDisposable
 
         // Remove Existing Temp Mods
         await _penumbraService.CallRemoveTemporaryMod(TemporaryModName, collection, Priority).ConfigureAwait(false);
-
-        var index = await Plugin.RunOnFramework(() =>
+        
+        // Get a game object for target player in object table
+        var gameObject = await Plugin.RunOnFramework(() =>
         {
             for (ushort i = 0; i < Plugin.ObjectTable.Length; i++)
             {
                 if (Plugin.ObjectTable[i]?.Name.TextValue == targetCharacterName)
-                    return i;
+                    return Plugin.ObjectTable[i];
             }
 
-            return ushort.MaxValue;
+            return null;
         }).ConfigureAwait(false);
 
         // If the object was not found in the table, exit
-        if (index is ushort.MaxValue)
+        if (gameObject is null)
         {
             Plugin.Log.Warning($"Unable to find {targetCharacterName} in object table");
             return false;
         }
 
         // Get Glamourer design
-        if (await _glamourerService.GetDesignAsync(index).ConfigureAwait(false) is not { } glamourer)
+        if (await _glamourerService.GetDesignAsync(gameObject.ObjectIndex).ConfigureAwait(false) is not { } glamourer)
         {
             Plugin.Log.Warning($"Unable to find {targetCharacterName} in object table");
             return false;
@@ -85,9 +87,19 @@ public class ModManager : IDisposable
         {
             characterData.ModInfo = new PenumbraCharacterModInfo
             {
-                ModifiedPaths = await _penumbraService.GetGameObjectResourcePaths(index).ConfigureAwait(false),
-                MetaData = await _penumbraService.GetMetaManipulations(index).ConfigureAwait(false)
+                ModifiedPaths = await _penumbraService.GetGameObjectResourcePaths(gameObject.ObjectIndex).ConfigureAwait(false),
+                MetaData = await _penumbraService.GetMetaManipulations(gameObject.ObjectIndex).ConfigureAwait(false)
             };
+        }
+        
+        // Get moodles if the option was provided
+        if ((attributes & CharacterAttributes.Moodles) == CharacterAttributes.Moodles)
+        {
+            // TODO: Store original moodles before swap
+            
+            characterData.Moodles = await _moodlesService.GetMoodles(gameObject.Address).ConfigureAwait(false);
+            if (characterData.Moodles is null)
+                Plugin.Log.Warning("[ModManager] Moodles were null.");
         }
 
         // Pause to allow others viewing your character details from their clients
@@ -113,6 +125,36 @@ public class ModManager : IDisposable
                         Priority).ConfigureAwait(false) is false)
             {
                 Plugin.Log.Warning($"Could not add {targetCharacterName}'s mods");
+                return false;
+            }
+        }
+        
+        // Apply moodles if the option was provided
+        if ((attributes & CharacterAttributes.Moodles) == CharacterAttributes.Moodles)
+        {
+            if (characterData.Moodles is null)
+            {
+                Plugin.Log.Warning($"Expected mods from {targetCharacterName} but none were present");
+                return false;
+            }
+
+            if (await Plugin.RunOnFramework(() => Plugin.ClientState.LocalPlayer).ConfigureAwait(false) is null)
+            {
+                Plugin.Log.Warning($"Unable to assimilate {targetCharacterName}'s moodles because you don't have a body");
+                return false;
+            }
+            
+            var ownAddress = await Plugin.RunOnFramework(() => Plugin.ObjectTable[0]?.Address).ConfigureAwait(false);
+            if (ownAddress is null)
+            {
+                Plugin.Log.Warning($"Could not find own address");
+                return false;
+            }
+
+            if (await _moodlesService.SetMoodles(ownAddress.Value, characterData.Moodles)
+                    .ConfigureAwait(false) is false)
+            {
+                Plugin.Log.Warning($"Could not add {targetCharacterName}'s moodles");
                 return false;
             }
         }
@@ -174,5 +216,10 @@ public class ModManager : IDisposable
         ///     The character's penumbra mod info
         /// </summary>
         public PenumbraCharacterModInfo? ModInfo;
+        
+        /// <summary>
+        ///     The character's current moodles
+        /// </summary>
+        public string? Moodles = string.Empty;
     }
 }

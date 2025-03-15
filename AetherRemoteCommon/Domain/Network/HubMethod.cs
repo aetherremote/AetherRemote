@@ -25,4 +25,6 @@ public static class HubMethod
     
     public const string SyncOnlineStatus = "SyncOnlineStatus";
     public const string SyncPermissions = "SyncPermissions";
+    
+    public const string Moodles = "Moodles";
 }

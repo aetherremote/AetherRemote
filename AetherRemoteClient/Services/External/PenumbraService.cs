@@ -22,10 +22,11 @@ public class PenumbraService : IDisposable
     private readonly GetGameObjectResourcePaths _getGameObjectResourcePaths;
     private readonly GetMetaManipulations _getMetaManipulations;
     private readonly GetCollectionForObject _getCollectionForObject;
+    private readonly RemoveTemporaryMod _removeTemporaryMod;
+    private readonly RedrawObject _redrawObject;
     
     // Check Penumbra Api
     private readonly Timer _periodicPenumbraTest;
-    private readonly RemoveTemporaryMod _removeTemporaryMod;
 
     /// <summary>
     ///     Is the penumbra api available for use?
@@ -43,6 +44,7 @@ public class PenumbraService : IDisposable
         _getMetaManipulations = new GetMetaManipulations(Plugin.PluginInterface);
         _removeTemporaryMod = new RemoveTemporaryMod(Plugin.PluginInterface);
         _getCollectionForObject = new GetCollectionForObject(Plugin.PluginInterface);
+        _redrawObject = new RedrawObject(Plugin.PluginInterface);
         
         _periodicPenumbraTest = new Timer(TestApiIntervalInSeconds * 1000);
         _periodicPenumbraTest.AutoReset = true;
@@ -85,10 +87,6 @@ public class PenumbraService : IDisposable
 
             foreach (var kvp in resource)
             {
-                //if (kvp.Value.Count is 1 && kvp.Key == kvp.Value.First())
-                //    continue;
-                //
-
                 foreach (var item in kvp.Value)
                     paths.Add(item, kvp.Key);
             }
@@ -159,7 +157,11 @@ public class PenumbraService : IDisposable
                 try
                 {
                     var result = _addTemporaryMod.Invoke(tag, collectionGuid, modifiedPaths, meta, priority);
-                    return result is PenumbraApiEc.Success;
+                    if (result is PenumbraApiEc.Success)
+                        return true;
+                    
+                    Plugin.Log.Warning($"[PenumbraService] [CallAddTemporaryMod] Unsuccessful, {result}");
+                    return false;
                 }
                 catch (Exception ex)
                 {
@@ -184,7 +186,11 @@ public class PenumbraService : IDisposable
                 try
                 {
                     var result = _removeTemporaryMod.Invoke(tag, collectionId, priority);
-                    return result is PenumbraApiEc.Success or PenumbraApiEc.NothingChanged;
+                    if (result is PenumbraApiEc.Success or PenumbraApiEc.NothingChanged)
+                        return true;
+                        
+                    Plugin.Log.Warning($"[PenumbraService] [CallRemoveTemporaryMod] Unsuccessful, {result}");
+                    return false;
                 }
                 catch (Exception ex)
                 {
@@ -194,6 +200,32 @@ public class PenumbraService : IDisposable
             }).ConfigureAwait(false);
 
         Plugin.Log.Warning("[PenumbraService] [CallRemoveTemporaryMod] Penumbra is not installed!");
+        return false;
+    }
+
+    /// <summary>
+    ///     Redraws the local client
+    /// </summary>
+    /// <param name="objectIndex"></param>
+    /// <returns></returns>
+    public async Task<bool> CallRedraw(int objectIndex = 0)
+    {
+        if (_penumbraAvailable)
+            return await Plugin.RunOnFramework(() =>
+            {
+                try
+                {
+                    _redrawObject.Invoke(objectIndex);
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    Plugin.Log.Warning($"[PenumbraService] [CallRedraw] Failure, {ex}");
+                    return false;
+                }
+            }).ConfigureAwait(false);
+
+        Plugin.Log.Warning("[PenumbraService] [CallRedraw] Penumbra is not installed!");
         return false;
     }
 

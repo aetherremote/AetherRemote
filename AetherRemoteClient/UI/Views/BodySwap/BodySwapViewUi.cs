@@ -22,7 +22,7 @@ public class BodySwapViewUi(
     public bool Draw()
     {
         ImGui.BeginChild("BodySwapContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
-
+        
         if (friendsListService.Selected.Count is 0)
         {
             SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground,
@@ -39,10 +39,15 @@ public class BodySwapViewUi(
                 "Body swapping must be done in rendering distance of your target(s). You can undo a body swap on yourself by going into the 'Status' tab, or reverting your character in glamourer. ");
         });
 
+        var half = ImGui.GetWindowWidth() * 0.5f;
         SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
         {
             SharedUserInterfaces.MediumText("Options");
             ImGui.Checkbox("Swap Mods", ref _controller.SwapMods);
+            
+            ImGui.SameLine();
+            ImGui.SetCursorPosX(half);
+            ImGui.Checkbox("Swap Moodles", ref _controller.SwapMoodles);
             
             ImGui.Spacing();
             

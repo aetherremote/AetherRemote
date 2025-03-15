@@ -80,8 +80,8 @@ public class BodySwapHandler(
                     Message = "You are lacking body swap permissions with one or more targets"
                 };
             }
-
-            if (request.SwapMods && permissionsGranted.Primary.HasFlag(PrimaryPermissions.Mods) is false)
+            
+            if (request.SwapAttributes.HasFlag(CharacterAttributes.Mods) && permissionsGranted.Primary.HasFlag(PrimaryPermissions.Mods) is false)
             {
                 logger.LogWarning("{Issuer} targeted {Target} but lacks mod permissions, aborting", issuerFriendCode, target);
                 await cancel.CancelAsync();
@@ -154,7 +154,7 @@ public class BodySwapHandler(
             var command = new BodySwapAction
             {
                 SenderFriendCode = issuerFriendCode,
-                SwapMods = request.SwapMods,
+                SwapAttributes = request.SwapAttributes,
                 Identity = deranged[i]
             };
 

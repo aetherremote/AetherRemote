@@ -56,11 +56,6 @@ public sealed class Plugin : IDalamudPlugin
 #endif
 
     /// <summary>
-    ///     Internal plugin stage
-    /// </summary>
-    public const string Stage = "Release";
-
-    /// <summary>
     ///     Internal plugin version
     /// </summary>
     public static readonly Version Version =
@@ -87,7 +82,7 @@ public sealed class Plugin : IDalamudPlugin
 
     // Disposable Handlers
     private readonly NetworkHandler _networkHandler;
-
+    
     public Plugin()
     {
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
@@ -106,21 +101,23 @@ public sealed class Plugin : IDalamudPlugin
         _networkService = new NetworkService();
 
         // External Services
+        var moodlesService = new MoodlesService();
         _glamourerService = new GlamourerService();
         _penumbraService = new PenumbraService();
 
         // Managers
         _actionQueueManager = new ActionQueueManager(chatService);
         _connectivityManager = new ConnectivityManager(friendsListService, _identityService, _networkService);
-        _modManager = new ModManager(_glamourerService, _penumbraService);
+        _modManager = new ModManager(_glamourerService, moodlesService, _penumbraService);
 
         // Handlers
         _networkHandler = new NetworkHandler(chatService, emoteService, friendsListService, _glamourerService,
-            _identityService, overrideService, logService, _networkService, _actionQueueManager, _modManager);
+            _identityService, moodlesService, overrideService, _penumbraService, logService, _networkService, _actionQueueManager,
+            _modManager);
 
         // Windows
         MainWindow = new MainWindow(commandLockoutService, emoteService, friendsListService, _glamourerService,
-            _identityService, logService, _networkService, overrideService, worldService, _modManager);
+            _identityService, logService, moodlesService, _networkService, overrideService, worldService, _modManager);
 
         WindowSystem = new WindowSystem("AetherRemote");
         WindowSystem.AddWindow(MainWindow);
@@ -161,7 +158,7 @@ public sealed class Plugin : IDalamudPlugin
     }
 
     /// <summary>
-    ///     Runs provided function on the XIV Framework. Await should never be used inside the <see cref="Func{T}" />
+    ///     Runs provided function on the XIV Framework. Await should never be used inside the <see cref="Func{T}"/>
     ///     passed to this function.
     /// </summary>
     public static async Task<T> RunOnFramework<T>(Func<T> func)
@@ -170,6 +167,18 @@ public sealed class Plugin : IDalamudPlugin
             return func.Invoke();
 
         return await Framework.RunOnFrameworkThread(func).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     Runs provided function on the XIV Framework. Await should never be used inside the <see cref="Action"/>
+    ///     passed to this function.
+    /// </summary>
+    public static async Task RunOnFramework(Action action)
+    {
+        if (Framework.IsInFrameworkUpdateThread)
+            action.Invoke();
+
+        await Framework.RunOnFrameworkThread(action).ConfigureAwait(false);
     }
 
     public void Dispose()
@@ -199,7 +208,7 @@ public sealed class Plugin : IDalamudPlugin
         WindowSystem.RemoveAllWindows();
         CommandManager.RemoveHandler(CommandName);
     }
-    
+
     /*
      *  AR Supporters Name-Game
      *  =======================
@@ -210,7 +219,7 @@ public sealed class Plugin : IDalamudPlugin
      *  Below is a list of everyone who will slowly be phased into variable names, see if you can spot where they appear
      *  in future commits! Looking at you, Tezra.
      *  Much love to every name on this list. If I missed anyone, PLEASE LET ME KNOW. There were a lot of people to comb
-     *  through, and I may have missed a name or two. 
+     *  through, and I may have missed a name or two.
      *  =======================
      *  Aria
      *  Asami

@@ -14,6 +14,16 @@
         "resolved": "2.2.0",
         "contentHash": "kPAHhj5kt2WdlLUBShWv2lg352odhV1D9fG/TWNO7HQSbABo5o30nujshX1PLdyVjfCYpW8k+Tfz/2Az8MyF1w=="
       },
+      "MemoryPack": {
+        "type": "Direct",
+        "requested": "[1.10.0, )",
+        "resolved": "1.10.0",
+        "contentHash": "QgvbIRqAXUvp4/3WcFahjOM3Hy42Ma2OxFsXitstc5XGHDpEl6zdV8XedxbBpvl29sS++i3BzT71/8ET1SyBvg==",
+        "dependencies": {
+          "MemoryPack.Core": "1.10.0",
+          "MemoryPack.Generator": "1.10.0"
+        }
+      },
       "Microsoft.AspNetCore.SignalR.Client": {
         "type": "Direct",
         "requested": "[8.0.11, )",
@@ -29,6 +39,16 @@
         "requested": "[5.3.0, )",
         "resolved": "5.3.0",
         "contentHash": "WThL0e5UnkIESgsvihzss91h6Ny/UUq3ghSR0/npC7rBgqnWjml7/KWcUkDMWTpw6NLUp8DAivJwOtcZR95wLA=="
+      },
+      "MemoryPack.Core": {
+        "type": "Transitive",
+        "resolved": "1.10.0",
+        "contentHash": "MxQ7jag9AOXyAbq7DGvaJBANINLxnkzibOMuwdYAjQDaeIWamIi8Z/QmkOJGBUPGANjIxv2J07rMsFFnHJW/iQ=="
+      },
+      "MemoryPack.Generator": {
+        "type": "Transitive",
+        "resolved": "1.10.0",
+        "contentHash": "U6J+mUb95KVO+ytZECLYJ4awuypfiGwNvWQDaEid3fKOz0X5GGQsLyKE4A9CyMqU5SZKri+Md9YcLGYMCqvkKA=="
       },
       "MessagePack": {
         "type": "Transitive",

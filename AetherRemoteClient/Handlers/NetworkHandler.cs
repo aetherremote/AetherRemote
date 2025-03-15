@@ -28,7 +28,9 @@ public class NetworkHandler : IDisposable
         FriendsListService friendsListService,
         GlamourerService glamourerService,
         IdentityService identityService,
+        MoodlesService moodlesService,
         OverrideService overrideService,
+        PenumbraService penumbraService,
         LogService logService,
         NetworkService networkService,
         ActionQueueManager actionQueueManager,
@@ -37,6 +39,7 @@ public class NetworkHandler : IDisposable
         var bodySwapHandler = new BodySwapHandler(friendsListService, identityService, overrideService, logService, modManager);
         var bodySwapQueryHandler = new BodySwapQueryHandler(friendsListService, identityService, overrideService, logService);
         var emoteHandler = new EmoteHandler(chatService, emoteService, friendsListService, logService, overrideService);
+        var moodlesHandler = new MoodlesHandler(friendsListService, moodlesService, overrideService, penumbraService, logService);
         var speakHandler = new SpeakHandler(friendsListService, logService, overrideService, actionQueueManager);
         var syncOnlineStatusHandler = new SyncOnlineStatusHandler(friendsListService);
         var syncPermissionsHandler = new SyncPermissionsHandler(friendsListService);
@@ -46,6 +49,7 @@ public class NetworkHandler : IDisposable
         _handlers.Add(networkService.Connection.On<BodySwapQueryRequest, BodySwapQueryResponse>(HubMethod.BodySwapQuery, bodySwapQueryHandler.Handle));
         _handlers.Add(networkService.Connection.On<BodySwapAction>(HubMethod.BodySwap, bodySwapHandler.Handle));
         _handlers.Add(networkService.Connection.On<EmoteAction>(HubMethod.Emote, emoteHandler.Handle));
+        _handlers.Add(networkService.Connection.On<MoodlesAction>(HubMethod.Moodles, moodlesHandler.Handle));
         _handlers.Add(networkService.Connection.On<SpeakAction>(HubMethod.Speak, speakHandler.Handle));
         _handlers.Add(networkService.Connection.On<SyncOnlineStatusAction>(HubMethod.SyncOnlineStatus, syncOnlineStatusHandler.Handle));
         _handlers.Add(networkService.Connection.On<SyncPermissionsAction>(HubMethod.SyncPermissions, syncPermissionsHandler.Handle));

@@ -10,6 +10,7 @@ public class HubRequestHandlerRegistry(
     BodySwapHandler bodySwapHandler,
     EmoteHandler emoteHandler,
     GetAccountDataHandler getAccountDataHandler,
+    MoodlesHandler moodlesHandler,
     RemoveFriendHandler removeFriendHandler,
     SpeakHandler speakHandler,
     TransformHandler transformHandler,
@@ -20,6 +21,7 @@ public class HubRequestHandlerRegistry(
     public BodySwapHandler BodySwapHandler { get; } = bodySwapHandler;
     public EmoteHandler EmoteHandler { get; } = emoteHandler;
     public GetAccountDataHandler GetAccountDataHandler { get; } = getAccountDataHandler;
+    public MoodlesHandler MoodlesHandler { get; } = moodlesHandler;
     public RemoveFriendHandler RemoveFriendHandler { get; } = removeFriendHandler;
     public SpeakHandler SpeakHandler { get; } = speakHandler;
     public TransformHandler TransformHandler { get; } = transformHandler;
