@@ -113,8 +113,30 @@ public class MoodlesHandler(
                 }
             }
             
-            // Add the new moodle
-            moodles.Add(moodle);
+            // Find a matching moodle
+            var index = moodles.FindIndex(m => m.Title == moodle.Title);
+
+            // If we found an index...
+            if (index > -1)
+            {
+                // If it is stackable...
+                if (moodles[index].StackOnReapply)
+                {
+                    // Update the stacks
+                    moodles[index].Stacks++;
+                }
+                else
+                {
+                    // Otherwise, exit early
+                    Plugin.Log.Info("[MoodleHandler] Moodle already exists and is not stackable, exiting early");
+                    return;
+                }
+            }
+            else
+            {
+                // If we didn't, just add the moodle
+                moodles.Add(moodle);
+            }
 
             // Re-serialize and convert to string
             var packagedMoodles = MemoryPackSerializer.Serialize(moodles, _serializerOptions);
