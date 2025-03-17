@@ -59,9 +59,18 @@ public class StatusViewUi(GlamourerService glamourerService, NetworkService netw
         
         SharedUserInterfaces.Tooltip("Reset identity");
         
+        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        {
+            SharedUserInterfaces.MediumText("Tips");
+            ImGui.TextUnformatted("You can hold CTRL and click to select multiple people at the same time.");
+        });
+        
+        if (SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.History, windowPadding, windowWidth))
+            _controller.ResetIdentity();
+        
+        SharedUserInterfaces.Tooltip("Next Tip");
+        
         ImGui.EndChild();
         return false;
     }
-
-    
 }
