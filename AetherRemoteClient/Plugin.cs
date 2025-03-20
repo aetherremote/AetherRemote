@@ -82,7 +82,7 @@ public sealed class Plugin : IDalamudPlugin
 
     // Disposable Handlers
     private readonly NetworkHandler _networkHandler;
-    
+
     public Plugin()
     {
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
@@ -94,6 +94,7 @@ public sealed class Plugin : IDalamudPlugin
         var friendsListService = new FriendsListService();
         var logService = new LogService();
         var overrideService = new OverrideService();
+        var tipService = new TipService();
         var worldService = new WorldService();
 
         // Disposable Services
@@ -112,12 +113,13 @@ public sealed class Plugin : IDalamudPlugin
 
         // Handlers
         _networkHandler = new NetworkHandler(chatService, emoteService, friendsListService, _glamourerService,
-            _identityService, moodlesService, overrideService, _penumbraService, logService, _networkService, _actionQueueManager,
+            _identityService, moodlesService, overrideService, _penumbraService, logService, _networkService,
+            _actionQueueManager,
             _modManager);
 
         // Windows
         MainWindow = new MainWindow(commandLockoutService, emoteService, friendsListService, _glamourerService,
-            _identityService, logService, moodlesService, _networkService, overrideService, worldService, _modManager);
+            _identityService, logService, _networkService, overrideService, tipService, worldService, _modManager);
 
         WindowSystem = new WindowSystem("AetherRemote");
         WindowSystem.AddWindow(MainWindow);

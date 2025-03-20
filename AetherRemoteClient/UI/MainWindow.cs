@@ -35,7 +35,7 @@ public class MainWindow : Window, IDisposable
     // Injected
     private readonly FriendsListService _friendsListService;
     private readonly NetworkService _networkService;
-    
+
     // Components
     private readonly FriendsListComponentUi _friendsListComponent;
 
@@ -66,9 +66,9 @@ public class MainWindow : Window, IDisposable
         GlamourerService glamourerService,
         IdentityService identityService,
         LogService logService,
-        MoodlesService moodlesService,
         NetworkService networkService,
         OverrideService overrideService,
+        TipService tipService,
         WorldService worldService,
         ModManager modManager) : base("Aether Remote 2 - Experimental")
     {
@@ -77,18 +77,20 @@ public class MainWindow : Window, IDisposable
             MinimumSize = new Vector2(800, 500),
             MaximumSize = ImGui.GetIO().DisplaySize
         };
-        
+
         // Components
         _friendsListComponent = new FriendsListComponentUi(friendsListService, networkService);
 
         // Views
-        _statusView = new StatusViewUi(glamourerService, networkService, identityService);
+        _statusView = new StatusViewUi(glamourerService, networkService, identityService, tipService);
         _friendsView = new FriendsViewUi(friendsListService, networkService);
         _overridesView = new OverridesViewUi(overrideService);
         _speakView = new SpeakViewUi(commandLockoutService, friendsListService, networkService, worldService);
         _emoteView = new EmoteViewUi(commandLockoutService, emoteService, friendsListService, networkService);
-        _transformationView = new TransformationViewUi(commandLockoutService, glamourerService, friendsListService, networkService);
-        _bodySwapView = new BodySwapViewUi(commandLockoutService, identityService, friendsListService, networkService, modManager);
+        _transformationView =
+            new TransformationViewUi(commandLockoutService, glamourerService, friendsListService, networkService);
+        _bodySwapView = new BodySwapViewUi(commandLockoutService, identityService, friendsListService, networkService,
+            modManager);
         _twinningView = new TwinningViewUi(commandLockoutService, friendsListService, identityService, networkService);
         _historyView = new HistoryViewUi(logService);
         _settingsView = new SettingsViewUi();
@@ -170,7 +172,7 @@ public class MainWindow : Window, IDisposable
 
         if (_currentView.Draw() is false)
             return;
-        
+
         ImGui.SameLine();
         var onFriendsView = _currentView == _friendsView;
         _friendsListComponent.Draw(onFriendsView, onFriendsView);
@@ -205,12 +207,12 @@ public class MainWindow : Window, IDisposable
 
         if (clicked is false)
             return;
-        
+
         // Set view
         _currentView = view;
         if (_currentView == _friendsView)
             return;
-            
+
         // If view isn't friends list, purge any offline friends from selection
         _friendsListService.PurgeOfflineFriendsFromSelect();
     }
