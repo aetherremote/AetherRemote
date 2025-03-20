@@ -32,6 +32,7 @@ public sealed class Plugin : IDalamudPlugin
     // Chat
     [PluginService] private static ICommandManager CommandManager { get; set; } = null!;
     [PluginService] internal static ISigScanner SigScanner { get; private set; } = null!;
+    [PluginService] internal static IChatGui ChatGui { get; private set; } = null!;
 
     // Dalamud
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;

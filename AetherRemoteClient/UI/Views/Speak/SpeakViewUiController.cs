@@ -114,6 +114,12 @@ public class SpeakViewUiController
                 Message = string.Empty;
                 Plugin.NotificationManager.AddNotification(NotificationHelper.Success(
                     "Successfully issued speak command", string.Empty));
+
+                if (ChannelSelect is not ChatChannel.Echo)
+                    return;
+                
+                foreach (var friend in _friendsListService.Selected)
+                    Plugin.ChatGui.Print($">>{friend.NoteOrFriendCode}: {input.Message}");
             }
             else
             {
