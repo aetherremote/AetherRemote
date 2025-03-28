@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Numerics;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain;
@@ -17,12 +18,20 @@ public static class SharedUserInterfaces
         ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize;
 
     private const ImGuiWindowFlags ComboWithFilterFlags = PopupWindowFlags | ImGuiWindowFlags.ChildWindow;
-    private const int BigFontSize = 40;
-    private const int MediumFontSize = 24;
+    public const int HugeFontSize = 200;
+    public const int BigFontSize = 40;
+    public const int MediumFontSize = 24;
 
+    private static readonly SafeFontConfig DefaultFontConfig = new() { SizePx = HugeFontSize };
+    private static ImFontPtr _hugeFontPtr;
+    private static IFontHandle? _hugeFont;
+    private static bool _hugeFontBuilt;
+    
+    private static ImFontPtr _bigFontPtr;
     private static IFontHandle? _bigFont;
     private static bool _bigFontBuilt;
 
+    private static ImFontPtr _mediumFontPtr;
     private static IFontHandle? _mediumFont;
     private static bool _mediumFontBuilt;
 
@@ -161,16 +170,16 @@ public static class SharedUserInterfaces
         if (_mediumFontBuilt)
             _mediumFont?.Pop();
     }
-
-    public static void PushBigFont()
-    {
-        _bigFont?.Push();
-    }
-
-    public static void PopBigFont()
-    {
-        _bigFont?.Pop();
-    }
+    
+    public static void PushHugeFont() => _hugeFont?.Push();
+    public static void PopHugeFont() => _hugeFont?.Pop();
+    public static void PushBigFont() => _bigFont?.Push();
+    public static void PopBigFont() => _bigFont?.Pop();
+    public static void PushMediumFont() => _mediumFont?.Push();
+    public static void PopMediumFont() => _mediumFont?.Pop();
+    public static ImFontPtr GetHugeFontPtr() => _hugeFontPtr;
+    public static ImFontPtr GetBigFontPtr() => _bigFontPtr;
+    public static ImFontPtr GetMediumFontPtr() => _mediumFontPtr;
     
     /// <summary>
     ///     Creates a button the size of a <see cref="ContentBox"/> on the right
@@ -261,24 +270,50 @@ public static class SharedUserInterfaces
     }
 
     /// <summary>
-    /// Initializes the two additional font sizes used in the plugin
+    ///     Initializes the two additional font sizes used in the plugin
     /// </summary>
     public static async Task InitializeFonts()
     {
+        string? dalamudFontDirectory = null;
+        try
+        {
+            var path = Path.Combine(Plugin.PluginInterface.DalamudAssetDirectory.FullName, "UIRes",
+                "Inconsolata-Regular.ttf");
+            
+            if (File.Exists(path))
+                dalamudFontDirectory = path;
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Warning($"Unexpectedly failed to read `Inconsolata-Regular` font, {e.Message}");
+        }
+        
+        _hugeFont = Plugin.PluginInterface.UiBuilder.FontAtlas.NewDelegateFontHandle(toolkit =>
+        {
+            toolkit.OnPreBuild(preBuild =>
+            {
+                _hugeFontPtr = dalamudFontDirectory is null 
+                    ? preBuild.AddDalamudDefaultFont(HugeFontSize) 
+                    : preBuild.AddFontFromFile(dalamudFontDirectory, DefaultFontConfig);
+            });
+        });
+        
         _bigFont = Plugin.PluginInterface.UiBuilder.FontAtlas.NewDelegateFontHandle(toolkit =>
         {
-            toolkit.OnPreBuild(preBuild => { preBuild.AddDalamudDefaultFont(BigFontSize); });
+            toolkit.OnPreBuild(preBuild => { _bigFontPtr = preBuild.AddDalamudDefaultFont(BigFontSize); });
         });
 
         _mediumFont = Plugin.PluginInterface.UiBuilder.FontAtlas.NewDelegateFontHandle(toolkit =>
         {
-            toolkit.OnPreBuild(preBuild => { preBuild.AddDalamudDefaultFont(MediumFontSize); });
+            toolkit.OnPreBuild(preBuild => { _mediumFontPtr = preBuild.AddDalamudDefaultFont(MediumFontSize); });
         });
 
+        await _hugeFont.WaitAsync().ConfigureAwait(false);
         await _bigFont.WaitAsync().ConfigureAwait(false);
         await _mediumFont.WaitAsync().ConfigureAwait(false);
         await Plugin.PluginInterface.UiBuilder.FontAtlas.BuildFontsAsync().ConfigureAwait(false);
 
+        _hugeFontBuilt = true;
         _bigFontBuilt = true;
         _mediumFontBuilt = true;
     }

@@ -67,6 +67,8 @@ public class FriendsListService
         
         var offlineFriend = new Friend("Friend 2");
         Friends.Add(offlineFriend);
+        
+        Selected.Add(onlineFriend);
     }
     
     /// <summary>

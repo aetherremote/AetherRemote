@@ -37,8 +37,9 @@ public sealed class Plugin : IDalamudPlugin
     // Dalamud
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
     [PluginService] internal static IPluginLog Log { get; private set; } = null!;
-    [PluginService] private static IFramework Framework { get; set; } = null!;
+    [PluginService] internal static IFramework Framework { get; set; } = null!;
     [PluginService] internal static INotificationManager NotificationManager { get; private set; } = null!;
+    [PluginService] internal static ITextureProvider TextureProvider { get; private set; } = null!;
     internal static Configuration Configuration { get; private set; } = null!;
 
     /// <summary>

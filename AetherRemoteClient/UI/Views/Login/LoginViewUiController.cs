@@ -9,7 +9,7 @@ public class LoginViewUiController(NetworkService networkService)
     /// <summary>
     ///     User inputted secret
     /// </summary>
-    public string Secret = Plugin.Configuration.Secret;
+    public string Secret = Plugin.DeveloperMode ? string.Empty : Plugin.Configuration.Secret;
     
     public async void Connect()
     {

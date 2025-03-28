@@ -10,6 +10,7 @@ using AetherRemoteClient.UI.Views.BodySwap;
 using AetherRemoteClient.UI.Views.Emote;
 using AetherRemoteClient.UI.Views.Friends;
 using AetherRemoteClient.UI.Views.History;
+using AetherRemoteClient.UI.Views.Hypnosis;
 using AetherRemoteClient.UI.Views.Login;
 using AetherRemoteClient.UI.Views.Moodles;
 using AetherRemoteClient.UI.Views.Overrides;
@@ -52,6 +53,7 @@ public class MainWindow : Window, IDisposable
     private readonly StatusViewUi _statusView;
     private readonly TransformationViewUi _transformationView;
     private readonly TwinningViewUi _twinningView;
+    private readonly HypnosisViewUi _hypnosisView;
     private IDrawable _currentView;
 
     // Instantiated
@@ -70,7 +72,7 @@ public class MainWindow : Window, IDisposable
         OverrideService overrideService,
         TipService tipService,
         WorldService worldService,
-        ModManager modManager) : base("Aether Remote 2 - Experimental")
+        ModManager modManager) : base("Aether Remote 2")
     {
         SizeConstraints = new WindowSizeConstraints
         {
@@ -96,6 +98,7 @@ public class MainWindow : Window, IDisposable
         _settingsView = new SettingsViewUi();
         _loginView = new LoginViewUi(networkService);
         _moodlesView = new MoodlesViewUi(commandLockoutService, friendsListService, networkService);
+        _hypnosisView = new HypnosisViewUi(friendsListService);
 
         _friendsListService = friendsListService;
         _networkService = networkService;
@@ -149,6 +152,7 @@ public class MainWindow : Window, IDisposable
                 CreateNavBarButton(FontAwesomeIcon.PeopleArrows, "Body Swap", _bodySwapView);
                 CreateNavBarButton(FontAwesomeIcon.PeopleGroup, "Twinning", _twinningView);
                 CreateNavBarButton(FontAwesomeIcon.Icons, "Moodles", _moodlesView);
+                CreateNavBarButton(FontAwesomeIcon.Stopwatch, "Hypnosis", _hypnosisView);
 
                 ImGui.TextUnformatted("Configuration");
                 CreateNavBarButton(FontAwesomeIcon.History, "History", _historyView);

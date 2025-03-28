@@ -11,6 +11,17 @@ namespace AetherRemoteClient.Services;
 /// </summary>
 public class ChatService
 {
+    // Const
+    const AllowedEntities AllowedCharacters = AllowedEntities.UppercaseLetters | 
+                                              AllowedEntities.LowercaseLetters | 
+                                              AllowedEntities.Numbers |
+                                              AllowedEntities.SpecialCharacters |
+                                              AllowedEntities.CharacterList | 
+                                              AllowedEntities.OtherCharacters |
+                                              AllowedEntities.Payloads | 
+                                              AllowedEntities.Unknown8 | 
+                                              AllowedEntities.Unknown9;
+    
     private readonly ProcessChatBoxDelegate? _processChatBox;
 
     /// <summary>
