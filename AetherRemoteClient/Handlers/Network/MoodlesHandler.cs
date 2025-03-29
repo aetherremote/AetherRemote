@@ -34,7 +34,7 @@ public class MoodlesHandler(
     public async Task Handle(MoodlesAction action)
     {
         Plugin.Log.Info($"{action}");
-        
+
         // Not friends
         if (friendsListService.Get(action.SenderFriendCode) is not { } friend)
         {
@@ -82,9 +82,11 @@ public class MoodlesHandler(
                 logService.Custom($"{friend.NoteOrFriendCode} tried to apply a moodle but failed unexpectedly");
                 return;
             }
-
+            
             // To be a valid moodle, an expiration time must be included
-            moodle.ExpiresAt = long.MaxValue;
+            moodle.ExpiresAt = moodle.TotalDurationSeconds is 0
+                ? long.MaxValue
+                : DateTimeOffset.Now.ToUnixTimeMilliseconds() * moodle.TotalDurationSeconds * 1000;
 
             // Get the existing moodles
             var existingMoodlesBase64String = await moodlesService.GetMoodles(address.Value).ConfigureAwait(false);
@@ -112,7 +114,7 @@ public class MoodlesHandler(
                     return;
                 }
             }
-            
+
             // Find a matching moodle
             var index = moodles.FindIndex(m => m.Title == moodle.Title);
 
@@ -129,7 +131,8 @@ public class MoodlesHandler(
                 else
                 {
                     // Otherwise, exit early
-                    Plugin.Log.Info($"[MoodleHandler] Moodle {moodle.Title} already exists and is not stackable, exiting early");
+                    Plugin.Log.Info(
+                        $"[MoodleHandler] Moodle {moodle.Title} already exists and is not stackable, exiting early");
                     return;
                 }
             }
@@ -152,8 +155,9 @@ public class MoodlesHandler(
             }
 
             // Redraw client so mare picks up changes
-            await penumbraService.CallRedraw();
-            
+            if (await penumbraService.CallRedraw() is false)
+                Plugin.Log.Warning("[MoodlesHandler] Unable to redraw");
+
             // Log success
             logService.Custom($"{friend.NoteOrFriendCode} applied the {moodle.Title} moodle to you");
         }

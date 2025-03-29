@@ -24,6 +24,11 @@ using MemoryPack;
 
 namespace Moodles.Data;
 
+/// <summary>
+///     This class is pulled directly from moodles, and is used to access the underlying moodles objects
+///     https://github.com/kawaii/Moodles/blob/main/Moodles/Data/MyStatus.cs
+/// </summary>
+
 [Serializable]
 [MemoryPackable]
 public partial class MyStatus

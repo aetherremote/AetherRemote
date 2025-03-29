@@ -89,7 +89,7 @@ public sealed class Plugin : IDalamudPlugin
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
         // Services
-        var chatService = new ChatService();
+        //var chatService = new ChatService();
         var commandLockoutService = new CommandLockoutService();
         var emoteService = new EmoteService();
         var friendsListService = new FriendsListService();
@@ -108,12 +108,12 @@ public sealed class Plugin : IDalamudPlugin
         _penumbraService = new PenumbraService();
 
         // Managers
-        _actionQueueManager = new ActionQueueManager(chatService);
+        _actionQueueManager = new ActionQueueManager();
         _connectivityManager = new ConnectivityManager(friendsListService, _identityService, _networkService);
         _modManager = new ModManager(_glamourerService, moodlesService, _penumbraService);
 
         // Handlers
-        _networkHandler = new NetworkHandler(chatService, emoteService, friendsListService, _glamourerService,
+        _networkHandler = new NetworkHandler(emoteService, friendsListService, _glamourerService,
             _identityService, moodlesService, overrideService, _penumbraService, logService, _networkService,
             _actionQueueManager,
             _modManager);
@@ -196,7 +196,6 @@ public sealed class Plugin : IDalamudPlugin
 
         // External Services
         _glamourerService.Dispose();
-        _penumbraService.Dispose();
 
         // Managers
         _connectivityManager.Dispose();

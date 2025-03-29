@@ -10,7 +10,7 @@ namespace AetherRemoteClient.Managers;
 /// <summary>
 ///     Responsible for sending actions to the in-game chat
 /// </summary>
-public class ActionQueueManager(ChatService chatService)
+public class ActionQueueManager
 {
     private const int MinProcessTime = 1100;
     private const int MaxProcessTime = 2400;
@@ -105,7 +105,7 @@ public class ActionQueueManager(ChatService chatService)
         if (Plugin.ClientState.IsPvPExcludingDen)
             return; 
         
-        chatService.SendMessage(action.Command);
+        ChatService.SendMessage(action.Command);
         Plugin.Log.Info(action.Log);
         
         // Queue next process

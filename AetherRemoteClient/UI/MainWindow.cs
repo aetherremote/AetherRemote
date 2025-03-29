@@ -31,6 +31,7 @@ public class MainWindow : Window, IDisposable
     // Const
     private static readonly Vector2 AlignButtonTextLeft = new(0, 0.5f);
     private static readonly Vector2 NavBarDimensions = new(180, 0);
+    private static readonly string MainWindowTitle = $"Aether Remote 2 - Version {Plugin.Version}";
 
     // Injected
     private readonly FriendsListService _friendsListService;
@@ -70,7 +71,7 @@ public class MainWindow : Window, IDisposable
         OverrideService overrideService,
         TipService tipService,
         WorldService worldService,
-        ModManager modManager) : base("Aether Remote 2 - Experimental")
+        ModManager modManager) : base(MainWindowTitle)
     {
         SizeConstraints = new WindowSizeConstraints
         {
@@ -116,7 +117,6 @@ public class MainWindow : Window, IDisposable
 
         // Views
         _friendsView.Dispose();
-
         GC.SuppressFinalize(this);
     }
 

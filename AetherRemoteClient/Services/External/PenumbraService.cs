@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using System.Timers;
 using Penumbra.Api.Enums;
 using Penumbra.Api.IpcSubscribers;
 
@@ -11,111 +9,110 @@ namespace AetherRemoteClient.Services.External;
 /// <summary>
 ///     Provides access to Penumbra IPCs
 /// </summary>
-public class PenumbraService : IDisposable
+public class PenumbraService
 {
-    // Const
-    private const int TestApiIntervalInSeconds = 45;
-
     // Penumbra API
     private readonly AddTemporaryMod _addTemporaryMod;
-    private readonly ApiVersion _apiVersion;
     private readonly GetGameObjectResourcePaths _getGameObjectResourcePaths;
     private readonly GetMetaManipulations _getMetaManipulations;
     private readonly GetCollectionForObject _getCollectionForObject;
     private readonly RemoveTemporaryMod _removeTemporaryMod;
     private readonly RedrawObject _redrawObject;
-    
-    // Check Penumbra Api
-    private readonly Timer _periodicPenumbraTest;
 
     /// <summary>
     ///     Is the penumbra api available for use?
     /// </summary>
-    private bool _penumbraAvailable;
-    
+    private readonly bool _penumbraAvailable;
+
     /// <summary>
     ///     <inheritdoc cref="PenumbraService"/>
     /// </summary>
     public PenumbraService()
     {
         _addTemporaryMod = new AddTemporaryMod(Plugin.PluginInterface);
-        _apiVersion = new ApiVersion(Plugin.PluginInterface);
         _getGameObjectResourcePaths = new GetGameObjectResourcePaths(Plugin.PluginInterface);
         _getMetaManipulations = new GetMetaManipulations(Plugin.PluginInterface);
         _removeTemporaryMod = new RemoveTemporaryMod(Plugin.PluginInterface);
         _getCollectionForObject = new GetCollectionForObject(Plugin.PluginInterface);
         _redrawObject = new RedrawObject(Plugin.PluginInterface);
-        
-        _periodicPenumbraTest = new Timer(TestApiIntervalInSeconds * 1000);
-        _periodicPenumbraTest.AutoReset = true;
-        _periodicPenumbraTest.Elapsed += PeriodicCheckApi;
-        _periodicPenumbraTest.Start();
 
-        PeriodicCheckApi();
+        try
+        {
+            var version = new ApiVersion(Plugin.PluginInterface).Invoke();
+            if (version.Breaking < 5)
+                return;
+
+            _penumbraAvailable = true;
+        }
+        catch (Exception)
+        {
+            // Ignored
+        }
+
+        Plugin.Log.Verbose($"[PenumbraService] Penumbra available: {_penumbraAvailable}");
     }
 
     /// <summary>
     ///     Calls penumbra's GetGameObjectResourcePaths function
     /// </summary>
     /// <returns>A list of modified objects, mapping the modified object to the target path</returns>
-    public async Task<Dictionary<string, string>> GetGameObjectResourcePaths(ushort objectIndex)
-    {
-        if (_penumbraAvailable is false)
-        {
-            Plugin.Log.Warning("[PenumbraService] [CallGetGameObjectResourcePaths] Penumbra is not installed!");
-            return [];
-        }
-
-        var gameObjectResourcePaths = await Plugin.RunOnFramework(() =>
-        {
-            try
-            {
-                return _getGameObjectResourcePaths.Invoke(objectIndex);
-            }
-            catch (Exception ex)
-            {
-                Plugin.Log.Warning($"[PenumbraService] [CallGetGameObjectResourcePaths] Failure, {ex}");
-                return [];
-            }
-        }).ConfigureAwait(false);
-        
-        var paths = new Dictionary<string, string>();
-        foreach (var resource in gameObjectResourcePaths)
-        {
-            if (resource is null)
-                continue;
-
-            foreach (var kvp in resource)
-            {
-                foreach (var item in kvp.Value)
-                    paths.Add(item, kvp.Key);
-            }
-        }
-        
-        return paths;
-    }
-
-    /// <summary>
-    ///     Calls penumbra's GetMetaManipulations function
-    /// </summary>
-    /// <returns>A character's metadata</returns>
-    public async Task<string> GetMetaManipulations(ushort objectIndex)
+    public async Task<Dictionary<string, string>> GetGameObjectResourcePaths(ushort index)
     {
         if (_penumbraAvailable)
             return await Plugin.RunOnFramework(() =>
             {
                 try
                 {
-                    return _getMetaManipulations.Invoke(objectIndex);
+                    var resources = _getGameObjectResourcePaths.Invoke(index);
+                    var paths = new Dictionary<string, string>();
+                    foreach (var resource in resources)
+                    {
+                        if (resource is null)
+                            continue;
+
+                        foreach (var kvp in resource)
+                        foreach (var item in kvp.Value)
+                            paths.Add(item, kvp.Key);
+                    }
+
+                    return paths;
                 }
-                catch (Exception ex)
+                catch (Exception e)
                 {
-                    Plugin.Log.Warning($"[PenumbraService] [CallGetMetaManipulations] Failure, {ex}");
+                    Plugin.Log.Warning(
+                        $"[PenumbraService] Unexpectedly failed getting resource paths for index {index}, {e.Message}");
+                    return [];
+                }
+            }).ConfigureAwait(false);
+
+        Plugin.Log.Warning(
+            $"[PenumbraService] Failed to get object resource paths for index {index} because penumbra is not available");
+        return [];
+    }
+
+    /// <summary>
+    ///     Calls penumbra's GetMetaManipulations function
+    /// </summary>
+    /// <returns>A character's metadata</returns>
+    public async Task<string> GetMetaManipulations(ushort index)
+    {
+        if (_penumbraAvailable)
+            return await Plugin.RunOnFramework(() =>
+            {
+                try
+                {
+                    return _getMetaManipulations.Invoke(index);
+                }
+                catch (Exception e)
+                {
+                    Plugin.Log.Warning(
+                        $"[PenumbraService] Unexpectedly failed getting manipulations for index {index}, {e.Message}");
                     return string.Empty;
                 }
             }).ConfigureAwait(false);
-        
-        Plugin.Log.Warning("[PenumbraService] [GetMetaManipulations] Penumbra is not installed!");
+
+        Plugin.Log.Warning(
+            $"[PenumbraService] Failed to get manipulations for index {index} because penumbra is not available");
         return string.Empty;
     }
 
@@ -131,17 +128,18 @@ public class PenumbraService : IDisposable
             {
                 try
                 {
-                    var result = _getCollectionForObject.Invoke(index);
-                    return result.EffectiveCollection.Id;
+                    return _getCollectionForObject.Invoke(index).EffectiveCollection.Id;
                 }
-                catch (Exception ex) 
+                catch (Exception e)
                 {
-                    Plugin.Log.Warning($"[PenumbraService] [GetCollectionForObject] Failure, {ex}");
+                    Plugin.Log.Warning(
+                        $"[PenumbraService] Unexpectedly failed to get collection for index {index}, {e.Message}");
                     return Guid.Empty;
                 }
             }).ConfigureAwait(false);
 
-        Plugin.Log.Warning("[PenumbraService] [GetCollectionForObject] Penumbra is not installed!");
+        Plugin.Log.Warning(
+            $"[PenumbraService] Failed to get collection for index {index} because penumbra is not available");
         return Guid.Empty;
     }
 
@@ -149,7 +147,8 @@ public class PenumbraService : IDisposable
     ///     Calls penumbra's AddTemporaryMod function
     /// </summary>
     /// <returns><see cref="bool"/> indicating success</returns>
-    public async Task<bool> AddTemporaryMod(string tag, Guid collectionGuid, Dictionary<string, string> modifiedPaths, string meta, int priority = 0)
+    public async Task<bool> AddTemporaryMod(string tag, Guid collectionGuid, Dictionary<string, string> modifiedPaths,
+        string meta, int priority = 0)
     {
         if (_penumbraAvailable)
             return await Plugin.RunOnFramework(() =>
@@ -159,18 +158,18 @@ public class PenumbraService : IDisposable
                     var result = _addTemporaryMod.Invoke(tag, collectionGuid, modifiedPaths, meta, priority);
                     if (result is PenumbraApiEc.Success)
                         return true;
-                    
-                    Plugin.Log.Warning($"[PenumbraService] [CallAddTemporaryMod] Unsuccessful, {result}");
+
+                    Plugin.Log.Warning($"[PenumbraService] Adding temporary mod was unsuccessful, result was {result}");
                     return false;
                 }
-                catch (Exception ex)
+                catch (Exception e)
                 {
-                    Plugin.Log.Warning($"[PenumbraService] [CallAddTemporaryMod] Failure, {ex}");
+                    Plugin.Log.Warning($"[PenumbraService] Adding temporary mod failed unexpectedly, {e.Message}");
                     return false;
                 }
             }).ConfigureAwait(false);
 
-        Plugin.Log.Warning("[PenumbraService] [CallAddTemporaryMod] Penumbra is not installed!");
+        Plugin.Log.Warning("[PenumbraService] Unable to add temporary mod because penumbra is not available");
         return false;
     }
 
@@ -188,18 +187,19 @@ public class PenumbraService : IDisposable
                     var result = _removeTemporaryMod.Invoke(tag, collectionId, priority);
                     if (result is PenumbraApiEc.Success or PenumbraApiEc.NothingChanged)
                         return true;
-                        
-                    Plugin.Log.Warning($"[PenumbraService] [CallRemoveTemporaryMod] Unsuccessful, {result}");
+
+                    Plugin.Log.Warning(
+                        $"[PenumbraService] Removing temporary mod was unsuccessful, result was {result}");
                     return false;
                 }
-                catch (Exception ex)
+                catch (Exception e)
                 {
-                    Plugin.Log.Warning($"[PenumbraService] [CallRemoveTemporaryMod] Failure, {ex}");
+                    Plugin.Log.Warning($"[PenumbraService] Removing temporary mod failed unexpectedly, {e.Message}");
                     return false;
                 }
             }).ConfigureAwait(false);
 
-        Plugin.Log.Warning("[PenumbraService] [CallRemoveTemporaryMod] Penumbra is not installed!");
+        Plugin.Log.Warning("[PenumbraService] Unable to remove temporary mod because penumbra is not available");
         return false;
     }
 
@@ -216,51 +216,14 @@ public class PenumbraService : IDisposable
                     _redrawObject.Invoke(objectIndex);
                     return true;
                 }
-                catch (Exception ex)
+                catch (Exception e)
                 {
-                    Plugin.Log.Warning($"[PenumbraService] [CallRedraw] Failure, {ex}");
+                    Plugin.Log.Warning($"[PenumbraService] Redrawing failed unexpectedly, {e.Message}");
                     return false;
                 }
             }).ConfigureAwait(false);
 
-        Plugin.Log.Warning("[PenumbraService] [CallRedraw] Penumbra is not installed!");
+        Plugin.Log.Warning("[PenumbraService] Unable to redraw because penumbra is not available");
         return false;
-    }
-
-    private void PeriodicCheckApi(object? sender = null, ElapsedEventArgs? e = null)
-    {
-        try
-        {
-            // Test if plugin installed
-            var penumbraPlugin = Plugin.PluginInterface.InstalledPlugins.FirstOrDefault(plugin =>
-                string.Equals(plugin.InternalName, "Penumbra", StringComparison.OrdinalIgnoreCase));
-            if (penumbraPlugin is null)
-            {
-                _penumbraAvailable = false;
-                return;
-            }
-
-            // Test if plugin can be invoked
-            var penumbraVersion = _apiVersion.Invoke();
-            if (penumbraVersion.Breaking < 1)
-            {
-                _penumbraAvailable = false;
-                return;
-            }
-
-            _penumbraAvailable = true;
-        }
-        catch (Exception ex)
-        {
-            Plugin.Log.Error($"Something went wrong trying to check for penumbra plugin: {ex}");
-        }
-    }
-    
-    public void Dispose()
-    {
-        _periodicPenumbraTest.Elapsed -= PeriodicCheckApi;
-        _periodicPenumbraTest.Stop();
-        _periodicPenumbraTest.Dispose();
-        GC.SuppressFinalize(this);
     }
 }

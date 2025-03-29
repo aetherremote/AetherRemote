@@ -22,7 +22,9 @@ public class StatusViewUiController(GlamourerService glamourerService, NetworkSe
     {
         try
         {
-            await glamourerService.RevertToAutomation().ConfigureAwait(false);
+            if (await glamourerService.RevertToAutomation().ConfigureAwait(false) is false)
+                return;
+            
             await identityService.SetIdentityToCurrentCharacter().ConfigureAwait(false);
         }
         catch (Exception e)

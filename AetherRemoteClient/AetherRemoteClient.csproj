@@ -3,11 +3,11 @@
     <Import Project="Dalamud.Plugin.Bootstrap.targets"/>
 
     <PropertyGroup>
-        <Authors></Authors>
-        <Company></Company>
-        <Version>2.0.1.3</Version>
-        <Description></Description>
-        <Copyright></Copyright>
+        <Authors>Mora</Authors>
+        <Company>Mora-XIV</Company>
+        <Version>2.1.0.0</Version>
+        <Description>XIV Plugin</Description>
+        <Copyright>(C)Mora 2024 - 25</Copyright>
         <PackageProjectUrl>https://github.com/aetherremote/AetherRemote</PackageProjectUrl>
     </PropertyGroup>
 

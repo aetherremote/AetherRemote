@@ -9,7 +9,6 @@ namespace AetherRemoteClient.Handlers.Network;
 ///     Handles a <see cref="EmoteAction"/>
 /// </summary>
 public class EmoteHandler(
-    ChatService chatService,
     EmoteService emoteService,
     FriendsListService friendsListService,
     LogService logService,
@@ -63,7 +62,7 @@ public class EmoteHandler(
             command.Append(" <mo>");
         
         // Execute command
-        chatService.SendMessage(command.ToString());
+        ChatService.SendMessage(command.ToString());
         
         // Log success
         logService.Custom($"{friend.NoteOrFriendCode} made you do the {action.Emote} emote");

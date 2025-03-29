@@ -24,16 +24,6 @@ public class FriendsListService
     public readonly HashSet<Friend> Selected = [];
 
     /// <summary>
-    ///     Event fired when a friend is deleted from the friend's list
-    /// </summary>
-    public event EventHandler<FriendDeletedEventArgs>? FriendDeletedEvent;
-
-    /// <summary>
-    ///     Event fired when the friend's list is deleted
-    /// </summary>
-    public event EventHandler<FriendsListDeletedEventArgs>? FriendsListDeletedEvent;
-
-    /// <summary>
     ///     Event fired when the selected targets have changed
     /// </summary>
     public event EventHandler<SelectedChangedEventArgs>? SelectedChangedEvent;
@@ -67,6 +57,8 @@ public class FriendsListService
         
         var offlineFriend = new Friend("Friend 2");
         Friends.Add(offlineFriend);
+        
+        Selected.Add(onlineFriend);
     }
     
     /// <summary>
@@ -78,8 +70,6 @@ public class FriendsListService
 
         if (Selected.Remove(friend))
             SelectedChangedEvent?.Invoke(this, new SelectedChangedEventArgs(Selected));
-
-        FriendDeletedEvent?.Invoke(this, new FriendDeletedEventArgs(friend));
     }
 
     /// <summary>
@@ -88,7 +78,6 @@ public class FriendsListService
     public void Clear()
     {
         Friends.Clear();
-        FriendsListDeletedEvent?.Invoke(this, new FriendsListDeletedEventArgs());
     }
 
     /// <summary>

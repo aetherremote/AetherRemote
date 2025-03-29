@@ -1,6 +1,5 @@
 using System;
 using System.Threading.Tasks;
-using System.Timers;
 using Dalamud.Plugin.Ipc;
 
 namespace AetherRemoteClient.Services.External;
@@ -10,119 +9,83 @@ namespace AetherRemoteClient.Services.External;
 /// </summary>
 public class MoodlesService
 {
-    // Const
-    private const int TestApiIntervalInSeconds = 45;
-
     // Moodles API
-    private readonly ICallGateSubscriber<int> _version;
     private readonly ICallGateSubscriber<nint, string> _get;
     private readonly ICallGateSubscriber<nint, string, object> _set;
-    private readonly ICallGateSubscriber<nint, object> _clear;
-
-    // Check Moodles API
-    private readonly Timer _periodicMoodlesTest;
 
     /// <summary>
     ///     Is the moodles api available for use?
     /// </summary>
-    private bool _moodlesAvailable;
+    private readonly bool _moodlesAvailable;
 
     /// <summary>
     ///     <inheritdoc cref="MoodlesService"/>
     /// </summary>
     public MoodlesService()
     {
-        _version = Plugin.PluginInterface.GetIpcSubscriber<int>("Moodles.Version");
         _get = Plugin.PluginInterface.GetIpcSubscriber<nint, string>("Moodles.GetStatusManagerByPtr");
         _set = Plugin.PluginInterface.GetIpcSubscriber<nint, string, object>("Moodles.SetStatusManagerByPtr");
-        _clear = Plugin.PluginInterface.GetIpcSubscriber<nint, object>("Moodles.ClearStatusManagerByPtr");
 
-        _periodicMoodlesTest = new Timer(TestApiIntervalInSeconds * 1000);
-        _periodicMoodlesTest.AutoReset = true;
-        _periodicMoodlesTest.Elapsed += PeriodicCheckApi;
-        _periodicMoodlesTest.Start();
+        try
+        {
+            _moodlesAvailable = Plugin.PluginInterface.GetIpcSubscriber<int>("Moodles.Version").InvokeFunc() is 1;
+        }
+        catch (Exception)
+        {
+            // Ignored
+        }
 
-        PeriodicCheckApi();
+        Plugin.Log.Verbose($"[MoodlesService] Moodles available: {_moodlesAvailable}");
     }
 
     /// <summary>
     ///     Retrieves a target's moodles
     /// </summary>
-    public async Task<string?> GetMoodles(nint objectTableAddress)
+    /// <param name="address">Object table address of the target whose moodles you will get</param>
+    public async Task<string?> GetMoodles(nint address)
     {
-        if (_moodlesAvailable is false)
-        {
-            Plugin.Log.Warning("[MoodlesService] [GetMoodles] Moodles is not installed!");
-            return null;
-        }
+        if (_moodlesAvailable)
+            return await Plugin.RunOnFramework(() =>
+            {
+                try
+                {
+                    return _get.InvokeFunc(address);
+                }
+                catch (Exception e)
+                {
+                    Plugin.Log.Error(
+                        $"[MoodlesService] Unexpectedly failed getting moodles for {address}, {e.Message}");
+                    return null;
+                }
+            }).ConfigureAwait(false);
 
-        try
-        {
-            return await Plugin.RunOnFramework(() => _get.InvokeFunc(objectTableAddress)).ConfigureAwait(false);
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Error($"[MoodlesService] [GetMoodles] Unexpected error for address {objectTableAddress}: {e}");
-            return null;
-        }
+        Plugin.Log.Warning($"[MoodlesService] Unable to get moodles for {address} because moodles is not available");
+        return null;
     }
 
     /// <summary>
     ///     Sets a target's moodles
     /// </summary>
-    public async Task<bool> SetMoodles(nint objectTableAddress, string moodle)
+    /// <param name="address">Object table address of the target whose moodles you will get</param>
+    /// /// <param name="moodles">The string of moodles to set</param>
+    public async Task<bool> SetMoodles(nint address, string moodles)
     {
-        if (_moodlesAvailable is false)
-        {
-            Plugin.Log.Warning("[MoodlesService] [SetMoodles] Moodles is not installed!");
-            return false;
-        }
+        if (_moodlesAvailable)
+            return await Plugin.RunOnFramework(() =>
+            {
+                try
+                {
+                    _set.InvokeAction(address, moodles);
+                    return true;
+                }
+                catch (Exception e)
+                {
+                    Plugin.Log.Error($"[MoodlesService] Unexpected failed to set moodles for {address}, {e.Message}");
+                    return false;
+                }
+            }).ConfigureAwait(false);
 
-        try
-        {
-            await Plugin.RunOnFramework(() => _set.InvokeAction(objectTableAddress, moodle)).ConfigureAwait(false);
-            return true;
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Error($"[MoodlesService] [SetMoodles] Unexpected error for address {objectTableAddress}: {e}");
-            return false;
-        }
-    }
-
-    /// <summary>
-    ///     Clear a target's moodles
-    /// </summary>
-    public async Task<bool> ClearMoodles(nint objectTableAddress)
-    {
-        if (_moodlesAvailable is false)
-        {
-            Plugin.Log.Warning("[MoodlesService] [ClearMoodles] Moodles is not installed!");
-            return false;
-        }
-
-        try
-        {
-            await Plugin.RunOnFramework(() => _clear.InvokeAction(objectTableAddress)).ConfigureAwait(false);
-            return true;
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Error($"[MoodlesService] [ClearMoodles] Unexpected error for address {objectTableAddress}: {e}");
-            return false;
-        }
-    }
-
-    private void PeriodicCheckApi(object? sender = null, ElapsedEventArgs? eventArgs = null)
-    {
-        try
-        {
-            _moodlesAvailable = _version.InvokeFunc() is 1;
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Error($"Something went wrong trying to check for moodles plugin: {e}");
-            _moodlesAvailable = false;
-        }
+        Plugin.Log.Warning($"[MoodlesService] Unable to set moodles for {address} because moodles is not available");
+        return false;
     }
 }

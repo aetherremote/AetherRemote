@@ -23,7 +23,6 @@ public class NetworkHandler : IDisposable
     ///     <inheritdoc cref="NetworkHandler"/>
     /// </summary>
     public NetworkHandler(
-        ChatService chatService,
         EmoteService emoteService,
         FriendsListService friendsListService,
         GlamourerService glamourerService,
@@ -38,7 +37,7 @@ public class NetworkHandler : IDisposable
     {
         var bodySwapHandler = new BodySwapHandler(friendsListService, identityService, overrideService, logService, modManager);
         var bodySwapQueryHandler = new BodySwapQueryHandler(friendsListService, identityService, overrideService, logService);
-        var emoteHandler = new EmoteHandler(chatService, emoteService, friendsListService, logService, overrideService);
+        var emoteHandler = new EmoteHandler(emoteService, friendsListService, logService, overrideService);
         var moodlesHandler = new MoodlesHandler(friendsListService, moodlesService, overrideService, penumbraService, logService);
         var speakHandler = new SpeakHandler(friendsListService, logService, overrideService, actionQueueManager);
         var syncOnlineStatusHandler = new SyncOnlineStatusHandler(friendsListService);
