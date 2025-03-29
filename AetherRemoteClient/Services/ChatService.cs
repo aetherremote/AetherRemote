@@ -11,6 +11,17 @@ namespace AetherRemoteClient.Services;
 /// </summary>
 public class ChatService
 {
+    // Const
+    private const AllowedEntities Allowed = AllowedEntities.UppercaseLetters |
+                                            AllowedEntities.LowercaseLetters |
+                                            AllowedEntities.Numbers |
+                                            AllowedEntities.SpecialCharacters |
+                                            AllowedEntities.CharacterList |
+                                            AllowedEntities.OtherCharacters |
+                                            AllowedEntities.Payloads |
+                                            AllowedEntities.Unknown8 |
+                                            AllowedEntities.Unknown9;
+    
     private readonly ProcessChatBoxDelegate? _processChatBox;
 
     /// <summary>
@@ -75,8 +86,8 @@ public class ChatService
     private static unsafe string SanitiseText(string text)
     {
         var utf8String = Utf8String.FromString(text);
-        utf8String->SanitizeString(0x27F, (Utf8String*)nint.Zero);
-
+        utf8String->SanitizeString(Allowed, null);
+        
         var sanitised = utf8String->ToString();
         utf8String->Dtor(true);
 

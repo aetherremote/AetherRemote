@@ -25,7 +25,7 @@ public class IdentityService : IDisposable
     {
         Plugin.ClientState.Login += OnLogin;
         Plugin.ClientState.Logout += OnLogout;
-        Identity = Plugin.ClientState.LocalPlayer?.Name.TextValue ?? Identity;
+        //Identity = Plugin.ClientState.LocalPlayer?.Name.TextValue ?? Identity;
     }
 
     /// <summary>
