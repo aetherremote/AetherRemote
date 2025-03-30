@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AetherRemoteClient.Ipc;
 using AetherRemoteClient.Services;
-using AetherRemoteClient.Services.External;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Util;
@@ -17,10 +17,10 @@ namespace AetherRemoteClient.Handlers.Network;
 /// </summary>
 public class MoodlesHandler(
     FriendsListService friendsListService,
-    MoodlesService moodlesService,
     OverrideService overrideService,
-    PenumbraService penumbraService,
-    LogService logService)
+    LogService logService,
+    MoodlesIpc moodles,
+    PenumbraIpc penumbra)
 {
     // Instantiated
     private readonly MemoryPackSerializerOptions _serializerOptions = new()
@@ -89,7 +89,7 @@ public class MoodlesHandler(
                 : DateTimeOffset.Now.ToUnixTimeMilliseconds() * moodle.TotalDurationSeconds * 1000;
 
             // Get the existing moodles
-            var existingMoodlesBase64String = await moodlesService.GetMoodles(address.Value).ConfigureAwait(false);
+            var existingMoodlesBase64String = await moodles.GetMoodles(address.Value).ConfigureAwait(false);
             if (existingMoodlesBase64String is null)
             {
                 logService.Custom($"{friend.NoteOrFriendCode} tried to apply a moodle but couldn't retrieve moodles");
@@ -97,7 +97,7 @@ public class MoodlesHandler(
             }
 
             // Make a list of moodles
-            var moodles = new List<MyStatus>();
+            var existingMoodles = new List<MyStatus>();
 
             // If the client already has moodles, deserialize those and add to it
             if (existingMoodlesBase64String.Length is not 0)
@@ -106,8 +106,8 @@ public class MoodlesHandler(
                 var bytesMoodles = Convert.FromBase64String(existingMoodlesBase64String);
 
                 // Deserialize the byte array into a moodle list
-                moodles = MemoryPackSerializer.Deserialize<List<MyStatus>>(bytesMoodles, _serializerOptions);
-                if (moodles is null)
+                existingMoodles = MemoryPackSerializer.Deserialize<List<MyStatus>>(bytesMoodles, _serializerOptions);
+                if (existingMoodles is null)
                 {
                     Plugin.Log.Warning("[MoodlesHandler] Existing moodles deserialization failed, aborting");
                     logService.Custom($"{friend.NoteOrFriendCode} tired to apply moodle but deserialization failed");
@@ -116,17 +116,17 @@ public class MoodlesHandler(
             }
 
             // Find a matching moodle
-            var index = moodles.FindIndex(m => m.Title == moodle.Title);
+            var index = existingMoodles.FindIndex(m => m.Title == moodle.Title);
 
             // If we found an index...
             if (index > -1)
             {
                 // If it is stackable...
-                if (moodles[index].StackOnReapply)
+                if (existingMoodles[index].StackOnReapply)
                 {
                     // Update the stacks
                     Plugin.Log.Info($"[MoodleHandler] Stacking {moodle.Title}");
-                    moodles[index].Stacks++;
+                    existingMoodles[index].Stacks++;
                 }
                 else
                 {
@@ -139,15 +139,15 @@ public class MoodlesHandler(
             else
             {
                 // If we didn't, just add the moodle
-                moodles.Add(moodle);
+                existingMoodles.Add(moodle);
             }
 
             // Re-serialize and convert to string
-            var packagedMoodles = MemoryPackSerializer.Serialize(moodles, _serializerOptions);
+            var packagedMoodles = MemoryPackSerializer.Serialize(existingMoodles, _serializerOptions);
             var packagedMoodlesBase64String = Convert.ToBase64String(packagedMoodles);
 
             // Apply moodles
-            var set = await moodlesService.SetMoodles(address.Value, packagedMoodlesBase64String).ConfigureAwait(false);
+            var set = await moodles.SetMoodles(address.Value, packagedMoodlesBase64String).ConfigureAwait(false);
             if (set is false)
             {
                 logService.Custom($"{friend.NoteOrFriendCode} tried to apply a moodle to you but failed");
@@ -155,7 +155,7 @@ public class MoodlesHandler(
             }
 
             // Redraw client so mare picks up changes
-            if (await penumbraService.CallRedraw() is false)
+            if (await penumbra.CallRedraw() is false)
                 Plugin.Log.Warning("[MoodlesHandler] Unable to redraw");
 
             // Log success

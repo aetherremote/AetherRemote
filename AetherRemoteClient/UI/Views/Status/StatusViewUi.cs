@@ -1,7 +1,7 @@
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
+using AetherRemoteClient.Ipc;
 using AetherRemoteClient.Services;
-using AetherRemoteClient.Services.External;
 using AetherRemoteClient.Utils;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
@@ -10,12 +10,12 @@ using ImGuiNET;
 namespace AetherRemoteClient.UI.Views.Status;
 
 public class StatusViewUi(
-    GlamourerService glamourerService,
     NetworkService networkService,
     IdentityService identityService,
-    TipService tipService) : IDrawable
+    TipService tipService,
+    GlamourerIpc glamourer) : IDrawable
 {
-    private readonly StatusViewUiController _controller = new(glamourerService, networkService, identityService);
+    private readonly StatusViewUiController _controller = new(networkService, identityService, glamourer);
 
     public bool Draw()
     {

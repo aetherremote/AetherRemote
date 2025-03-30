@@ -77,7 +77,7 @@ public class ActionQueueManager
     }
     
     /// <summary>
-    ///     Must be called once every framework ticks
+    ///     Must be called once every framework update
     /// </summary>
     public void Update()
     {

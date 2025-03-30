@@ -1,15 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AetherRemoteClient.Domain.Interfaces;
 using Penumbra.Api.Enums;
 using Penumbra.Api.IpcSubscribers;
 
-namespace AetherRemoteClient.Services.External;
+namespace AetherRemoteClient.Ipc;
 
 /// <summary>
-///     Provides access to Penumbra IPCs
+///     Provides access to Penumbra
 /// </summary>
-public class PenumbraService
+public class PenumbraIpc : IExternalPlugin
 {
     // Penumbra API
     private readonly AddTemporaryMod _addTemporaryMod;
@@ -18,16 +19,17 @@ public class PenumbraService
     private readonly GetCollectionForObject _getCollectionForObject;
     private readonly RemoveTemporaryMod _removeTemporaryMod;
     private readonly RedrawObject _redrawObject;
+    private readonly ApiVersion _version;
+    
+    /// <summary>
+    ///     Is Penumbra available for use?
+    /// </summary>
+    public bool ApiAvailable = true;
 
     /// <summary>
-    ///     Is the penumbra api available for use?
+    ///     <see cref="PenumbraIpc"/>
     /// </summary>
-    private readonly bool _penumbraAvailable;
-
-    /// <summary>
-    ///     <inheritdoc cref="PenumbraService"/>
-    /// </summary>
-    public PenumbraService()
+    public PenumbraIpc()
     {
         _addTemporaryMod = new AddTemporaryMod(Plugin.PluginInterface);
         _getGameObjectResourcePaths = new GetGameObjectResourcePaths(Plugin.PluginInterface);
@@ -35,30 +37,33 @@ public class PenumbraService
         _removeTemporaryMod = new RemoveTemporaryMod(Plugin.PluginInterface);
         _getCollectionForObject = new GetCollectionForObject(Plugin.PluginInterface);
         _redrawObject = new RedrawObject(Plugin.PluginInterface);
-
+        _version = new ApiVersion(Plugin.PluginInterface);
+        
+        TestIpcAvailability();
+    }
+    
+    /// <summary>
+    ///     Tests for availability to Penumbra
+    /// </summary>
+    public void TestIpcAvailability()
+    {
         try
         {
-            var version = new ApiVersion(Plugin.PluginInterface).Invoke();
-            if (version.Breaking < 5)
-                return;
-
-            _penumbraAvailable = true;
+            ApiAvailable = _version.Invoke().Breaking > 4;
         }
         catch (Exception)
         {
-            // Ignored
+            ApiAvailable = false;
         }
-
-        Plugin.Log.Verbose($"[PenumbraService] Penumbra available: {_penumbraAvailable}");
     }
-
+    
     /// <summary>
     ///     Calls penumbra's GetGameObjectResourcePaths function
     /// </summary>
     /// <returns>A list of modified objects, mapping the modified object to the target path</returns>
     public async Task<Dictionary<string, string>> GetGameObjectResourcePaths(ushort index)
     {
-        if (_penumbraAvailable)
+        if (ApiAvailable)
             return await Plugin.RunOnFramework(() =>
             {
                 try
@@ -96,7 +101,7 @@ public class PenumbraService
     /// <returns>A character's metadata</returns>
     public async Task<string> GetMetaManipulations(ushort index)
     {
-        if (_penumbraAvailable)
+        if (ApiAvailable)
             return await Plugin.RunOnFramework(() =>
             {
                 try
@@ -123,7 +128,7 @@ public class PenumbraService
     /// <returns>Collection GUID</returns>
     public async Task<Guid> GetCollection(int index = 0)
     {
-        if (_penumbraAvailable)
+        if (ApiAvailable)
             return await Plugin.RunOnFramework(() =>
             {
                 try
@@ -150,7 +155,7 @@ public class PenumbraService
     public async Task<bool> AddTemporaryMod(string tag, Guid collectionGuid, Dictionary<string, string> modifiedPaths,
         string meta, int priority = 0)
     {
-        if (_penumbraAvailable)
+        if (ApiAvailable)
             return await Plugin.RunOnFramework(() =>
             {
                 try
@@ -179,7 +184,7 @@ public class PenumbraService
     /// <returns><see cref="bool"/> indicating success</returns>
     public async Task<bool> CallRemoveTemporaryMod(string tag, Guid collectionId, int priority)
     {
-        if (_penumbraAvailable)
+        if (ApiAvailable)
             return await Plugin.RunOnFramework(() =>
             {
                 try
@@ -208,7 +213,7 @@ public class PenumbraService
     /// </summary>
     public async Task<bool> CallRedraw(int objectIndex = 0)
     {
-        if (_penumbraAvailable)
+        if (ApiAvailable)
             return await Plugin.RunOnFramework(() =>
             {
                 try

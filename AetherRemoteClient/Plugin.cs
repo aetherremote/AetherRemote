@@ -3,12 +3,11 @@ using System.Reflection;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Handlers;
+using AetherRemoteClient.Ipc;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
-using AetherRemoteClient.Services.External;
 using AetherRemoteClient.UI;
 using AetherRemoteClient.Utils;
-using Dalamud.Game;
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.Game.Command;
 using Dalamud.Interface.Windowing;
@@ -31,7 +30,6 @@ public sealed class Plugin : IDalamudPlugin
 
     // Chat
     [PluginService] private static ICommandManager CommandManager { get; set; } = null!;
-    [PluginService] internal static ISigScanner SigScanner { get; private set; } = null!;
     [PluginService] internal static IChatGui ChatGui { get; private set; } = null!;
 
     // Dalamud
@@ -70,12 +68,12 @@ public sealed class Plugin : IDalamudPlugin
     private readonly IdentityService _identityService;
     private readonly NetworkService _networkService;
 
-    // Disposable External Services
-    private readonly GlamourerService _glamourerService;
-    private readonly PenumbraService _penumbraService;
+    // IPCs
+    private readonly GlamourerIpc _glamourerIpc;
 
     // Managers
     private readonly ActionQueueManager _actionQueueManager;
+    private readonly DependencyManager _dependencyManager;
 
     // Disposable Managers
     private readonly ConnectivityManager _connectivityManager;
@@ -89,38 +87,35 @@ public sealed class Plugin : IDalamudPlugin
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
         // Services
-        //var chatService = new ChatService();
         var commandLockoutService = new CommandLockoutService();
         var emoteService = new EmoteService();
         var friendsListService = new FriendsListService();
+        _identityService = new IdentityService();
         var logService = new LogService();
+        _networkService = new NetworkService();
         var overrideService = new OverrideService();
         var tipService = new TipService();
         var worldService = new WorldService();
 
-        // Disposable Services
-        _identityService = new IdentityService();
-        _networkService = new NetworkService();
-
-        // External Services
-        var moodlesService = new MoodlesService();
-        _glamourerService = new GlamourerService();
-        _penumbraService = new PenumbraService();
+        // IPCs
+        _glamourerIpc = new GlamourerIpc();
+        var moodlesIpc = new MoodlesIpc();
+        var penumbraIpc = new PenumbraIpc();
 
         // Managers
         _actionQueueManager = new ActionQueueManager();
         _connectivityManager = new ConnectivityManager(friendsListService, _identityService, _networkService);
-        _modManager = new ModManager(_glamourerService, moodlesService, _penumbraService);
+        _dependencyManager = new DependencyManager(_glamourerIpc, moodlesIpc, penumbraIpc);
+        _modManager = new ModManager(_glamourerIpc, moodlesIpc, penumbraIpc);
 
         // Handlers
-        _networkHandler = new NetworkHandler(emoteService, friendsListService, _glamourerService,
-            _identityService, moodlesService, overrideService, _penumbraService, logService, _networkService,
-            _actionQueueManager,
-            _modManager);
+        _networkHandler = new NetworkHandler(emoteService, friendsListService, _identityService, overrideService,
+            logService, _networkService, _glamourerIpc, moodlesIpc, penumbraIpc, _actionQueueManager, _modManager);
 
         // Windows
-        MainWindow = new MainWindow(commandLockoutService, emoteService, friendsListService, _glamourerService,
-            _identityService, logService, _networkService, overrideService, tipService, worldService, _modManager);
+        MainWindow = new MainWindow(commandLockoutService, emoteService, friendsListService, _identityService,
+            logService, _networkService, overrideService, tipService, worldService, _glamourerIpc, moodlesIpc,
+            penumbraIpc, _modManager);
 
         WindowSystem = new WindowSystem("AetherRemote");
         WindowSystem.AddWindow(MainWindow);
@@ -153,6 +148,7 @@ public sealed class Plugin : IDalamudPlugin
 
         // Since we should always be on the main thread when sending a message, it is useful to update it here
         _actionQueueManager.Update();
+        _dependencyManager.Update();
     }
 
     private void OpenMainUi()
@@ -195,7 +191,7 @@ public sealed class Plugin : IDalamudPlugin
         _networkService.Dispose();
 
         // External Services
-        _glamourerService.Dispose();
+        _glamourerIpc.Dispose();
 
         // Managers
         _connectivityManager.Dispose();

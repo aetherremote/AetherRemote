@@ -8,6 +8,12 @@
         "resolved": "12.0.0",
         "contentHash": "J5TJLV3f16T/E2H2P17ClWjtfEBPpq3yxvqW46eN36JCm6wR+EaoaYkqG9Rm5sHqs3/nK/vKjWWyvEs/jhKoXw=="
       },
+      "DotNet.ReproducibleBuilds": {
+        "type": "Direct",
+        "requested": "[1.2.25, )",
+        "resolved": "1.2.25",
+        "contentHash": "xCXiw7BCxHJ8pF6wPepRUddlh2dlQlbr81gXA72hdk4FLHkKXas7EH/n+fk5UCA/YfMqG1Z6XaPiUjDbUNBUzg=="
+      },
       "Glamourer.Api": {
         "type": "Direct",
         "requested": "[2.4.1, )",
@@ -33,6 +39,12 @@
           "Microsoft.AspNetCore.Http.Connections.Client": "8.0.11",
           "Microsoft.AspNetCore.SignalR.Client.Core": "8.0.11"
         }
+      },
+      "Microsoft.NET.ILLink.Tasks": {
+        "type": "Direct",
+        "requested": "[9.0.3, )",
+        "resolved": "9.0.3",
+        "contentHash": "1rqGTfubVg0qj2PsK6esyq3PIxtYJYrN3LsYUV9RrvH3anmt3fT3ozYdAZZH4U8JU/pt5pPIUk8NBSu26wtekA=="
       },
       "Penumbra.Api": {
         "type": "Direct",
@@ -215,6 +227,7 @@
           "Microsoft.AspNetCore.SignalR.Protocols.MessagePack": "[8.0.11, )"
         }
       }
-    }
+    },
+    "net9.0-windows7.0/linux-x64": {}
   }
 }

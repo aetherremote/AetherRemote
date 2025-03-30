@@ -1,17 +1,19 @@
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
+using AetherRemoteClient.Ipc;
 using AetherRemoteClient.Utils;
+using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using ImGuiNET;
 
 namespace AetherRemoteClient.UI.Views.Settings;
 
-public class SettingsViewUi : IDrawable
+public class SettingsViewUi(GlamourerIpc glamourer, MoodlesIpc moodles, PenumbraIpc penumbra) : IDrawable
 {
     private readonly SettingsViewUiController _controller = new();
-    
+
     private static readonly Vector2 CheckboxPadding = new(8, 0);
-    
+
     public bool Draw()
     {
         ImGui.BeginChild("SettingsContent", Vector2.Zero, false, AetherRemoteStyle.ContentFlags);
@@ -31,7 +33,10 @@ public class SettingsViewUi : IDrawable
                 Plugin.Configuration.Save();
 
             SharedUserInterfaces.Tooltip(
-                ["Enabling safe mode will cancel any commands sent to you and", " prevent further ones from being processed"]);
+            [
+                "Enabling safe mode will cancel any commands sent to you and",
+                " prevent further ones from being processed"
+            ]);
 
             ImGui.SameLine();
             if (Plugin.Configuration.SafeMode)
@@ -40,9 +45,38 @@ public class SettingsViewUi : IDrawable
                 ImGui.TextColored(ImGuiColors.DalamudRed, "OFF");
         });
 
+        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        {
+            SharedUserInterfaces.MediumText("Dependencies");
+            ImGui.TextColored(ImGuiColors.DalamudGrey,
+                "Install these additional plugins for a more complete experience");
+
+            ImGui.Spacing();
+
+            ImGui.TextUnformatted("Penumbra");
+            ImGui.SameLine();
+            DrawCheckmarkOrCrossOut(penumbra.ApiAvailable);
+
+            ImGui.TextUnformatted("Glamourer");
+            ImGui.SameLine();
+            DrawCheckmarkOrCrossOut(glamourer.ApiAvailable);
+
+            ImGui.TextUnformatted("Moodles");
+            ImGui.SameLine();
+            DrawCheckmarkOrCrossOut(moodles.ApiAvailable);
+        });
+
         ImGui.PopStyleVar();
         ImGui.EndChild();
-        
+
         return false;
+    }
+
+    private static void DrawCheckmarkOrCrossOut(bool apiAvailable)
+    {
+        if (apiAvailable)
+            SharedUserInterfaces.Icon(FontAwesomeIcon.Check, ImGuiColors.HealerGreen);
+        else
+            SharedUserInterfaces.Icon(FontAwesomeIcon.Times, ImGuiColors.DalamudRed);
     }
 }

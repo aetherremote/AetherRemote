@@ -1,10 +1,10 @@
 using System;
+using AetherRemoteClient.Ipc;
 using AetherRemoteClient.Services;
-using AetherRemoteClient.Services.External;
 
 namespace AetherRemoteClient.UI.Views.Status;
 
-public class StatusViewUiController(GlamourerService glamourerService, NetworkService networkService, IdentityService identityService)
+public class StatusViewUiController(NetworkService networkService, IdentityService identityService, GlamourerIpc glamourer)
 {
     public async void Disconnect()
     {
@@ -22,7 +22,7 @@ public class StatusViewUiController(GlamourerService glamourerService, NetworkSe
     {
         try
         {
-            if (await glamourerService.RevertToAutomation().ConfigureAwait(false) is false)
+            if (await glamourer.RevertToAutomation().ConfigureAwait(false) is false)
                 return;
             
             await identityService.SetIdentityToCurrentCharacter().ConfigureAwait(false);

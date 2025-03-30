@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AetherRemoteClient.Ipc;
 using AetherRemoteClient.Services;
-using AetherRemoteClient.Services.External;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
@@ -16,9 +16,9 @@ namespace AetherRemoteClient.UI.Views.Transformation;
 /// </summary>
 /// <param name="glamourerService"></param>
 public class TransformationViewUiController(
-    GlamourerService glamourerService,
     FriendsListService friendsListService,
-    NetworkService networkService)
+    NetworkService networkService,
+    GlamourerIpc glamourer)
 {
     public string GlamourerCode = string.Empty;
     
@@ -32,7 +32,7 @@ public class TransformationViewUiController(
     {
         try
         {
-            var result = await glamourerService.GetDesignAsync();
+            var result = await glamourer.GetDesignAsync();
             if (result is null)
             {
                 NotificationHelper.Warning("Unable to get glamourer data",
@@ -63,7 +63,7 @@ public class TransformationViewUiController(
                 return;
             }
         
-            var data = await glamourerService.GetDesignAsync(index.Value);
+            var data = await glamourer.GetDesignAsync(index.Value);
             if (data is null)
             {
                 NotificationHelper.Warning("Unable to get glamourer data",

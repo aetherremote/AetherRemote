@@ -1,7 +1,7 @@
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
+using AetherRemoteClient.Ipc;
 using AetherRemoteClient.Services;
-using AetherRemoteClient.Services.External;
 using AetherRemoteClient.Utils;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
@@ -11,15 +11,15 @@ namespace AetherRemoteClient.UI.Views.Transformation;
 
 public class TransformationViewUi(
     CommandLockoutService commandLockoutService,
-    GlamourerService glamourerService,
     FriendsListService friendsListService,
-    NetworkService networkService) : IDrawable
+    NetworkService networkService,
+    GlamourerIpc glamourer) : IDrawable
 {
     // Const
     private static readonly Vector2 IconSize = new(32);
     
     // Instantiated
-    private readonly TransformationViewUiController _controller = new(glamourerService, friendsListService, networkService);
+    private readonly TransformationViewUiController _controller = new(friendsListService, networkService, glamourer);
 
     public bool Draw()
     {

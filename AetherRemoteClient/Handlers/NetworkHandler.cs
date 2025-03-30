@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using AetherRemoteClient.Handlers.Network;
+using AetherRemoteClient.Ipc;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
-using AetherRemoteClient.Services.External;
 using AetherRemoteCommon.Domain.Network;
 using Microsoft.AspNetCore.SignalR.Client;
 
@@ -25,24 +25,24 @@ public class NetworkHandler : IDisposable
     public NetworkHandler(
         EmoteService emoteService,
         FriendsListService friendsListService,
-        GlamourerService glamourerService,
         IdentityService identityService,
-        MoodlesService moodlesService,
         OverrideService overrideService,
-        PenumbraService penumbraService,
         LogService logService,
         NetworkService networkService,
+        GlamourerIpc glamourerIpc,
+        MoodlesIpc moodlesIpc,
+        PenumbraIpc penumbraIpc,
         ActionQueueManager actionQueueManager,
         ModManager modManager)
     {
         var bodySwapHandler = new BodySwapHandler(friendsListService, identityService, overrideService, logService, modManager);
         var bodySwapQueryHandler = new BodySwapQueryHandler(friendsListService, identityService, overrideService, logService);
         var emoteHandler = new EmoteHandler(emoteService, friendsListService, logService, overrideService);
-        var moodlesHandler = new MoodlesHandler(friendsListService, moodlesService, overrideService, penumbraService, logService);
+        var moodlesHandler = new MoodlesHandler(friendsListService, overrideService, logService, moodlesIpc, penumbraIpc);
         var speakHandler = new SpeakHandler(friendsListService, logService, overrideService, actionQueueManager);
         var syncOnlineStatusHandler = new SyncOnlineStatusHandler(friendsListService);
         var syncPermissionsHandler = new SyncPermissionsHandler(friendsListService);
-        var transformHandler = new TransformHandler(friendsListService, glamourerService, overrideService, logService);
+        var transformHandler = new TransformHandler(friendsListService, overrideService, logService, glamourerIpc);
         var twinningHandler = new TwinningHandler(friendsListService, identityService, overrideService, logService, modManager);
 
         _handlers.Add(networkService.Connection.On<BodySwapQueryRequest, BodySwapQueryResponse>(HubMethod.BodySwapQuery, bodySwapQueryHandler.Handle));

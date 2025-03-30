@@ -57,7 +57,7 @@ public static class SharedUserInterfaces
     }
 
     /// <summary>
-    /// Draws a <see cref="FontAwesomeIcon"/>
+    ///     Draws a <see cref="FontAwesomeIcon"/>
     /// </summary>
     public static void Icon(FontAwesomeIcon icon, Vector4? color = null)
     {

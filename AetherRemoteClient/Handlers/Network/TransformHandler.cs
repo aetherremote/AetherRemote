@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
+using AetherRemoteClient.Ipc;
 using AetherRemoteClient.Services;
-using AetherRemoteClient.Services.External;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Util;
@@ -12,9 +12,9 @@ namespace AetherRemoteClient.Handlers.Network;
 /// </summary>
 public class TransformHandler(
     FriendsListService friendsListService, 
-    GlamourerService glamourerService,
     OverrideService overrideService, 
-    LogService logService)
+    LogService logService,
+    GlamourerIpc glamourerIpc)
 {
     /// <summary>
     ///     <inheritdoc cref="TransformHandler"/>
@@ -79,7 +79,7 @@ public class TransformHandler(
         }
         
         // Attempt to apply
-        if (await glamourerService.ApplyDesignAsync(action.GlamourerData, action.GlamourerApplyType).ConfigureAwait(false) is false)
+        if (await glamourerIpc.ApplyDesignAsync(action.GlamourerData, action.GlamourerApplyType).ConfigureAwait(false) is false)
         {
             Plugin.Log.Warning($"Failed to handle transformation request from {friend.NoteOrFriendCode}");
             logService.Custom($"{friend.NoteOrFriendCode} tried to transform you, but an unexpected error occured.");

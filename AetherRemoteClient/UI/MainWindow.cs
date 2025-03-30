@@ -2,9 +2,9 @@ using System;
 using System.Numerics;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain.Interfaces;
+using AetherRemoteClient.Ipc;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
-using AetherRemoteClient.Services.External;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.UI.Views.BodySwap;
 using AetherRemoteClient.UI.Views.Emote;
@@ -64,13 +64,15 @@ public class MainWindow : Window, IDisposable
         CommandLockoutService commandLockoutService,
         EmoteService emoteService,
         FriendsListService friendsListService,
-        GlamourerService glamourerService,
         IdentityService identityService,
         LogService logService,
         NetworkService networkService,
         OverrideService overrideService,
         TipService tipService,
         WorldService worldService,
+        GlamourerIpc glamourer,
+        MoodlesIpc moodles,
+        PenumbraIpc penumbra,
         ModManager modManager) : base(MainWindowTitle)
     {
         SizeConstraints = new WindowSizeConstraints
@@ -83,18 +85,18 @@ public class MainWindow : Window, IDisposable
         _friendsListComponent = new FriendsListComponentUi(friendsListService, networkService);
 
         // Views
-        _statusView = new StatusViewUi(glamourerService, networkService, identityService, tipService);
+        _statusView = new StatusViewUi(networkService, identityService, tipService, glamourer);
         _friendsView = new FriendsViewUi(friendsListService, networkService);
         _overridesView = new OverridesViewUi(overrideService);
         _speakView = new SpeakViewUi(commandLockoutService, friendsListService, networkService, worldService);
         _emoteView = new EmoteViewUi(commandLockoutService, emoteService, friendsListService, networkService);
         _transformationView =
-            new TransformationViewUi(commandLockoutService, glamourerService, friendsListService, networkService);
+            new TransformationViewUi(commandLockoutService, friendsListService, networkService, glamourer);
         _bodySwapView = new BodySwapViewUi(commandLockoutService, identityService, friendsListService, networkService,
             modManager);
         _twinningView = new TwinningViewUi(commandLockoutService, friendsListService, identityService, networkService);
         _historyView = new HistoryViewUi(logService);
-        _settingsView = new SettingsViewUi();
+        _settingsView = new SettingsViewUi(glamourer, moodles, penumbra);
         _loginView = new LoginViewUi(networkService);
         _moodlesView = new MoodlesViewUi(commandLockoutService, friendsListService, networkService);
 

@@ -1,50 +1,59 @@
 using System;
 using System.Threading.Tasks;
+using AetherRemoteClient.Domain.Interfaces;
 using Dalamud.Plugin.Ipc;
 
-namespace AetherRemoteClient.Services.External;
+namespace AetherRemoteClient.Ipc;
 
 /// <summary>
-///     Provides access to Moodles IPCs
+///     Provides access to Moodles
 /// </summary>
-public class MoodlesService
+public class MoodlesIpc : IExternalPlugin
 {
     // Moodles API
     private readonly ICallGateSubscriber<nint, string> _get;
     private readonly ICallGateSubscriber<nint, string, object> _set;
+    private readonly ICallGateSubscriber<int> _version;
+    
+    /// <summary>
+    ///     Is Moodles available for use?
+    /// </summary>
+    public bool ApiAvailable = true;
 
     /// <summary>
-    ///     Is the moodles api available for use?
+    ///     <inheritdoc cref="MoodlesIpc"/>
     /// </summary>
-    private readonly bool _moodlesAvailable;
-
-    /// <summary>
-    ///     <inheritdoc cref="MoodlesService"/>
-    /// </summary>
-    public MoodlesService()
+    public MoodlesIpc()
     {
         _get = Plugin.PluginInterface.GetIpcSubscriber<nint, string>("Moodles.GetStatusManagerByPtr");
         _set = Plugin.PluginInterface.GetIpcSubscriber<nint, string, object>("Moodles.SetStatusManagerByPtr");
-
+        _version = Plugin.PluginInterface.GetIpcSubscriber<int>("Moodles.Version");
+        
+        TestIpcAvailability();
+    }
+    
+    /// <summary>
+    ///     Tests for availability for Moodles
+    /// </summary>
+    public void TestIpcAvailability()
+    {
         try
         {
-            _moodlesAvailable = Plugin.PluginInterface.GetIpcSubscriber<int>("Moodles.Version").InvokeFunc() is 1;
+            ApiAvailable = _version.InvokeFunc() is 1;
         }
         catch (Exception)
         {
-            // Ignored
+            ApiAvailable = false;
         }
-
-        Plugin.Log.Verbose($"[MoodlesService] Moodles available: {_moodlesAvailable}");
     }
-
+    
     /// <summary>
     ///     Retrieves a target's moodles
     /// </summary>
     /// <param name="address">Object table address of the target whose moodles you will get</param>
     public async Task<string?> GetMoodles(nint address)
     {
-        if (_moodlesAvailable)
+        if (ApiAvailable)
             return await Plugin.RunOnFramework(() =>
             {
                 try
@@ -67,10 +76,10 @@ public class MoodlesService
     ///     Sets a target's moodles
     /// </summary>
     /// <param name="address">Object table address of the target whose moodles you will get</param>
-    /// /// <param name="moodles">The string of moodles to set</param>
+    /// <param name="moodles">The string of moodles to set</param>
     public async Task<bool> SetMoodles(nint address, string moodles)
     {
-        if (_moodlesAvailable)
+        if (ApiAvailable)
             return await Plugin.RunOnFramework(() =>
             {
                 try

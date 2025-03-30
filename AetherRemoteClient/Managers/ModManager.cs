@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain.Events;
-using AetherRemoteClient.Services.External;
+using AetherRemoteClient.Ipc;
 using AetherRemoteCommon.Domain.Enums;
 
 namespace AetherRemoteClient.Managers;
@@ -17,25 +17,25 @@ public class ModManager : IDisposable
     private const int Priority = 99;
 
     // Injected
-    private readonly GlamourerService _glamourerService;
-    private readonly MoodlesService _moodlesService;
-    private readonly PenumbraService _penumbraService;
+    private readonly GlamourerIpc _glamourer;
+    private readonly MoodlesIpc _moodles;
+    private readonly PenumbraIpc _penumbra;
 
     /// <summary>
     ///     <inheritdoc cref="ModManager"/>
     /// </summary>
-    public ModManager(GlamourerService glamourerService, MoodlesService moodlesService, PenumbraService penumbraService)
+    public ModManager(GlamourerIpc glamourer, MoodlesIpc moodles, PenumbraIpc penumbra)
     {
-        _glamourerService = glamourerService;
-        _moodlesService = moodlesService;
-        _penumbraService = penumbraService;
+        _glamourer = glamourer;
+        _moodles = moodles;
+        _penumbra = penumbra;
 
-        _glamourerService.LocalPlayerResetOrReapply += OnPlayerResetOrReapply;
+        _glamourer.LocalPlayerResetOrReapply += OnPlayerResetOrReapply;
     }
 
     public void Dispose()
     {
-        _glamourerService.LocalPlayerResetOrReapply -= OnPlayerResetOrReapply;
+        _glamourer.LocalPlayerResetOrReapply -= OnPlayerResetOrReapply;
         GC.SuppressFinalize(this);
     }
 
@@ -45,10 +45,10 @@ public class ModManager : IDisposable
     public async Task<bool> Assimilate(string targetCharacterName, CharacterAttributes attributes)
     {
         // Get Current Collection
-        var collection = await _penumbraService.GetCollection().ConfigureAwait(false);
+        var collection = await _penumbra.GetCollection().ConfigureAwait(false);
 
         // Remove Existing Temp Mods
-        await _penumbraService.CallRemoveTemporaryMod(TemporaryModName, collection, Priority).ConfigureAwait(false);
+        await _penumbra.CallRemoveTemporaryMod(TemporaryModName, collection, Priority).ConfigureAwait(false);
         
         // Get a game object for target player in object table
         var gameObject = await Plugin.RunOnFramework(() =>
@@ -70,7 +70,7 @@ public class ModManager : IDisposable
         }
 
         // Get Glamourer design
-        if (await _glamourerService.GetDesignAsync(gameObject.ObjectIndex).ConfigureAwait(false) is not { } glamourer)
+        if (await _glamourer.GetDesignAsync(gameObject.ObjectIndex).ConfigureAwait(false) is not { } glamourer)
         {
             Plugin.Log.Warning($"Unable to find {targetCharacterName} in object table");
             return false;
@@ -87,8 +87,8 @@ public class ModManager : IDisposable
         {
             characterData.ModInfo = new PenumbraCharacterModInfo
             {
-                ModifiedPaths = await _penumbraService.GetGameObjectResourcePaths(gameObject.ObjectIndex).ConfigureAwait(false),
-                MetaData = await _penumbraService.GetMetaManipulations(gameObject.ObjectIndex).ConfigureAwait(false)
+                ModifiedPaths = await _penumbra.GetGameObjectResourcePaths(gameObject.ObjectIndex).ConfigureAwait(false),
+                MetaData = await _penumbra.GetMetaManipulations(gameObject.ObjectIndex).ConfigureAwait(false)
             };
         }
         
@@ -97,7 +97,7 @@ public class ModManager : IDisposable
         {
             // TODO: Store original moodles before swap
             
-            characterData.Moodles = await _moodlesService.GetMoodles(gameObject.Address).ConfigureAwait(false);
+            characterData.Moodles = await _moodles.GetMoodles(gameObject.Address).ConfigureAwait(false);
             if (characterData.Moodles is null)
                 Plugin.Log.Warning("[ModManager] Moodles were null.");
         }
@@ -120,7 +120,7 @@ public class ModManager : IDisposable
                 return false;
             }
 
-            if (await _penumbraService
+            if (await _penumbra
                     .AddTemporaryMod(TemporaryModName, collection, characterData.ModInfo.ModifiedPaths, characterData.ModInfo.MetaData,
                         Priority).ConfigureAwait(false) is false)
             {
@@ -151,7 +151,7 @@ public class ModManager : IDisposable
                 return false;
             }
 
-            if (await _moodlesService.SetMoodles(ownAddress.Value, characterData.Moodles)
+            if (await _moodles.SetMoodles(ownAddress.Value, characterData.Moodles)
                     .ConfigureAwait(false) is false)
             {
                 Plugin.Log.Warning($"Could not add {targetCharacterName}'s moodles");
@@ -160,7 +160,7 @@ public class ModManager : IDisposable
         }
 
         // Apply Glamourer
-        if (await _glamourerService.ApplyDesignAsync(characterData.GlamourerData, GlamourerApplyFlag.All).ConfigureAwait(false) is false)
+        if (await _glamourer.ApplyDesignAsync(characterData.GlamourerData, GlamourerApplyFlag.All).ConfigureAwait(false) is false)
         {
             Plugin.Log.Warning($"Could not apply {targetCharacterName}'s glamourer data");
             return false;
@@ -176,8 +176,8 @@ public class ModManager : IDisposable
     {
         try
         {
-            var current = await _penumbraService.GetCollection().ConfigureAwait(false);
-            await _penumbraService.CallRemoveTemporaryMod(TemporaryModName, current, Priority).ConfigureAwait(false);
+            var current = await _penumbra.GetCollection().ConfigureAwait(false);
+            await _penumbra.CallRemoveTemporaryMod(TemporaryModName, current, Priority).ConfigureAwait(false);
         }
         catch (Exception exception)
         {
