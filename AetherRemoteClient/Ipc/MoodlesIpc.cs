@@ -18,7 +18,7 @@ public class MoodlesIpc : IExternalPlugin
     /// <summary>
     ///     Is Moodles available for use?
     /// </summary>
-    public bool ApiAvailable = true;
+    public bool ApiAvailable;
 
     /// <summary>
     ///     <inheritdoc cref="MoodlesIpc"/>

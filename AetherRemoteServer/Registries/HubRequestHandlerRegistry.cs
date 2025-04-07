@@ -8,6 +8,7 @@ namespace AetherRemoteServer.Registries;
 public class HubRequestHandlerRegistry(
     AddFriendHandler addFriendHandler,
     BodySwapHandler bodySwapHandler,
+    CustomizePlusHandler customizePlusHandler,
     EmoteHandler emoteHandler,
     GetAccountDataHandler getAccountDataHandler,
     MoodlesHandler moodlesHandler,
@@ -27,4 +28,5 @@ public class HubRequestHandlerRegistry(
     public TransformHandler TransformHandler { get; } = transformHandler;
     public TwinningHandler TwinningHandler { get; } = twinningHandler;
     public UpdateFriendHandler UpdateFriendHandler { get; } = updateFriendHandler;
+    public CustomizePlusHandler CustomizePlusHandler { get; } = customizePlusHandler;
 }

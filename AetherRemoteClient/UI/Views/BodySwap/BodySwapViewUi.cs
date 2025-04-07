@@ -50,6 +50,9 @@ public class BodySwapViewUi(
             ImGui.Checkbox("Swap Moodles", ref _controller.SwapMoodles);
             
             ImGui.Spacing();
+            ImGui.Checkbox("Swap Customize+", ref _controller.SwapCustomizePlus);
+            
+            ImGui.Spacing();
             
             ImGui.Checkbox("Include Self", ref _controller.IncludeSelfInSwap);
             SharedUserInterfaces.Tooltip("Include yourself in the targets to body swap");

@@ -8,7 +8,7 @@ using ImGuiNET;
 
 namespace AetherRemoteClient.UI.Views.Settings;
 
-public class SettingsViewUi(GlamourerIpc glamourer, MoodlesIpc moodles, PenumbraIpc penumbra) : IDrawable
+public class SettingsViewUi(CustomizePlusIpc customize, GlamourerIpc glamourer, MoodlesIpc moodles, PenumbraIpc penumbra) : IDrawable
 {
     private readonly SettingsViewUiController _controller = new();
 
@@ -64,6 +64,10 @@ public class SettingsViewUi(GlamourerIpc glamourer, MoodlesIpc moodles, Penumbra
             ImGui.TextUnformatted("Moodles");
             ImGui.SameLine();
             DrawCheckmarkOrCrossOut(moodles.ApiAvailable);
+            
+            ImGui.TextUnformatted("Customize+");
+            ImGui.SameLine();
+            DrawCheckmarkOrCrossOut(customize.ApiAvailable);
         });
 
         ImGui.PopStyleVar();

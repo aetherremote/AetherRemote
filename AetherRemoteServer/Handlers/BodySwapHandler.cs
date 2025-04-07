@@ -81,7 +81,8 @@ public class BodySwapHandler(
                 };
             }
             
-            if (request.SwapAttributes.HasFlag(CharacterAttributes.Mods) && permissionsGranted.Primary.HasFlag(PrimaryPermissions.Mods) is false)
+            if (request.SwapAttributes.HasFlag(CharacterAttributes.Mods) && 
+                permissionsGranted.Primary.HasFlag(PrimaryPermissions.Mods) is false)
             {
                 logger.LogWarning("{Issuer} targeted {Target} but lacks mod permissions, aborting", issuerFriendCode, target);
                 await cancel.CancelAsync();
@@ -89,6 +90,30 @@ public class BodySwapHandler(
                 {
                     Success = false,
                     Message = "You are lacking mod permissions with one or more targets"
+                };
+            }
+            
+            if (request.SwapAttributes.HasFlag(CharacterAttributes.Moodles) && 
+                permissionsGranted.Primary.HasFlag(PrimaryPermissions.Moodles) is false)
+            {
+                logger.LogWarning("{Issuer} targeted {Target} but lacks moodles permissions, aborting", issuerFriendCode, target);
+                await cancel.CancelAsync();
+                return new BodySwapResponse
+                {
+                    Success = false,
+                    Message = "You are lacking moodles permissions with one or more targets"
+                };
+            }
+
+            if (request.SwapAttributes.HasFlag(CharacterAttributes.CustomizePlus) &&
+                permissionsGranted.Primary.HasFlag(PrimaryPermissions.CustomizePlus) is false)
+            {
+                logger.LogWarning("{Issuer} targeted {Target} but lacks customize plus permissions, aborting", issuerFriendCode, target);
+                await cancel.CancelAsync();
+                return new BodySwapResponse
+                {
+                    Success = false,
+                    Message = "You are lacking customize+ permissions with one or more targets"
                 };
             }
 

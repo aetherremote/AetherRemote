@@ -121,6 +121,8 @@ public class OverridesViewUi(OverrideService overrideService) : IDrawable
                 ImGui.Checkbox("Body Swap", ref _controller.Overrides.BodySwap);
                 ImGui.TableNextColumn();
                 ImGui.Checkbox("Twinning", ref _controller.Overrides.Twinning);
+                ImGui.TableNextColumn();
+                ImGui.Checkbox("Customize+", ref _controller.Overrides.CustomizePlus);
                 ImGui.EndTable();
             }
 

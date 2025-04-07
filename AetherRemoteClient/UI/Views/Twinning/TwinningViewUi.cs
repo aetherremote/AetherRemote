@@ -45,6 +45,10 @@ public class TwinningViewUi(
             ImGui.SameLine();
             ImGui.SetCursorPosX(half);
             ImGui.Checkbox("Swap Moodles", ref _controller.SwapMoodles);
+            
+            ImGui.Spacing();
+            
+            ImGui.Checkbox("Swap Customize+", ref _controller.SwapCustomizePlus);
         });
         
         var friendsLackingPermissions = _controller.GetFriendsLackingPermissions();

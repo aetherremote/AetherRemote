@@ -27,4 +27,5 @@ public static class HubMethod
     public const string SyncPermissions = "SyncPermissions";
     
     public const string Moodles = "Moodles";
+    public const string CustomizePlus = "CustomizePlus";
 }

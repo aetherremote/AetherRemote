@@ -46,9 +46,24 @@ public class TwinningHandler(
                 continue;
             }
             
-            if (request.SwapAttributes.HasFlag(CharacterAttributes.Mods) && permissionsGranted.Primary.HasFlag(PrimaryPermissions.Mods) is false)
+            if (request.SwapAttributes.HasFlag(CharacterAttributes.Mods) && 
+                permissionsGranted.Primary.HasFlag(PrimaryPermissions.Mods) is false)
             {
                 logger.LogInformation("{Issuer} targeted {Target} but lacks mod permissions, skipping", friendCode, target);
+                continue;
+            }
+            
+            if (request.SwapAttributes.HasFlag(CharacterAttributes.Moodles) && 
+                permissionsGranted.Primary.HasFlag(PrimaryPermissions.Moodles) is false)
+            {
+                logger.LogInformation("{Issuer} targeted {Target} but lacks moodles permissions, skipping", friendCode, target);
+                continue;
+            }
+            
+            if (request.SwapAttributes.HasFlag(CharacterAttributes.CustomizePlus) && 
+                permissionsGranted.Primary.HasFlag(PrimaryPermissions.CustomizePlus) is false)
+            {
+                logger.LogInformation("{Issuer} targeted {Target} but lacks customize plus permissions, skipping", friendCode, target);
                 continue;
             }
 

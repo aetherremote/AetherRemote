@@ -170,6 +170,8 @@ public class FriendsViewUi(FriendsListService friendsListService, NetworkService
                 ImGui.Checkbox("Body Swap", ref _controller.EditingUserPermissions.BodySwap);
                 ImGui.TableNextColumn();
                 ImGui.Checkbox("Twinning", ref _controller.EditingUserPermissions.Twinning);
+                ImGui.TableNextColumn();
+                ImGui.Checkbox("Customize+", ref _controller.EditingUserPermissions.CustomizePlus);
                 ImGui.EndTable();
             }
 

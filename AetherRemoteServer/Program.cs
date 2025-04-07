@@ -45,6 +45,7 @@ public class Program
         // Handles
         builder.Services.AddSingleton<AddFriendHandler>();
         builder.Services.AddSingleton<BodySwapHandler>();
+        builder.Services.AddSingleton<CustomizePlusHandler>();
         builder.Services.AddSingleton<EmoteHandler>();
         builder.Services.AddSingleton<GetAccountDataHandler>();
         builder.Services.AddSingleton<MoodlesHandler>();

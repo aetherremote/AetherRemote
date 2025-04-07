@@ -88,6 +88,13 @@ public class PrimaryHub(
         logger.LogInformation("{Request}", request);
         return await handlerRegistry.UpdateFriendHandler.Handle(FriendCode, request, Clients);
     }
+    
+    [HubMethodName(HubMethod.CustomizePlus)]
+    public async Task<BaseResponse> CustomizePlus(CustomizePlusRequest request)
+    {
+        logger.LogInformation("{Request}", request);
+        return await handlerRegistry.CustomizePlusHandler.Handle(FriendCode, request, Clients);
+    }
 
     /// <summary>
     ///     Handles when a client connects to the hub

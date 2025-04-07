@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain.Events;
@@ -17,6 +18,7 @@ public class ModManager : IDisposable
     private const int Priority = 99;
 
     // Injected
+    private readonly CustomizePlusIpc _customizePlus;
     private readonly GlamourerIpc _glamourer;
     private readonly MoodlesIpc _moodles;
     private readonly PenumbraIpc _penumbra;
@@ -24,8 +26,9 @@ public class ModManager : IDisposable
     /// <summary>
     ///     <inheritdoc cref="ModManager"/>
     /// </summary>
-    public ModManager(GlamourerIpc glamourer, MoodlesIpc moodles, PenumbraIpc penumbra)
+    public ModManager(CustomizePlusIpc customizePlus, GlamourerIpc glamourer, MoodlesIpc moodles, PenumbraIpc penumbra)
     {
+        _customizePlus = customizePlus;
         _glamourer = glamourer;
         _moodles = moodles;
         _penumbra = penumbra;
@@ -101,6 +104,13 @@ public class ModManager : IDisposable
             if (characterData.Moodles is null)
                 Plugin.Log.Warning("[ModManager] Moodles were null.");
         }
+        
+        if ((attributes & CharacterAttributes.CustomizePlus) == CharacterAttributes.CustomizePlus)
+        {
+            characterData.CustomizePlusTemplates = _customizePlus.GetActiveTemplatesOnCharacter(targetCharacterName);
+            if (characterData.CustomizePlusTemplates is null)
+                Plugin.Log.Warning("[ModManager] CustomizePlus data was null.");
+        }
 
         // Pause to allow others viewing your character details from their clients
         await Task.Delay(3000).ConfigureAwait(false);
@@ -158,6 +168,22 @@ public class ModManager : IDisposable
                 return false;
             }
         }
+        
+        // Apply moodles if the option was provided
+        if ((attributes & CharacterAttributes.CustomizePlus) == CharacterAttributes.CustomizePlus)
+        {
+            if (characterData.CustomizePlusTemplates is not null)
+            {
+                await Plugin.RunOnFramework(() =>
+                {
+                    _customizePlus.ApplyCustomize(characterData.CustomizePlusTemplates);
+                }).ConfigureAwait(false);
+            }
+            else
+            {
+                Plugin.Log.Warning($"Expected mods from {targetCharacterName} but none were present");
+            }
+        }
 
         // Apply Glamourer
         if (await _glamourer.ApplyDesignAsync(characterData.GlamourerData, GlamourerApplyFlag.All).ConfigureAwait(false) is false)
@@ -176,6 +202,7 @@ public class ModManager : IDisposable
     {
         try
         {
+            _customizePlus.DeleteCustomize();
             var current = await _penumbra.GetCollection().ConfigureAwait(false);
             await _penumbra.CallRemoveTemporaryMod(TemporaryModName, current, Priority).ConfigureAwait(false);
         }
@@ -221,5 +248,10 @@ public class ModManager : IDisposable
         ///     The character's current moodles
         /// </summary>
         public string? Moodles = string.Empty;
+
+        /// <summary>
+        ///     The character's customize plus template
+        /// </summary>
+        public IList? CustomizePlusTemplates = null;
     }
 }

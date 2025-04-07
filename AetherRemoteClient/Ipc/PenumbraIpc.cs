@@ -24,7 +24,7 @@ public class PenumbraIpc : IExternalPlugin
     /// <summary>
     ///     Is Penumbra available for use?
     /// </summary>
-    public bool ApiAvailable = true;
+    public bool ApiAvailable;
 
     /// <summary>
     ///     <see cref="PenumbraIpc"/>

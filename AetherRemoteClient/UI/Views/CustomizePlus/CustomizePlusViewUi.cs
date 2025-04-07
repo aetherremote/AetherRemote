@@ -6,22 +6,22 @@ using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using ImGuiNET;
 
-namespace AetherRemoteClient.UI.Views.Moodles;
+namespace AetherRemoteClient.UI.Views.CustomizePlus;
 
-public class MoodlesViewUi(
+public class CustomizePlusViewUi(
     CommandLockoutService commandLockoutService,
     FriendsListService friendsListService,
     NetworkService networkService) : IDrawable
 {
     // Const
     private static readonly Vector2 IconSize = new(32);
-
+    
     // Instantiated
-    private readonly MoodlesViewUiController _controller = new(friendsListService, networkService);
-
+    private readonly CustomizePlusViewUiController _controller = new(friendsListService, networkService);
+    
     public bool Draw()
     {
-        ImGui.BeginChild("MoodlesContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
+        ImGui.BeginChild("BodySwapContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
         
         if (friendsListService.Selected.Count is 0)
         {
@@ -35,17 +35,16 @@ public class MoodlesViewUi(
         var windowWidthHalf = ImGui.GetWindowWidth() * 0.5f;
         SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
         {
-            SharedUserInterfaces.MediumText("Saved Moodles");
+            SharedUserInterfaces.MediumText("Saved Templates");
             ImGui.TextColored(ImGuiColors.DalamudGrey, "Coming in a future update");
         });
 
         SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
         {
             SharedUserInterfaces.MediumText("Quick Actions");
-
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Paste, IconSize))
-                _controller.Moodle = ImGui.GetClipboardText();
-            SharedUserInterfaces.Tooltip("Paste moodle data from your clipboard");
+                _controller.Customize = ImGui.GetClipboardText();
+            SharedUserInterfaces.Tooltip("Paste Customize+ data from clipboard");
         });
         
         var friendsLackingPermissions = _controller.GetFriendsLackingPermissions();
@@ -61,14 +60,14 @@ public class MoodlesViewUi(
                 ImGui.TextWrapped(string.Join(", ", friendsLackingPermissions));
             });
         }
-
+        
         SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
         {
-            SharedUserInterfaces.MediumText("Moodle Data");
+            SharedUserInterfaces.MediumText("Customize Data");
 
             var width = (windowWidthHalf - ImGui.GetStyle().WindowPadding.X) * 2;
             ImGui.SetNextItemWidth(width);
-            var shouldSendMoodle = ImGui.InputTextWithHint("##MoodleData", "Moodle data", ref _controller.Moodle, 5000,
+            var shouldSendCustomize = ImGui.InputTextWithHint("##CustomizeData", "Customize data", ref _controller.Customize, 5000,
                 ImGuiInputTextFlags.EnterReturnsTrue);
 
             ImGui.Spacing();
@@ -76,22 +75,22 @@ public class MoodlesViewUi(
             if (commandLockoutService.IsLocked)
             {
                 ImGui.BeginDisabled();
-                ImGui.Button("Apply Moodle", new Vector2(width, 0));
+                ImGui.Button("Apply Customize", new Vector2(width, 0));
                 ImGui.EndDisabled();
             }
             else
             {
-                if (ImGui.Button("Apply Moodle", new Vector2(width, 0)))
-                    shouldSendMoodle = true;
+                if (ImGui.Button("Apply Customize", new Vector2(width, 0)))
+                    shouldSendCustomize = true;
 
-                if (shouldSendMoodle is false)
+                if (shouldSendCustomize is false)
                     return;
 
                 commandLockoutService.Lock();
-                _controller.SendMoodle();
+                _controller.SendCustomize();
             }
         });
-
+        
         ImGui.EndChild();
         return true;
     }

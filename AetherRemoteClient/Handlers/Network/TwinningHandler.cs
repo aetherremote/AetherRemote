@@ -86,6 +86,24 @@ public class TwinningHandler(
             }
         }
         
+        // If customize plus is an attribute...
+        if (action.SwapAttributes.HasFlag(CharacterAttributes.CustomizePlus))
+        {
+            // Overriding mods
+            if (overrideService.HasActiveOverride(PrimaryPermissions.CustomizePlus))
+            {
+                logService.Override("Body Swap", friend.NoteOrFriendCode);
+                return;
+            }
+
+            // Lacking permissions for mods
+            if (friend.PermissionsGrantedToFriend.Has(PrimaryPermissions.CustomizePlus) is false)
+            {
+                logService.LackingPermissions("Body Swap", friend.NoteOrFriendCode);
+                return;
+            }
+        }
+        
         // Check if local body is present
         if (await Plugin.RunOnFramework(() => Plugin.ClientState.LocalPlayer is null).ConfigureAwait(false))
         { 

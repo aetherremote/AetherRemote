@@ -23,6 +23,7 @@ public class NetworkHandler : IDisposable
     ///     <inheritdoc cref="NetworkHandler"/>
     /// </summary>
     public NetworkHandler(
+        CustomizePlusIpc customizePlusIpc,
         EmoteService emoteService,
         FriendsListService friendsListService,
         IdentityService identityService,
@@ -44,6 +45,7 @@ public class NetworkHandler : IDisposable
         var syncPermissionsHandler = new SyncPermissionsHandler(friendsListService);
         var transformHandler = new TransformHandler(friendsListService, overrideService, logService, glamourerIpc);
         var twinningHandler = new TwinningHandler(friendsListService, identityService, overrideService, logService, modManager);
+        var customizePlusHandler = new CustomizePlusHandler(friendsListService, overrideService, logService, customizePlusIpc);
 
         _handlers.Add(networkService.Connection.On<BodySwapQueryRequest, BodySwapQueryResponse>(HubMethod.BodySwapQuery, bodySwapQueryHandler.Handle));
         _handlers.Add(networkService.Connection.On<BodySwapAction>(HubMethod.BodySwap, bodySwapHandler.Handle));
@@ -54,6 +56,7 @@ public class NetworkHandler : IDisposable
         _handlers.Add(networkService.Connection.On<SyncPermissionsAction>(HubMethod.SyncPermissions, syncPermissionsHandler.Handle));
         _handlers.Add(networkService.Connection.On<TransformAction>(HubMethod.Transform, transformHandler.Handle));
         _handlers.Add(networkService.Connection.On<TwinningAction>(HubMethod.Twinning, twinningHandler.Handle));
+        _handlers.Add(networkService.Connection.On<CustomizePlusAction>(HubMethod.CustomizePlus, customizePlusHandler.Handle));
     }
 
     public void Dispose()

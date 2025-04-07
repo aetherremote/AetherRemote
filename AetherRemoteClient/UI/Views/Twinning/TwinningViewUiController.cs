@@ -17,6 +17,7 @@ public class TwinningViewUiController(
 {
     public bool SwapMods;
     public bool SwapMoodles;
+    public bool SwapCustomizePlus;
 
     public async void Twin()
     {
@@ -30,6 +31,8 @@ public class TwinningViewUiController(
                 attributes |= CharacterAttributes.Mods;
             if (SwapMoodles)
                 attributes |= CharacterAttributes.Moodles;
+            if (SwapCustomizePlus)
+                attributes |= CharacterAttributes.CustomizePlus;
 
             var input = new TwinningRequest
             {
@@ -75,6 +78,18 @@ public class TwinningViewUiController(
             }
             
             if (SwapMods && selected.PermissionsGrantedByFriend.Has(PrimaryPermissions.Mods) is false)
+            {
+                thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
+                continue;
+            }
+            
+            if (SwapMoodles && selected.PermissionsGrantedByFriend.Has(PrimaryPermissions.Moodles) is false)
+            {
+                thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
+                continue;
+            }
+            
+            if (SwapCustomizePlus && selected.PermissionsGrantedByFriend.Has(PrimaryPermissions.CustomizePlus) is false)
             {
                 thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
             }

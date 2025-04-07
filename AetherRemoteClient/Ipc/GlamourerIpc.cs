@@ -37,7 +37,7 @@ public class GlamourerIpc : IExternalPlugin, IDisposable
     /// <summary>
     ///     Is Glamourer available for use?
     /// </summary>
-    public bool ApiAvailable = true;
+    public bool ApiAvailable;
 
     /// <summary>
     ///     <inheritdoc cref="GlamourerIpc"/>

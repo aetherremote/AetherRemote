@@ -6,42 +6,45 @@ using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
 
-namespace AetherRemoteClient.UI.Views.Moodles;
+namespace AetherRemoteClient.UI.Views.CustomizePlus;
 
-public class MoodlesViewUiController(FriendsListService friendsListService, NetworkService networkService)
+public class CustomizePlusViewUiController(FriendsListService friendsListService, NetworkService networkService)
 {
-    public string Moodle = string.Empty;
+    /// <summary>
+    ///     Customize+ data to send
+    /// </summary>
+    public string Customize = string.Empty;
     
-    public async void SendMoodle()
+    public async void SendCustomize()
     {
         try
         {
-            if (Moodle.Length is 0)
+            if (Customize.Length is 0)
                 return;
 
-            var input = new MoodlesRequest
+            var input = new CustomizePlusRequest
             {
                 TargetFriendCodes = friendsListService.Selected.Select(friend => friend.FriendCode).ToList(),
-                Moodle = Moodle
+                Customize = Customize
             };
 
-            var response = await networkService.InvokeAsync<MoodlesRequest, BaseResponse>(HubMethod.Moodles, input);
+            var response = await networkService.InvokeAsync<CustomizePlusRequest, BaseResponse>(HubMethod.CustomizePlus, input);
             if (Plugin.DeveloperMode || response.Success)
             {
-                Moodle = string.Empty;
+                Customize = string.Empty;
                 
                 Plugin.NotificationManager.AddNotification(NotificationHelper.Success(
-                    "Successfully added moodle", string.Empty));
+                    "Successfully applied customize plus template", string.Empty));
             }
             else
             {
                 Plugin.NotificationManager.AddNotification(NotificationHelper.Warning(
-                    "Unable to add moodle", response.Message));
+                    "Unable to apply customize plus template", response.Message));
             }
         }
         catch (Exception e)
         {
-            Plugin.Log.Warning($"Failed to add moodle, {e.Message}");
+            Plugin.Log.Warning($"Failed to apply customize plus template, {e.Message}");
         }
     }
     
@@ -54,7 +57,7 @@ public class MoodlesViewUiController(FriendsListService friendsListService, Netw
         var thoseWhoYouLackPermissionsFor = new List<string>();
         foreach (var selected in friendsListService.Selected)
         {
-            if (selected.PermissionsGrantedByFriend.Primary.HasFlag(PrimaryPermissions.Moodles) is false)
+            if (selected.PermissionsGrantedByFriend.Primary.HasFlag(PrimaryPermissions.CustomizePlus) is false)
                 thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
         }
         return thoseWhoYouLackPermissionsFor;

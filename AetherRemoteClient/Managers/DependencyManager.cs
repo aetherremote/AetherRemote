@@ -8,9 +8,9 @@ namespace AetherRemoteClient.Managers;
 /// <summary>
 ///     Manages dependencies and external plugins to ensure availability
 /// </summary>
-public class DependencyManager(GlamourerIpc glamourer, MoodlesIpc moodles, PenumbraIpc penumbra)
+public class DependencyManager(CustomizePlusIpc customize, GlamourerIpc glamourer, MoodlesIpc moodles, PenumbraIpc penumbra)
 {
-    private readonly List<IExternalPlugin> _dependencies = [glamourer, moodles, penumbra];
+    private readonly List<IExternalPlugin> _dependencies = [customize, glamourer, moodles, penumbra];
     
     private DateTime _timeLastUpdated = DateTime.Now;
     private double _timeUntilNextProcess = 60000;

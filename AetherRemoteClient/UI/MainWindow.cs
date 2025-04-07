@@ -7,6 +7,7 @@ using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.UI.Views.BodySwap;
+using AetherRemoteClient.UI.Views.CustomizePlus;
 using AetherRemoteClient.UI.Views.Emote;
 using AetherRemoteClient.UI.Views.Friends;
 using AetherRemoteClient.UI.Views.History;
@@ -42,6 +43,7 @@ public class MainWindow : Window, IDisposable
 
     // Views
     private readonly BodySwapViewUi _bodySwapView;
+    private readonly CustomizePlusViewUi _customizePlusView;
     private readonly EmoteViewUi _emoteView;
     private readonly FriendsViewUi _friendsView;
     private readonly HistoryViewUi _historyView;
@@ -70,6 +72,7 @@ public class MainWindow : Window, IDisposable
         OverrideService overrideService,
         TipService tipService,
         WorldService worldService,
+        CustomizePlusIpc customize,
         GlamourerIpc glamourer,
         MoodlesIpc moodles,
         PenumbraIpc penumbra,
@@ -96,9 +99,10 @@ public class MainWindow : Window, IDisposable
             modManager);
         _twinningView = new TwinningViewUi(commandLockoutService, friendsListService, identityService, networkService);
         _historyView = new HistoryViewUi(logService);
-        _settingsView = new SettingsViewUi(glamourer, moodles, penumbra);
+        _settingsView = new SettingsViewUi(customize, glamourer, moodles, penumbra);
         _loginView = new LoginViewUi(networkService);
         _moodlesView = new MoodlesViewUi(commandLockoutService, friendsListService, networkService);
+        _customizePlusView = new CustomizePlusViewUi(commandLockoutService, friendsListService, networkService);
 
         _friendsListService = friendsListService;
         _networkService = networkService;
@@ -151,6 +155,7 @@ public class MainWindow : Window, IDisposable
                 CreateNavBarButton(FontAwesomeIcon.PeopleArrows, "Body Swap", _bodySwapView);
                 CreateNavBarButton(FontAwesomeIcon.PeopleGroup, "Twinning", _twinningView);
                 CreateNavBarButton(FontAwesomeIcon.Icons, "Moodles", _moodlesView);
+                CreateNavBarButton(FontAwesomeIcon.Plus, "Customize", _customizePlusView);
 
                 ImGui.TextUnformatted("Configuration");
                 CreateNavBarButton(FontAwesomeIcon.History, "History", _historyView);

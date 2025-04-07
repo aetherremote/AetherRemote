@@ -19,7 +19,7 @@ public class LogService
         var log = new InternalLog
         {
             TimeStamp = DateTime.Now,
-            Message = $"Rejected {action} action from {sender} because you are in safe mod"
+            Message = $"Rejected {action} action from {sender} because you are in safe mode"
         };
         
         Logs.Add(log);

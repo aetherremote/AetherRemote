@@ -23,6 +23,7 @@ public class BodySwapViewUiController(
     public bool IncludeSelfInSwap;
     public bool SwapMods;
     public bool SwapMoodles;
+    public bool SwapCustomizePlus;
 
     /// <summary>
     ///     Handles the swap button from the Ui
@@ -39,6 +40,8 @@ public class BodySwapViewUiController(
                 attributes |= CharacterAttributes.Mods;
             if (SwapMoodles)
                 attributes |= CharacterAttributes.Moodles;
+            if (SwapCustomizePlus)
+                attributes |= CharacterAttributes.CustomizePlus;
             
             var input = new BodySwapRequest
             {
@@ -102,8 +105,20 @@ public class BodySwapViewUiController(
                 thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
                 continue;
             }
-            
+
             if (SwapMods && selected.PermissionsGrantedByFriend.Has(PrimaryPermissions.Mods) is false)
+            {
+                thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
+                continue;
+            }
+
+            if (SwapMoodles && selected.PermissionsGrantedByFriend.Has(PrimaryPermissions.Moodles) is false)
+            {
+                thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
+                continue;
+            }
+            
+            if (SwapCustomizePlus && selected.PermissionsGrantedByFriend.Has(PrimaryPermissions.CustomizePlus) is false)
             {
                 thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
             }
