@@ -130,6 +130,9 @@ public class CustomizePlusIpc : IExternalPlugin, IDisposable
                 return false;
             }
 
+            // Delete any current profiles
+            DeleteCustomize();
+
             if (_profileManager.Create() is not { } profile)
             {
                 Plugin.Log.Warning("[CustomizePlusIpc] Failed to create profile");
@@ -163,6 +166,9 @@ public class CustomizePlusIpc : IExternalPlugin, IDisposable
 
         try
         {
+            // Delete any current profiles
+            DeleteCustomize();
+            
             if (_profileManager.Create() is not { } profile)
             {
                 Plugin.Log.Warning("[CustomizePlusIpc] Failed to create profile");
