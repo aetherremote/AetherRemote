@@ -21,7 +21,7 @@ namespace AetherRemoteClient.Ipc;
 /// <summary>
 ///     Provides access to CustomizePlus
 /// </summary>
-public class CustomizePlusIpc : IExternalPlugin
+public class CustomizePlusIpc : IExternalPlugin, IDisposable
 {
     // Instantiated
     private ProfileManager _profileManager = null!;
@@ -350,5 +350,11 @@ public class CustomizePlusIpc : IExternalPlugin
         }
 
         return null;
+    }
+
+    public void Dispose()
+    {
+        _profileManager.Delete();
+        GC.SuppressFinalize(this);
     }
 }

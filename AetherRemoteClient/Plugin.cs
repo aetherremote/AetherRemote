@@ -69,6 +69,7 @@ public sealed class Plugin : IDalamudPlugin
     private readonly NetworkService _networkService;
 
     // IPCs
+    private readonly CustomizePlusIpc _customizePlusIpc;
     private readonly GlamourerIpc _glamourerIpc;
 
     // Managers
@@ -98,7 +99,7 @@ public sealed class Plugin : IDalamudPlugin
         var worldService = new WorldService();
 
         // IPCs
-        var customizePlusIpc = new CustomizePlusIpc();
+        _customizePlusIpc = new CustomizePlusIpc();
         _glamourerIpc = new GlamourerIpc();
         var moodlesIpc = new MoodlesIpc();
         var penumbraIpc = new PenumbraIpc();
@@ -106,17 +107,17 @@ public sealed class Plugin : IDalamudPlugin
         // Managers
         _actionQueueManager = new ActionQueueManager();
         _connectivityManager = new ConnectivityManager(friendsListService, _identityService, _networkService);
-        _dependencyManager = new DependencyManager(customizePlusIpc, _glamourerIpc, moodlesIpc, penumbraIpc);
-        _modManager = new ModManager(customizePlusIpc, _glamourerIpc, moodlesIpc, penumbraIpc);
+        _dependencyManager = new DependencyManager(_customizePlusIpc, _glamourerIpc, moodlesIpc, penumbraIpc);
+        _modManager = new ModManager(_customizePlusIpc, _glamourerIpc, moodlesIpc, penumbraIpc);
 
         // Handlers
-        _networkHandler = new NetworkHandler(customizePlusIpc, emoteService, friendsListService, _identityService, 
+        _networkHandler = new NetworkHandler(_customizePlusIpc, emoteService, friendsListService, _identityService, 
             overrideService, logService, _networkService, _glamourerIpc, moodlesIpc, penumbraIpc, _actionQueueManager, 
             _modManager);
 
         // Windows
         MainWindow = new MainWindow(commandLockoutService, emoteService, friendsListService, _identityService,
-            logService, _networkService, overrideService, tipService, worldService, customizePlusIpc, _glamourerIpc, 
+            logService, _networkService, overrideService, tipService, worldService, _customizePlusIpc, _glamourerIpc, 
             moodlesIpc, penumbraIpc, _modManager);
 
         WindowSystem = new WindowSystem("AetherRemote");

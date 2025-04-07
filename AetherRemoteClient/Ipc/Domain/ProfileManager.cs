@@ -60,6 +60,13 @@ public class ProfileManager(object pluginInstance)
                 [profileType, typeof(bool), typeof(bool)], null);
             
             _templateType = assembly.GetType("CustomizePlus.Templates.Data.Template");
+            
+            /*
+             * This is hacky, but disposing CustomizePlusIPC doesn't always remove the profile
+             * So instead, when the plugin loads, clean up any aether remote profiles created before logout
+             */
+            Delete();
+            
             return true;
         }
         catch (Exception e)

@@ -16,7 +16,7 @@ namespace AetherRemoteServer.Controllers;
 public class AuthController(Configuration config, DatabaseService db)
     : ControllerBase
 {
-    private readonly Version _expectedVersion = new(2, 2, 0, 0);
+    private readonly Version _expectedVersion = new(2, 2, 0, 1);
 
     [AllowAnonymous]
     [HttpPost("login")]
