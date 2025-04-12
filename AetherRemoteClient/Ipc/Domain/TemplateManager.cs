@@ -58,27 +58,27 @@ public class TemplateManager(object pluginInstance)
         object?[] parameters = [templateData, null];
         if (_deserializeMethod?.Invoke(null, parameters) is not { } version)
         {
-            Plugin.Log.Verbose("Unable to deserialize template");
+            Plugin.Log.Warning("Unable to deserialize template");
             return null;
         }
 
         var integer = Convert.ToInt32(version);
         if (integer is not 4)
         {
-            Plugin.Log.Verbose("Unable to deserialize template, incompatible version");
+            Plugin.Log.Warning("Unable to deserialize template, incompatible version");
             return null;
         }
 
         if (parameters[1] is not string json)
         {
-            Plugin.Log.Verbose("Unable to deserialize template");
+            Plugin.Log.Warning("Unable to deserialize template");
             return null;
         }
 
         if (JsonConvert.DeserializeObject(json, _templateType!) is { } template)
             return template;
         
-        Plugin.Log.Verbose("Unable to deserialize template, aborting");
+        Plugin.Log.Warning("Unable to deserialize template, aborting");
         return null;
     }
 }

@@ -355,6 +355,7 @@ public class CustomizePlusIpc : IExternalPlugin, IDisposable
             Plugin.Log.Fatal(e.ToString());
         }
 
+        Plugin.Log.Warning("Could not find CustomizePlus assembly");
         return null;
     }
 

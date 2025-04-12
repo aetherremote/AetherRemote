@@ -49,7 +49,7 @@ public sealed class Plugin : IDalamudPlugin
     ///     the server is invoked
     /// </summary>
 #if DEBUG
-    public const bool DeveloperMode = true;
+    public const bool DeveloperMode = false;
 #else
     public const bool DeveloperMode = false;
 #endif
@@ -171,18 +171,6 @@ public sealed class Plugin : IDalamudPlugin
         return await Framework.RunOnFrameworkThread(func).ConfigureAwait(false);
     }
 
-    /// <summary>
-    ///     Runs provided function on the XIV Framework. Await should never be used inside the <see cref="Action"/>
-    ///     passed to this function.
-    /// </summary>
-    public static async Task RunOnFramework(Action action)
-    {
-        if (Framework.IsInFrameworkUpdateThread)
-            action.Invoke();
-
-        await Framework.RunOnFrameworkThread(action).ConfigureAwait(false);
-    }
-
     public void Dispose()
     {
         PluginInterface.UiBuilder.Draw -= DrawUi;
@@ -195,6 +183,7 @@ public sealed class Plugin : IDalamudPlugin
 
         // External Services
         _glamourerIpc.Dispose();
+        _customizePlusIpc.Dispose();
 
         // Managers
         _connectivityManager.Dispose();
@@ -218,7 +207,7 @@ public sealed class Plugin : IDalamudPlugin
      *  but you all helped me preserve and that deserves recognition.
      *  So I've decided to immorality all those names in the plugin code; Not as comments, but as actual variables!
      *  Below is a list of everyone who will slowly be phased into variable names, see if you can spot where they appear
-     *  in future commits! Looking at you, Tezra.
+     *  in future commits! I'm looking at you, Tezra.
      *  Much love to every name on this list. If I missed anyone, PLEASE LET ME KNOW. There were a lot of people to comb
      *  through, and I may have missed a name or two.
      *  =======================

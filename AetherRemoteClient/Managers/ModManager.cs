@@ -52,7 +52,7 @@ public class ModManager : IDisposable
 
         // Remove Existing Temp Mods
         await _penumbra.CallRemoveTemporaryMod(TemporaryModName, collection, Priority).ConfigureAwait(false);
-        
+
         // Get a game object for target player in object table
         var gameObject = await Plugin.RunOnFramework(() =>
         {
@@ -90,21 +90,22 @@ public class ModManager : IDisposable
         {
             characterData.ModInfo = new PenumbraCharacterModInfo
             {
-                ModifiedPaths = await _penumbra.GetGameObjectResourcePaths(gameObject.ObjectIndex).ConfigureAwait(false),
+                ModifiedPaths =
+                    await _penumbra.GetGameObjectResourcePaths(gameObject.ObjectIndex).ConfigureAwait(false),
                 MetaData = await _penumbra.GetMetaManipulations(gameObject.ObjectIndex).ConfigureAwait(false)
             };
         }
-        
+
         // Get moodles if the option was provided
         if ((attributes & CharacterAttributes.Moodles) == CharacterAttributes.Moodles)
         {
             // TODO: Store original moodles before swap
-            
+
             characterData.Moodles = await _moodles.GetMoodles(gameObject.Address).ConfigureAwait(false);
             if (characterData.Moodles is null)
                 Plugin.Log.Warning("[ModManager] Moodles were null.");
         }
-        
+
         if ((attributes & CharacterAttributes.CustomizePlus) == CharacterAttributes.CustomizePlus)
         {
             characterData.CustomizePlusTemplates = _customizePlus.GetActiveTemplatesOnCharacter(targetCharacterName);
@@ -131,14 +132,15 @@ public class ModManager : IDisposable
             }
 
             if (await _penumbra
-                    .AddTemporaryMod(TemporaryModName, collection, characterData.ModInfo.ModifiedPaths, characterData.ModInfo.MetaData,
+                    .AddTemporaryMod(TemporaryModName, collection, characterData.ModInfo.ModifiedPaths,
+                        characterData.ModInfo.MetaData,
                         Priority).ConfigureAwait(false) is false)
             {
                 Plugin.Log.Warning($"Could not add {targetCharacterName}'s mods");
                 return false;
             }
         }
-        
+
         // Apply moodles if the option was provided
         if ((attributes & CharacterAttributes.Moodles) == CharacterAttributes.Moodles)
         {
@@ -150,10 +152,11 @@ public class ModManager : IDisposable
 
             if (await Plugin.RunOnFramework(() => Plugin.ClientState.LocalPlayer).ConfigureAwait(false) is null)
             {
-                Plugin.Log.Warning($"Unable to assimilate {targetCharacterName}'s moodles because you don't have a body");
+                Plugin.Log.Warning(
+                    $"Unable to assimilate {targetCharacterName}'s moodles because you don't have a body");
                 return false;
             }
-            
+
             var ownAddress = await Plugin.RunOnFramework(() => Plugin.ObjectTable[0]?.Address).ConfigureAwait(false);
             if (ownAddress is null)
             {
@@ -168,16 +171,14 @@ public class ModManager : IDisposable
                 return false;
             }
         }
-        
+
         // Apply moodles if the option was provided
         if ((attributes & CharacterAttributes.CustomizePlus) == CharacterAttributes.CustomizePlus)
         {
             if (characterData.CustomizePlusTemplates is not null)
             {
-                await Plugin.RunOnFramework(() =>
-                {
-                    _customizePlus.ApplyCustomize(characterData.CustomizePlusTemplates);
-                }).ConfigureAwait(false);
+                await Plugin.RunOnFramework(() => _customizePlus.ApplyCustomize(characterData.CustomizePlusTemplates))
+                    .ConfigureAwait(false);
             }
             else
             {
@@ -186,7 +187,8 @@ public class ModManager : IDisposable
         }
 
         // Apply Glamourer
-        if (await _glamourer.ApplyDesignAsync(characterData.GlamourerData, GlamourerApplyFlag.All).ConfigureAwait(false) is false)
+        if (await _glamourer.ApplyDesignAsync(characterData.GlamourerData, GlamourerApplyFlag.All)
+                .ConfigureAwait(false) is false)
         {
             Plugin.Log.Warning($"Could not apply {targetCharacterName}'s glamourer data");
             return false;
@@ -222,7 +224,7 @@ public class ModManager : IDisposable
         ///     penumbra has overwritten. This can be a file path or an internal game object path.
         /// </summary>
         public Dictionary<string, string> ModifiedPaths = [];
-        
+
         /// <summary>
         ///     The metadata of a character modified by penumbra.
         /// </summary>
@@ -238,12 +240,12 @@ public class ModManager : IDisposable
         ///     The character's glamourer data
         /// </summary>
         public string GlamourerData = string.Empty;
-        
+
         /// <summary>
         ///     The character's penumbra mod info
         /// </summary>
         public PenumbraCharacterModInfo? ModInfo;
-        
+
         /// <summary>
         ///     The character's current moodles
         /// </summary>

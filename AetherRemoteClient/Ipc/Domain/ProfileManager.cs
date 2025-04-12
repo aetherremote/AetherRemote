@@ -58,15 +58,15 @@ public class ProfileManager(object pluginInstance)
             var profileType = assembly.GetType("CustomizePlus.Profiles.Data.Profile")!;
             _setEnabled = type.GetMethod("SetEnabled", BindingFlags.Public | BindingFlags.Instance, null,
                 [profileType, typeof(bool), typeof(bool)], null);
-            
+
             _templateType = assembly.GetType("CustomizePlus.Templates.Data.Template");
-            
+
             /*
              * This is hacky, but disposing CustomizePlusIPC doesn't always remove the profile
              * So instead, when the plugin loads, clean up any aether remote profiles created before logout
              */
             Delete();
-            
+
             return true;
         }
         catch (Exception e)
@@ -82,14 +82,21 @@ public class ProfileManager(object pluginInstance)
     /// <param name="profile">Customize profile instance</param>
     public void AddCharacter(object profile)
     {
-        if (GetCurrentPlayer() is not { } actor)
+        try
         {
-            Plugin.Log.Verbose("Character actor is null");
-            return;
-        }
+            if (GetCurrentPlayer() is not { } actor)
+            {
+                Plugin.Log.Warning("Character actor is null");
+                return;
+            }
 
-        object[] param = [profile, actor];
-        _addCharacter?.Invoke(_instance, param);
+            object[] param = [profile, actor];
+            _addCharacter?.Invoke(_instance, param);
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Warning($"Error adding character, {e}");
+        }
     }
 
     /// <summary>
@@ -99,8 +106,15 @@ public class ProfileManager(object pluginInstance)
     /// <param name="template">Customize template instance</param>
     public void AddTemplate(object profile, object template)
     {
-        object[] param = [profile, template];
-        _addTemplate?.Invoke(_instance, param);
+        try
+        {
+            object[] param = [profile, template];
+            _addTemplate?.Invoke(_instance, param);
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Warning($"Error adding template, {e}");
+        }
     }
 
     /// <summary>
@@ -109,14 +123,22 @@ public class ProfileManager(object pluginInstance)
     /// <returns></returns>
     public object? Create()
     {
-        if (GetExistingProfile() is not null)
+        try
         {
-            Plugin.Log.Verbose("Profile already exists");
+            if (GetExistingProfile() is not null)
+            {
+                Plugin.Log.Warning("Profile already exists");
+                return null;
+            }
+
+            object[] param = [ProfileName, true];
+            return _createProfile?.Invoke(_instance, param);
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Warning($"Error creating profile, {e}");
             return null;
         }
-
-        object[] param = [ProfileName, true];
-        return _createProfile?.Invoke(_instance, param);
     }
 
     /// <summary>
@@ -124,14 +146,21 @@ public class ProfileManager(object pluginInstance)
     /// </summary>
     public void Delete()
     {
-        if (GetExistingProfile() is not { } profile)
+        try
         {
-            Plugin.Log.Verbose("Profile doesn't exist");
-            return;
-        }
+            if (GetExistingProfile() is not { } profile)
+            {
+                Plugin.Log.Verbose("[ProfileManager] Profile doesn't exist, skipping delete");
+                return;
+            }
 
-        object[] param = [profile];
-        _deleteProfile?.Invoke(_instance, param);
+            object[] param = [profile];
+            _deleteProfile?.Invoke(_instance, param);
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Warning($"Error deleting profile, {e}");
+        }
     }
 
     /// <summary>
@@ -139,8 +168,15 @@ public class ProfileManager(object pluginInstance)
     /// </summary>
     public void SetEnabled(object profile)
     {
-        object[] param = [profile, true, false];
-        _setEnabled?.Invoke(_instance, param);
+        try
+        {
+            object[] param = [profile, true, false];
+            _setEnabled?.Invoke(_instance, param);
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Warning($"Error setting enabled, {e.Message}");
+        }
     }
 
     /// <summary>
@@ -149,8 +185,15 @@ public class ProfileManager(object pluginInstance)
     /// <param name="profile"></param>
     public void SetPriority(object profile)
     {
-        object[] param = [profile, int.MaxValue];
-        _setPriority?.Invoke(_instance, param);
+        try
+        {
+            object[] param = [profile, int.MaxValue];
+            _setPriority?.Invoke(_instance, param);
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Warning($"Error setting priority, {e}");
+        }
     }
 
     /// <summary>
@@ -159,25 +202,32 @@ public class ProfileManager(object pluginInstance)
     /// <returns>Profile instance, otherwise null</returns>
     private object? GetExistingProfile()
     {
-        var profiles = _profilesField?.GetValue(_instance);
-        if (profiles is not IEnumerable profilesList)
+        try
         {
-            Plugin.Log.Verbose("ProfilesList is not an enumerable, aborting");
-            return null;
-        }
+            var profiles = _profilesField?.GetValue(_instance);
+            if (profiles is not IEnumerable profilesList)
+            {
+                Plugin.Log.Warning("ProfilesList is not an enumerable, aborting");
+                return null;
+            }
 
-        foreach (var profile in profilesList)
+            foreach (var profile in profilesList)
+            {
+                var profileType = profile.GetType();
+                var nameField = profileType.GetProperty("Name", BindingFlags.Public | BindingFlags.Instance);
+                var nameObject = nameField?.GetValue(profile);
+                if (nameObject?.ToString() is not { } name ||
+                    name.Contains(ProfileName, StringComparison.OrdinalIgnoreCase) is false)
+                    continue;
+
+                return profile;
+            }
+        }
+        catch (Exception e)
         {
-            var profileType = profile.GetType();
-            var nameField = profileType.GetProperty("Name", BindingFlags.Public | BindingFlags.Instance);
-            var nameObject = nameField?.GetValue(profile);
-            if (nameObject?.ToString() is not { } name ||
-                name.Contains(ProfileName, StringComparison.OrdinalIgnoreCase) is false)
-                continue;
-
-            return profile;
+            Plugin.Log.Warning($"Error retrieving existing profile, {e}");
         }
-
+        
         return null;
     }
 
@@ -187,80 +237,90 @@ public class ProfileManager(object pluginInstance)
     /// <returns>Profile, or null if no profile is found</returns>
     public IList? GetActiveProfileOnCharacter(string name)
     {
-        var profiles = _profilesField?.GetValue(_instance);
-        if (profiles is not IEnumerable profilesList)
-            return null;
-
-        object? finalProfile = null;
-        var highestPriorityFound = -1;
-        foreach (var profile in profilesList)
+        try
         {
-            var profileType = profile.GetType();
-            var enabledField = profileType.GetProperty("Enabled", BindingFlags.Public | BindingFlags.Instance);
-            var enabledBool = enabledField?.GetValue(profile);
-            if (enabledBool is null or false)
-                continue;
-            
-            var charactersField = profileType.GetProperty("Characters", BindingFlags.Public | BindingFlags.Instance);
-            var charactersObject = charactersField?.GetValue(profile);
-            if (charactersObject is not IList characters)
+            var profiles = _profilesField?.GetValue(_instance);
+            if (profiles is not IEnumerable profilesList)
+                return null;
+
+            object? finalProfile = null;
+            var highestPriorityFound = -1;
+            foreach (var profile in profilesList)
             {
-                Plugin.Log.Verbose("Characters list is not an enumerable, aborting");
-                continue;
-            }
-            
-            var foundCurrentLocalCharacter = false;
-            foreach (var character in characters)
-            {
-                if (character is null || character.ToString()?.Contains(name, StringComparison.OrdinalIgnoreCase) is false)
+                var profileType = profile.GetType();
+                var enabledField = profileType.GetProperty("Enabled", BindingFlags.Public | BindingFlags.Instance);
+                var enabledBool = enabledField?.GetValue(profile);
+                if (enabledBool is null or false)
                     continue;
-                
-                foundCurrentLocalCharacter = true;
-                break;
+
+                var charactersField =
+                    profileType.GetProperty("Characters", BindingFlags.Public | BindingFlags.Instance);
+                var charactersObject = charactersField?.GetValue(profile);
+                if (charactersObject is not IList characters)
+                {
+                    Plugin.Log.Warning("Characters list is not an enumerable, aborting");
+                    continue;
+                }
+
+                var foundCurrentLocalCharacter = false;
+                foreach (var character in characters)
+                {
+                    if (character is null ||
+                        character.ToString()?.Contains(name, StringComparison.OrdinalIgnoreCase) is false)
+                        continue;
+
+                    foundCurrentLocalCharacter = true;
+                    break;
+                }
+
+                if (foundCurrentLocalCharacter is false)
+                    continue;
+
+                var priorityField = profileType.GetProperty("Priority", BindingFlags.Public | BindingFlags.Instance);
+                var priorityObject = priorityField?.GetValue(profile);
+                if (priorityObject is not int priority)
+                {
+                    Plugin.Log.Warning("Characters list is not an enumerable, aborting");
+                    continue;
+                }
+
+                if (priority <= highestPriorityFound)
+                    continue;
+
+                highestPriorityFound = priority;
+                finalProfile = profile;
             }
 
-            if (foundCurrentLocalCharacter is false)
-                continue;
-            
-            var priorityField = profileType.GetProperty("Priority", BindingFlags.Public | BindingFlags.Instance);
-            var priorityObject = priorityField?.GetValue(profile);
-            if (priorityObject is not int priority)
+            // No active or valid profiles for this character
+            if (finalProfile is null)
             {
-                Plugin.Log.Verbose("Characters list is not an enumerable, aborting");
-                continue;
+                if (_templateType is null)
+                    return null;
+
+                try
+                {
+                    var emptyTemplate = Activator.CreateInstance(_templateType);
+                    var list = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(_templateType))!;
+                    list.Add(emptyTemplate);
+                    return list;
+                }
+                catch (Exception e)
+                {
+                    Plugin.Log.Warning($"[ProfileManager] Exception, {e}");
+                    return null;
+                }
             }
 
-            if (priority <= highestPriorityFound)
-                continue;
-            
-            highestPriorityFound = priority;
-            finalProfile = profile;
+            var finalProfileType = finalProfile.GetType();
+            var templatesField = finalProfileType.GetProperty("Templates", BindingFlags.Public | BindingFlags.Instance);
+            var templatesObject = templatesField?.GetValue(finalProfile);
+            return templatesObject as IList;
         }
-
-        // No active or valid profiles for this character
-        if (finalProfile is null)
+        catch (Exception e)
         {
-            if (_templateType is null)
-                return null;
-
-            try
-            {
-                var emptyTemplate = Activator.CreateInstance(_templateType);
-                var list = (IList)Activator.CreateInstance(typeof(List<>).MakeGenericType(_templateType))!;
-                list.Add(emptyTemplate);
-                return list;
-            }
-            catch (Exception e)
-            {
-                Plugin.Log.Warning($"[ProfileManager] Exception, {e}");
-                return null;
-            }
+            Plugin.Log.Warning($"Error getting active profile, {e}");
+            return null;
         }
-
-        var finalProfileType = finalProfile.GetType();
-        var templatesField = finalProfileType.GetProperty("Templates", BindingFlags.Public | BindingFlags.Instance);
-        var templatesObject = templatesField?.GetValue(finalProfile);
-        return templatesObject as IList;
     }
 
     /// <summary>
@@ -269,8 +329,16 @@ public class ProfileManager(object pluginInstance)
     /// <returns></returns>
     private object? GetCurrentPlayer()
     {
-        var actorManager = _getCurrentCharacterField?.GetValue(_instance);
-        var getCurrentPlayerMethod = actorManager?.GetType().GetMethod("GetCurrentPlayer");
-        return getCurrentPlayerMethod?.Invoke(actorManager, null);
+        try
+        {
+            var actorManager = _getCurrentCharacterField?.GetValue(_instance);
+            var getCurrentPlayerMethod = actorManager?.GetType().GetMethod("GetCurrentPlayer");
+            return getCurrentPlayerMethod?.Invoke(actorManager, null);
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Warning($"[ProfileManager] Error getting current player, {e}");
+            return null;
+        }
     }
 }
