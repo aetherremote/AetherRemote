@@ -114,7 +114,7 @@ public class CustomizePlusIpc : IExternalPlugin, IDisposable
     /// <summary>
     ///     Creates and applies a special CustomizePlus profile to the local player with provided template data
     /// </summary>
-    public bool ApplyCustomize(string customizeData)
+    public async Task<bool> ApplyCustomize(string customizeData)
     {
         if (ApiAvailable is false)
         {
@@ -122,96 +122,70 @@ public class CustomizePlusIpc : IExternalPlugin, IDisposable
             return false;
         }
 
-        try
-        {
-            if (_templateManager.CreateTemplate(customizeData) is not { } template)
-            {
-                Plugin.Log.Warning("[CustomizePlusIpc] Deserialize customize template");
-                return false;
-            }
-
-            // Delete any current profiles
-            DeleteCustomize();
-
-            if (_profileManager.Create() is not { } profile)
-            {
-                Plugin.Log.Warning("[CustomizePlusIpc] Failed to create profile");
-                return false;
-            }
-
-            _profileManager.AddCharacter(profile);
-            _profileManager.AddTemplate(profile, template);
-            _profileManager.SetPriority(profile);
-            _profileManager.SetEnabled(profile);
-            return true;
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Warning($"[CustomizePlusIpc] Failed to apply customize profile, {e.Message}");
-        }
-
+        if (await Plugin.RunOnFramework(() => _templateManager.CreateTemplate(customizeData)).ConfigureAwait(false) is { } template)
+            return await ApplyCustomize(new ArrayList { template }).ConfigureAwait(false);
+        
+        Plugin.Log.Warning("[CustomizePlusIpc] Failed to deserialize CustomizePlus template");
         return false;
     }
     
     /// <summary>
     ///     Creates and applies a special CustomizePlus profile to the local player with provided template data
     /// </summary>
-    public bool ApplyCustomize(IList templates)
+    public async Task<bool> ApplyCustomize(IList templates)
     {
-        if (ApiAvailable is false)
-        {
-            Plugin.Log.Warning("[CustomizePlusIpc] Failed to apply customize profile because api is not available");
-            return false;
-        }
-
-        try
-        {
-            // Delete any current profiles
-            DeleteCustomize();
-            
-            if (_profileManager.Create() is not { } profile)
+        if (ApiAvailable)
+            return await Plugin.RunOnFramework(() =>
             {
-                Plugin.Log.Warning("[CustomizePlusIpc] Failed to create profile");
-                return false;
-            }
+                if (_profileManager.Create() is not { } profile)
+                {
+                    Plugin.Log.Warning("[CustomizePlusIpc] Failed to create profile");
+                    return false;
+                }
+                
+                if (_profileManager.AddCharacter(profile) is false)
+                {
+                    Plugin.Log.Warning("[CustomizePlusIpc] Failed to create profile");
+                    return false;
+                }
 
-            _profileManager.AddCharacter(profile);
-            foreach (var template in templates)
-                _profileManager.AddTemplate(profile, template);
-            
-            _profileManager.SetPriority(profile);
-            _profileManager.SetEnabled(profile);
-            return true;
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Warning($"[CustomizePlusIpc] Failed to apply customize profile, {e.Message}");
-        }
+                foreach (var template in templates)
+                {
+                    if (_profileManager.AddTemplate(profile, template))
+                        continue;
+                    
+                    Plugin.Log.Warning("[CustomizePlusIpc] Failed to add a template");
+                    return false;
+                }
 
+                if (_profileManager.SetPriority(profile) is false)
+                {
+                    Plugin.Log.Warning("[CustomizePlusIpc] Failed to set priority");
+                    return false;
+                }
+
+                if (_profileManager.SetEnabled(profile) is false)
+                {
+                    Plugin.Log.Warning("[CustomizePlusIpc] Failed to set enabled");
+                    return false;
+                }
+
+                return true;
+            }).ConfigureAwait(false);
+        
+        Plugin.Log.Warning("[CustomizePlusIpc] Failed to apply customize profile because api is not available");
         return false;
     }
 
     /// <summary>
     ///     Removes the CustomizePlus profile created by AR
     /// </summary>
-    public bool DeleteCustomize()
+    public async Task<bool> DeleteCustomize()
     {
-        if (ApiAvailable is false)
-        {
-            Plugin.Log.Warning("[CustomizePlusIpc] Failed to apply customize profile because api is not available");
-            return false;
-        }
+        if (ApiAvailable)
+            return await Plugin.RunOnFramework(() => _profileManager.Delete()).ConfigureAwait(false);
 
-        try
-        {
-            _profileManager.Delete();
-            return true;
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Warning($"[CustomizePlusIpc] Failed to delete customize profile, {e.Message}");
-        }
-
+        Plugin.Log.Warning("[CustomizePlusIpc] Failed to apply customize profile because api is not available");
         return false;
     }
 
@@ -219,8 +193,14 @@ public class CustomizePlusIpc : IExternalPlugin, IDisposable
     ///     Gets all active templates on provided player name
     /// </summary>
     /// <returns></returns>
-    public IList? GetActiveTemplatesOnCharacter(string characterName) =>
-        _profileManager.GetActiveProfileOnCharacter(characterName);
+    public async Task<IList?> GetActiveTemplates(string characterName)
+    {
+        if (ApiAvailable)
+            return await Plugin.RunOnFramework(() => _profileManager.GetActiveProfileOnCharacter(characterName)).ConfigureAwait(false);
+        
+        Plugin.Log.Warning("[CustomizePlusIpc] Failed to get active templates because api is not available");
+        return null;
+    }
 
     /// <summary>
     ///     Get the Customize plus plugin assembly from loaded into dalamud services

@@ -12,6 +12,10 @@ namespace AetherRemoteClient.Ipc;
 /// </summary>
 public class PenumbraIpc : IExternalPlugin
 {
+    // Const
+    private const string TemporaryModName = "AetherRemoteMods";
+    private const int Priority = 99;
+    
     // Penumbra API
     private readonly AddTemporaryMod _addTemporaryMod;
     private readonly GetGameObjectResourcePaths _getGameObjectResourcePaths;
@@ -152,15 +156,14 @@ public class PenumbraIpc : IExternalPlugin
     ///     Calls penumbra's AddTemporaryMod function
     /// </summary>
     /// <returns><see cref="bool"/> indicating success</returns>
-    public async Task<bool> AddTemporaryMod(string tag, Guid collectionGuid, Dictionary<string, string> modifiedPaths,
-        string meta, int priority = 0)
+    public async Task<bool> AddTemporaryMod(Guid collectionGuid, Dictionary<string, string> modifiedPaths, string meta)
     {
         if (ApiAvailable)
             return await Plugin.RunOnFramework(() =>
             {
                 try
                 {
-                    var result = _addTemporaryMod.Invoke(tag, collectionGuid, modifiedPaths, meta, priority);
+                    var result = _addTemporaryMod.Invoke(TemporaryModName, collectionGuid, modifiedPaths, meta, Priority);
                     if (result is PenumbraApiEc.Success)
                         return true;
 
@@ -182,14 +185,14 @@ public class PenumbraIpc : IExternalPlugin
     ///     Calls penumbra's RemoveTemporaryMod function
     /// </summary>
     /// <returns><see cref="bool"/> indicating success</returns>
-    public async Task<bool> CallRemoveTemporaryMod(string tag, Guid collectionId, int priority)
+    public async Task<bool> CallRemoveTemporaryMod(Guid collectionId)
     {
         if (ApiAvailable)
             return await Plugin.RunOnFramework(() =>
             {
                 try
                 {
-                    var result = _removeTemporaryMod.Invoke(tag, collectionId, priority);
+                    var result = _removeTemporaryMod.Invoke(TemporaryModName, collectionId, Priority);
                     if (result is PenumbraApiEc.Success or PenumbraApiEc.NothingChanged)
                         return true;
 

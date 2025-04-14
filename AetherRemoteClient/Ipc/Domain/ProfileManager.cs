@@ -80,22 +80,24 @@ public class ProfileManager(object pluginInstance)
     ///     Adds the local current character to a provided profile
     /// </summary>
     /// <param name="profile">Customize profile instance</param>
-    public void AddCharacter(object profile)
+    public bool AddCharacter(object profile)
     {
         try
         {
             if (GetCurrentPlayer() is not { } actor)
             {
                 Plugin.Log.Warning("Character actor is null");
-                return;
+                return false;
             }
 
             object[] param = [profile, actor];
             _addCharacter?.Invoke(_instance, param);
+            return true;
         }
         catch (Exception e)
         {
             Plugin.Log.Warning($"Error adding character, {e}");
+            return false;
         }
     }
 
@@ -104,16 +106,18 @@ public class ProfileManager(object pluginInstance)
     /// </summary>
     /// <param name="profile">Customize profile instance</param>
     /// <param name="template">Customize template instance</param>
-    public void AddTemplate(object profile, object template)
+    public bool AddTemplate(object profile, object template)
     {
         try
         {
             object[] param = [profile, template];
             _addTemplate?.Invoke(_instance, param);
+            return true;
         }
         catch (Exception e)
         {
             Plugin.Log.Warning($"Error adding template, {e}");
+            return false;
         }
     }
 
@@ -144,38 +148,42 @@ public class ProfileManager(object pluginInstance)
     /// <summary>
     ///     Deletes any profile created by Aether Remote
     /// </summary>
-    public void Delete()
+    public bool Delete()
     {
         try
         {
             if (GetExistingProfile() is not { } profile)
             {
                 Plugin.Log.Verbose("[ProfileManager] Profile doesn't exist, skipping delete");
-                return;
+                return true; // Exit gracefully
             }
 
             object[] param = [profile];
             _deleteProfile?.Invoke(_instance, param);
+            return true;
         }
         catch (Exception e)
         {
             Plugin.Log.Warning($"Error deleting profile, {e}");
+            return false;
         }
     }
 
     /// <summary>
     ///     Sets the enabled status for a provided profile
     /// </summary>
-    public void SetEnabled(object profile)
+    public bool SetEnabled(object profile)
     {
         try
         {
             object[] param = [profile, true, false];
             _setEnabled?.Invoke(_instance, param);
+            return true;
         }
         catch (Exception e)
         {
             Plugin.Log.Warning($"Error setting enabled, {e.Message}");
+            return false;
         }
     }
 
@@ -183,16 +191,18 @@ public class ProfileManager(object pluginInstance)
     ///     Sets a priority for a provided profile
     /// </summary>
     /// <param name="profile"></param>
-    public void SetPriority(object profile)
+    public bool SetPriority(object profile)
     {
         try
         {
             object[] param = [profile, int.MaxValue];
             _setPriority?.Invoke(_instance, param);
+            return true;
         }
         catch (Exception e)
         {
             Plugin.Log.Warning($"Error setting priority, {e}");
+            return false;
         }
     }
 

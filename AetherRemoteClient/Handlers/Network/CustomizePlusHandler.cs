@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using AetherRemoteClient.Ipc;
 using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain.Enums;
@@ -16,7 +17,7 @@ public class CustomizePlusHandler(
     /// <summary>
     ///     <inheritdoc cref="MoodlesHandler"/>
     /// </summary>
-    public void Handle(CustomizePlusAction action)
+    public async Task Handle(CustomizePlusAction action)
     {
         Plugin.Log.Info($"{action}");
         
@@ -50,7 +51,7 @@ public class CustomizePlusHandler(
 
         try
         {
-            if (customize.ApplyCustomize(action.Customize) is false)
+            if (await customize.ApplyCustomize(action.Customize) is false)
             {
                 Plugin.Log.Warning("[CustomizePlusHandler] Unable to apply customize");
                 return;

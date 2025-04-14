@@ -38,8 +38,8 @@ public class NetworkService : IDisposable
     // private const string PostUrl = "https://localhost:5006/api/auth/login";
 
     // Beta
-    private const string HubUrl = "https://foxitsvc.com:5007/primaryHub";
-    private const string PostUrl = "https://foxitsvc.com:5007/api/auth/login";
+    private const string HubUrl = "https://foxitsvc.com:5006/primaryHub";
+    private const string PostUrl = "https://foxitsvc.com:5006/api/auth/login";
 #else
     // Prod
     private const string HubUrl = "https://foxitsvc.com:5006/primaryHub";

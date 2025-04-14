@@ -111,13 +111,13 @@ public sealed class Plugin : IDalamudPlugin
         _modManager = new ModManager(_customizePlusIpc, _glamourerIpc, moodlesIpc, penumbraIpc);
 
         // Handlers
-        _networkHandler = new NetworkHandler(_customizePlusIpc, emoteService, friendsListService, _identityService, 
-            overrideService, logService, _networkService, _glamourerIpc, moodlesIpc, penumbraIpc, _actionQueueManager, 
+        _networkHandler = new NetworkHandler(_customizePlusIpc, emoteService, friendsListService, _identityService,
+            overrideService, logService, _networkService, _glamourerIpc, moodlesIpc, penumbraIpc, _actionQueueManager,
             _modManager);
 
         // Windows
         MainWindow = new MainWindow(commandLockoutService, emoteService, friendsListService, _identityService,
-            logService, _networkService, overrideService, tipService, worldService, _customizePlusIpc, _glamourerIpc, 
+            logService, _networkService, overrideService, tipService, worldService, _customizePlusIpc, _glamourerIpc,
             moodlesIpc, penumbraIpc, _modManager);
 
         WindowSystem = new WindowSystem("AetherRemote");
@@ -134,8 +134,9 @@ public sealed class Plugin : IDalamudPlugin
 
         Task.Run(SharedUserInterfaces.InitializeFonts);
 
-        if (DeveloperMode)
-            MainWindow.IsOpen = true;
+#if DEBUG
+        MainWindow.IsOpen = true;
+#endif
     }
 
     private void OnCommand(string command, string args)
