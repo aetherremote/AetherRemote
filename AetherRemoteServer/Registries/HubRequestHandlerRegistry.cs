@@ -1,3 +1,4 @@
+using AetherRemoteCommon.Domain.Network;
 using AetherRemoteServer.Handlers;
 
 namespace AetherRemoteServer.Registries;
@@ -11,6 +12,7 @@ public class HubRequestHandlerRegistry(
     CustomizePlusHandler customizePlusHandler,
     EmoteHandler emoteHandler,
     GetAccountDataHandler getAccountDataHandler,
+    HypnosisHandler hypnosisHandler,
     MoodlesHandler moodlesHandler,
     RemoveFriendHandler removeFriendHandler,
     SpeakHandler speakHandler,
@@ -22,6 +24,7 @@ public class HubRequestHandlerRegistry(
     public BodySwapHandler BodySwapHandler { get; } = bodySwapHandler;
     public EmoteHandler EmoteHandler { get; } = emoteHandler;
     public GetAccountDataHandler GetAccountDataHandler { get; } = getAccountDataHandler;
+    public HypnosisHandler HypnosisHandler { get; } = hypnosisHandler;
     public MoodlesHandler MoodlesHandler { get; } = moodlesHandler;
     public RemoveFriendHandler RemoveFriendHandler { get; } = removeFriendHandler;
     public SpeakHandler SpeakHandler { get; } = speakHandler;

@@ -48,6 +48,7 @@ public class Program
         builder.Services.AddSingleton<CustomizePlusHandler>();
         builder.Services.AddSingleton<EmoteHandler>();
         builder.Services.AddSingleton<GetAccountDataHandler>();
+        builder.Services.AddSingleton<HypnosisHandler>();
         builder.Services.AddSingleton<MoodlesHandler>();
         builder.Services.AddSingleton<RemoveFriendHandler>();
         builder.Services.AddSingleton<SpeakHandler>();
@@ -59,8 +60,9 @@ public class Program
         builder.Services.AddSingleton<HubRequestHandlerRegistry>();
 
 #if DEBUG
-        // builder.WebHost.UseUrls("https://localhost:5006");
+        builder.WebHost.UseUrls("https://localhost:5006");
         
+        /*
         builder.WebHost.ConfigureKestrel(options =>
         {
             var ip = IPAddress.Parse("192.168.1.14");
@@ -69,6 +71,7 @@ public class Program
                 listenOptions.UseHttps($"{configuration.CertificatePath}", $"{configuration.CertificatePasswordPath}");
             });
         });
+        */
 #else
         builder.WebHost.ConfigureKestrel(options =>
         {

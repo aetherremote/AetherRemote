@@ -11,6 +11,7 @@ using AetherRemoteClient.UI.Views.CustomizePlus;
 using AetherRemoteClient.UI.Views.Emote;
 using AetherRemoteClient.UI.Views.Friends;
 using AetherRemoteClient.UI.Views.History;
+using AetherRemoteClient.UI.Views.Hypnosis;
 using AetherRemoteClient.UI.Views.Login;
 using AetherRemoteClient.UI.Views.Moodles;
 using AetherRemoteClient.UI.Views.Overrides;
@@ -47,6 +48,7 @@ public class MainWindow : Window, IDisposable
     private readonly EmoteViewUi _emoteView;
     private readonly FriendsViewUi _friendsView;
     private readonly HistoryViewUi _historyView;
+    private readonly HypnosisViewUi _hypnosisView;
     private readonly LoginViewUi _loginView;
     private readonly MoodlesViewUi _moodlesView;
     private readonly OverridesViewUi _overridesView;
@@ -70,12 +72,14 @@ public class MainWindow : Window, IDisposable
         LogService logService,
         NetworkService networkService,
         OverrideService overrideService,
+        SpiralService spiralService,
         TipService tipService,
         WorldService worldService,
         CustomizePlusIpc customize,
         GlamourerIpc glamourer,
         MoodlesIpc moodles,
         PenumbraIpc penumbra,
+        ActionQueueManager actionQueueManager,
         ModManager modManager) : base(MainWindowTitle)
     {
         SizeConstraints = new WindowSizeConstraints
@@ -88,7 +92,7 @@ public class MainWindow : Window, IDisposable
         _friendsListComponent = new FriendsListComponentUi(friendsListService, networkService);
 
         // Views
-        _statusView = new StatusViewUi(networkService, identityService, tipService, glamourer);
+        _statusView = new StatusViewUi(networkService, identityService, tipService, spiralService, glamourer);
         _friendsView = new FriendsViewUi(friendsListService, networkService);
         _overridesView = new OverridesViewUi(overrideService);
         _speakView = new SpeakViewUi(commandLockoutService, friendsListService, networkService, worldService);
@@ -99,7 +103,8 @@ public class MainWindow : Window, IDisposable
             modManager);
         _twinningView = new TwinningViewUi(commandLockoutService, friendsListService, identityService, networkService);
         _historyView = new HistoryViewUi(logService);
-        _settingsView = new SettingsViewUi(customize, glamourer, moodles, penumbra);
+        _hypnosisView = new HypnosisViewUi(friendsListService, networkService, spiralService);
+        _settingsView = new SettingsViewUi(spiralService, customize, glamourer, moodles, penumbra, actionQueueManager);
         _loginView = new LoginViewUi(networkService);
         _moodlesView = new MoodlesViewUi(commandLockoutService, friendsListService, networkService);
         _customizePlusView = new CustomizePlusViewUi(commandLockoutService, friendsListService, networkService);
@@ -156,6 +161,7 @@ public class MainWindow : Window, IDisposable
                 CreateNavBarButton(FontAwesomeIcon.PeopleGroup, "Twinning", _twinningView);
                 CreateNavBarButton(FontAwesomeIcon.Icons, "Moodles", _moodlesView);
                 CreateNavBarButton(FontAwesomeIcon.Plus, "Customize", _customizePlusView);
+                CreateNavBarButton(FontAwesomeIcon.Stopwatch, "Hypnosis", _hypnosisView);
 
                 ImGui.TextUnformatted("Configuration");
                 CreateNavBarButton(FontAwesomeIcon.History, "History", _historyView);

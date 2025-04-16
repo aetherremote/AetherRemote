@@ -95,6 +95,13 @@ public class PrimaryHub(
         logger.LogInformation("{Request}", request);
         return await handlerRegistry.CustomizePlusHandler.Handle(FriendCode, request, Clients);
     }
+    
+    [HubMethodName(HubMethod.Hypnosis)]
+    public async Task<BaseResponse> Hypnosis(HypnosisRequest request)
+    {
+        logger.LogInformation("{Request}", request);
+        return await handlerRegistry.HypnosisHandler.Handle(FriendCode, request, Clients);
+    }
 
     /// <summary>
     ///     Handles when a client connects to the hub

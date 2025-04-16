@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain;
@@ -10,6 +11,8 @@ using AetherRemoteClient.UI;
 using AetherRemoteClient.Utils;
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.Game.Command;
+using Dalamud.Game.Text.SeStringHandling;
+using Dalamud.Game.Text.SeStringHandling.Payloads;
 using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
@@ -35,21 +38,17 @@ public sealed class Plugin : IDalamudPlugin
     // Dalamud
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
     [PluginService] internal static IPluginLog Log { get; private set; } = null!;
-    [PluginService] private static IFramework Framework { get; set; } = null!;
+    [PluginService] internal static IFramework Framework { get; set; } = null!;
     [PluginService] internal static INotificationManager NotificationManager { get; private set; } = null!;
+    [PluginService] internal static ITextureProvider TextureProvider { get; private set; } = null!;
     internal static Configuration Configuration { get; private set; } = null!;
-
-    /// <summary>
-    ///     Plugin command name
-    /// </summary>
-    private const string CommandName = "/remote";
 
     /// <summary>
     ///     Disables interacting with the server in any way, and returns mocked successes and the line when
     ///     the server is invoked
     /// </summary>
 #if DEBUG
-    public const bool DeveloperMode = false;
+    public const bool DeveloperMode = true;
 #else
     public const bool DeveloperMode = false;
 #endif
@@ -67,6 +66,7 @@ public sealed class Plugin : IDalamudPlugin
     // Disposable Services
     private readonly IdentityService _identityService;
     private readonly NetworkService _networkService;
+    private readonly SpiralService _spiralService;
 
     // IPCs
     private readonly CustomizePlusIpc _customizePlusIpc;
@@ -95,6 +95,7 @@ public sealed class Plugin : IDalamudPlugin
         var logService = new LogService();
         _networkService = new NetworkService();
         var overrideService = new OverrideService();
+        _spiralService = new SpiralService();
         var tipService = new TipService();
         var worldService = new WorldService();
 
@@ -112,21 +113,18 @@ public sealed class Plugin : IDalamudPlugin
 
         // Handlers
         _networkHandler = new NetworkHandler(_customizePlusIpc, emoteService, friendsListService, _identityService,
-            overrideService, logService, _networkService, _glamourerIpc, moodlesIpc, penumbraIpc, _actionQueueManager,
+            overrideService, logService, _networkService, _spiralService, _glamourerIpc, moodlesIpc, penumbraIpc, _actionQueueManager,
             _modManager);
 
         // Windows
         MainWindow = new MainWindow(commandLockoutService, emoteService, friendsListService, _identityService,
-            logService, _networkService, overrideService, tipService, worldService, _customizePlusIpc, _glamourerIpc,
-            moodlesIpc, penumbraIpc, _modManager);
+            logService, _networkService, overrideService, _spiralService, tipService, worldService, _customizePlusIpc, _glamourerIpc,
+            moodlesIpc, penumbraIpc, _actionQueueManager, _modManager);
 
         WindowSystem = new WindowSystem("AetherRemote");
         WindowSystem.AddWindow(MainWindow);
-
-        CommandManager.AddHandler(CommandName, new CommandInfo(OnCommand)
-        {
-            HelpMessage = "Opens primary Aether Remote window"
-        });
+        
+        BuildCommands();
 
         PluginInterface.UiBuilder.Draw += DrawUi;
         PluginInterface.UiBuilder.OpenMainUi += OpenMainUi;
@@ -139,9 +137,81 @@ public sealed class Plugin : IDalamudPlugin
 #endif
     }
 
+    private const string OldCommandName = "/remote";
+    private const string CommandNameFull = "/aetherremote";
+    private const string CommandNameShort = "/ar";
+
+    private const string StopArg = "stop";
+    private const string SafeMode = "safemode";
+    private const string SafeWord = "safeword";
+
+    private void BuildCommands()
+    {
+        CommandManager.AddHandler(CommandNameShort, new CommandInfo(OnCommand)
+        {
+            HelpMessage = $"""
+                          Opens the primary plugin window
+                          /ar {StopArg} - Stops all current spirals
+                          /ar {SafeMode} - Put the plugin into safe mode
+                          /ar {SafeWord} - Put the plugin into safe mode
+                          """
+        });
+        
+        CommandManager.AddHandler(CommandNameFull, new CommandInfo(OnCommand)
+        {
+            ShowInHelp = false
+        });
+        
+        CommandManager.AddHandler(OldCommandName, new CommandInfo(OnCommand)
+        {
+            ShowInHelp = false
+        });
+    }
+
     private void OnCommand(string command, string args)
     {
-        MainWindow.IsOpen = true;
+        if (args == string.Empty)
+        {
+            MainWindow.IsOpen = true;
+            return;
+        }
+
+        var payloads = new List<Payload>();
+        switch (args)
+        {
+            case StopArg:
+                _spiralService.StopCurrentSpiral();
+                payloads.Add(new UIForegroundPayload(AetherRemoteStyle.TextColorPurple));
+                payloads.Add(new TextPayload("[AetherRemote] "));
+                payloads.Add(UIForegroundPayload.UIForegroundOff);
+                payloads.Add( new TextPayload("Stopped current spirals"));
+                break;
+            
+            case SafeMode:
+            case SafeWord:
+                _spiralService.StopCurrentSpiral();
+                _actionQueueManager.Clear();
+                Configuration.SafeMode = true;
+                Configuration.Save();
+                payloads.Add(new UIForegroundPayload(AetherRemoteStyle.TextColorPurple));
+                payloads.Add(new TextPayload("[AetherRemote] "));
+                payloads.Add(UIForegroundPayload.UIForegroundOff);
+                payloads.Add(new TextPayload("Plugin is now in "));
+                payloads.Add(new UIForegroundPayload(AetherRemoteStyle.TextColorGreen));
+                payloads.Add(new TextPayload("safe mode"));
+                payloads.Add(UIForegroundPayload.UIForegroundOff);
+                break;
+            
+            default:
+                payloads.Add(new UIForegroundPayload(AetherRemoteStyle.TextColorPurple));
+                payloads.Add(new TextPayload("[AetherRemote] "));
+                payloads.Add(UIForegroundPayload.UIForegroundOff);
+                payloads.Add(new TextPayload($"Unknown argument \"{args}\""));
+                break;
+        }
+        
+        if (payloads.Count > 0)
+            ChatGui.Print(new SeString(payloads));
     }
 
     private void DrawUi()
@@ -153,6 +223,7 @@ public sealed class Plugin : IDalamudPlugin
         // Since we should always be on the main thread when sending a message, it is useful to update it here
         _actionQueueManager.Update();
         _dependencyManager.Update();
+        _spiralService.DrawSpiral();
     }
 
     private void OpenMainUi()
@@ -197,7 +268,9 @@ public sealed class Plugin : IDalamudPlugin
         MainWindow.Dispose();
 
         WindowSystem.RemoveAllWindows();
-        CommandManager.RemoveHandler(CommandName);
+        CommandManager.RemoveHandler(CommandNameShort);
+        CommandManager.RemoveHandler(CommandNameFull);
+        CommandManager.RemoveHandler(OldCommandName);
     }
 
     /*

@@ -34,5 +34,6 @@ public enum PrimaryPermissions
     CustomizePlus = 1 << 18,
     
     // Misc
-    Moodles = 1 << 17
+    Moodles = 1 << 17,
+    Hypnosis = 1 << 19,
 }

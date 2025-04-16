@@ -4,7 +4,7 @@
     <PropertyGroup>
         <Authors>Mora</Authors>
         <Company>Mora-XIV</Company>
-        <Version>2.2.0.3</Version>
+        <Version>2.3.0.0</Version>
         <Description>XIV Plugin</Description>
         <Copyright>(C)Mora 2024 - 25</Copyright>
         <PackageProjectUrl>https://github.com/aetherremote/AetherRemote</PackageProjectUrl>
@@ -36,5 +36,12 @@
 
     <ItemGroup>
         <ProjectReference Include="..\AetherRemoteCommon\AetherRemoteCommon.csproj"/>
+    </ItemGroup>
+    
+    <ItemGroup>
+        <Content Include="..\Images\spiral.png">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <Visible>false</Visible>
+        </Content>
     </ItemGroup>
 </Project>

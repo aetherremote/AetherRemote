@@ -134,6 +134,12 @@ public class OverridesViewUi(OverrideService overrideService) : IDrawable
         {
             ImGui.TextUnformatted("Moodles");
             ImGui.Checkbox("Allow##Moodles", ref _controller.Overrides.Moodles);
+        });
+        
+        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        {
+            ImGui.TextUnformatted("Hypnosis");
+            ImGui.Checkbox("Allow##Hypnosis", ref _controller.Overrides.Hypnosis);
         }, true, false);
 
         if (_controller.PendingChanges())

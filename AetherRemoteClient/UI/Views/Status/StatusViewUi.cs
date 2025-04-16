@@ -13,9 +13,10 @@ public class StatusViewUi(
     NetworkService networkService,
     IdentityService identityService,
     TipService tipService,
-    GlamourerIpc glamourer) : IDrawable
+    SpiralService spiralService,
+    GlamourerIpc glamourerIpc) : IDrawable
 {
-    private readonly StatusViewUiController _controller = new(networkService, identityService, glamourer);
+    private readonly StatusViewUiController _controller = new(networkService, identityService, glamourerIpc);
 
     public bool Draw()
     {
@@ -62,6 +63,19 @@ public class StatusViewUi(
             _controller.ResetIdentity();
 
         SharedUserInterfaces.Tooltip("Reset identity");
+        
+        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        {
+            SharedUserInterfaces.MediumText("Hypnosis");
+            ImGui.TextUnformatted(spiralService.IsBeingHypnotized 
+                ? $"Spiral from {spiralService.Sender}"
+                : "No active spirals");
+        });
+        
+        if (SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.Stop, windowPadding, windowWidth))
+            spiralService.StopCurrentSpiral();
+        
+        SharedUserInterfaces.Tooltip("Stop spiral");
 
         SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
         {

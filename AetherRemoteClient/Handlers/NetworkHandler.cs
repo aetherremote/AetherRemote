@@ -30,6 +30,7 @@ public class NetworkHandler : IDisposable
         OverrideService overrideService,
         LogService logService,
         NetworkService networkService,
+        SpiralService spiralService,
         GlamourerIpc glamourerIpc,
         MoodlesIpc moodlesIpc,
         PenumbraIpc penumbraIpc,
@@ -39,6 +40,7 @@ public class NetworkHandler : IDisposable
         var bodySwapHandler = new BodySwapHandler(friendsListService, identityService, overrideService, logService, modManager);
         var bodySwapQueryHandler = new BodySwapQueryHandler(friendsListService, identityService, overrideService, logService);
         var emoteHandler = new EmoteHandler(emoteService, friendsListService, logService, overrideService);
+        var hypnosisHandler = new HypnosisHandler(friendsListService, overrideService, logService, spiralService);
         var moodlesHandler = new MoodlesHandler(friendsListService, overrideService, logService, moodlesIpc, penumbraIpc);
         var speakHandler = new SpeakHandler(friendsListService, logService, overrideService, actionQueueManager);
         var syncOnlineStatusHandler = new SyncOnlineStatusHandler(friendsListService);
@@ -57,6 +59,7 @@ public class NetworkHandler : IDisposable
         _handlers.Add(networkService.Connection.On<TransformAction>(HubMethod.Transform, transformHandler.Handle));
         _handlers.Add(networkService.Connection.On<TwinningAction>(HubMethod.Twinning, twinningHandler.Handle));
         _handlers.Add(networkService.Connection.On<CustomizePlusAction>(HubMethod.CustomizePlus, customizePlusHandler.Handle));
+        _handlers.Add(networkService.Connection.On<HypnosisAction>(HubMethod.Hypnosis, hypnosisHandler.Handle));
     }
 
     public void Dispose()

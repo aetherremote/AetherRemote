@@ -183,6 +183,12 @@ public class FriendsViewUi(FriendsListService friendsListService, NetworkService
         {
             ImGui.TextUnformatted("Moodles");
             ImGui.Checkbox("Allow###Moodles", ref _controller.EditingUserPermissions.Moodles);
+        });
+        
+        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        {
+            ImGui.TextUnformatted("Hypnosis");
+            ImGui.Checkbox("Allow###Hypnosis", ref _controller.EditingUserPermissions.Hypnosis);
         }, true, false);
 
         // Pending Changes

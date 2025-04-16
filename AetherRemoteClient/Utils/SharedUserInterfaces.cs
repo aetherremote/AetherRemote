@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Numerics;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain;
@@ -17,15 +18,22 @@ public static class SharedUserInterfaces
         ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize;
 
     private const ImGuiWindowFlags ComboWithFilterFlags = PopupWindowFlags | ImGuiWindowFlags.ChildWindow;
+    
+    public const int MassiveFontSize = 300;
+    private static bool _massiveFontBuilt;
+    private static IFontHandle? _massiveFont;
+    public static ImFontPtr MassiveFontPtr;
+    private static readonly SafeFontConfig DefaultFontConfig = new() { SizePx = MassiveFontSize };
+    
     private const int BigFontSize = 40;
-    private const int MediumFontSize = 24;
-
-    private static IFontHandle? _bigFont;
     private static bool _bigFontBuilt;
+    private static IFontHandle? _bigFont;
 
-    private static IFontHandle? _mediumFont;
+    public const int MediumFontSize = 24;
     private static bool _mediumFontBuilt;
-
+    private static IFontHandle? _mediumFont;
+    public static ImFontPtr MediumFontPtr;
+    
     /// <summary>
     ///     Draws a tool tip for the last hovered ImGui component
     /// </summary>
@@ -61,15 +69,12 @@ public static class SharedUserInterfaces
     /// </summary>
     public static void Icon(FontAwesomeIcon icon, Vector4? color = null)
     {
-        if (color.HasValue)
-            ImGui.PushStyleColor(ImGuiCol.Text, color.Value);
-
         ImGui.PushFont(UiBuilder.IconFont);
-        ImGui.TextUnformatted(icon.ToIconString());
+        if (color is null)
+            ImGui.TextUnformatted(icon.ToIconString());
+        else
+            ImGui.TextColored(color.Value, icon.ToIconString());
         ImGui.PopFont();
-
-        if (color.HasValue)
-            ImGui.PopStyleColor();
     }
 
     /// <summary>
@@ -99,19 +104,16 @@ public static class SharedUserInterfaces
     /// </summary>
     public static void MediumText(string text, Vector4? color = null)
     {
-        if (color.HasValue)
-            ImGui.PushStyleColor(ImGuiCol.Text, color.Value);
-
         if (_mediumFontBuilt)
             _mediumFont?.Push();
-
-        ImGui.TextUnformatted(text);
+        
+        if (color is null)
+            ImGui.TextUnformatted(text);
+        else
+            ImGui.TextColored(color.Value, text);
 
         if (_mediumFontBuilt)
             _mediumFont?.Pop();
-
-        if (color.HasValue)
-            ImGui.PopStyleColor();
     }
 
     /// <summary>
@@ -143,34 +145,13 @@ public static class SharedUserInterfaces
         if (_bigFontBuilt)
             _bigFont?.Pop();
     }
-
-    /// <summary>
-    ///     Draws text using the big font, centered, with optional color.
-    /// </summary>
-    public static void MediumTextCentered(string text, Vector4? color = null)
-    {
-        if (_mediumFontBuilt)
-            _mediumFont?.Push();
-
-        ImGui.SetCursorPosX((ImGui.GetWindowWidth() - ImGui.CalcTextSize(text).X) * 0.5f);
-        if (color is null)
-            ImGui.TextUnformatted(text);
-        else
-            ImGui.TextColored(color.Value, text);
-
-        if (_mediumFontBuilt)
-            _mediumFont?.Pop();
-    }
-
-    public static void PushBigFont()
-    {
-        _bigFont?.Push();
-    }
-
-    public static void PopBigFont()
-    {
-        _bigFont?.Pop();
-    }
+    
+    public static void PushMassiveFont() => _massiveFont?.Push();
+    public static void PopMassiveFont() => _massiveFont?.Pop();
+    public static void PushBigFont() => _bigFont?.Push();
+    public static void PopBigFont() => _bigFont?.Pop();
+    public static void PushMediumFont() => _mediumFont?.Push();
+    public static void PopMediumFont() => _mediumFont?.Pop();
     
     /// <summary>
     ///     Creates a button the size of a <see cref="ContentBox"/> on the right
@@ -232,8 +213,7 @@ public static class SharedUserInterfaces
     /// <summary>
     ///     Creates a rounded rectangle encompassing the current width of a child and the components inside the menu box
     /// </summary>
-    public static void ContentBox(uint backgroundColor, Action contentToDraw, bool spanWindowWidth = true,
-        bool addSpacingAtEnd = true)
+    public static void ContentBox(uint backgroundColor, Action contentToDraw, bool spanWindowWidth = true, bool addSpacingAtEnd = true)
     {
         var windowPadding = ImGui.GetStyle().WindowPadding;
         var drawList = ImGui.GetWindowDrawList();
@@ -265,6 +245,30 @@ public static class SharedUserInterfaces
     /// </summary>
     public static async Task InitializeFonts()
     {
+        string? dalamudFontDirectory = null;
+        try
+        {
+            var path = Path.Combine(Plugin.PluginInterface.DalamudAssetDirectory.FullName, "UIRes",
+                "Inconsolata-Regular.ttf");
+            
+            if (File.Exists(path))
+                dalamudFontDirectory = path;
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Warning($"Unexpectedly failed to read `Inconsolata-Regular` font, {e.Message}");
+        }
+        
+        _massiveFont = Plugin.PluginInterface.UiBuilder.FontAtlas.NewDelegateFontHandle(toolkit =>
+        {
+            toolkit.OnPreBuild(preBuild =>
+            {
+                MassiveFontPtr = dalamudFontDirectory is null 
+                    ? preBuild.AddDalamudDefaultFont(MassiveFontSize) 
+                    : preBuild.AddFontFromFile(dalamudFontDirectory, DefaultFontConfig);
+            });
+        });
+        
         _bigFont = Plugin.PluginInterface.UiBuilder.FontAtlas.NewDelegateFontHandle(toolkit =>
         {
             toolkit.OnPreBuild(preBuild => { preBuild.AddDalamudDefaultFont(BigFontSize); });
@@ -272,13 +276,14 @@ public static class SharedUserInterfaces
 
         _mediumFont = Plugin.PluginInterface.UiBuilder.FontAtlas.NewDelegateFontHandle(toolkit =>
         {
-            toolkit.OnPreBuild(preBuild => { preBuild.AddDalamudDefaultFont(MediumFontSize); });
+            toolkit.OnPreBuild(preBuild => { MediumFontPtr = preBuild.AddDalamudDefaultFont(MediumFontSize); });
         });
 
         await _bigFont.WaitAsync().ConfigureAwait(false);
         await _mediumFont.WaitAsync().ConfigureAwait(false);
         await Plugin.PluginInterface.UiBuilder.FontAtlas.BuildFontsAsync().ConfigureAwait(false);
 
+        _massiveFontBuilt = true;
         _bigFontBuilt = true;
         _mediumFontBuilt = true;
     }
