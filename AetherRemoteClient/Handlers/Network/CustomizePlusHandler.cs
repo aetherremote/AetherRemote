@@ -51,7 +51,13 @@ public class CustomizePlusHandler(
 
         try
         {
-            if (await customize.ApplyCustomize(action.Customize) is false)
+            if (await customize.DeleteCustomize().ConfigureAwait(false) is false)
+            {
+                Plugin.Log.Warning("[CustomizePlusHandler] Unable to delete existing customize");
+                return;
+            }
+            
+            if (await customize.ApplyCustomize(action.Customize).ConfigureAwait(false) is false)
             {
                 Plugin.Log.Warning("[CustomizePlusHandler] Unable to apply customize");
                 return;

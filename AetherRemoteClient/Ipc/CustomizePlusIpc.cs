@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Ipc.Domain;
+using Dalamud.Plugin;
 
 namespace AetherRemoteClient.Ipc;
 
@@ -43,6 +44,7 @@ public class CustomizePlusIpc : IExternalPlugin, IDisposable
     public CustomizePlusIpc()
     {
         TestIpcAvailability();
+        Plugin.PluginInterface.ActivePluginsChanged += PluginInterfaceOnActivePluginsChanged;
     }
 
     /// <summary>
@@ -145,7 +147,7 @@ public class CustomizePlusIpc : IExternalPlugin, IDisposable
                 
                 if (_profileManager.AddCharacter(profile) is false)
                 {
-                    Plugin.Log.Warning("[CustomizePlusIpc] Failed to create profile");
+                    Plugin.Log.Warning("[CustomizePlusIpc] Failed to add character");
                     return false;
                 }
 
@@ -338,10 +340,17 @@ public class CustomizePlusIpc : IExternalPlugin, IDisposable
         Plugin.Log.Warning("Could not find CustomizePlus assembly");
         return null;
     }
+    
+    // Updating Customize+ while the plugin is active will cause the assembly reference to become stale
+    private void PluginInterfaceOnActivePluginsChanged(PluginListInvalidationKind kind, bool _)
+    {
+        TestIpcAvailabilityAsync();
+    }
 
     public void Dispose()
     {
         _profileManager.Delete();
+        Plugin.PluginInterface.ActivePluginsChanged -= PluginInterfaceOnActivePluginsChanged;
         GC.SuppressFinalize(this);
     }
 }
