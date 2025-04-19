@@ -15,38 +15,54 @@ namespace AetherRemoteClient.UI.Views.Hypnosis;
 
 public class HypnosisViewUiController
 {
-    // TODO: This class is so messy.. will clean up eventually... Fu fu fu~
-    private const float SpiralSpeedMax = 0.003f;
-    private const float SpiralSpeedMin = 0;
+    // Util
+    private const float TwoPi = MathF.PI * 2f;
+    private static readonly Random Random = new();
+    
+    // Spiral Location
     private const string SpiralName = "spiral.png";
+    private readonly string _spiralPath =
+        Path.Combine(Plugin.PluginInterface.AssemblyLocation.Directory?.FullName!, SpiralName);
+
+    // Spiral Constants
+    public static readonly Vector2 SpiralSize = new(120);
     private const float SpiralScalar = 0.5f * SpiralPreviewZoom;
     private const float SpiralPreviewZoom = 15f;
-    private const float TwoPi = MathF.PI * 2f;
-    
-    public static readonly Vector2 SpiralSize = new(120);
-    private static readonly Random Random = new();
     private static readonly int[] PreviewSpeeds = [ 10000, 6000, 4000, 3000, 2000, 1200, 800, 400, 200, 100 ];
     
-    public Vector4 SpiralColor = new(1.0f, 0.25f, 1.0f, 0.5f);
+    // Speed
+    private const float SpiralSpeedMax = 0.003f;
+    private const float SpiralSpeedMin = 0;
+    public int SpiralSpeed = 50;
     
+    // Corners
+    private readonly Vector2[] _spiralUv = [new(0, 0), new(1, 0), new(1, 1), new(0, 1)];
+    private readonly Vector2[] _corners =
+    [
+        new Vector2(-SpiralSize.X, -SpiralSize.Y) * SpiralScalar,
+        new Vector2(SpiralSize.X, -SpiralSize.Y) * SpiralScalar,
+        new Vector2(SpiralSize.X, SpiralSize.Y) * SpiralScalar,
+        new Vector2(-SpiralSize.X, SpiralSize.Y) * SpiralScalar
+    ];
+    
+    // Text
+    private readonly Timer _currentDisplayPhraseTimer;
+    private string _currentDisplayPhrase = string.Empty;
+    private int _lastDisplayPhraseIndex;
+    
+    // Current spiral info
+    public Vector4 SpiralColor = new(1.0f, 0.25f, 1.0f, 0.5f);
     public Vector4 PreviewTextColor = Vector4.One;
     public string PreviewText = string.Empty;
     public int PreviewTextInterval = 5;
     public int PreviewTextMode = 0;
-
-    private readonly Timer _currentDisplayPhraseTimer;
-    private string _currentDisplayPhrase = string.Empty;
-    private int _lastDisplayPhraseIndex;
     private string[] _hypnosisTextWordBank = [];
     
-    private readonly string _spiralPath = Path.Combine(Plugin.PluginInterface.AssemblyLocation.Directory?.FullName!, SpiralName);
-    private readonly Vector2[] _spiralUv;
-    private readonly Vector2[] _corners;
-    
-    public int SpiralSpeed = 50;
-    private float _spiralRotation;
+    // Spiral functional info
+    private float _currentSpiralRotation;
     public int SpiralDuration;
     
+    // Injected
     private readonly FriendsListService _friendsListService;
     private readonly NetworkService _networkService;
     private readonly SpiralService _spiralService;
@@ -61,22 +77,6 @@ public class HypnosisViewUiController
         _currentDisplayPhraseTimer.Elapsed += ChangeDisplayPhrase;
         _currentDisplayPhraseTimer.AutoReset = true;
         _currentDisplayPhraseTimer.Start();
-
-        _corners =
-        [
-            new Vector2(-SpiralSize.X, -SpiralSize.Y) * SpiralScalar,
-            new Vector2(SpiralSize.X, -SpiralSize.Y) * SpiralScalar,
-            new Vector2(SpiralSize.X, SpiralSize.Y) * SpiralScalar,
-            new Vector2(-SpiralSize.X, SpiralSize.Y) * SpiralScalar
-        ];
-
-        _spiralUv =
-        [
-            new Vector2(0, 0),
-            new Vector2(1, 0),
-            new Vector2(1, 1),
-            new Vector2(0, 1)
-        ];
     }
 
     private void ChangeDisplayPhrase(object? sender, ElapsedEventArgs e)
@@ -115,15 +115,15 @@ public class HypnosisViewUiController
             return;
 
         var speed = (SpiralSpeedMax - SpiralSpeedMin) * (SpiralSpeed * 0.01f) + SpiralSpeedMin;
-        _spiralRotation += Plugin.Framework.UpdateDelta.Milliseconds * speed;
-        _spiralRotation %= TwoPi;
+        _currentSpiralRotation += Plugin.Framework.UpdateDelta.Milliseconds * speed;
+        _currentSpiralRotation %= TwoPi;
 
         var drawList = ImGui.GetForegroundDrawList();
         var topLeft = ImGui.GetCursorScreenPos();
         var center = topLeft + SpiralSize * 0.5f;
         
-        var cos = MathF.Cos(_spiralRotation);
-        var sin = MathF.Sin(_spiralRotation);
+        var cos = MathF.Cos(_currentSpiralRotation);
+        var sin = MathF.Sin(_currentSpiralRotation);
 
         var rotated = new Vector2[4];
         for (var i = 0; i < 4; i++)

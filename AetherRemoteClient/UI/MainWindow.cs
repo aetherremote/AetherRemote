@@ -59,11 +59,6 @@ public class MainWindow : Window, IDisposable
     private readonly TwinningViewUi _twinningView;
     private IDrawable _currentView;
 
-    // Instantiated
-    private Vector2 _dimensions = Vector2.Zero;
-    private float _itemSpacing;
-    private Vector2 _offset = Vector2.Zero;
-
     public MainWindow(
         CommandLockoutService commandLockoutService,
         EmoteService emoteService,
@@ -133,12 +128,11 @@ public class MainWindow : Window, IDisposable
 
     public override void Draw()
     {
-        var style = ImGui.GetStyle();
-        var windowPadding = style.WindowPadding;
-        _dimensions = new Vector2(NavBarDimensions.X - windowPadding.X * 2, 25);
-        _offset = windowPadding with { Y = (_dimensions.Y - ImGui.GetFontSize()) * 0.5f };
-        _itemSpacing = style.ItemSpacing.Y;
-
+        var spacing = ImGui.GetStyle().ItemSpacing;
+        var windowPadding = ImGui.GetStyle().WindowPadding;
+        var size = new Vector2(NavBarDimensions.X - windowPadding.X * 2, 25);
+        var offset = windowPadding with { Y = (size.Y - ImGui.GetFontSize()) * 0.5f };
+        
         ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, AetherRemoteStyle.Rounding);
         ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, AetherRemoteStyle.Rounding);
 
@@ -149,32 +143,32 @@ public class MainWindow : Window, IDisposable
             if (_networkService.Connection.State is HubConnectionState.Connected || Plugin.DeveloperMode)
             {
                 ImGui.TextUnformatted("General");
-                CreateNavBarButton(FontAwesomeIcon.User, "Status", _statusView);
-                CreateNavBarButton(FontAwesomeIcon.UserFriends, "Friends", _friendsView);
-                CreateNavBarButton(FontAwesomeIcon.Globe, "Overrides", _overridesView);
+                NavBarButton(FontAwesomeIcon.User, "Status", _statusView, size, offset, spacing);
+                NavBarButton(FontAwesomeIcon.UserFriends, "Friends", _friendsView, size, offset, spacing);
+                NavBarButton(FontAwesomeIcon.Globe, "Overrides", _overridesView, size, offset, spacing);
 
                 ImGui.TextUnformatted("Control");
-                CreateNavBarButton(FontAwesomeIcon.Comments, "Speak", _speakView);
-                CreateNavBarButton(FontAwesomeIcon.Smile, "Emote", _emoteView);
-                CreateNavBarButton(FontAwesomeIcon.WandMagicSparkles, "Transformation", _transformationView);
-                CreateNavBarButton(FontAwesomeIcon.PeopleArrows, "Body Swap", _bodySwapView);
-                CreateNavBarButton(FontAwesomeIcon.PeopleGroup, "Twinning", _twinningView);
-                CreateNavBarButton(FontAwesomeIcon.Icons, "Moodles", _moodlesView);
-                CreateNavBarButton(FontAwesomeIcon.Plus, "Customize", _customizePlusView);
-                CreateNavBarButton(FontAwesomeIcon.Stopwatch, "Hypnosis", _hypnosisView);
+                NavBarButton(FontAwesomeIcon.Comments, "Speak", _speakView, size, offset, spacing);
+                NavBarButton(FontAwesomeIcon.Smile, "Emote", _emoteView, size, offset, spacing);
+                NavBarButton(FontAwesomeIcon.WandMagicSparkles, "Transformation", _transformationView, size, offset, spacing);
+                NavBarButton(FontAwesomeIcon.PeopleArrows, "Body Swap", _bodySwapView, size, offset, spacing);
+                NavBarButton(FontAwesomeIcon.PeopleGroup, "Twinning", _twinningView, size, offset, spacing);
+                NavBarButton(FontAwesomeIcon.Icons, "Moodles", _moodlesView, size, offset, spacing);
+                NavBarButton(FontAwesomeIcon.Plus, "Customize", _customizePlusView, size, offset, spacing);
+                NavBarButton(FontAwesomeIcon.Stopwatch, "Hypnosis", _hypnosisView, size, offset, spacing);
 
                 ImGui.TextUnformatted("Configuration");
-                CreateNavBarButton(FontAwesomeIcon.History, "History", _historyView);
+                NavBarButton(FontAwesomeIcon.History, "History", _historyView, size, offset, spacing);
             }
             else
             {
                 ImGui.TextUnformatted("General");
-                CreateNavBarButton(FontAwesomeIcon.Plug, "Login", _loginView);
+                NavBarButton(FontAwesomeIcon.Plug, "Login", _loginView, size, offset, spacing);
 
                 ImGui.TextUnformatted("Configuration");
             }
 
-            CreateNavBarButton(FontAwesomeIcon.Wrench, "Settings", _settingsView);
+            NavBarButton(FontAwesomeIcon.Wrench, "Settings", _settingsView, size, offset, spacing);
 
             ImGui.PopStyleVar();
             ImGui.EndChild();
@@ -185,49 +179,37 @@ public class MainWindow : Window, IDisposable
 
         if (_currentView.Draw() is false)
             return;
+            
 
         ImGui.SameLine();
         var onFriendsView = _currentView == _friendsView;
         _friendsListComponent.Draw(onFriendsView, onFriendsView);
     }
 
-    private void CreateNavBarButton(FontAwesomeIcon icon, string text, IDrawable view)
+    private void NavBarButton(FontAwesomeIcon icon, string text, IDrawable view, Vector2 size, Vector2 offset, Vector2 spacing)
     {
         var begin = ImGui.GetCursorPos();
-
-        bool clicked;
         if (_currentView == view)
         {
             ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteStyle.PrimaryColor);
-            clicked = ImGui.Button($"##{text}", _dimensions);
+            ImGui.Button($"##{text}", size);
             ImGui.PopStyleColor();
         }
         else
         {
-            clicked = ImGui.Button($"##{text}", _dimensions);
+            if (ImGui.Button($"##{text}", size))
+            {
+                _currentView = view;
+                _friendsListService.PurgeOfflineFriendsFromSelect();
+            }
         }
+        
+        ImGui.SetCursorPos(begin + offset);
 
-        ImGui.SetCursorPos(begin + _offset);
-
-        ImGui.PushFont(UiBuilder.IconFont);
-        ImGui.TextUnformatted(icon.ToIconString());
-        ImGui.PopFont();
-
+        SharedUserInterfaces.Icon(icon);
         ImGui.SameLine();
         ImGui.TextUnformatted(text);
-
-        ImGui.SetCursorPos(begin + new Vector2(0, _dimensions.Y + _itemSpacing));
-
-        if (clicked is false)
-            return;
-
-        // Set view
-        _currentView = view;
-        if (_currentView == _friendsView)
-            return;
-
-        // If view isn't friends list, purge any offline friends from selection
-        _friendsListService.PurgeOfflineFriendsFromSelect();
+        ImGui.SetCursorPos(begin + new Vector2(0, size.Y + spacing.Y));
     }
 
     private Task OnConnected() => SetToStatusViewOrSettings();

@@ -20,7 +20,6 @@ public class SpiralService
 
     // Spiral Location
     private const string SpiralName = "spiral.png";
-
     private readonly string _spiralPath =
         Path.Combine(Plugin.PluginInterface.AssemblyLocation.Directory?.FullName!, SpiralName);
 
