@@ -1,7 +1,7 @@
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteServer.Services;
 
-namespace AetherRemoteServer.Handlers;
+namespace AetherRemoteServer.Hubs.Handlers;
 
 /// <summary>
 ///     Handles the logic for fulfilling a <see cref="RemoveFriendRequest"/>

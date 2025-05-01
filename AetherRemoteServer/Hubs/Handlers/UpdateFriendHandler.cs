@@ -3,7 +3,7 @@ using AetherRemoteServer.Managers;
 using AetherRemoteServer.Services;
 using Microsoft.AspNetCore.SignalR;
 
-namespace AetherRemoteServer.Handlers;
+namespace AetherRemoteServer.Hubs.Handlers;
 
 public class UpdateFriendHandler(
     ConnectedClientsManager connectedClientsManager,

@@ -4,7 +4,7 @@ using AetherRemoteServer.Managers;
 using AetherRemoteServer.Services;
 using Microsoft.AspNetCore.SignalR;
 
-namespace AetherRemoteServer.Handlers;
+namespace AetherRemoteServer.Hubs.Handlers;
 
 /// <summary>
 ///     Handles the logic for fulfilling a <see cref="TwinningRequest"/>

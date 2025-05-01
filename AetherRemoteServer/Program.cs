@@ -1,12 +1,10 @@
-using System.Net;
 using System.Text;
 using AetherRemoteServer.Authentication.Requirements;
 using AetherRemoteServer.Domain;
 using AetherRemoteServer.Domain.Authentication;
-using AetherRemoteServer.Handlers;
 using AetherRemoteServer.Hubs;
+using AetherRemoteServer.Hubs.Handlers;
 using AetherRemoteServer.Managers;
-using AetherRemoteServer.Registries;
 using AetherRemoteServer.Services;
 using MessagePack;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -35,7 +33,7 @@ public class Program
                     .WithSecurity(MessagePackSecurity.UntrustedData);
             });
         builder.Services.AddSingleton(configuration);
-        
+
         // Services
         builder.Services.AddSingleton<DatabaseService>();
 
@@ -55,13 +53,10 @@ public class Program
         builder.Services.AddSingleton<TransformHandler>();
         builder.Services.AddSingleton<TwinningHandler>();
         builder.Services.AddSingleton<UpdateFriendHandler>();
-        
-        // Registries
-        builder.Services.AddSingleton<HubRequestHandlerRegistry>();
 
 #if DEBUG
         builder.WebHost.UseUrls("https://localhost:5006");
-        
+
         /*
         builder.WebHost.ConfigureKestrel(options =>
         {

@@ -4,20 +4,17 @@ using AetherRemoteServer.Managers;
 using AetherRemoteServer.Services;
 using Microsoft.AspNetCore.SignalR;
 
-namespace AetherRemoteServer.Handlers;
+namespace AetherRemoteServer.Hubs.Handlers;
 
-/// <summary>
-///     Handles the logic for fulling a <see cref="MoodlesRequest"/>
-/// </summary>
-public class MoodlesHandler(
+public class CustomizePlusHandler(
     DatabaseService databaseService,
     ConnectedClientsManager connectedClientsManager,
-    ILogger<MoodlesHandler> logger)
+    ILogger<CustomizePlusHandler> logger)
 {
     /// <summary>
     ///     Handles the request
     /// </summary>
-    public async Task<BaseResponse> Handle(string friendCode, MoodlesRequest request, IHubCallerClients clients)
+    public async Task<BaseResponse> Handle(string friendCode, CustomizePlusRequest request, IHubCallerClients clients)
     {
         if (connectedClientsManager.IsUserExceedingRequestLimit(friendCode))
         {
@@ -44,7 +41,7 @@ public class MoodlesHandler(
                 continue;
             }
             
-            if (permissionsGranted.Primary.HasFlag(PrimaryPermissions.Moodles) is false)
+            if (permissionsGranted.Primary.HasFlag(PrimaryPermissions.CustomizePlus) is false)
             {
                 logger.LogInformation("{Issuer} targeted {Target} but lacks permissions, skipping", friendCode, target);
                 continue;
@@ -52,15 +49,15 @@ public class MoodlesHandler(
 
             try
             {
-                var command = new MoodlesAction
+                var command = new CustomizePlusAction
                 {
                     SenderFriendCode = friendCode,
-                    Moodle = request.Moodle
+                    Customize = request.Customize
                 };
                 
-                logger.LogInformation("Sending {Moodle} to {FriendCode}", target, request.Moodle);
+                logger.LogInformation("Sending {Customize} to {FriendCode}", request.Customize, target);
                 
-                await clients.Client(connectedClient.ConnectionId).SendAsync(HubMethod.Moodles, command);
+                await clients.Client(connectedClient.ConnectionId).SendAsync(HubMethod.CustomizePlus, command);
             }
             catch (Exception e)
             {

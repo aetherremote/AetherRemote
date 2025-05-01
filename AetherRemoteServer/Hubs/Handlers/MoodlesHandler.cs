@@ -1,18 +1,23 @@
-using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteServer.Managers;
 using AetherRemoteServer.Services;
 using Microsoft.AspNetCore.SignalR;
 
-namespace AetherRemoteServer.Handlers;
+namespace AetherRemoteServer.Hubs.Handlers;
 
-public class HypnosisHandler(
+/// <summary>
+///     Handles the logic for fulling a <see cref="MoodlesRequest"/>
+/// </summary>
+public class MoodlesHandler(
     DatabaseService databaseService,
     ConnectedClientsManager connectedClientsManager,
-    ILogger<HypnosisHandler> logger)
+    ILogger<MoodlesHandler> logger)
 {
-    public async Task<BaseResponse> Handle(string friendCode, HypnosisRequest request, IHubCallerClients clients)
+    /// <summary>
+    ///     Handles the request
+    /// </summary>
+    public async Task<BaseResponse> Handle(string friendCode, MoodlesRequest request, IHubCallerClients clients)
     {
         if (connectedClientsManager.IsUserExceedingRequestLimit(friendCode))
         {
@@ -39,7 +44,7 @@ public class HypnosisHandler(
                 continue;
             }
             
-            if (permissionsGranted.Primary.HasFlag(PrimaryPermissions.Hypnosis) is false)
+            if (permissionsGranted.Primary.HasFlag(PrimaryPermissions.Moodles) is false)
             {
                 logger.LogInformation("{Issuer} targeted {Target} but lacks permissions, skipping", friendCode, target);
                 continue;
@@ -47,24 +52,15 @@ public class HypnosisHandler(
 
             try
             {
-                var command = new HypnosisAction
+                var command = new MoodlesAction
                 {
                     SenderFriendCode = friendCode,
-                    Spiral = new SpiralInfo
-                    {
-                        Duration = request.Spiral.Duration,
-                        Speed = request.Spiral.Speed,
-                        TextSpeed = request.Spiral.TextSpeed,
-                        Color = request.Spiral.Color,
-                        TextColor = request.Spiral.TextColor,
-                        TextMode = request.Spiral.TextMode,
-                        WordBank = request.Spiral.WordBank
-                    }
+                    Moodle = request.Moodle
                 };
                 
-                logger.LogInformation("Sending {Spiral} to {FriendCode}", command, target);
+                logger.LogInformation("Sending {Moodle} to {FriendCode}", target, request.Moodle);
                 
-                await clients.Client(connectedClient.ConnectionId).SendAsync(HubMethod.Hypnosis, command);
+                await clients.Client(connectedClient.ConnectionId).SendAsync(HubMethod.Moodles, command);
             }
             catch (Exception e)
             {

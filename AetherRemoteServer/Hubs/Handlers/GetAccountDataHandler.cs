@@ -3,7 +3,7 @@ using AetherRemoteCommon.Domain.Network;
 using AetherRemoteServer.Managers;
 using AetherRemoteServer.Services;
 
-namespace AetherRemoteServer.Handlers;
+namespace AetherRemoteServer.Hubs.Handlers;
 
 /// <summary>
 ///     Handles the logic for fulfilling a <see cref="GetAccountDataRequest"/>

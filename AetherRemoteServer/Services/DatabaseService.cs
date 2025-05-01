@@ -1,4 +1,3 @@
-using System.Text.Json;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteServer.Domain;
@@ -16,7 +15,6 @@ public class DatabaseService
     private const string PermissionsTable = "PermissionsTable";
     private const string SecretParam = "@Secret";
     private const string FriendCodeParam = "@FriendCode";
-    private const string IsAdminParam = "@IsAdmin";
     private const string TargetFriendCodeParam = "@TargetFriendCode";
     private const string VersionParam = "@Version";
     private const string PrimaryPermissionsParam = "@PrimaryPermissions";
@@ -36,6 +34,7 @@ public class DatabaseService
     /// </summary>
     public DatabaseService(ILogger<DatabaseService> logger)
     {
+        // Inject
         _logger = logger;
 
         // Db file check
@@ -55,37 +54,6 @@ public class DatabaseService
 
         // Table validation
         InitializeDbTables();
-    }
-
-    /// <summary>
-    ///     Creates a new user entry in the valid users table
-    /// </summary>
-    public async Task<bool> CreateUser(string friendCode, string secret, bool isAdmin)
-    {
-        await using var command = _db.CreateCommand();
-        command.CommandText =
-            $"""
-                INSERT INTO {ValidUsersTable} (FriendCode, Secret, IsAdmin) 
-                VALUES ({FriendCodeParam}, {SecretParam}, {IsAdminParam})
-             """;
-        command.Parameters.AddWithValue(FriendCodeParam, friendCode);
-        command.Parameters.AddWithValue(SecretParam, secret);
-        command.Parameters.AddWithValue(IsAdminParam, isAdmin ? 1 : 0);
-
-        try
-        {
-            var success = await command.ExecuteNonQueryAsync() is 1;
-            if (success)
-                _userCache.Set(friendCode, new User(friendCode, secret, isAdmin));
-
-            return success;
-        }
-        catch (Exception e)
-        {
-            _logger.LogWarning("Unable to create user {FriendCode} {Secret} {IsAdmin}, {Exception}", friendCode, secret,
-                isAdmin, e.Message);
-            return false;
-        }
     }
 
     /// <summary>
@@ -115,8 +83,7 @@ public class DatabaseService
         }
         catch (Exception e)
         {
-            _logger.LogWarning("Unable to get user by friend code for {FriendCode}, {Exception}", friendCode,
-                e.Message);
+            _logger.LogWarning("Unable to get user with friend code {FriendCode}, {Exception}", friendCode, e.Message);
             return null;
         }
     }
@@ -142,33 +109,8 @@ public class DatabaseService
         }
         catch (Exception e)
         {
-            _logger.LogWarning("Unable to get user by secret for {Secret}, {Exception}", secret, e.Message);
+            _logger.LogWarning("Unable to get user with secret {Secret}, {Exception}", secret, e.Message);
             return null;
-        }
-    }
-
-    /// <summary>
-    ///     Deletes a user entry from the valid users table
-    /// </summary>
-    public async Task<int> DeleteUser(string friendCode)
-    {
-        await using var command = _db.CreateCommand();
-        command.CommandText = $"DELETE FROM {ValidUsersTable} WHERE FriendCode = {FriendCodeParam}";
-        command.Parameters.AddWithValue(FriendCodeParam, friendCode);
-
-        try
-        {
-            var rows = await command.ExecuteNonQueryAsync();
-            if (rows is 1)
-                _userCache.Remove(friendCode);
-
-            return rows;
-        }
-        catch (Exception e)
-        {
-            _logger.LogWarning("Unable to delete user by friend code for {FriendCode}, {Exception}", friendCode,
-                e.Message);
-            return 0;
         }
     }
 
@@ -354,21 +296,5 @@ public class DatabaseService
              """;
 
         initializePermissionsTable.ExecuteNonQuery();
-    }
-
-    /// <summary>
-    /// Executes a db query to get a user from the ValidUsers table. This can throw an exception.
-    /// </summary>
-    private static async Task<User?> ExecuteGetUserQuery(SqliteCommand command)
-    {
-        await using var reader = await command.ExecuteReaderAsync();
-        if (await reader.ReadAsync() is false)
-            return null;
-
-        var friendCode = reader.GetString(0);
-        var secret = reader.GetString(1);
-        var isAdmin = reader.GetInt32(2) is 1;
-
-        return new User(friendCode, secret, isAdmin);
     }
 }
