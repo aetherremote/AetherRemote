@@ -15,7 +15,7 @@ public class SpeakHandler(
     FriendsListService friendsListService,
     LogService logService,
     OverrideService overrideService,
-    ActionQueueManager actionQueueManager)
+    ActionQueueService actionQueueService)
 {
     /// <summary>
     ///     <inheritdoc cref="SpeakHandler"/>
@@ -108,7 +108,7 @@ public class SpeakHandler(
         }
 
         // Add the action to the action queue to be sent when available
-        actionQueueManager.Enqueue(friend, action.Message, action.ChatChannel, action.Extra);
+        actionQueueService.Enqueue(friend, action.Message, action.ChatChannel, action.Extra);
 
         // Build a proper log message with specific formatting
         var log = new StringBuilder();

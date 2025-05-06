@@ -12,7 +12,7 @@ namespace AetherRemoteClient.Services;
 /// <summary>
 ///     Manages functionality to render spirals to the screen
 /// </summary>
-public class SpiralService
+public class SpiralService : IDisposable
 {
     // Util
     private const float TwoPi = MathF.PI * 2f;
@@ -56,6 +56,8 @@ public class SpiralService
 
         _currentDisplayPhraseTimer = new Timer(int.MaxValue) { AutoReset = true };
         _currentDisplayPhraseTimer.Elapsed += ChangeDisplayPhrase;
+        
+        Plugin.PluginInterface.UiBuilder.Draw += Update;
     }
 
     /// <summary>
@@ -89,7 +91,7 @@ public class SpiralService
     /// <summary>
     ///     To be called once a frame to render any current spirals
     /// </summary>
-    public void DrawSpiral()
+    private void Update()
     {
         if (_currentSpiral is null)
             return;
@@ -177,5 +179,15 @@ public class SpiralService
             _lastDisplayPhraseIndex %= _currentSpiral.WordBank.Length;
             _currentDisplayPhrase = _currentSpiral.WordBank[_lastDisplayPhraseIndex];
         }
+    }
+
+    public void Dispose()
+    {
+        _currentDisplayPhraseTimer.Elapsed -= SpiralExpirationTimerOnElapsed;
+        _spiralExpirationTimer.Elapsed -= SpiralExpirationTimerOnElapsed;
+        
+        Plugin.PluginInterface.UiBuilder.Draw -= Update;
+        
+        GC.SuppressFinalize(this);
     }
 }

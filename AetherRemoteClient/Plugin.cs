@@ -1,41 +1,32 @@
 using System;
-using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Handlers;
+using AetherRemoteClient.Handlers.Network;
 using AetherRemoteClient.Ipc;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI;
+using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
 using Dalamud.Game.ClientState.Objects;
-using Dalamud.Game.Command;
-using Dalamud.Game.Text.SeStringHandling;
-using Dalamud.Game.Text.SeStringHandling.Payloads;
-using Dalamud.Interface.Windowing;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AetherRemoteClient;
 
 // ReSharper disable once ClassNeverInstantiated.Global
 public sealed class Plugin : IDalamudPlugin
 {
-    // Lumina
     [PluginService] internal static IDataManager DataManager { get; private set; } = null!;
-
-    // Game Objects
     [PluginService] internal static IClientState ClientState { get; private set; } = null!;
     [PluginService] internal static ITargetManager TargetManager { get; private set; } = null!;
     [PluginService] internal static IObjectTable ObjectTable { get; private set; } = null!;
-
-    // Chat
-    [PluginService] private static ICommandManager CommandManager { get; set; } = null!;
+    [PluginService] internal static ICommandManager CommandManager { get; set; } = null!;
     [PluginService] internal static IChatGui ChatGui { get; private set; } = null!;
-
-    // Dalamud
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
     [PluginService] internal static IPluginLog Log { get; private set; } = null!;
     [PluginService] internal static IFramework Framework { get; set; } = null!;
@@ -48,7 +39,7 @@ public sealed class Plugin : IDalamudPlugin
     ///     the server is invoked
     /// </summary>
 #if DEBUG
-    public const bool DeveloperMode = true;
+    public const bool DeveloperMode = false;
 #else
     public const bool DeveloperMode = false;
 #endif
@@ -58,177 +49,86 @@ public sealed class Plugin : IDalamudPlugin
     /// </summary>
     public static readonly Version Version =
         Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0, 0);
-
-    // Windows
-    private WindowSystem WindowSystem { get; }
-    private MainWindow MainWindow { get; }
-
-    // Disposable Services
-    private readonly IdentityService _identityService;
-    private readonly NetworkService _networkService;
-    private readonly SpiralService _spiralService;
-
-    // IPCs
-    private readonly CustomizePlusIpc _customizePlusIpc;
-    private readonly GlamourerIpc _glamourerIpc;
-
-    // Managers
-    private readonly ActionQueueManager _actionQueueManager;
-    private readonly DependencyManager _dependencyManager;
-
-    // Disposable Managers
-    private readonly ConnectivityManager _connectivityManager;
-    private readonly ModManager _modManager;
-
-    // Disposable Handlers
-    private readonly NetworkHandler _networkHandler;
-
+    
+    // Instantiated
+    private readonly ServiceProvider _services;
+    
     public Plugin()
     {
         Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
 
+        var services = new ServiceCollection();
+
         // Services
-        var commandLockoutService = new CommandLockoutService();
-        var emoteService = new EmoteService();
-        var friendsListService = new FriendsListService();
-        _identityService = new IdentityService();
-        var logService = new LogService();
-        _networkService = new NetworkService();
-        var overrideService = new OverrideService();
-        _spiralService = new SpiralService();
-        var tipService = new TipService();
-        var worldService = new WorldService();
-
-        // IPCs
-        _customizePlusIpc = new CustomizePlusIpc();
-        _glamourerIpc = new GlamourerIpc();
-        var moodlesIpc = new MoodlesIpc();
-        var penumbraIpc = new PenumbraIpc();
-
+        services.AddSingleton<ActionQueueService>();
+        services.AddSingleton<CommandLockoutService>();
+        services.AddSingleton<EmoteService>();
+        services.AddSingleton<FriendsListService>();
+        services.AddSingleton<IdentityService>();
+        services.AddSingleton<LogService>();
+        services.AddSingleton<NetworkService>();
+        services.AddSingleton<OverrideService>();
+        services.AddSingleton<SpiralService>();
+        services.AddSingleton<TipService>();
+        services.AddSingleton<WorldService>();
+        
+        // Services - Ipc
+        services.AddSingleton<CustomizePlusIpc>();
+        services.AddSingleton<GlamourerIpc>();
+        services.AddSingleton<MoodlesIpc>();
+        services.AddSingleton<PenumbraIpc>();
+        
         // Managers
-        _actionQueueManager = new ActionQueueManager();
-        _connectivityManager = new ConnectivityManager(friendsListService, _identityService, _networkService);
-        _dependencyManager = new DependencyManager(_customizePlusIpc, _glamourerIpc, moodlesIpc, penumbraIpc);
-        _modManager = new ModManager(_customizePlusIpc, _glamourerIpc, moodlesIpc, penumbraIpc);
-
+        services.AddSingleton<ChatCommandManager>();
+        services.AddSingleton<ConnectivityManager>();
+        services.AddSingleton<DependencyManager>();
+        services.AddSingleton<ModManager>();
+        
         // Handlers
-        _networkHandler = new NetworkHandler(_customizePlusIpc, emoteService, friendsListService, _identityService,
-            overrideService, logService, _networkService, _spiralService, _glamourerIpc, moodlesIpc, penumbraIpc, _actionQueueManager,
-            _modManager);
-
-        // Windows
-        MainWindow = new MainWindow(commandLockoutService, emoteService, friendsListService, _identityService,
-            logService, _networkService, overrideService, _spiralService, tipService, worldService, _customizePlusIpc, _glamourerIpc,
-            moodlesIpc, penumbraIpc, _actionQueueManager, _modManager);
-
-        WindowSystem = new WindowSystem("AetherRemote");
-        WindowSystem.AddWindow(MainWindow);
+        services.AddSingleton<BodySwapHandler>();
+        services.AddSingleton<BodySwapQueryHandler>();
+        services.AddSingleton<EmoteHandler>();
+        services.AddSingleton<HypnosisHandler>();
+        services.AddSingleton<MoodlesHandler>();
+        services.AddSingleton<SpeakHandler>();
+        services.AddSingleton<SyncOnlineStatusHandler>();
+        services.AddSingleton<SyncPermissionsHandler>();
+        services.AddSingleton<TransformHandler>();
+        services.AddSingleton<TwinningHandler>();
+        services.AddSingleton<CustomizePlusHandler>();
+        services.AddSingleton<NetworkHandler>(); // Aggregate handler
         
-        BuildCommands();
-
-        PluginInterface.UiBuilder.Draw += DrawUi;
-        PluginInterface.UiBuilder.OpenMainUi += OpenMainUi;
-        PluginInterface.UiBuilder.OpenConfigUi += OpenMainUi;
-
+        // Ui - Components
+        services.AddSingleton<FriendsListComponentUi>();
+        
+        // Ui - Windows
+        services.AddSingleton<MainWindow>();
+        services.AddSingleton<WindowManager>();
+        
+        // Build the dependency injection framework
+        _services = services.BuildServiceProvider();
+        
+        // Services
+        _services.GetRequiredService<ActionQueueService>();
+        _services.GetRequiredService<SpiralService>();
+        
+        // Managers
+        _services.GetRequiredService<ChatCommandManager>();
+        _services.GetRequiredService<ConnectivityManager>();
+        _services.GetRequiredService<DependencyManager>();
+        
+        // Handlers
+        _services.GetRequiredService<NetworkHandler>();
+        
+        // Ui - Windows
+        _services.GetRequiredService<WindowManager>();
+        
         Task.Run(SharedUserInterfaces.InitializeFonts);
-
-#if DEBUG
-        MainWindow.IsOpen = true;
-#endif
     }
-
-    private const string OldCommandName = "/remote";
-    private const string CommandNameFull = "/aetherremote";
-    private const string CommandNameShort = "/ar";
-
-    private const string StopArg = "stop";
-    private const string SafeMode = "safemode";
-    private const string SafeWord = "safeword";
-
-    private void BuildCommands()
+    
+    public void Dispose()
     {
-        CommandManager.AddHandler(CommandNameShort, new CommandInfo(OnCommand)
-        {
-            HelpMessage = $"""
-                          Opens the primary plugin window
-                          /ar {StopArg} - Stops all current spirals
-                          /ar {SafeMode} - Put the plugin into safe mode
-                          /ar {SafeWord} - Put the plugin into safe mode
-                          """
-        });
-        
-        CommandManager.AddHandler(CommandNameFull, new CommandInfo(OnCommand)
-        {
-            ShowInHelp = false
-        });
-        
-        CommandManager.AddHandler(OldCommandName, new CommandInfo(OnCommand)
-        {
-            ShowInHelp = false
-        });
-    }
-
-    private void OnCommand(string command, string args)
-    {
-        if (args == string.Empty)
-        {
-            MainWindow.IsOpen = true;
-            return;
-        }
-
-        var payloads = new List<Payload>();
-        switch (args)
-        {
-            case StopArg:
-                _spiralService.StopCurrentSpiral();
-                payloads.Add(new UIForegroundPayload(AetherRemoteStyle.TextColorPurple));
-                payloads.Add(new TextPayload("[AetherRemote] "));
-                payloads.Add(UIForegroundPayload.UIForegroundOff);
-                payloads.Add( new TextPayload("Stopped current spirals"));
-                break;
-            
-            case SafeMode:
-            case SafeWord:
-                _spiralService.StopCurrentSpiral();
-                _actionQueueManager.Clear();
-                Configuration.SafeMode = true;
-                Configuration.Save();
-                payloads.Add(new UIForegroundPayload(AetherRemoteStyle.TextColorPurple));
-                payloads.Add(new TextPayload("[AetherRemote] "));
-                payloads.Add(UIForegroundPayload.UIForegroundOff);
-                payloads.Add(new TextPayload("Plugin is now in "));
-                payloads.Add(new UIForegroundPayload(AetherRemoteStyle.TextColorGreen));
-                payloads.Add(new TextPayload("safe mode"));
-                payloads.Add(UIForegroundPayload.UIForegroundOff);
-                break;
-            
-            default:
-                payloads.Add(new UIForegroundPayload(AetherRemoteStyle.TextColorPurple));
-                payloads.Add(new TextPayload("[AetherRemote] "));
-                payloads.Add(UIForegroundPayload.UIForegroundOff);
-                payloads.Add(new TextPayload($"Unknown argument \"{args}\""));
-                break;
-        }
-        
-        if (payloads.Count > 0)
-            ChatGui.Print(new SeString(payloads));
-    }
-
-    private void DrawUi()
-    {
-        AetherRemoteStyle.Stylize();
-        WindowSystem.Draw();
-        AetherRemoteStyle.UnStylize();
-
-        // Since we should always be on the main thread when sending a message, it is useful to update it here
-        _actionQueueManager.Update();
-        _dependencyManager.Update();
-        _spiralService.DrawSpiral();
-    }
-
-    private void OpenMainUi()
-    {
-        MainWindow.IsOpen = true;
+        _services.Dispose();
     }
 
     /// <summary>
@@ -241,36 +141,6 @@ public sealed class Plugin : IDalamudPlugin
             return func.Invoke();
 
         return await Framework.RunOnFrameworkThread(func).ConfigureAwait(false);
-    }
-
-    public void Dispose()
-    {
-        PluginInterface.UiBuilder.Draw -= DrawUi;
-        PluginInterface.UiBuilder.OpenMainUi -= OpenMainUi;
-        PluginInterface.UiBuilder.OpenConfigUi -= OpenMainUi;
-
-        // Services
-        _identityService.Dispose();
-        _networkService.Dispose();
-
-        // External Services
-        _glamourerIpc.Dispose();
-        _customizePlusIpc.Dispose();
-
-        // Managers
-        _connectivityManager.Dispose();
-        _modManager.Dispose();
-
-        // Handlers
-        _networkHandler.Dispose();
-
-        // Windows
-        MainWindow.Dispose();
-
-        WindowSystem.RemoveAllWindows();
-        CommandManager.RemoveHandler(CommandNameShort);
-        CommandManager.RemoveHandler(CommandNameFull);
-        CommandManager.RemoveHandler(OldCommandName);
     }
 
     /*

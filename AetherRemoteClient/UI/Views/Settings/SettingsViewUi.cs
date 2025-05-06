@@ -1,7 +1,6 @@
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Ipc;
-using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using Dalamud.Interface;
@@ -11,14 +10,14 @@ using ImGuiNET;
 namespace AetherRemoteClient.UI.Views.Settings;
 
 public class SettingsViewUi(
+    ActionQueueService actionQueueService,
     SpiralService spiralService,
     CustomizePlusIpc customize, 
     GlamourerIpc glamourer, 
     MoodlesIpc moodles,
-    PenumbraIpc penumbra,
-    ActionQueueManager actionQueueManager) : IDrawable
+    PenumbraIpc penumbra) : IDrawable
 {
-    private readonly SettingsViewUiController _controller = new(spiralService, actionQueueManager);
+    private readonly SettingsViewUiController _controller = new(actionQueueService, spiralService);
 
     private static readonly Vector2 CheckboxPadding = new(8, 0);
 

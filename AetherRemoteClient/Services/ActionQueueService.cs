@@ -1,16 +1,15 @@
 using System;
 using System.Collections.Concurrent;
 using AetherRemoteClient.Domain;
-using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Util;
 
-namespace AetherRemoteClient.Managers;
+namespace AetherRemoteClient.Services;
 
 /// <summary>
 ///     Responsible for sending actions to the in-game chat
 /// </summary>
-public class ActionQueueManager
+public class ActionQueueService: IDisposable
 {
     private const int MinProcessTime = 1100;
     private const int MaxProcessTime = 2400;
@@ -20,6 +19,14 @@ public class ActionQueueManager
     
     private DateTime _timeLastUpdated = DateTime.Now;
     private double _timeUntilNextProcess;
+
+    /// <summary>
+    ///     <inheritdoc cref="ActionQueueService"/>
+    /// </summary>
+    public ActionQueueService()
+    {
+        Plugin.PluginInterface.UiBuilder.Draw += Update;
+    }
     
     /// <summary>
     ///     Enqueues a chat command to take place. An empty queue will process a message immediately.
@@ -76,10 +83,7 @@ public class ActionQueueManager
         _actions.Enqueue(new ChatAction { Command = command, Log = log });
     }
     
-    /// <summary>
-    ///     Must be called once every framework update
-    /// </summary>
-    public void Update()
+    private void Update()
     {
         if (_actions.IsEmpty || Plugin.ClientState.LocalPlayer is null)
             return;
@@ -128,5 +132,11 @@ public class ActionQueueManager
         ///     Message that is posted in logs
         /// </summary>
         public string Log = string.Empty;
+    }
+
+    public void Dispose()
+    {
+        Plugin.PluginInterface.UiBuilder.Draw -= Update;
+        GC.SuppressFinalize(this);
     }
 }

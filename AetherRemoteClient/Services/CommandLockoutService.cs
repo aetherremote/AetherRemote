@@ -37,14 +37,6 @@ public class CommandLockoutService : IDisposable
         _commandLockoutTimer.Start();
     }
 
-    /// <summary>
-    ///     Releases a lockout early
-    /// </summary>
-    public void Unlock()
-    {
-        IsLocked = false;
-    }
-
     private void LockoutComplete(object? sender, ElapsedEventArgs e)
     {
         IsLocked = false;

@@ -60,6 +60,7 @@ public class MainWindow : Window, IDisposable
     private IDrawable _currentView;
 
     public MainWindow(
+        ActionQueueService actionQueueService,
         CommandLockoutService commandLockoutService,
         EmoteService emoteService,
         FriendsListService friendsListService,
@@ -74,7 +75,6 @@ public class MainWindow : Window, IDisposable
         GlamourerIpc glamourer,
         MoodlesIpc moodles,
         PenumbraIpc penumbra,
-        ActionQueueManager actionQueueManager,
         ModManager modManager) : base(MainWindowTitle)
     {
         SizeConstraints = new WindowSizeConstraints
@@ -99,7 +99,7 @@ public class MainWindow : Window, IDisposable
         _twinningView = new TwinningViewUi(commandLockoutService, friendsListService, identityService, networkService);
         _historyView = new HistoryViewUi(logService);
         _hypnosisView = new HypnosisViewUi(friendsListService, networkService, spiralService);
-        _settingsView = new SettingsViewUi(spiralService, customize, glamourer, moodles, penumbra, actionQueueManager);
+        _settingsView = new SettingsViewUi(actionQueueService, spiralService, customize, glamourer, moodles, penumbra);
         _loginView = new LoginViewUi(networkService);
         _moodlesView = new MoodlesViewUi(commandLockoutService, friendsListService, networkService);
         _customizePlusView = new CustomizePlusViewUi(commandLockoutService, friendsListService, networkService);

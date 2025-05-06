@@ -1,9 +1,8 @@
-using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 
 namespace AetherRemoteClient.UI.Views.Settings;
 
-public class SettingsViewUiController(SpiralService spiralService, ActionQueueManager actionQueueManager)
+public class SettingsViewUiController(ActionQueueService actionQueueService, SpiralService spiralService)
 {
     public int MinimumSpiralSpeed = 0;
     public int MaximumSpiralSpeed = 100;
@@ -19,6 +18,6 @@ public class SettingsViewUiController(SpiralService spiralService, ActionQueueMa
         
         // If we're in safe mode, begin disabling all active things
         spiralService.StopCurrentSpiral();
-        actionQueueManager.Clear();
+        actionQueueService.Clear();
     }
 }
