@@ -109,7 +109,7 @@ public class SpeakViewUiController
             };
 
             var response = await _networkService.InvokeAsync<BaseResponse>(HubMethod.Speak, input);
-            if (Plugin.DeveloperMode || response.Success)
+            if (response.Success)
             {
                 Message = string.Empty;
                 Plugin.NotificationManager.AddNotification(NotificationHelper.Success(
@@ -149,10 +149,7 @@ public class SpeakViewUiController
                 case ChatChannel.Linkshell:
                 case ChatChannel.CrossWorldLinkshell:
                     if (PermissionsChecker.Speak(selected.PermissionsGrantedByFriend.Linkshell, LinkshellSelection) is false)
-                    {
                         thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
-                        continue;
-                    }
                     break;
                 
                 case ChatChannel.Say:
@@ -168,10 +165,7 @@ public class SpeakViewUiController
                 case ChatChannel.PvPTeam:
                 default:
                     if (PermissionsChecker.Speak(selected.PermissionsGrantedByFriend.Primary, ChannelSelect) is false)
-                    {
                         thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
-                        continue;
-                    }
                     break;
             }
         }

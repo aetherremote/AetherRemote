@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Events;
-using AetherRemoteCommon.Domain.Enums;
 using ImGuiNET;
 
 namespace AetherRemoteClient.Services;
@@ -42,24 +41,6 @@ public class FriendsListService
     ///     Adds a friend locally
     /// </summary>
     public void Add(Friend friend) => Friends.Add(friend);
-
-    /// <summary>
-    ///     <inheritdoc cref="FriendsListService"/>
-    /// </summary>
-    public FriendsListService()
-    {
-        if (Plugin.DeveloperMode is false)
-            return;
-        
-        var onlineFriend = new Friend("Friend 1", null, true);
-        onlineFriend.PermissionsGrantedByFriend.Primary |= PrimaryPermissions.Say | PrimaryPermissions.Speak;
-        Friends.Add(onlineFriend);
-        
-        var offlineFriend = new Friend("Friend 2");
-        Friends.Add(offlineFriend);
-        
-        Selected.Add(onlineFriend);
-    }
     
     /// <summary>
     ///     Deletes a friend locally

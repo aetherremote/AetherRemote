@@ -14,7 +14,6 @@ namespace AetherRemoteClient.UI.Views.Transformation;
 /// <summary>
 ///     Handles events from the <see cref="TransformationViewUi"/>
 /// </summary>
-/// <param name="glamourerService"></param>
 public class TransformationViewUiController(
     FriendsListService friendsListService,
     NetworkService networkService,
@@ -105,7 +104,7 @@ public class TransformationViewUiController(
             
             var response =
                 await networkService.InvokeAsync<BaseResponse>(HubMethod.Transform, input);
-            if (Plugin.DeveloperMode || response.Success)
+            if (response.Success)
             {
                 Plugin.NotificationManager.AddNotification(NotificationHelper.Success(
                     "Successfully transformed", string.Empty));

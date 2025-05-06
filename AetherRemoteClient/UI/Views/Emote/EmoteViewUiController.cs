@@ -38,7 +38,7 @@ public class EmoteViewUiController(EmoteService emoteService, FriendsListService
             };
         
             var response = await networkService.InvokeAsync<BaseResponse>(HubMethod.Emote, input).ConfigureAwait(false);
-            if (Plugin.DeveloperMode || response.Success)
+            if (response.Success)
             {
                 EmoteSelection = string.Empty;
                 Plugin.NotificationManager.AddNotification(NotificationHelper.Success(

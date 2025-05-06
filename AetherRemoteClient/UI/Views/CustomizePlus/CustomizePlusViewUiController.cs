@@ -29,7 +29,7 @@ public class CustomizePlusViewUiController(FriendsListService friendsListService
             };
 
             var response = await networkService.InvokeAsync<BaseResponse>(HubMethod.CustomizePlus, input);
-            if (Plugin.DeveloperMode || response.Success)
+            if (response.Success)
             {
                 Customize = string.Empty;
                 

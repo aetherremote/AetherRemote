@@ -140,7 +140,7 @@ public class MainWindow : Window, IDisposable
         {
             ImGui.PushStyleVar(ImGuiStyleVar.ButtonTextAlign, AlignButtonTextLeft);
 
-            if (_networkService.Connection.State is HubConnectionState.Connected || Plugin.DeveloperMode)
+            if (_networkService.Connection.State is HubConnectionState.Connected)
             {
                 ImGui.TextUnformatted("General");
                 NavBarButton(FontAwesomeIcon.User, "Status", _statusView, size, offset, spacing);

@@ -44,7 +44,7 @@ public class FriendsListComponentUiController(FriendsListService friendsListServ
         var result =
             await networkService.InvokeAsync<AddFriendResponse>(HubMethod.AddFriend, request).ConfigureAwait(false);
 
-        if (Plugin.DeveloperMode || result.Success)
+        if (result.Success)
         {
             friendsListService.Add(FriendCodeToAdd, null, result.Online);
 

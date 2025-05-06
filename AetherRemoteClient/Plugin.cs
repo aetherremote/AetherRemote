@@ -35,16 +35,6 @@ public sealed class Plugin : IDalamudPlugin
     internal static Configuration Configuration { get; private set; } = null!;
 
     /// <summary>
-    ///     Disables interacting with the server in any way, and returns mocked successes and the line when
-    ///     the server is invoked
-    /// </summary>
-#if DEBUG
-    public const bool DeveloperMode = false;
-#else
-    public const bool DeveloperMode = false;
-#endif
-
-    /// <summary>
     ///     Internal plugin version
     /// </summary>
     public static readonly Version Version =

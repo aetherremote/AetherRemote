@@ -69,9 +69,6 @@ public class ConnectivityManager : IDisposable
     {
         try
         {
-            if (Plugin.DeveloperMode)
-                return;
-
             if (Plugin.Configuration.AutoLogin)
                 await _networkService.StartAsync().ConfigureAwait(false);
         }
@@ -85,9 +82,6 @@ public class ConnectivityManager : IDisposable
     {
         try
         {
-            if (Plugin.DeveloperMode)
-                return;
-
             await _networkService.StopAsync().ConfigureAwait(false);
         }
         catch (Exception)
