@@ -112,8 +112,7 @@ public class SpeakViewUiController
             if (response.Success)
             {
                 Message = string.Empty;
-                Plugin.NotificationManager.AddNotification(NotificationHelper.Success(
-                    "Successfully issued speak command", string.Empty));
+                NotificationHelper.Success("Successfully issued speak command", string.Empty);
 
                 if (ChannelSelect is not ChatChannel.Echo)
                     return;
@@ -123,8 +122,7 @@ public class SpeakViewUiController
             }
             else
             {
-                Plugin.NotificationManager.AddNotification(NotificationHelper.Warning(
-                    "Unable to issue speak command", response.Message));
+                NotificationHelper.Warning("Unable to issue speak command", response.Message);
             }
         }
         catch (Exception e)

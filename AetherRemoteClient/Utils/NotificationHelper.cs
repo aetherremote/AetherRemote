@@ -15,9 +15,9 @@ public static class NotificationHelper
     /// <summary>
     ///     Shorthand to create an information notification minimized
     /// </summary>
-    public static Notification Info(string title, string content)
+    public static void Info(string title, string content)
     {
-        return new Notification
+        var notification = new Notification
         {
             Type = NotificationType.Info,
             Icon = INotificationIcon.From(FontAwesomeIcon.ExclamationCircle),
@@ -28,14 +28,16 @@ public static class NotificationHelper
             Title = title,
             Content = content
         };
+        
+        Plugin.NotificationManager.AddNotification(notification);
     }
     
     /// <summary>
     ///     Shorthand to create a success notification minimized
     /// </summary>
-    public static Notification Success(string title, string content)
+    public static void Success(string title, string content)
     {
-        return new Notification
+        var notification = new Notification
         {
             Type = NotificationType.Success,
             Icon = INotificationIcon.From(FontAwesomeIcon.CheckCircle),
@@ -46,14 +48,16 @@ public static class NotificationHelper
             Title = title,
             Content = content
         };
+        
+        Plugin.NotificationManager.AddNotification(notification);
     }
 
     /// <summary>
     ///     Shorthand to create a warning notification minimized
     /// </summary>
-    public static Notification Warning(string title, string content)
+    public static void Warning(string title, string content)
     {
-        return new Notification
+        var notification = new Notification
         {
             Type = NotificationType.Warning,
             Icon = INotificationIcon.From(FontAwesomeIcon.ExclamationCircle),
@@ -63,14 +67,16 @@ public static class NotificationHelper
             Title = title,
             Content = content
         };
+        
+        Plugin.NotificationManager.AddNotification(notification);
     }
 
     /// <summary>
     ///     Shorthand to create an error notification minimized
     /// </summary>
-    public static Notification Error(string title, string content)
+    public static void Error(string title, string content)
     {
-        return new Notification
+        var notification = new Notification
         {
             Type = NotificationType.Error,
             Icon = INotificationIcon.From(FontAwesomeIcon.ExclamationCircle),
@@ -80,5 +86,7 @@ public static class NotificationHelper
             Title = title,
             Content = content
         };
+        
+        Plugin.NotificationManager.AddNotification(notification);
     }
 }

@@ -37,8 +37,7 @@ public class FriendsListComponentUiController(FriendsListService friendsListServ
 
         var friend = friendsListService.Get(FriendCodeToAdd);
         if (friend is not null)
-            Plugin.NotificationManager.AddNotification(NotificationHelper.Warning(
-                "Friend Already Exists", "Unable to add friend because friend already exists"));
+            NotificationHelper.Warning("Friend Already Exists", "Unable to add friend because friend already exists");
 
         var request = new AddFriendRequest { TargetFriendCode = FriendCodeToAdd };
         var result =
@@ -48,13 +47,11 @@ public class FriendsListComponentUiController(FriendsListService friendsListServ
         {
             friendsListService.Add(FriendCodeToAdd, null, result.Online);
 
-            Plugin.NotificationManager.AddNotification(NotificationHelper.Success(
-                "Successfully Added Friend", $"Successfully added {FriendCodeToAdd} as a friend"));
+            NotificationHelper.Success("Successfully Added Friend", $"Successfully added {FriendCodeToAdd} as a friend");
         }
         else
         {
-            Plugin.NotificationManager.AddNotification(NotificationHelper.Error(
-                "Failed to Add Friend", $"{result.Message}"));
+            NotificationHelper.Error("Failed to Add Friend", $"{result.Message}");
         }
 
         FriendCodeToAdd = string.Empty;

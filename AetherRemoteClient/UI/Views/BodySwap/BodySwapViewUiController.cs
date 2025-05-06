@@ -56,8 +56,7 @@ public class BodySwapViewUiController(
                     : null
             };
 
-            Plugin.NotificationManager.AddNotification(
-                NotificationHelper.Info("Beginning body swap, this may take a moment", string.Empty));
+            NotificationHelper.Info("Beginning body swap, this may take a moment", string.Empty);
 
             var response =
                 await networkService.InvokeAsync<BodySwapResponse>(HubMethod.BodySwap, input);
@@ -65,13 +64,11 @@ public class BodySwapViewUiController(
             {
                 if (response.Identity is null)
                 {
-                    Plugin.NotificationManager.AddNotification(NotificationHelper.Warning(
-                        "Unable to swap bodies", "You did not receive a valid identity after the swap"));
+                    NotificationHelper.Warning("Unable to swap bodies", "You did not receive a valid identity after the swap");
                 }
                 else
                 {
-                    Plugin.NotificationManager.AddNotification(NotificationHelper.Success(
-                        "Successfully swapped bodies", string.Empty));
+                    NotificationHelper.Success("Successfully swapped bodies", string.Empty);
                     
                     // Actually apply glamourer, mods, etc...
                     await modManager.Assimilate(response.Identity.GameObjectName, attributes).ConfigureAwait(false);
@@ -82,8 +79,7 @@ public class BodySwapViewUiController(
             }
             else
             {
-                Plugin.NotificationManager.AddNotification(NotificationHelper.Warning(
-                    "Unable to swap bodies", response.Message));
+                NotificationHelper.Warning("Unable to swap bodies", response.Message);
             }
         }
         catch (Exception e)

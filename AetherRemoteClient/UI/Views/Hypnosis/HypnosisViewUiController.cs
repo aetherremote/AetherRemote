@@ -198,13 +198,11 @@ public class HypnosisViewUiController
             var response = await _networkService.InvokeAsync<BaseResponse>(HubMethod.Hypnosis, input);
             if (response.Success)
             {
-                Plugin.NotificationManager.AddNotification(NotificationHelper.Success(
-                    "Successfully sent spiral", string.Empty));
+                NotificationHelper.Success("Successfully sent spiral", string.Empty);
             }
             else
             {
-                Plugin.NotificationManager.AddNotification(NotificationHelper.Warning(
-                    "Unable to send spiral", response.Message));
+                NotificationHelper.Warning("Unable to send spiral", response.Message);
             }
         }
         catch (Exception e)

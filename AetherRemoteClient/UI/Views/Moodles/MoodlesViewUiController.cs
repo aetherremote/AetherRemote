@@ -30,13 +30,11 @@ public class MoodlesViewUiController(FriendsListService friendsListService, Netw
             {
                 Moodle = string.Empty;
                 
-                Plugin.NotificationManager.AddNotification(NotificationHelper.Success(
-                    "Successfully added moodle", string.Empty));
+                NotificationHelper.Success("Successfully added moodle", string.Empty);
             }
             else
             {
-                Plugin.NotificationManager.AddNotification(NotificationHelper.Warning(
-                    "Unable to add moodle", response.Message));
+                NotificationHelper.Warning("Unable to add moodle", response.Message);
             }
         }
         catch (Exception e)

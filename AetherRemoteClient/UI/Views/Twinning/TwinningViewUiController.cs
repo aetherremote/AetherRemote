@@ -48,13 +48,11 @@ public class TwinningViewUiController(
             var response = await networkService.InvokeAsync<BaseResponse>(HubMethod.Twinning, input);
             if (response.Success)
             {
-                Plugin.NotificationManager.AddNotification(NotificationHelper.Success(
-                    "Successfully twinned", string.Empty));
+                NotificationHelper.Success("Successfully twinned", string.Empty);
             }
             else
             {
-                Plugin.NotificationManager.AddNotification(NotificationHelper.Warning(
-                    "Unable to twin", response.Message));
+                NotificationHelper.Warning("Unable to twin", response.Message);
             }
         }
         catch (Exception e)

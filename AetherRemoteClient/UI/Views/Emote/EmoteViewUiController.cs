@@ -41,13 +41,11 @@ public class EmoteViewUiController(EmoteService emoteService, FriendsListService
             if (response.Success)
             {
                 EmoteSelection = string.Empty;
-                Plugin.NotificationManager.AddNotification(NotificationHelper.Success(
-                    "Successfully issued emote command", string.Empty));
+                NotificationHelper.Success("Successfully issued emote command", string.Empty);
             }
             else
             {
-                Plugin.NotificationManager.AddNotification(NotificationHelper.Warning(
-                    "Unable to issue emote command", response.Message));
+                NotificationHelper.Warning("Unable to issue emote command", response.Message);
             }
         }
         catch (Exception e)

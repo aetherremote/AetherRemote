@@ -83,13 +83,11 @@ public class FriendsViewUiController : IDisposable
                 _friendBeingEdited.PermissionsGrantedToFriend = permissions;
                 _friendBeingEditedUserPermissionsOriginal = BooleanUserPermissions.From(permissions);
                 
-                Plugin.NotificationManager.AddNotification(NotificationHelper.Success(
-                    "Successfully saved friend", string.Empty));
+                NotificationHelper.Success("Successfully saved friend", string.Empty);
             }
             else
             {
-                Plugin.NotificationManager.AddNotification(NotificationHelper.Warning(
-                    "Unable to save friend", string.Empty));
+                NotificationHelper.Warning("Unable to save friend", string.Empty);
             }
         }
         catch (Exception e)
@@ -116,13 +114,11 @@ public class FriendsViewUiController : IDisposable
                 _friendsListService.Delete(_friendBeingEdited);
                 _friendBeingEdited = null;
                 
-                Plugin.NotificationManager.AddNotification(NotificationHelper.Success(
-                    "Successfully deleted friend", string.Empty));
+                NotificationHelper.Success("Successfully deleted friend", string.Empty);
             }
             else
             {
-                Plugin.NotificationManager.AddNotification(NotificationHelper.Warning(
-                    "Unable to delete friend", string.Empty));
+                NotificationHelper.Warning("Unable to delete friend", string.Empty);
             }
         }
         catch (Exception e)

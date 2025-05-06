@@ -36,10 +36,6 @@ public class NetworkService : IDisposable
     // Local
     private const string HubUrl = "https://localhost:5006/primaryHub";
     private const string PostUrl = "https://localhost:5006/api/auth/login";
-
-    // Beta
-    // private const string HubUrl = "https://foxitsvc.com:5007/primaryHub";
-    // private const string PostUrl = "https://foxitsvc.com:5007/api/auth/login";
 #else
     // Prod
     private const string HubUrl = "https://foxitsvc.com:5006/primaryHub";
@@ -84,22 +80,17 @@ public class NetworkService : IDisposable
             if (Connection.State is HubConnectionState.Connected)
             {
                 Connected?.Invoke();
-                var notification = NotificationHelper.Success("[Aether Remote] Connected", string.Empty);
-                Plugin.NotificationManager.AddNotification(notification);
+                NotificationHelper.Success("[Aether Remote] Connected", string.Empty);
             }
             else
-            {
-                var notification = NotificationHelper.Warning("[Aether Remote] Unable to connect",
-                    "See developer console for more information");
-                Plugin.NotificationManager.AddNotification(notification);
+            { 
+                NotificationHelper.Warning("[Aether Remote] Unable to connect", "See developer console for more information");
             }
         }
         catch (Exception e)
         {
             Plugin.Log.Warning($"[NetworkService] [StartAsync] {e.Message}]");
-            var notification = NotificationHelper.Warning("[Aether Remote] Could not connect",
-                "See developer console for more information");
-            Plugin.NotificationManager.AddNotification(notification);
+            NotificationHelper.Warning("[Aether Remote] Could not connect", "See developer console for more information");
         }
     }
 

@@ -33,13 +33,11 @@ public class CustomizePlusViewUiController(FriendsListService friendsListService
             {
                 Customize = string.Empty;
                 
-                Plugin.NotificationManager.AddNotification(NotificationHelper.Success(
-                    "Successfully applied customize plus template", string.Empty));
+                NotificationHelper.Success("Successfully applied customize plus template", string.Empty);
             }
             else
             {
-                Plugin.NotificationManager.AddNotification(NotificationHelper.Warning(
-                    "Unable to apply customize plus template", response.Message));
+                NotificationHelper.Warning("Unable to apply customize plus template", response.Message);
             }
         }
         catch (Exception e)

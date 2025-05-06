@@ -106,13 +106,11 @@ public class TransformationViewUiController(
                 await networkService.InvokeAsync<BaseResponse>(HubMethod.Transform, input);
             if (response.Success)
             {
-                Plugin.NotificationManager.AddNotification(NotificationHelper.Success(
-                    "Successfully transformed", string.Empty));
+                NotificationHelper.Success("Successfully transformed", string.Empty);
             }
             else
             {
-                Plugin.NotificationManager.AddNotification(NotificationHelper.Warning(
-                    "Unable to transform", response.Message));
+                NotificationHelper.Warning("Unable to transform", response.Message);
             }
         }
         catch (Exception e)
