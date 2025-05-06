@@ -3,7 +3,6 @@ using System.Numerics;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
-using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using ImGuiNET;
 

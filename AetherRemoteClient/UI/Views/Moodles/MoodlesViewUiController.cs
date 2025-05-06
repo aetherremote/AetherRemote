@@ -25,7 +25,7 @@ public class MoodlesViewUiController(FriendsListService friendsListService, Netw
                 Moodle = Moodle
             };
 
-            var response = await networkService.InvokeAsync<MoodlesRequest, BaseResponse>(HubMethod.Moodles, input);
+            var response = await networkService.InvokeAsync<BaseResponse>(HubMethod.Moodles, input);
             if (Plugin.DeveloperMode || response.Success)
             {
                 Moodle = string.Empty;

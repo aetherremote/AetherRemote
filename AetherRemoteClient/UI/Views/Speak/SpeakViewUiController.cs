@@ -108,7 +108,7 @@ public class SpeakViewUiController
                 TargetFriendCodes = _friendsListService.Selected.Select(friend => friend.FriendCode).ToList()
             };
 
-            var response = await _networkService.InvokeAsync<SpeakRequest, BaseResponse>(HubMethod.Speak, input);
+            var response = await _networkService.InvokeAsync<BaseResponse>(HubMethod.Speak, input);
             if (Plugin.DeveloperMode || response.Success)
             {
                 Message = string.Empty;

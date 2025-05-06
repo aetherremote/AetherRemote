@@ -76,7 +76,7 @@ public class FriendsViewUiController : IDisposable
             };
 
             var result =
-                await _networkService.InvokeAsync<UpdateFriendRequest, BaseResponse>(HubMethod.UpdateFriend, input).ConfigureAwait(false);
+                await _networkService.InvokeAsync<BaseResponse>(HubMethod.UpdateFriend, input).ConfigureAwait(false);
             if (Plugin.DeveloperMode || result.Success)
             {
                 _friendBeingEdited.Note = Note == string.Empty ? null : Note;
@@ -110,7 +110,7 @@ public class FriendsViewUiController : IDisposable
 
             var input = new RemoveFriendRequest { TargetFriendCode = FriendCode };
             var result =
-                await _networkService.InvokeAsync<RemoveFriendRequest, BaseResponse>(HubMethod.RemoveFriend, input);
+                await _networkService.InvokeAsync<BaseResponse>(HubMethod.RemoveFriend, input);
             if (Plugin.DeveloperMode || result.Success)
             {
                 _friendsListService.Delete(_friendBeingEdited);

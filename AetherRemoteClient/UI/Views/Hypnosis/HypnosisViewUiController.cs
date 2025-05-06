@@ -195,7 +195,7 @@ public class HypnosisViewUiController
                 }
             };
             
-            var response = await _networkService.InvokeAsync<HypnosisRequest, BaseResponse>(HubMethod.Hypnosis, input);
+            var response = await _networkService.InvokeAsync<BaseResponse>(HubMethod.Hypnosis, input);
             if (Plugin.DeveloperMode || response.Success)
             {
                 Plugin.NotificationManager.AddNotification(NotificationHelper.Success(

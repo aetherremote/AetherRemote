@@ -45,7 +45,7 @@ public class TwinningViewUiController(
                 },
             };
 
-            var response = await networkService.InvokeAsync<TwinningRequest, BaseResponse>(HubMethod.Twinning, input);
+            var response = await networkService.InvokeAsync<BaseResponse>(HubMethod.Twinning, input);
             if (Plugin.DeveloperMode || response.Success)
             {
                 Plugin.NotificationManager.AddNotification(NotificationHelper.Success(

@@ -129,28 +129,27 @@ public class NetworkService : IDisposable
     /// </summary>
     /// <param name="method">The name of the method to call</param>
     /// <param name="request">The request object to send</param>
-    /// <typeparam name="T">Request object (Example <see cref="AddFriendRequest" />)</typeparam>
-    /// <typeparam name="TU">Response object (Example <see cref="AddFriendResponse" />)</typeparam>
+    /// <typeparam name="T">Response object (Example <see cref="AddFriendResponse" />)</typeparam>
     /// <returns></returns>
-    public async Task<TU> InvokeAsync<T, TU>(string method, T request)
+    public async Task<T> InvokeAsync<T>(string method, object request)
     {
         if (Connection.State is not HubConnectionState.Connected)
         {
             Plugin.Log.Warning("[NetworkService] No connection established");
-            return Activator.CreateInstance<TU>();
+            return Activator.CreateInstance<T>();
         }
 
         try
         {
             Plugin.Log.Verbose($"[NetworkService] Request: {request}");
-            var response = await Connection.InvokeAsync<TU>(method, request);
+            var response = await Connection.InvokeAsync<T>(method, request);
             Plugin.Log.Verbose($"[NetworkService] Response: {response}");
             return response;
         }
         catch (Exception e)
         {
             Plugin.Log.Warning($"[NetworkService] [InvokeAsync] {e}");
-            return Activator.CreateInstance<TU>();
+            return Activator.CreateInstance<T>();
         }
     }
 

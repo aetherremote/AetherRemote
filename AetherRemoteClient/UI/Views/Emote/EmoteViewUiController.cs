@@ -37,7 +37,7 @@ public class EmoteViewUiController(EmoteService emoteService, FriendsListService
                 TargetFriendCodes = friendsListService.Selected.Select(friend => friend.FriendCode).ToList()
             };
         
-            var response = await networkService.InvokeAsync<EmoteRequest, BaseResponse>(HubMethod.Emote, input).ConfigureAwait(false);
+            var response = await networkService.InvokeAsync<BaseResponse>(HubMethod.Emote, input).ConfigureAwait(false);
             if (Plugin.DeveloperMode || response.Success)
             {
                 EmoteSelection = string.Empty;

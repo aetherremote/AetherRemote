@@ -41,7 +41,7 @@ public class ConnectivityManager : IDisposable
     {
         var input = new GetAccountDataRequest();
         var result = await _networkService
-            .InvokeAsync<GetAccountDataRequest, GetAccountDataResponse>(HubMethod.GetAccountData, input)
+            .InvokeAsync<GetAccountDataResponse>(HubMethod.GetAccountData, input)
             .ConfigureAwait(false);
         
         if (result.Success is false)

@@ -42,7 +42,7 @@ public class FriendsListComponentUiController(FriendsListService friendsListServ
 
         var request = new AddFriendRequest { TargetFriendCode = FriendCodeToAdd };
         var result =
-            await networkService.InvokeAsync<AddFriendRequest, AddFriendResponse>(HubMethod.AddFriend, request).ConfigureAwait(false);
+            await networkService.InvokeAsync<AddFriendResponse>(HubMethod.AddFriend, request).ConfigureAwait(false);
 
         if (Plugin.DeveloperMode || result.Success)
         {

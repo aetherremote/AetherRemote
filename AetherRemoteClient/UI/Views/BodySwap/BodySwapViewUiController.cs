@@ -60,7 +60,7 @@ public class BodySwapViewUiController(
                 NotificationHelper.Info("Beginning body swap, this may take a moment", string.Empty));
 
             var response =
-                await networkService.InvokeAsync<BodySwapRequest, BodySwapResponse>(HubMethod.BodySwap, input);
+                await networkService.InvokeAsync<BodySwapResponse>(HubMethod.BodySwap, input);
             if (Plugin.DeveloperMode || response.Success)
             {
                 if (response.Identity is null)

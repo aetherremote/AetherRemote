@@ -104,7 +104,7 @@ public class TransformationViewUiController(
             };
             
             var response =
-                await networkService.InvokeAsync<TransformRequest, BaseResponse>(HubMethod.Transform, input);
+                await networkService.InvokeAsync<BaseResponse>(HubMethod.Transform, input);
             if (Plugin.DeveloperMode || response.Success)
             {
                 Plugin.NotificationManager.AddNotification(NotificationHelper.Success(
