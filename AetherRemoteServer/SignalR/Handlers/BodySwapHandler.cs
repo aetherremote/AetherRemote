@@ -1,26 +1,22 @@
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteServer.Managers;
-using AetherRemoteServer.Services;
+using AetherRemoteServer.Domain.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 
-namespace AetherRemoteServer.Hubs.Handlers;
+namespace AetherRemoteServer.SignalR.Handlers;
 
 /// <summary>
 ///     Handles the logic for fulfilling a <see cref="BodySwapRequest"/>
 /// </summary>
-public class BodySwapHandler(
-    DatabaseService databaseService,
-    ConnectedClientsManager connectedClientsManager,
-    ILogger<BodySwapHandler> logger)
+public class BodySwapHandler(IClientConnectionService connections, IDatabaseService database, ILogger<BodySwapHandler> logger)
 {
     /// <summary>
     ///     Handles the request
     /// </summary>
     public async Task<BodySwapResponse> Handle(string issuerFriendCode, BodySwapRequest request, IHubCallerClients clients)
     {
-        if (connectedClientsManager.IsUserExceedingRequestLimit(issuerFriendCode))
+        if (connections.IsUserExceedingRequestLimit(issuerFriendCode))
         {
             logger.LogWarning("{Friend} exceeded request limit", issuerFriendCode);
             return new BodySwapResponse { Success = false, Message = "Exceeded request limit" };
@@ -43,11 +39,11 @@ public class BodySwapHandler(
 
         var cancel = new CancellationTokenSource();
         var tasks = new Task<BodySwapQueryResponse>[request.TargetFriendCodes.Count];
-        var connections = new string[request.TargetFriendCodes.Count];
+        var connectionInfo = new string[request.TargetFriendCodes.Count];
         for (var i = 0; i < request.TargetFriendCodes.Count; i++)
         {
             var target = request.TargetFriendCodes[i];
-            if (connectedClientsManager.ConnectedClients.TryGetValue(target, out var client) is false)
+            if (connections.TryGetClient(target) is not { } client)
             {
                 logger.LogWarning("{Issuer} targeted {Target} but they are offline, aborting", issuerFriendCode, target);
                 await cancel.CancelAsync();
@@ -58,7 +54,7 @@ public class BodySwapHandler(
                 };
             }
 
-            var permissions = await databaseService.GetPermissions(target);
+            var permissions = await database.GetPermissions(target);
             if (permissions.Permissions.TryGetValue(issuerFriendCode, out var permissionsGranted) is false)
             {
                 logger.LogWarning("{Issuer} targeted {Target} who is not a friend, aborting", issuerFriendCode, target);
@@ -134,7 +130,7 @@ public class BodySwapHandler(
                 };
             }
 
-            connections[i] = client.ConnectionId;
+            connectionInfo[i] = client.ConnectionId;
         }
 
         var timeout = Task.Delay(10000, cancel.Token);
@@ -185,7 +181,7 @@ public class BodySwapHandler(
 
             try
             {
-                await clients.Client(connections[i]).SendAsync(HubMethod.BodySwap, command, cancel.Token);
+                await clients.Client(connectionInfo[i]).SendAsync(HubMethod.BodySwap, command, cancel.Token);
             }
             catch (Exception e)
             {

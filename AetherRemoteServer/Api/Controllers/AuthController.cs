@@ -2,18 +2,17 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteServer.Authentication;
 using AetherRemoteServer.Domain;
-using AetherRemoteServer.Services;
+using AetherRemoteServer.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 
-namespace AetherRemoteServer.Controllers;
+namespace AetherRemoteServer.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController(Configuration config, DatabaseService db) : ControllerBase
+public class AuthController(Configuration config, IDatabaseService db) : ControllerBase
 {
     private readonly Version _expectedVersion = new(2, 3, 0, 1);
 
@@ -27,7 +26,7 @@ public class AuthController(Configuration config, DatabaseService db) : Controll
         var user = await db.GetUserBySecret(request.Secret);
         if (user is null)
             return Unauthorized("You are not registered");
-        
+
         var token = GenerateJwtToken(
         [
             new Claim(AuthClaimTypes.FriendCode, user.FriendCode)

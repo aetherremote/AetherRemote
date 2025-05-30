@@ -1,12 +1,12 @@
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteServer.Services;
+using AetherRemoteServer.Domain.Interfaces;
 
-namespace AetherRemoteServer.Hubs.Handlers;
+namespace AetherRemoteServer.SignalR.Handlers;
 
 /// <summary>
 ///     Handles the logic for fulfilling a <see cref="RemoveFriendRequest"/>
 /// </summary>
-public class RemoveFriendHandler(DatabaseService databaseService)
+public class RemoveFriendHandler(IDatabaseService databaseService)
 {
     /// <summary>
     ///     Handles the request

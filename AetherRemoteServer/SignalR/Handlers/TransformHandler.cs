@@ -1,25 +1,21 @@
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteServer.Managers;
-using AetherRemoteServer.Services;
+using AetherRemoteServer.Domain.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 
-namespace AetherRemoteServer.Hubs.Handlers;
+namespace AetherRemoteServer.SignalR.Handlers;
 
 /// <summary>
 ///     Handles the logic for fulfilling a <see cref="TransformRequest"/>
 /// </summary>
-public class TransformHandler(
-    DatabaseService databaseService,
-    ConnectedClientsManager connectedClientsManager,
-    ILogger<AddFriendHandler> logger)
+public class TransformHandler(IClientConnectionService connections, IDatabaseService database, ILogger<AddFriendHandler> logger)
 {
     /// <summary>
     ///     Handle the request
     /// </summary>
     public async Task<BaseResponse> Handle(string friendCode, TransformRequest request, IHubCallerClients clients)
     {
-        if (connectedClientsManager.IsUserExceedingRequestLimit(friendCode))
+        if (connections.IsUserExceedingRequestLimit(friendCode))
         {
             logger.LogWarning("{Friend} exceeded request limit", friendCode);
             return new BaseResponse { Success = false, Message = "Exceeded request limit" };
@@ -27,13 +23,13 @@ public class TransformHandler(
 
         foreach (var target in request.TargetFriendCodes)
         {
-            if (connectedClientsManager.ConnectedClients.TryGetValue(target, out var connectedClient) is false)
+            if (connections.TryGetClient(target) is not { } connectedClient)
             {
                 logger.LogInformation("{Issuer} targeted {Target} but they are offline, skipping", friendCode, target);
                 continue;
             }
 
-            var targetPermissions = await databaseService.GetPermissions(target);
+            var targetPermissions = await database.GetPermissions(target);
             if (targetPermissions.Permissions.TryGetValue(friendCode, out var permissionsGranted) is false)
             {
                 logger.LogInformation("{Issuer} targeted {Target} who is not a friend, skipping", friendCode, target);

@@ -1,21 +1,18 @@
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteServer.Managers;
-using AetherRemoteServer.Services;
+using AetherRemoteServer.Domain.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 
-namespace AetherRemoteServer.Hubs.Handlers;
+namespace AetherRemoteServer.SignalR.Handlers;
 
-public class UpdateFriendHandler(
-    ConnectedClientsManager connectedClientsManager,
-    DatabaseService databaseService,
-    ILogger<UpdateFriendHandler> logger)
+public class UpdateFriendHandler(IClientConnectionService connections, IDatabaseService database, ILogger<UpdateFriendHandler> logger)
 {
     public async Task<BaseResponse> Handle(string friendCode, UpdateFriendRequest request, IHubCallerClients clients)
     {
-        var success = await databaseService.UpdatePermissions(friendCode, request.TargetFriendCode, request.Permissions);
-        if (connectedClientsManager.ConnectedClients.TryGetValue(request.TargetFriendCode, out var connectedClient) is false)
-            return new BaseResponse { Success = success };
+        var success = await database.UpdatePermissions(friendCode, request.TargetFriendCode, request.Permissions);
         
+        if (connections.TryGetClient(request.TargetFriendCode) is not { } connectedClient)
+            return new BaseResponse { Success = success };
+
         try
         {
             var sync = new SyncPermissionsAction

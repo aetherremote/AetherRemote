@@ -4,7 +4,7 @@ namespace AetherRemoteServer.Domain;
 ///     Represents a client connected to the server and the information required for them to issue commands
 ///     and for the server to issue commands to them.
 /// </summary>
-public class ConnectedClientInfo(string connectionId)
+public class ClientInfo(string connectionId)
 {
     /// <summary>
     ///     Signal R connection id granted to this client

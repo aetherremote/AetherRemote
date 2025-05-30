@@ -1,17 +1,16 @@
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteServer.Authentication;
-using AetherRemoteServer.Hubs.Handlers;
-using AetherRemoteServer.Managers;
+using AetherRemoteServer.Domain;
+using AetherRemoteServer.SignalR.Handlers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
-namespace AetherRemoteServer.Hubs;
+namespace AetherRemoteServer.SignalR.Hubs;
 
 [Authorize]
 public class PrimaryHub(
     // Managers
-    ConnectedClientsManager connectedClientsManager,
-    
+    OnlineStatusUpdateHandler onlineStatusUpdateHandler,
+
     // Handlers
     AddFriendHandler addFriendHandler,
     BodySwapHandler bodySwapHandler,
@@ -25,7 +24,7 @@ public class PrimaryHub(
     TransformHandler transformHandler,
     TwinningHandler twinningHandler,
     UpdateFriendHandler updateFriendHandler,
-    
+
     // Logger
     ILogger<PrimaryHub> logger) : Hub
 {
@@ -122,7 +121,7 @@ public class PrimaryHub(
     /// </summary>
     public override async Task OnConnectedAsync()
     {
-        await connectedClientsManager.ProcessFriendOnlineStatusChange(FriendCode, true, Context, Clients);
+        await onlineStatusUpdateHandler.Handle(FriendCode, true, Context, Clients);
         await base.OnConnectedAsync();
     }
 
@@ -131,7 +130,7 @@ public class PrimaryHub(
     /// </summary>
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        await connectedClientsManager.ProcessFriendOnlineStatusChange(FriendCode, false, Context, Clients);
+        await onlineStatusUpdateHandler.Handle(FriendCode, false, Context, Clients);
         await base.OnDisconnectedAsync(exception);
     }
 }

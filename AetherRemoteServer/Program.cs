@@ -1,14 +1,12 @@
 using System.Text;
-using AetherRemoteServer.Authentication.Requirements;
 using AetherRemoteServer.Domain;
-using AetherRemoteServer.Domain.Authentication;
-using AetherRemoteServer.Hubs;
-using AetherRemoteServer.Hubs.Handlers;
-using AetherRemoteServer.Managers;
+using AetherRemoteServer.Domain.Interfaces;
 using AetherRemoteServer.Services;
+using AetherRemoteServer.SignalR.Handlers;
+using AetherRemoteServer.SignalR.Handlers.Helpers;
+using AetherRemoteServer.SignalR.Hubs;
 using MessagePack;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 
 namespace AetherRemoteServer;
@@ -35,12 +33,12 @@ public class Program
         builder.Services.AddSingleton(configuration);
 
         // Services
-        builder.Services.AddSingleton<DatabaseService>();
-
-        // Managers
-        builder.Services.AddSingleton<ConnectedClientsManager>();
+        builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
+        builder.Services.AddSingleton<IClientConnectionService, ClientConnectionService>();
+        builder.Services.AddSingleton<TargetAccessResolver>();
 
         // Handles
+        builder.Services.AddSingleton<OnlineStatusUpdateHandler>();
         builder.Services.AddSingleton<AddFriendHandler>();
         builder.Services.AddSingleton<BodySwapHandler>();
         builder.Services.AddSingleton<CustomizePlusHandler>();
@@ -101,8 +99,6 @@ public class Program
 
     private static void ConfigureJwtAuthentication(IServiceCollection services, Configuration configuration)
     {
-        services.AddTransient<IAuthorizationHandler, AdminRequirementHandler>();
-
         services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme).AddJwtBearer(options =>
         {
             options.TokenValidationParameters = new TokenValidationParameters
@@ -114,12 +110,5 @@ public class Program
                 IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(configuration.SigningKey)),
             };
         });
-
-        services.AddAuthorizationBuilder()
-            .AddPolicy("Administrator", policy =>
-            {
-                policy.RequireAuthenticatedUser();
-                policy.AddRequirements(new AdminRequirement());
-            });
     }
 }

@@ -1,6 +1,7 @@
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteServer.Domain;
+using AetherRemoteServer.Domain.Interfaces;
 using Microsoft.Data.Sqlite;
 
 namespace AetherRemoteServer.Services;
@@ -8,7 +9,7 @@ namespace AetherRemoteServer.Services;
 /// <summary>
 ///     Provides methods for interacting with the underlying Sqlite3 database
 /// </summary>
-public class DatabaseService
+public class DatabaseService : IDatabaseService
 {
     // Constants
     private const string ValidUsersTable = "ValidUsersTable";

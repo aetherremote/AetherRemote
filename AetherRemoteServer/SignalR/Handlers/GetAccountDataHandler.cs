@@ -1,28 +1,27 @@
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteServer.Managers;
-using AetherRemoteServer.Services;
+using AetherRemoteServer.Domain.Interfaces;
 
-namespace AetherRemoteServer.Hubs.Handlers;
+namespace AetherRemoteServer.SignalR.Handlers;
 
 /// <summary>
 ///     Handles the logic for fulfilling a <see cref="GetAccountDataRequest"/>
 /// </summary>
-public class GetAccountDataHandler(DatabaseService databaseService, ConnectedClientsManager connectedClientsManager)
+public class GetAccountDataHandler(IClientConnectionService connections, IDatabaseService database)
 {
     /// <summary>
     ///     Handles the request
     /// </summary>
     public async Task<GetAccountDataResponse> Handle(string friendCode, GetAccountDataRequest request)
     {
-        var permissionsGrantedToOthers = await databaseService.GetPermissions(friendCode);
+        var permissionsGrantedToOthers = await database.GetPermissions(friendCode);
         var permissionsGrantedByOthers = new Dictionary<string, UserPermissions>();
         foreach (var friend in permissionsGrantedToOthers.Permissions)
         {
-            if (connectedClientsManager.ConnectedClients.ContainsKey(friend.Key) is false)
+            if (connections.TryGetClient(friend.Key) is null)
                 continue;
 
-            var friendsPermissions = await databaseService.GetPermissions(friend.Key);
+            var friendsPermissions = await database.GetPermissions(friend.Key);
             if (friendsPermissions.Permissions.TryGetValue(friendCode, out var permissionsGranted))
                 permissionsGrantedByOthers[friend.Key] = permissionsGranted;
         }
