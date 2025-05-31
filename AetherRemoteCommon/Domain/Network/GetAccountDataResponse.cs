@@ -2,6 +2,8 @@ using MessagePack;
 
 namespace AetherRemoteCommon.Domain.Network;
 
+// ReSharper disable PropertyCanBeMadeInitOnly.Global
+
 [MessagePackObject(keyAsPropertyName: true)]
 public record GetAccountDataResponse : BaseResponse
 {

@@ -1,0 +1,92 @@
+using AetherRemoteCommon.V2.Domain.Enum;
+using AetherRemoteCommon.V2.Domain.Network.Base;
+
+namespace AetherRemoteClient.Utils;
+
+using System.Collections.Generic;
+using System.Text;
+
+/// <summary>
+///     Parses any response from the server and provides a notification on the screen with the results 
+/// </summary>
+public static class ActionResultParser
+{
+    public static void Parse(string operation, ActionResponse response)
+    {
+        if (response.Result is not ActionResponseEc.Success)
+        {
+            NotificationHelper.Error($"Failed {operation} request", BuildActionFailedNotification(response.Result));
+            return;
+        }
+
+        var count = 0;
+        var message = new StringBuilder();
+        foreach (var (target, code) in response.Results)
+        {
+            if (code is ActionResultEc.Success)
+                continue;
+
+            count++;
+            message.AppendLine(BuildActionFailedNotification2(target, code));
+        }
+
+        if (count is 0)
+        {
+            NotificationHelper.Success($"{operation} - Success", string.Empty);
+        }
+        else if (count == response.Results.Count)
+        {
+            var title = $"{operation} - Failure";
+            NotificationHelper.Error(title, message.ToString());
+        }
+        else
+        {
+            var title = $"{operation} - Partial Success, {count}/{response.Results.Count} failures";
+            NotificationHelper.Warning(title, message.ToString());
+        }
+    }
+
+    private static string BuildActionFailedNotification(ActionResponseEc code)
+    {
+        if (code is ActionResponseEc.Success)
+            return "Code was successful but the error handling method was called.";
+
+        return code switch
+        {
+            // General
+            ActionResponseEc.TooManyRequests => "Too many requests, slow down!",
+            ActionResponseEc.TooManyTargets =>
+                "You have too many targets for this operation. In game operations are limited to 3 targets",
+
+            // Exception
+            ActionResponseEc.Unknown => "Unknown failure",
+
+            // Default
+            _ => "The error code was uninitialized."
+        };
+    }
+
+    private static string BuildActionFailedNotification2(string target, ActionResultEc code)
+    {
+        if (code is ActionResultEc.Success)
+            return string.Concat("No error for ", target);
+
+        var name = Plugin.Configuration.Notes.GetValueOrDefault(target, target);
+        return code switch
+        {
+            ActionResultEc.ClientNotFriends or
+                ActionResultEc.TargetNotFriends => string.Concat("You are not friends with ", name),
+
+            ActionResultEc.ClientInSafeMode => string.Concat(name, " is in safe-mode"),
+            ActionResultEc.ClientHasOverride => string.Concat(name, " is overriding this command"),
+            ActionResultEc.ClientHasNotGrantedSenderPermissions or
+                ActionResultEc.TargetHasNotGrantedSenderPermissions => string.Concat(name, " has not granted you permissions for this command"),
+            ActionResultEc.ClientBadData => string.Concat(name, " could not parse the data you provided"),
+            
+            ActionResultEc.TargetTimeout => string.Concat("The command timed out to ", name),
+            ActionResultEc.TargetOffline => string.Concat(name, " is offline"),
+
+            _ => string.Concat(name, " encountered an unknown error")
+        };
+    }
+}

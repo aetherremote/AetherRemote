@@ -6,6 +6,8 @@ using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.V2.Domain.Enum;
+using AetherRemoteCommon.V2.Domain.Network.Base;
 
 namespace AetherRemoteClient.UI.Views.Emote;
 
@@ -36,17 +38,12 @@ public class EmoteViewUiController(EmoteService emoteService, FriendsListService
                 Emote = EmoteSelection,
                 TargetFriendCodes = friendsListService.Selected.Select(friend => friend.FriendCode).ToList()
             };
-        
-            var response = await networkService.InvokeAsync<BaseResponse>(HubMethod.Emote, input).ConfigureAwait(false);
-            if (response.Success)
-            {
+            
+            var r = await networkService.InvokeAsync<ActionResponse>(HubMethod.Emote, input).ConfigureAwait(false);
+            if (r.Result is ActionResponseEc.Success)
                 EmoteSelection = string.Empty;
-                NotificationHelper.Success("Successfully issued emote command", string.Empty);
-            }
-            else
-            {
-                NotificationHelper.Warning("Unable to issue emote command", response.Message);
-            }
+            
+            ActionResultParser.Parse("Emote", r);
         }
         catch (Exception e)
         {

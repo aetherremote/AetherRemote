@@ -1,8 +1,10 @@
 using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.V2.Domain.Network.Base;
 using AetherRemoteServer.Domain;
 using AetherRemoteServer.SignalR.Handlers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using EmoteRequest = AetherRemoteCommon.V2.Domain.Network.EmoteRequest;
 
 namespace AetherRemoteServer.SignalR.Hubs;
 
@@ -49,7 +51,7 @@ public class PrimaryHub(
     }
 
     [HubMethodName(HubMethod.Emote)]
-    public async Task<BaseResponse> Emote(EmoteRequest request)
+    public async Task<ActionResponse> Emote(EmoteRequest request)
     {
         logger.LogInformation("{Request}", request);
         return await emoteHandler.Handle(FriendCode, request, Clients);

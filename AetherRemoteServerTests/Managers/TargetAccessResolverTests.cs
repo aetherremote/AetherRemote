@@ -1,6 +1,7 @@
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.V2;
+using AetherRemoteCommon.V2.Domain.Enum;
 using AetherRemoteServer.Domain;
 using AetherRemoteServer.Domain.Interfaces;
 using AetherRemoteServer.SignalR.Handlers.Helpers;
@@ -60,7 +61,7 @@ public class TargetAccessResolverTests
         var result = await _manager.TryGetAuthorizedConnectionAsync(Sender, Target, PrimaryPermissions.Speak);
         Assert.Multiple(() =>
         {
-            Assert.That(result.Result, Is.EqualTo(AetherRemoteActionErrorCode.Success));
+            Assert.That(result.Result, Is.EqualTo(ActionResultEc.Success));
             Assert.That(result.Value, Is.EqualTo("SOME_ID"));
         });
     }
@@ -69,7 +70,7 @@ public class TargetAccessResolverTests
     public async Task TestPrimaryPermissions_NoPermissions()
     {
         var result = await _manager.TryGetAuthorizedConnectionAsync(Sender, Target, PrimaryPermissions.Moodles);
-        Assert.That(result.Result, Is.EqualTo(AetherRemoteActionErrorCode.TargetHasNotGrantedSenderPermissions));
+        Assert.That(result.Result, Is.EqualTo(ActionResultEc.TargetHasNotGrantedSenderPermissions));
     }
     
     [Test]
@@ -78,7 +79,7 @@ public class TargetAccessResolverTests
         var result = await _manager.TryGetAuthorizedConnectionAsync(Sender, Target, LinkshellPermissions.Cwl1);
         Assert.Multiple(() =>
         {
-            Assert.That(result.Result, Is.EqualTo(AetherRemoteActionErrorCode.Success));
+            Assert.That(result.Result, Is.EqualTo(ActionResultEc.Success));
             Assert.That(result.Value, Is.EqualTo("SOME_ID"));
         });
     }

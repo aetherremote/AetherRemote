@@ -1,5 +1,7 @@
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.V2;
+using AetherRemoteCommon.V2.Domain;
+using AetherRemoteCommon.V2.Domain.Enum;
 using AetherRemoteServer.Domain.Interfaces;
 
 namespace AetherRemoteServer.SignalR.Handlers.Helpers;
@@ -12,36 +14,36 @@ public class TargetAccessResolver(IClientConnectionService connections, IDatabas
     /// <summary>
     ///     TODO
     /// </summary>
-    public async Task<AetherRemoteAction<string>> TryGetAuthorizedConnectionAsync(string sender, string target, PrimaryPermissions primary)
+    public async Task<ActionResult<string>> TryGetAuthorizedConnectionAsync(string sender, string target, PrimaryPermissions primary)
     {
         if (connections.TryGetClient(target) is not { } connectedClient)
-            return AetherRemoteActionBuilder.Fail<string>(AetherRemoteActionErrorCode.TargetOffline);
+            return ActionResultBuilder.Fail<string>(ActionResultEc.TargetOffline);
         
         var targetPermissions = await database.GetPermissions(target);
         if (targetPermissions.Permissions.TryGetValue(sender, out var permissionsGranted) is false)
-            return AetherRemoteActionBuilder.Fail<string>(AetherRemoteActionErrorCode.TargetNotFriends);
+            return ActionResultBuilder.Fail<string>(ActionResultEc.TargetNotFriends);
 
         if (primary is PrimaryPermissions.None || (permissionsGranted.Primary & primary) == primary)
-            return AetherRemoteActionBuilder.Ok(connectedClient.ConnectionId);
+            return ActionResultBuilder.Ok(connectedClient.ConnectionId);
         
-        return AetherRemoteActionBuilder.Fail<string>(AetherRemoteActionErrorCode.TargetHasNotGrantedSenderPermissions);
+        return ActionResultBuilder.Fail<string>(ActionResultEc.TargetHasNotGrantedSenderPermissions);
     }
     
     /// <summary>
     ///     TODO
     /// </summary>
-    public async Task<AetherRemoteAction<string>> TryGetAuthorizedConnectionAsync(string sender, string target, LinkshellPermissions linkshell)
+    public async Task<ActionResult<string>> TryGetAuthorizedConnectionAsync(string sender, string target, LinkshellPermissions linkshell)
     {
         if (connections.TryGetClient(target) is not { } connectedClient)
-            return AetherRemoteActionBuilder.Fail<string>(AetherRemoteActionErrorCode.TargetOffline);
+            return ActionResultBuilder.Fail<string>(ActionResultEc.TargetOffline);
         
         var targetPermissions = await database.GetPermissions(target);
         if (targetPermissions.Permissions.TryGetValue(sender, out var permissionsGranted) is false)
-            return AetherRemoteActionBuilder.Fail<string>(AetherRemoteActionErrorCode.TargetNotFriends);
+            return ActionResultBuilder.Fail<string>(ActionResultEc.TargetNotFriends);
 
         if (linkshell is LinkshellPermissions.None || (permissionsGranted.Linkshell & linkshell) == linkshell)
-            return AetherRemoteActionBuilder.Ok(connectedClient.ConnectionId);
+            return ActionResultBuilder.Ok(connectedClient.ConnectionId);
         
-        return AetherRemoteActionBuilder.Fail<string>(AetherRemoteActionErrorCode.TargetHasNotGrantedSenderPermissions);
+        return ActionResultBuilder.Fail<string>(ActionResultEc.TargetHasNotGrantedSenderPermissions);
     }
 }

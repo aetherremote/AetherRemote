@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using AetherRemoteClient.Handlers.Network;
 using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.V2.Domain;
+using AetherRemoteCommon.V2.Domain.Network;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace AetherRemoteClient.Handlers;
@@ -34,9 +36,9 @@ public class NetworkHandler : IDisposable
         TwinningHandler twinningHandler,
         CustomizePlusHandler customizePlusHandler)
     {
+        // Old
         _handlers.Add(networkService.Connection.On<BodySwapQueryRequest, BodySwapQueryResponse>(HubMethod.BodySwapQuery, bodySwapQueryHandler.Handle));
         _handlers.Add(networkService.Connection.On<BodySwapAction>(HubMethod.BodySwap, bodySwapHandler.Handle));
-        _handlers.Add(networkService.Connection.On<EmoteAction>(HubMethod.Emote, emoteHandler.Handle));
         _handlers.Add(networkService.Connection.On<MoodlesAction>(HubMethod.Moodles, moodlesHandler.Handle));
         _handlers.Add(networkService.Connection.On<SpeakAction>(HubMethod.Speak, speakHandler.Handle));
         _handlers.Add(networkService.Connection.On<SyncOnlineStatusAction>(HubMethod.SyncOnlineStatus, syncOnlineStatusHandler.Handle));
@@ -45,6 +47,9 @@ public class NetworkHandler : IDisposable
         _handlers.Add(networkService.Connection.On<TwinningAction>(HubMethod.Twinning, twinningHandler.Handle));
         _handlers.Add(networkService.Connection.On<CustomizePlusAction>(HubMethod.CustomizePlus, customizePlusHandler.Handle));
         _handlers.Add(networkService.Connection.On<HypnosisAction>(HubMethod.Hypnosis, hypnosisHandler.Handle));
+        
+        // New
+        _handlers.Add(networkService.Connection.On<EmoteForwardedRequest, ActionResult<Unit>>(HubMethod.Emote, emoteHandler.Handle));
     }
 
     public void Dispose()

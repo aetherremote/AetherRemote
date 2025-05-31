@@ -1,14 +1,19 @@
 using AetherRemoteCommon;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.V2.Domain;
+using AetherRemoteCommon.V2.Domain.Enum;
+using AetherRemoteCommon.V2.Domain.Network;
+using AetherRemoteCommon.V2.Domain.Network.Base;
 using AetherRemoteServer.Domain.Interfaces;
 using AetherRemoteServer.SignalR.Handlers.Helpers;
 using Microsoft.AspNetCore.SignalR;
+using EmoteRequest = AetherRemoteCommon.V2.Domain.Network.EmoteRequest;
 
 namespace AetherRemoteServer.SignalR.Handlers;
 
 /// <summary>
-///     Handles the logic for fulfilling a <see cref="EmoteRequest"/>
+///     Handles the logic for fulfilling a <see cref="AetherRemoteCommon.Domain.Network.EmoteRequest"/>
 /// </summary>
 public class EmoteHandler(
     TargetAccessResolver targetAccessResolver,
@@ -18,48 +23,58 @@ public class EmoteHandler(
     /// <summary>
     ///     Handles the request
     /// </summary>
-    public async Task<BaseResponse> Handle(string senderFriendCode, EmoteRequest request, IHubCallerClients clients)
+    public async Task<ActionResponse> Handle(string senderFriendCode, EmoteRequest request, IHubCallerClients clients)
     {
         if (connections.IsUserExceedingRequestLimit(senderFriendCode))
         {
             logger.LogWarning("{Friend} exceeded request limit", senderFriendCode);
-            return new BaseResponse
-            {
-                Success = false, 
-                Message = "Exceeded request limit"
-            };
+            return new ActionResponse(ActionResponseEc.TooManyRequests);
         }
 
         if (request.TargetFriendCodes.Count > Constraints.MaximumTargetsForInGameOperations)
         {
             logger.LogWarning("{Friend} tried to target more than the allowed amount for in-game actions", senderFriendCode);
-            return new BaseResponse
-            {
-                Success = false, 
-                Message = "Maximum number of targets exceeded"
-            };
+            return new ActionResponse(ActionResponseEc.TooManyTargets);
         }
-
-        var command = new EmoteAction(senderFriendCode, request.Emote, request.DisplayLogMessage);
-        foreach (var target in request.TargetFriendCodes)
+        
+        var results = new Dictionary<string, ActionResultEc>();
+        var command = new EmoteForwardedRequest(senderFriendCode, request.Emote, request.DisplayLogMessage);
+        var pending = new Task<ActionResult<Unit>>[request.TargetFriendCodes.Count];
+        for (var i = 0; i < request.TargetFriendCodes.Count; i++)
         {
-            if (await targetAccessResolver.TryGetAuthorizedConnectionAsync(senderFriendCode, target, PrimaryPermissions.Emote)
-                is not { } connectedClient)
-                continue;
+            var target = request.TargetFriendCodes[i];
+            var connectionIdResult =
+                await targetAccessResolver.TryGetAuthorizedConnectionAsync(senderFriendCode, target,
+                    PrimaryPermissions.Emote);
 
-            if (connectedClient.Value is not { } connectionId)
+            if (connectionIdResult.Result is not ActionResultEc.Success)
+            {
+                pending[i] = Task.FromResult(ActionResultBuilder.Fail(connectionIdResult.Result));
                 continue;
+            }
+
+            if (connectionIdResult.Value is not { } connectionId)
+            {
+                pending[i] = Task.FromResult(ActionResultBuilder.Fail(ActionResultEc.ValueNotSet));
+                continue;
+            }
             
             try
             {
-                await clients.Client(connectionId).SendAsync(HubMethod.Emote, command);
+                var client = clients.Client(connectionId);
+                pending[i] = HandlerUtils.AwaitResponsesWithTimeout<Unit>(HubMethod.Emote, client, command);
             }
             catch (Exception e)
             {
                 logger.LogWarning("{Issuer} send action to {Target} failed, {Error}", senderFriendCode, target, e.Message);
+                pending[i] = Task.FromResult(ActionResultBuilder.Fail(ActionResultEc.Unknown));
             }
         }
+        
+        var completed = await Task.WhenAll(pending);//.ConfigureAwait(false);
+        for(var i = 0; i < completed.Length; i++)
+            results.Add(request.TargetFriendCodes[i], completed[i].Result);
 
-        return new BaseResponse { Success = true };
+        return new ActionResponse(results);
     }
 }
