@@ -80,16 +80,17 @@ public static class SharedUserInterfaces
     /// <summary>
     ///     Creates a button with specified icon
     /// </summary>
-    public static bool IconButton(FontAwesomeIcon icon, Vector2? size = null, string? tooltip = null)
+    public static bool IconButton(FontAwesomeIcon icon, Vector2? size = null, string? tooltip = null, string? id = null)
     {
+        var raw = id is null
+            ? string.Concat(icon.ToIconString())
+            : string.Concat(icon.ToIconString(), "##", id);
+        
         ImGui.PushFont(UiBuilder.IconFont);
-        var result = ImGui.Button(icon.ToIconString(), size ?? Vector2.Zero);
+        var result = ImGui.Button(raw, size ?? Vector2.Zero);
         ImGui.PopFont();
 
-        if (tooltip is null)
-            return result;
-
-        if (ImGui.IsItemHovered() is false)
+        if (tooltip is null || ImGui.IsItemHovered() is false)
             return result;
 
         ImGui.BeginTooltip();

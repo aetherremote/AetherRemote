@@ -49,7 +49,8 @@ public class SettingsViewUi(
         SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
         {
             SharedUserInterfaces.MediumText("General");
-            ImGui.Checkbox("Auto Connect", ref Plugin.Configuration.AutoLogin);
+            if (ImGui.Checkbox("Auto Connect", ref Plugin.Configuration.AutoLogin))
+                Plugin.Configuration.Save();
         });
         
         SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>

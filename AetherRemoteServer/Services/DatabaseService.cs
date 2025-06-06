@@ -1,5 +1,6 @@
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Enums.New;
 using AetherRemoteServer.Domain;
 using AetherRemoteServer.Domain.Interfaces;
 using Microsoft.Data.Sqlite;
@@ -14,6 +15,10 @@ public class DatabaseService : IDatabaseService
     // Constants
     private const string ValidUsersTable = "ValidUsersTable";
     private const string PermissionsTable = "PermissionsTable";
+    
+    private const string PermissionsTableV2 = "PermissionsTableV2";
+    private const string SpeakPermissionsParam = "@SpeakPermissions";
+    
     private const string SecretParam = "@Secret";
     private const string FriendCodeParam = "@FriendCode";
     private const string TargetFriendCodeParam = "@TargetFriendCode";
@@ -297,5 +302,89 @@ public class DatabaseService : IDatabaseService
              """;
 
         initializePermissionsTable.ExecuteNonQuery();
+        
+        using var initializePermissionsTableV2 = _db.CreateCommand();
+        initializePermissionsTableV2.CommandText = 
+            $"""
+                CREATE TABLE IF NOT EXISTS {PermissionsTableV2} (
+                     FriendCode TEXT NOT NULL,
+                     TargetFriendCode TEXT NOT NULL,
+                     PrimaryPermissions INTEGER NOT NULL,
+                     SpeakPermissions INTEGER NOT NULL,
+                     PRIMARY KEY (FriendCode, TargetFriendCode),
+                     FOREIGN KEY (FriendCode) REFERENCES {ValidUsersTable} (FriendCode),
+                     FOREIGN KEY (TargetFriendCode) REFERENCES {ValidUsersTable} (FriendCode)
+                )
+             """;
+        
+        initializePermissionsTableV2.ExecuteNonQuery();
+        
+        // Convert();
     }
+    
+    private async Task Convert()
+    {
+        _logger.LogInformation("Beginning...");
+        
+        await using var command = _db.CreateCommand();
+        command.CommandText = $"SELECT * FROM {PermissionsTable}";
+
+        var results = new List<Convertable>();
+        try
+        {
+            await using var reader = await command.ExecuteReaderAsync();
+            while (reader.Read())
+            {
+                var friendCode = reader.GetString(0);
+                var targetFriendCode = reader.GetString(1);
+                var version = reader.GetInt32(2);
+                var primary = reader.GetInt32(3);
+                var linkshell = reader.GetInt32(4);
+
+                var p = (PrimaryPermissions)primary;
+                var l = (LinkshellPermissions)linkshell;
+
+                var c = new Convertable(friendCode, targetFriendCode, p, l);
+                results.Add(c);
+                _logger.LogInformation("Got {C}", c);
+            }
+        }
+        catch (Exception e)
+        {
+            _logger.LogWarning("{Exception}", e);
+        }
+
+        foreach (var c in results)
+        {
+            var carp = Converter.Convert(c.PrimaryPermissions, c.LinkshellPermissions);
+            
+            var (np, ns) = carp;
+            await using var cmd = _db.CreateCommand();
+            cmd.CommandText = $"INSERT INTO {PermissionsTableV2} (FriendCode, TargetFriendCode, PrimaryPermissions, SpeakPermissions) VALUES ({FriendCodeParam}, {TargetFriendCodeParam}, {PrimaryPermissionsParam}, {SpeakPermissionsParam})";
+            cmd.Parameters.AddWithValue(FriendCodeParam, c.FriendCode);
+            cmd.Parameters.AddWithValue(TargetFriendCodeParam, c.TargetFriendCode);
+            cmd.Parameters.AddWithValue(PrimaryPermissionsParam, np);
+            cmd.Parameters.AddWithValue(SpeakPermissionsParam, ns);
+
+            _logger.LogInformation("Writing {CAR}", carp);
+            
+            try
+            { 
+                await cmd.ExecuteNonQueryAsync();
+            }
+            catch (Exception e)
+            {
+                _logger.LogWarning("{Exception}", e);
+            }
+        }
+        
+        _logger.LogInformation("Ended...");
+        
+    }
+
+    private record Convertable(
+        string FriendCode,
+        string TargetFriendCode,
+        PrimaryPermissions PrimaryPermissions,
+        LinkshellPermissions LinkshellPermissions);
 }

@@ -14,7 +14,7 @@ using AetherRemoteClient.UI.Views.History;
 using AetherRemoteClient.UI.Views.Hypnosis;
 using AetherRemoteClient.UI.Views.Login;
 using AetherRemoteClient.UI.Views.Moodles;
-using AetherRemoteClient.UI.Views.Overrides;
+using AetherRemoteClient.UI.Views.Pause;
 using AetherRemoteClient.UI.Views.Settings;
 using AetherRemoteClient.UI.Views.Speak;
 using AetherRemoteClient.UI.Views.Status;
@@ -32,7 +32,6 @@ public class MainWindow : Window, IDisposable
 {
     // Const
     private static readonly Vector2 AlignButtonTextLeft = new(0, 0.5f);
-    private static readonly Vector2 NavBarDimensions = new(180, 0);
     private static readonly string MainWindowTitle = $"Aether Remote 2 - Version {Plugin.Version}";
 
     // Injected
@@ -51,7 +50,7 @@ public class MainWindow : Window, IDisposable
     private readonly HypnosisViewUi _hypnosisView;
     private readonly LoginViewUi _loginView;
     private readonly MoodlesViewUi _moodlesView;
-    private readonly OverridesViewUi _overridesView;
+    private readonly PauseViewUi _pauseView;
     private readonly SettingsViewUi _settingsView;
     private readonly SpeakViewUi _speakView;
     private readonly StatusViewUi _statusView;
@@ -67,7 +66,7 @@ public class MainWindow : Window, IDisposable
         IdentityService identityService,
         LogService logService,
         NetworkService networkService,
-        OverrideService overrideService,
+        PauseService pauseService,
         SpiralService spiralService,
         TipService tipService,
         WorldService worldService,
@@ -89,7 +88,6 @@ public class MainWindow : Window, IDisposable
         // Views
         _statusView = new StatusViewUi(networkService, identityService, tipService, spiralService, glamourer);
         _friendsView = new FriendsViewUi(friendsListService, networkService);
-        _overridesView = new OverridesViewUi(overrideService);
         _speakView = new SpeakViewUi(commandLockoutService, friendsListService, networkService, worldService);
         _emoteView = new EmoteViewUi(commandLockoutService, emoteService, friendsListService, networkService);
         _transformationView =
@@ -103,7 +101,8 @@ public class MainWindow : Window, IDisposable
         _loginView = new LoginViewUi(networkService);
         _moodlesView = new MoodlesViewUi(commandLockoutService, friendsListService, networkService);
         _customizePlusView = new CustomizePlusViewUi(commandLockoutService, friendsListService, networkService);
-
+        _pauseView = new PauseViewUi(friendsListService, pauseService);
+        
         _friendsListService = friendsListService;
         _networkService = networkService;
         _networkService.Connected += OnConnected;
@@ -130,13 +129,13 @@ public class MainWindow : Window, IDisposable
     {
         var spacing = ImGui.GetStyle().ItemSpacing;
         var windowPadding = ImGui.GetStyle().WindowPadding;
-        var size = new Vector2(NavBarDimensions.X - windowPadding.X * 2, 25);
+        var size = new Vector2(AetherRemoteStyle.NavBarDimensions.X - windowPadding.X * 2, 25);
         var offset = windowPadding with { Y = (size.Y - ImGui.GetFontSize()) * 0.5f };
         
         ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, AetherRemoteStyle.Rounding);
         ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, AetherRemoteStyle.Rounding);
 
-        if (ImGui.BeginChild("###MainWindowNavBar", NavBarDimensions, true))
+        if (ImGui.BeginChild("###MainWindowNavBar", AetherRemoteStyle.NavBarDimensions, true))
         {
             ImGui.PushStyleVar(ImGuiStyleVar.ButtonTextAlign, AlignButtonTextLeft);
 
@@ -145,7 +144,7 @@ public class MainWindow : Window, IDisposable
                 ImGui.TextUnformatted("General");
                 NavBarButton(FontAwesomeIcon.User, "Status", _statusView, size, offset, spacing);
                 NavBarButton(FontAwesomeIcon.UserFriends, "Friends", _friendsView, size, offset, spacing);
-                NavBarButton(FontAwesomeIcon.Globe, "Overrides", _overridesView, size, offset, spacing);
+                NavBarButton(FontAwesomeIcon.Pause, "Pause", _pauseView, size, offset, spacing);
 
                 ImGui.TextUnformatted("Control");
                 NavBarButton(FontAwesomeIcon.Comments, "Speak", _speakView, size, offset, spacing);
