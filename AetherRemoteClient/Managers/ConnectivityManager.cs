@@ -41,24 +41,25 @@ public class ConnectivityManager : IDisposable
     private async Task GetAndSetAccountData()
     {
         var input = new GetAccountDataRequest();
-        var result = await _networkService
+        var response = await _networkService
             .InvokeAsync<GetAccountDataResponse>(HubMethod.GetAccountData, input)
             .ConfigureAwait(false);
-        
-        if (result.Success is false)
+
+        if (response.Result is not GetAccountDataEc.Success)
         {
-            Plugin.Log.Fatal($"[NetworkHandler] Failed to get account data, {result.Message}");
+            // TODO: Maybe add a pop-up response here?   
+            Plugin.Log.Fatal($"[NetworkHandler] Failed to get account data, {response.Result}");
             await _networkService.StopAsync().ConfigureAwait(false);
             return;
         }
 
-        _identityService.FriendCode = result.FriendCode;
+        _identityService.FriendCode = response.FriendCode;
         await _identityService.SetIdentityToCurrentCharacter().ConfigureAwait(false);
 
         _friendsListService.Clear();
-        foreach (var (friendCode, permissionsGrantedToFriend) in result.PermissionsGrantedToOthers)
+        foreach (var (friendCode, permissionsGrantedToFriend) in response.PermissionsGrantedToOthers)
         {
-            var online = result.PermissionsGrantedByOthers.TryGetValue(friendCode, out var permissionsGrantedByOther);
+            var online = response.PermissionsGrantedByOthers.TryGetValue(friendCode, out var permissionsGrantedByOther);
             Plugin.Configuration.Notes.TryGetValue(friendCode, out var note);
 
             var friend = new Friend(friendCode, note, online, permissionsGrantedToFriend, permissionsGrantedByOther);

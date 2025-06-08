@@ -2,10 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AetherRemoteClient.Ipc;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
-using AetherRemoteCommon.Domain.Enums;
-using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Util;
+using AetherRemoteCommon.Domain.Enums.New;
+using AetherRemoteCommon.V2.Domain;
+using AetherRemoteCommon.V2.Domain.Enum;
 using AetherRemoteCommon.V2.Domain.Network.Moodles;
 using MemoryPack;
 using Moodles.Data;
@@ -17,12 +18,15 @@ namespace AetherRemoteClient.Handlers.Network;
 ///     Handles a <see cref="MoodlesForwardedRequest"/>
 /// </summary>
 public class MoodlesHandler(
-    FriendsListService friendsListService,
-    OverrideService overrideService,
     LogService logService,
     MoodlesIpc moodles,
-    PenumbraIpc penumbra)
+    PenumbraIpc penumbra,
+    ForwardedRequestManager forwardedRequestManager)
 {
+    // Const
+    private const string Operation = "Moodles";
+    private const PrimaryPermissions2 Permissions = PrimaryPermissions2.Moodles;
+    
     // Instantiated
     private readonly MemoryPackSerializerOptions _serializerOptions = new()
     {
@@ -32,37 +36,16 @@ public class MoodlesHandler(
     /// <summary>
     ///     <inheritdoc cref="MoodlesHandler"/>
     /// </summary>
-    public async Task Handle(MoodlesForwardedRequest forwardedRequest)
+    public async Task<ActionResult<Unit>> Handle(MoodlesForwardedRequest request)
     {
-        Plugin.Log.Info($"{forwardedRequest}");
+        Plugin.Log.Info($"{request}");
 
-        // Not friends
-        if (friendsListService.Get(forwardedRequest.SenderFriendCode) is not { } friend)
-        {
-            logService.NotFriends("Moodles", forwardedRequest.SenderFriendCode);
-            return;
-        }
-
-        // Plugin in safe mode
-        if (Plugin.Configuration.SafeMode)
-        {
-            logService.SafeMode("Moodles", friend.NoteOrFriendCode);
-            return;
-        }
-
-        // Overriding moodles
-        if (overrideService.HasActiveOverride(PrimaryPermissions.Moodles))
-        {
-            logService.Override("Moodles", friend.NoteOrFriendCode);
-            return;
-        }
-
-        // Lacking permissions for moodles
-        if (friend.PermissionsGrantedToFriend.Has(PrimaryPermissions.Moodles) is false)
-        {
-            logService.LackingPermissions("Moodles", friend.NoteOrFriendCode);
-            return;
-        }
+        var placeholder = forwardedRequestManager.Placehold(Operation, request.SenderFriendCode, Permissions);
+        if (placeholder.Result is not ActionResultEc.Success)
+            return ActionResultBuilder.Fail(placeholder.Result);
+        
+        if (placeholder.Value is not { } friend)
+            return ActionResultBuilder.Fail(ActionResultEc.ValueNotSet);
 
         try
         {
@@ -72,16 +55,16 @@ public class MoodlesHandler(
             {
                 Plugin.Log.Warning("[MoodlesHandler] Object table address is null, aborting");
                 logService.Custom($"{friend.NoteOrFriendCode} tried to apply a moodle but failed unexpectedly");
-                return;
+                return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
             }
 
             // Deserialize the input string into a moodle
-            var moodle = JsonConvert.DeserializeObject<MyStatus>(forwardedRequest.Moodle);
+            var moodle = JsonConvert.DeserializeObject<MyStatus>(request.Moodle);
             if (moodle is null)
             {
                 Plugin.Log.Warning("[MoodlesHandler] Moodle deserialization failed, aborting");
                 logService.Custom($"{friend.NoteOrFriendCode} tried to apply a moodle but failed unexpectedly");
-                return;
+                return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
             }
             
             // To be a valid moodle, an expiration time must be included
@@ -94,7 +77,7 @@ public class MoodlesHandler(
             if (existingMoodlesBase64String is null)
             {
                 logService.Custom($"{friend.NoteOrFriendCode} tried to apply a moodle but couldn't retrieve moodles");
-                return;
+                return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
             }
 
             // Make a list of moodles
@@ -112,7 +95,7 @@ public class MoodlesHandler(
                 {
                     Plugin.Log.Warning("[MoodlesHandler] Existing moodles deserialization failed, aborting");
                     logService.Custom($"{friend.NoteOrFriendCode} tired to apply moodle but deserialization failed");
-                    return;
+                    return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
                 }
             }
 
@@ -132,9 +115,8 @@ public class MoodlesHandler(
                 else
                 {
                     // Otherwise, exit early
-                    Plugin.Log.Info(
-                        $"[MoodleHandler] Moodle {moodle.Title} already exists and is not stackable, exiting early");
-                    return;
+                    Plugin.Log.Info($"[MoodleHandler] Moodle {moodle.Title} already exists and is not stackable");
+                    return ActionResultBuilder.Ok();
                 }
             }
             else
@@ -152,7 +134,7 @@ public class MoodlesHandler(
             if (set is false)
             {
                 logService.Custom($"{friend.NoteOrFriendCode} tried to apply a moodle to you but failed");
-                return;
+                ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
             }
 
             // Redraw client so mare picks up changes
@@ -161,11 +143,13 @@ public class MoodlesHandler(
 
             // Log success
             logService.Custom($"{friend.NoteOrFriendCode} applied the {moodle.Title} moodle to you");
+            return ActionResultBuilder.Ok();
         }
         catch (Exception e)
         {
             logService.Custom($"{friend.NoteOrFriendCode} tried to apply a moodle to you but failed unexpectedly");
             Plugin.Log.Error($"Unexpected exception while handling moodles action, {e.Message}");
+            return ActionResultBuilder.Fail(ActionResultEc.Unknown);
         }
     }
 }

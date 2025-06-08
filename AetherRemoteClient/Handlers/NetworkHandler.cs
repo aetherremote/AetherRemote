@@ -4,7 +4,7 @@ using AetherRemoteClient.Handlers.Network;
 using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.V2.Domain;
-using AetherRemoteCommon.V2.Domain.Network;
+using AetherRemoteCommon.V2.Domain.Network.BodySwap;
 using AetherRemoteCommon.V2.Domain.Network.Customize;
 using AetherRemoteCommon.V2.Domain.Network.Emote;
 using AetherRemoteCommon.V2.Domain.Network.Hypnosis;
@@ -34,7 +34,6 @@ public class NetworkHandler : IDisposable
     public NetworkHandler(
         NetworkService networkService,
         BodySwapHandler bodySwapHandler,
-        BodySwapQueryHandler bodySwapQueryHandler,
         EmoteHandler emoteHandler,
         HypnosisHandler hypnosisHandler,
         MoodlesHandler moodlesHandler,
@@ -45,21 +44,19 @@ public class NetworkHandler : IDisposable
         TwinningHandler twinningHandler,
         CustomizePlusHandler customizePlusHandler)
     {
-        // Old
-        _handlers.Add(networkService.Connection.On<BodySwapQueryRequest, BodySwapQueryResponse>(HubMethod.BodySwapQuery, bodySwapQueryHandler.Handle));
-        _handlers.Add(networkService.Connection.On<BodySwapAction>(HubMethod.BodySwap, bodySwapHandler.Handle));
-        _handlers.Add(networkService.Connection.On<MoodlesForwardedRequest>(HubMethod.Moodles, moodlesHandler.Handle));
-        _handlers.Add(networkService.Connection.On<SpeakForwardedRequest>(HubMethod.Speak, speakHandler.Handle));
-        _handlers.Add(networkService.Connection.On<SyncOnlineStatusForwardedRequest>(HubMethod.SyncOnlineStatus, syncOnlineStatusHandler.Handle));
-        _handlers.Add(networkService.Connection.On<SyncPermissionsForwardedRequest>(HubMethod.SyncPermissions, syncPermissionsHandler.Handle));
-        _handlers.Add(networkService.Connection.On<TransformForwardedRequest>(HubMethod.Transform, transformHandler.Handle));
-        _handlers.Add(networkService.Connection.On<TwinningForwardedRequest>(HubMethod.Twinning, twinningHandler.Handle));
-       
-        _handlers.Add(networkService.Connection.On<HypnosisForwardedRequest>(HubMethod.Hypnosis, hypnosisHandler.Handle));
-        
-        // New
+        // Responses Needed
+        _handlers.Add(networkService.Connection.On<BodySwapForwardedRequest, ActionResult<Unit>>(HubMethod.BodySwap, bodySwapHandler.Handle));
         _handlers.Add(networkService.Connection.On<CustomizeForwardedRequest, ActionResult<Unit>>(HubMethod.CustomizePlus, customizePlusHandler.Handle));
         _handlers.Add(networkService.Connection.On<EmoteForwardedRequest, ActionResult<Unit>>(HubMethod.Emote, emoteHandler.Handle));
+        _handlers.Add(networkService.Connection.On<HypnosisForwardedRequest, ActionResult<Unit>>(HubMethod.Hypnosis, hypnosisHandler.Handle));
+        _handlers.Add(networkService.Connection.On<MoodlesForwardedRequest, ActionResult<Unit>>(HubMethod.Moodles, moodlesHandler.Handle));
+        _handlers.Add(networkService.Connection.On<SpeakForwardedRequest, ActionResult<Unit>>(HubMethod.Speak, speakHandler.Handle));
+        _handlers.Add(networkService.Connection.On<TransformForwardedRequest, ActionResult<Unit>>(HubMethod.Transform, transformHandler.Handle));
+        _handlers.Add(networkService.Connection.On<TwinningForwardedRequest, ActionResult<Unit>>(HubMethod.Twinning, twinningHandler.Handle));
+        
+        // No Responses Needed
+        _handlers.Add(networkService.Connection.On<SyncOnlineStatusForwardedRequest>(HubMethod.SyncOnlineStatus, syncOnlineStatusHandler.Handle));
+        _handlers.Add(networkService.Connection.On<SyncPermissionsForwardedRequest>(HubMethod.SyncPermissions, syncPermissionsHandler.Handle));
     }
 
     public void Dispose()

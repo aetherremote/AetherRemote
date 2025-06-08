@@ -2,6 +2,7 @@ using AetherRemoteCommon;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.New;
 using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.Util;
 using AetherRemoteCommon.V2.Domain.Enum;
 using AetherRemoteCommon.V2.Domain.Network;
 using AetherRemoteCommon.V2.Domain.Network.Speak;
@@ -38,23 +39,7 @@ public class SpeakHandler(
             return new ActionResponse(ActionResponseEc.TooManyTargets);
         }
 
-        var permissions = request.ChatChannel switch
-        {
-            ChatChannel.Say => SpeakPermissions2.Say,
-            ChatChannel.Roleplay => SpeakPermissions2.Roleplay,
-            ChatChannel.Echo => SpeakPermissions2.Echo,
-            ChatChannel.Yell => SpeakPermissions2.Yell,
-            ChatChannel.Shout => SpeakPermissions2.Shout,
-            ChatChannel.Tell => SpeakPermissions2.Tell,
-            ChatChannel.Party => SpeakPermissions2.Party,
-            ChatChannel.Alliance => SpeakPermissions2.Alliance,
-            ChatChannel.FreeCompany => SpeakPermissions2.FreeCompany,
-            ChatChannel.PvPTeam => SpeakPermissions2.PvPTeam,
-            ChatChannel.Linkshell => ConvertToLinkshell(SpeakPermissions2.Ls1, request.Extra),
-            ChatChannel.CrossWorldLinkshell => ConvertToLinkshell(SpeakPermissions2.Cwl1, request.Extra),
-            _ => SpeakPermissions2.None
-        };
-
+        var permissions = request.ChatChannel.ToSpeakPermissions(request.Extra);
         if (permissions == SpeakPermissions2.None)
             return new ActionResponse(ActionResponseEc.BadDataInRequest);
 

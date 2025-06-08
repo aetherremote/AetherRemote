@@ -1,10 +1,9 @@
 using System;
 using System.Threading.Tasks;
 using AetherRemoteClient.Ipc;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
-using AetherRemoteCommon.Domain.Enums;
-using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Util;
+using AetherRemoteCommon.Domain.Enums.New;
 using AetherRemoteCommon.V2.Domain;
 using AetherRemoteCommon.V2.Domain.Enum;
 using AetherRemoteCommon.V2.Domain.Network.Customize;
@@ -12,11 +11,14 @@ using AetherRemoteCommon.V2.Domain.Network.Customize;
 namespace AetherRemoteClient.Handlers.Network;
 
 public class CustomizePlusHandler(
-    FriendsListService friendsListService,
-    OverrideService overrideService,
     LogService logService,
-    CustomizePlusIpc customize)
+    CustomizePlusIpc customize,
+    ForwardedRequestManager forwardedRequestManager)
 {
+    // Const
+    private const string Operation = "Customize+";
+    private const PrimaryPermissions2 Permissions = PrimaryPermissions2.CustomizePlus;
+    
     /// <summary>
     ///     <inheritdoc cref="MoodlesHandler"/>
     /// </summary>
@@ -24,33 +26,12 @@ public class CustomizePlusHandler(
     {
         Plugin.Log.Info($"{request}");
         
-        // Not friends
-        if (friendsListService.Get(request.SenderFriendCode) is not { } friend)
-        {
-            logService.NotFriends("CustomizePlus", request.SenderFriendCode);
-            return ActionResultBuilder.Fail(ActionResultEc.ClientNotFriends);
-        }
-
-        // Plugin in safe mode
-        if (Plugin.Configuration.SafeMode)
-        {
-            logService.SafeMode("CustomizePlus", friend.NoteOrFriendCode);
-            return ActionResultBuilder.Fail(ActionResultEc.ClientInSafeMode);
-        }
-
-        // Overriding moodles
-        if (overrideService.HasActiveOverride(PrimaryPermissions.Customize))
-        {
-            logService.Override("CustomizePlus", friend.NoteOrFriendCode);
-            return ActionResultBuilder.Fail(ActionResultEc.ClientHasOverride);
-        }
-
-        // Lacking permissions for moodles
-        if (friend.PermissionsGrantedToFriend.Has(PrimaryPermissions.Customize) is false)
-        {
-            logService.LackingPermissions("CustomizePlus", friend.NoteOrFriendCode);
-            return ActionResultBuilder.Fail(ActionResultEc.ClientHasNotGrantedSenderPermissions);
-        }
+        var placeholder = forwardedRequestManager.Placehold(Operation, request.SenderFriendCode, Permissions);
+        if (placeholder.Result is not ActionResultEc.Success)
+            return ActionResultBuilder.Fail(placeholder.Result);
+        
+        if (placeholder.Value is not { } friend)
+            return ActionResultBuilder.Fail(ActionResultEc.ValueNotSet);
 
         try
         {

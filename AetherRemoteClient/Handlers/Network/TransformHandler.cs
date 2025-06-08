@@ -1,9 +1,10 @@
 using System.Threading.Tasks;
 using AetherRemoteClient.Ipc;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
-using AetherRemoteCommon.Domain.Enums;
-using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Util;
+using AetherRemoteCommon.V2.Domain;
+using AetherRemoteCommon.V2.Domain.Enum;
 using AetherRemoteCommon.V2.Domain.Network.Transform;
 
 namespace AetherRemoteClient.Handlers.Network;
@@ -12,82 +13,36 @@ namespace AetherRemoteClient.Handlers.Network;
 ///     Handles a <see cref="TransformForwardedRequest"/>
 /// </summary>
 public class TransformHandler(
-    FriendsListService friendsListService, 
-    OverrideService overrideService, 
     LogService logService,
-    GlamourerIpc glamourerIpc)
+    GlamourerIpc glamourerIpc,
+    ForwardedRequestManager forwardedRequestManager)
 {
+    // Const
+    private const string Operation = "Transform";
+    
     /// <summary>
     ///     <inheritdoc cref="TransformHandler"/>
     /// </summary>
-    public async Task Handle(TransformForwardedRequest forwardedRequest)
+    public async Task<ActionResult<Unit>> Handle(TransformForwardedRequest request)
     {
-        // Not friends
-        if (friendsListService.Get(forwardedRequest.SenderFriendCode) is not { } friend)
-        {
-            logService.NotFriends("Transform", forwardedRequest.SenderFriendCode);
-            return;
-        }
+        var permissions = request.GlamourerApplyType.ToPrimaryPermission();
+        var placeholder = forwardedRequestManager.Placehold(Operation, request.SenderFriendCode, permissions);
+        if (placeholder.Result is not ActionResultEc.Success)
+            return ActionResultBuilder.Fail(placeholder.Result);
         
-        // Plugin in safe mode
-        if (Plugin.Configuration.SafeMode)
-        {
-            logService.SafeMode("Transform", friend.NoteOrFriendCode);
-            return;
-        }
-
-        // Handle customization permissions
-        if ((forwardedRequest.GlamourerApplyType & GlamourerApplyFlags.Customization) == GlamourerApplyFlags.Customization)
-        {
-            // Overriding customizations
-            if (overrideService.HasActiveOverride(PrimaryPermissions.Customization))
-            {
-                logService.Override("Transform", friend.NoteOrFriendCode);
-                return;
-            }
-
-            // Lacking permissions for customizations
-            if (friend.PermissionsGrantedToFriend.Has(PrimaryPermissions.Customization) is false)
-            {
-                logService.LackingPermissions("Transform", friend.NoteOrFriendCode);
-                return;
-            }
-        }
-
-        // Handle equipment permissions
-        if ((forwardedRequest.GlamourerApplyType & GlamourerApplyFlags.Equipment) == GlamourerApplyFlags.Equipment)
-        {
-            // Overriding equipment
-            if (overrideService.HasActiveOverride(PrimaryPermissions.Equipment))
-            {
-                logService.Override("Transform", friend.NoteOrFriendCode);
-                return;
-            }
-
-            // Lacking permissions for equipment
-            if (friend.PermissionsGrantedToFriend.Has(PrimaryPermissions.Equipment) is false)
-            {
-                logService.LackingPermissions("Transform", friend.NoteOrFriendCode);
-                return;
-            }
-        }
-        
-        // Check if local body is present
-        if (await Plugin.RunOnFramework(() => Plugin.ClientState.LocalPlayer is null).ConfigureAwait(false))
-        {
-            logService.MissingLocalBody("Transform", friend.NoteOrFriendCode);
-            return;
-        }
+        if (placeholder.Value is not { } friend)
+            return ActionResultBuilder.Fail(ActionResultEc.ValueNotSet);
         
         // Attempt to apply
-        if (await glamourerIpc.ApplyDesignAsync(forwardedRequest.GlamourerData, forwardedRequest.GlamourerApplyType).ConfigureAwait(false) is false)
+        if (await glamourerIpc.ApplyDesignAsync(request.GlamourerData, request.GlamourerApplyType).ConfigureAwait(false) is false)
         {
             Plugin.Log.Warning($"Failed to handle transformation request from {friend.NoteOrFriendCode}");
             logService.Custom($"{friend.NoteOrFriendCode} tried to transform you, but an unexpected error occured.");
-            return;
+            return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
         }
         
         // Log Success
         logService.Custom($"{friend.NoteOrFriendCode} transformed you");
+        return ActionResultBuilder.Ok();
     }
 }

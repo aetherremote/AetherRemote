@@ -63,10 +63,10 @@ public class SpiralService : IDisposable
     /// <summary>
     ///     Begins drawling a spiral to the screen
     /// </summary>
-    public void StartSpiral(SpiralInfo spiralInfo, string sender)
+    public void StartSpiral(string sender, SpiralInfo spiralInfo)
     {
-        _currentSpiral = spiralInfo;
         _currentSender = sender;
+        _currentSpiral = spiralInfo;
 
         _currentDisplayPhraseTimer.Interval = spiralInfo.TextSpeed;
         _currentDisplayPhraseTimer.Start();

@@ -1,9 +1,9 @@
 using System.Text;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
-using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Enums.New;
 using AetherRemoteCommon.V2.Domain;
 using AetherRemoteCommon.V2.Domain.Enum;
-using AetherRemoteCommon.V2.Domain.Network;
 using AetherRemoteCommon.V2.Domain.Network.Emote;
 
 namespace AetherRemoteClient.Handlers.Network;
@@ -13,10 +13,13 @@ namespace AetherRemoteClient.Handlers.Network;
 /// </summary>
 public class EmoteHandler(
     EmoteService emoteService,
-    FriendsListService friendsListService,
     LogService logService,
-    OverrideService overrideService)
+    ForwardedRequestManager forwardedRequestManager)
 {
+    // Const
+    private const string Operation = "Emote";
+    private const PrimaryPermissions2 Permissions = PrimaryPermissions2.Emote;
+    
     /// <summary>
     ///     <inheritdoc cref="EmoteHandler"/>
     /// </summary>
@@ -24,38 +27,17 @@ public class EmoteHandler(
     {
         Plugin.Log.Info($"{request}");
         
-        // Not friends
-        if (friendsListService.Get(request.SenderFriendCode) is not { } friend)
-        {
-            logService.NotFriends("Emote", request.SenderFriendCode);
-            return ActionResultBuilder.Fail(ActionResultEc.ClientNotFriends);
-        }
-
-        // Plugin in safe mode
-        if (Plugin.Configuration.SafeMode)
-        {
-            logService.SafeMode("Emote", friend.NoteOrFriendCode);
-            return ActionResultBuilder.Fail(ActionResultEc.ClientInSafeMode);
-        }
-
-        // Overriding emotes
-        if (overrideService.HasActiveOverride(PrimaryPermissions.Emote))
-        {
-            logService.Override("Emote", friend.NoteOrFriendCode);
-            return ActionResultBuilder.Fail(ActionResultEc.ClientHasOverride);
-        }
-
-        // Lacking permissions for emoting
-        if (friend.PermissionsGrantedToFriend.Primary.HasFlag(PrimaryPermissions.Emote) is false)
-        {
-            logService.LackingPermissions("Emote", friend.NoteOrFriendCode);
-            return ActionResultBuilder.Fail(ActionResultEc.ClientHasNotGrantedSenderPermissions);
-        }
+        var placeholder = forwardedRequestManager.Placehold(Operation, request.SenderFriendCode, Permissions);
+        if (placeholder.Result is not ActionResultEc.Success)
+            return ActionResultBuilder.Fail(placeholder.Result);
+        
+        if (placeholder.Value is not { } friend)
+            return ActionResultBuilder.Fail(ActionResultEc.ValueNotSet);
 
         // Check if real emote
         if (emoteService.Emotes.Contains(request.Emote) is false)
         {
-            logService.InvalidData("Emote", friend.NoteOrFriendCode);
+            logService.InvalidData(Operation, friend.NoteOrFriendCode);
             return ActionResultBuilder.Fail(ActionResultEc.ClientBadData);
         }
 

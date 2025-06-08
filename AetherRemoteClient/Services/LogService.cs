@@ -14,12 +14,12 @@ public class LogService
     /// <summary>
     ///     Logs a command rejection due to safe mode 
     /// </summary>
-    public void SafeMode(string action, string sender)
+    public void SafeMode(string operation, string sender)
     {
         var log = new InternalLog
         {
             TimeStamp = DateTime.Now,
-            Message = $"Rejected {action} action from {sender} because you are in safe mode"
+            Message = $"Rejected {operation} action from {sender} because you are in safe mode"
         };
         
         Logs.Add(log);
@@ -28,12 +28,12 @@ public class LogService
     /// <summary>
     ///     Logs a command rejection due to not being friended
     /// </summary>
-    public void NotFriends(string action, string sender)
+    public void NotFriends(string operation, string sender)
     {
         var log = new InternalLog
         {
             TimeStamp = DateTime.Now,
-            Message = $"Rejected {action} action from {sender} because you are not friends"
+            Message = $"Rejected {operation} action from {sender} because you are not friends"
         };
         
         Logs.Add(log);
@@ -42,12 +42,12 @@ public class LogService
     /// <summary>
     ///     Logs a command rejection due to overriding it locally
     /// </summary>
-    public void Override(string action, string sender)
+    public void Override(string operation, string sender)
     {
         var log = new InternalLog
         {
             TimeStamp = DateTime.Now,
-            Message = $"Rejected {action} action from {sender} because you are overriding it locally"
+            Message = $"Rejected {operation} action from {sender} because you are overriding it locally"
         };
         
         Logs.Add(log);
@@ -56,12 +56,12 @@ public class LogService
     /// <summary>
     ///     Logs a command rejection due to lacking permissions
     /// </summary>
-    public void LackingPermissions(string action, string sender)
+    public void LackingPermissions(string operation, string sender)
     {
         var log = new InternalLog
         {
             TimeStamp = DateTime.Now,
-            Message = $"Rejected {action} action from {sender} because they are lacking permissions"
+            Message = $"Rejected {operation} action from {sender} because they are lacking permissions"
         };
         
         Logs.Add(log);
@@ -70,12 +70,12 @@ public class LogService
     /// <summary>
     ///     Logs a command rejection due to invalid data
     /// </summary>
-    public void InvalidData(string action, string sender)
+    public void InvalidData(string operation, string sender)
     {
         var log = new InternalLog
         {
             TimeStamp = DateTime.Now,
-            Message = $"Rejected {action} action from {sender} because they send invalid data"
+            Message = $"Rejected {operation} action from {sender} because they send invalid data"
         };
         
         Logs.Add(log);
@@ -84,12 +84,34 @@ public class LogService
     /// <summary>
     ///     Logs a command rejection due to invalid data
     /// </summary>
-    public void MissingLocalBody(string action, string sender)
+    public void MissingLocalBody(string operation, string sender)
     {
         var log = new InternalLog
         {
             TimeStamp = DateTime.Now,
-            Message = $"Unable to process {action} action from {sender} because you lack a local body"
+            Message = $"Unable to process {operation} action from {sender} because you lack a local body"
+        };
+        
+        Logs.Add(log);
+    }
+
+    public void FriendPaused(string operation, string sender)
+    {
+        var log = new InternalLog
+        {
+            TimeStamp = DateTime.Now,
+            Message = $"Rejected {operation} action from {sender} because you have them paused"
+        };
+        
+        Logs.Add(log);
+    }
+    
+    public void FeaturePaused(string operation, string sender)
+    {
+        var log = new InternalLog
+        {
+            TimeStamp = DateTime.Now,
+            Message = $"Rejected {operation} action from {sender} because you have that feature paused"
         };
         
         Logs.Add(log);

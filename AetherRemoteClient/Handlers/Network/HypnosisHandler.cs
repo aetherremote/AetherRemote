@@ -1,62 +1,47 @@
-using System.Threading.Tasks;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
-using AetherRemoteCommon.Domain;
-using AetherRemoteCommon.Domain.Enums;
-using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Util;
+using AetherRemoteCommon.Domain.Enums.New;
+using AetherRemoteCommon.V2.Domain;
+using AetherRemoteCommon.V2.Domain.Enum;
 using AetherRemoteCommon.V2.Domain.Network.Hypnosis;
 
 namespace AetherRemoteClient.Handlers.Network;
 
+/// <summary>
+///     TODO
+/// </summary>
 public class HypnosisHandler(
-    FriendsListService friendsListService,
-    OverrideService overrideService,
     LogService logService,
-    SpiralService spiralService)
+    SpiralService spiralService,
+    ForwardedRequestManager forwardedRequestManager)
 {
+    // Const
+    private const string Operation = "Hypnosis";
+    private const PrimaryPermissions2 Permissions = PrimaryPermissions2.Hypnosis;
+    
     /// <summary>
-    ///     <inheritdoc cref="MoodlesHandler"/>
+    ///     <inheritdoc cref="HypnosisHandler"/>
     /// </summary>
-    public void Handle(HypnosisForwardedRequest forwardedRequest)
+    public ActionResult<Unit> Handle(HypnosisForwardedRequest request)
     {
-        Plugin.Log.Info($"{forwardedRequest}");
+        Plugin.Log.Info($"{request}");
 
-        // Not friends
-        if (friendsListService.Get(forwardedRequest.SenderFriendCode) is not { } friend)
-        {
-            logService.NotFriends("Hypnosis", forwardedRequest.SenderFriendCode);
-            return;
-        }
-
-        // Plugin in safe mode
-        if (Plugin.Configuration.SafeMode)
-        {
-            logService.SafeMode("Hypnosis", friend.NoteOrFriendCode);
-            return;
-        }
-
-        // Overriding hypnosis
-        if (overrideService.HasActiveOverride(PrimaryPermissions.Hypnosis))
-        {
-            logService.Override("Hypnosis", friend.NoteOrFriendCode);
-            return;
-        }
-
-        // Lacking permissions for hypnosis
-        if (friend.PermissionsGrantedToFriend.Has(PrimaryPermissions.Hypnosis) is false)
-        {
-            logService.LackingPermissions("Hypnosis", friend.NoteOrFriendCode);
-            return;
-        }
+        var placeholder = forwardedRequestManager.Placehold(Operation, request.SenderFriendCode, Permissions);
+        if (placeholder.Result is not ActionResultEc.Success)
+            return ActionResultBuilder.Fail(placeholder.Result);
+        
+        if (placeholder.Value is not { } friend)
+            return ActionResultBuilder.Fail(ActionResultEc.ValueNotSet);
         
         // Already being hypnotized
         if (spiralService.IsBeingHypnotized)
         {
             logService.Custom($"Rejected hypnosis spiral from {friend.NoteOrFriendCode} because you're already being hypnotized");
-            return;
+            return ActionResultBuilder.Fail(ActionResultEc.ClientBeingHypnotized);
         }
         
-        spiralService.StartSpiral(forwardedRequest.Spiral, friend.NoteOrFriendCode);
+        spiralService.StartSpiral(friend.NoteOrFriendCode, request.Spiral);
         logService.Custom($"{friend.NoteOrFriendCode} began to hypnotize you");
+        return ActionResultBuilder.Ok();
     }
 }

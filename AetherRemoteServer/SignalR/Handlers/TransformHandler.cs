@@ -1,6 +1,7 @@
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.New;
 using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.Util;
 using AetherRemoteCommon.V2.Domain.Enum;
 using AetherRemoteCommon.V2.Domain.Network;
 using AetherRemoteCommon.V2.Domain.Network.Transform;
@@ -31,24 +32,12 @@ public class TransformHandler(
             return new ActionResponse(ActionResponseEc.TooManyRequests);
         }
 
-        var permissions = ApplyFlagsToPrimaryPermissions(request.GlamourerApplyType);
+        var permissions = request.GlamourerApplyType.ToPrimaryPermission();
         if (permissions == PrimaryPermissions2.Twinning)
             return new ActionResponse(ActionResponseEc.BadDataInRequest);
         
         var forwardedRequest = new TransformForwardedRequest(sender, request.GlamourerData, request.GlamourerApplyType);
         var requestInfo = new PrimaryRequestInfo(Method, permissions, forwardedRequest);
         return await forwardedRequestManager.Send(sender, request.TargetFriendCodes, requestInfo, clients);
-    }
-
-    private static PrimaryPermissions2 ApplyFlagsToPrimaryPermissions(GlamourerApplyFlags applyFlags)
-    {
-        var permissions = PrimaryPermissions2.Twinning;
-        if ((applyFlags & GlamourerApplyFlags.Customization) == GlamourerApplyFlags.Customization)
-            permissions |= PrimaryPermissions2.GlamourerCustomization;
-
-        if ((applyFlags & GlamourerApplyFlags.Equipment) == GlamourerApplyFlags.Equipment)
-            permissions |= PrimaryPermissions2.GlamourerEquipment;
-
-        return permissions;
     }
 }

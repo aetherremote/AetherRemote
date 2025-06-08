@@ -72,11 +72,11 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<ChatCommandManager>();
         services.AddSingleton<ConnectivityManager>();
         services.AddSingleton<DependencyManager>();
+        services.AddSingleton<ForwardedRequestManager>();
         services.AddSingleton<ModManager>();
         
         // Handlers
         services.AddSingleton<BodySwapHandler>();
-        services.AddSingleton<BodySwapQueryHandler>();
         services.AddSingleton<EmoteHandler>();
         services.AddSingleton<HypnosisHandler>();
         services.AddSingleton<MoodlesHandler>();

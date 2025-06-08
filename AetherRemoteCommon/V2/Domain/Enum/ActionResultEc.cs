@@ -7,10 +7,12 @@ public enum ActionResultEc
     // Client Side
     ClientNotFriends,
     ClientInSafeMode,
-    ClientHasOverride,
+    ClientHasFeaturePaused,
+    ClientHasSenderPaused,
     ClientHasNotGrantedSenderPermissions,
     ClientBadData,
     ClientPluginDependency,
+    ClientBeingHypnotized,
     
     // Server -> Client
     TargetOffline,

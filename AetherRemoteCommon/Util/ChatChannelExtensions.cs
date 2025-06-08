@@ -1,4 +1,5 @@
 using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Enums.New;
 
 namespace AetherRemoteCommon.Util;
 
@@ -47,27 +48,35 @@ public static class ChatChannelExtensions
     }
 
     /// <summary>
-    ///     Converts a <see cref="ChatChannel"/> into the corresponding <see cref="PrimaryPermissions"/> or null if
-    ///     no mapping can be made.
+    ///     TODO
     /// </summary>
-    public static PrimaryPermissions ToPrimaryPermissions(this ChatChannel chatChannel)
+    public static SpeakPermissions2 ToSpeakPermissions(this ChatChannel chatChannel, string? extra = null)
     {
         return chatChannel switch
         {
-            ChatChannel.Say => PrimaryPermissions.Say,
-            ChatChannel.Yell => PrimaryPermissions.Yell,
-            ChatChannel.Shout => PrimaryPermissions.Shout,
-            ChatChannel.Tell => PrimaryPermissions.Tell,
-            ChatChannel.Party => PrimaryPermissions.Party,
-            ChatChannel.Alliance => PrimaryPermissions.Alliance,
-            ChatChannel.FreeCompany => PrimaryPermissions.FreeCompany,
-            ChatChannel.PvPTeam => PrimaryPermissions.PvPTeam,
-            ChatChannel.Echo => PrimaryPermissions.Echo,
-            ChatChannel.Roleplay => PrimaryPermissions.ChatEmote,
-            _ => PrimaryPermissions.None
+            ChatChannel.Say => SpeakPermissions2.Say,
+            ChatChannel.Roleplay => SpeakPermissions2.Roleplay,
+            ChatChannel.Echo => SpeakPermissions2.Echo,
+            ChatChannel.Yell => SpeakPermissions2.Yell,
+            ChatChannel.Shout => SpeakPermissions2.Shout,
+            ChatChannel.Tell => SpeakPermissions2.Tell,
+            ChatChannel.Party => SpeakPermissions2.Party,
+            ChatChannel.Alliance => SpeakPermissions2.Alliance,
+            ChatChannel.FreeCompany => SpeakPermissions2.FreeCompany,
+            ChatChannel.PvPTeam => SpeakPermissions2.PvPTeam,
+            ChatChannel.Linkshell => ConvertToLinkshell(SpeakPermissions2.Ls1, extra),
+            ChatChannel.CrossWorldLinkshell => ConvertToLinkshell(SpeakPermissions2.Cwl1, extra),
+            _ => SpeakPermissions2.None
         };
     }
-
+    
+    private static SpeakPermissions2 ConvertToLinkshell(SpeakPermissions2 starting, string? extra)
+    {
+        return int.TryParse(extra, out var number)
+            ? (SpeakPermissions2)((int)starting << (number - 1))
+            : SpeakPermissions2.None;
+    }
+    
     /// <summary>
     ///     Converts a <see cref="ChatChannel"/> into the corresponding <see cref="LinkshellPermissions"/> or null if
     ///     no mapping can be made.

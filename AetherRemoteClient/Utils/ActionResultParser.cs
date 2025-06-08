@@ -66,6 +66,7 @@ public static class ActionResultParser
         };
     }
 
+    // TODO: Expand to fit ALL new action result cases
     private static string BuildActionFailedNotification2(string target, ActionResultEc code)
     {
         if (code is ActionResultEc.Success)
@@ -78,7 +79,6 @@ public static class ActionResultParser
                 ActionResultEc.TargetNotFriends => string.Concat("You are not friends with ", name),
 
             ActionResultEc.ClientInSafeMode => string.Concat(name, " is in safe-mode"),
-            ActionResultEc.ClientHasOverride => string.Concat(name, " is overriding this command"),
             ActionResultEc.ClientHasNotGrantedSenderPermissions or
                 ActionResultEc.TargetHasNotGrantedSenderPermissions => string.Concat(name, " has not granted you permissions for this command"),
             ActionResultEc.ClientBadData => string.Concat(name, " could not parse the data you provided"),
