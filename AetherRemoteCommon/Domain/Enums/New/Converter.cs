@@ -55,7 +55,7 @@ public static class Converter
         if ((primary & PrimaryPermissions.Twinning) == PrimaryPermissions.Twinning)
             primary2 |= PrimaryPermissions2.Twinning;
         
-        if ((primary & PrimaryPermissions.CustomizePlus) == PrimaryPermissions.CustomizePlus)
+        if ((primary & PrimaryPermissions.Customize) == PrimaryPermissions.Customize)
             primary2 |= PrimaryPermissions2.CustomizePlus;
         
         if ((primary & PrimaryPermissions.Moodles) == PrimaryPermissions.Moodles)

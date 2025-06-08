@@ -7,7 +7,8 @@ using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.V2.Domain.Enum;
-using AetherRemoteCommon.V2.Domain.Network.Base;
+using AetherRemoteCommon.V2.Domain.Network;
+using AetherRemoteCommon.V2.Domain.Network.Emote;
 
 namespace AetherRemoteClient.UI.Views.Emote;
 
@@ -32,18 +33,12 @@ public class EmoteViewUiController(EmoteService emoteService, FriendsListService
             if (emoteService.Emotes.Contains(EmoteSelection) is false)
                 return;
 
-            var input = new EmoteRequest
-            {
-                DisplayLogMessage = DisplayLogMessage,
-                Emote = EmoteSelection,
-                TargetFriendCodes = friendsListService.Selected.Select(friend => friend.FriendCode).ToList()
-            };
-            
-            var r = await networkService.InvokeAsync<ActionResponse>(HubMethod.Emote, input).ConfigureAwait(false);
-            if (r.Result is ActionResponseEc.Success)
+            var request = new EmoteRequest(friendsListService.SelectedFriendCodes, EmoteSelection, DisplayLogMessage);
+            var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.Emote, request).ConfigureAwait(false);
+            if (response.Result is ActionResponseEc.Success)
                 EmoteSelection = string.Empty;
             
-            ActionResultParser.Parse("Emote", r);
+            ActionResultParser.Parse("Emote", response);
         }
         catch (Exception e)
         {

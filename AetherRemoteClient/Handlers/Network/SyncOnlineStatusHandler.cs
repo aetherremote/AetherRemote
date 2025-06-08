@@ -1,17 +1,18 @@
 using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.V2.Domain.Network.SyncOnlineStatus;
 
 namespace AetherRemoteClient.Handlers.Network;
 
 /// <summary>
-///     Handles a <see cref="SyncOnlineStatusAction"/>
+///     Handles a <see cref="SyncOnlineStatusForwardedRequest"/>
 /// </summary>
 public class SyncOnlineStatusHandler(FriendsListService friendsListService)
 {
     /// <summary>
     ///     <inheritdoc cref="SyncOnlineStatusHandler"/>
     /// </summary>
-    public void Handle(SyncOnlineStatusAction action)
+    public void Handle(SyncOnlineStatusForwardedRequest action)
     {
         if (friendsListService.Get(action.SenderFriendCode) is not { } friend)
             return;

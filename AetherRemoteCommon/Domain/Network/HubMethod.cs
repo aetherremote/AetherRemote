@@ -13,12 +13,7 @@ public static class HubMethod
     public const string Emote = "Emote";
     public const string Transform = "Transform";
     public const string BodySwap = "BodySwap";
-    public const string Revert = "Revert";
     public const string Twinning = "Twinning";
-
-    public const string GetUser = "GetUser";
-    public const string CreateUser = "CreateUser";
-    public const string DeleteUser = "DeleteUser";
 
     public const string GetAccountData = "GetAccountData";
     public const string BodySwapQuery = "BodySwapQuery";

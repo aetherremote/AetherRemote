@@ -90,14 +90,14 @@ public class BodySwapHandler(
         if (action.SwapAttributes.HasFlag(CharacterAttributes.CustomizePlus))
         {
             // Overriding mods
-            if (overrideService.HasActiveOverride(PrimaryPermissions.CustomizePlus))
+            if (overrideService.HasActiveOverride(PrimaryPermissions.Customize))
             {
                 logService.Override("Body Swap", friend.NoteOrFriendCode);
                 return;
             }
 
             // Lacking permissions for mods
-            if (friend.PermissionsGrantedToFriend.Has(PrimaryPermissions.CustomizePlus) is false)
+            if (friend.PermissionsGrantedToFriend.Has(PrimaryPermissions.Customize) is false)
             {
                 logService.LackingPermissions("Body Swap", friend.NoteOrFriendCode);
                 return;

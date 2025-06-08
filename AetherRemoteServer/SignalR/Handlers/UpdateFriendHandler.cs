@@ -1,26 +1,31 @@
 using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.V2.Domain.Enum;
+using AetherRemoteCommon.V2.Domain.Network.SyncPermissions;
+using AetherRemoteCommon.V2.Domain.Network.UpdateFriend;
 using AetherRemoteServer.Domain.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AetherRemoteServer.SignalR.Handlers;
 
-public class UpdateFriendHandler(IClientConnectionService connections, IDatabaseService database, ILogger<UpdateFriendHandler> logger)
+public class UpdateFriendHandler(IConnectionsService connections, IDatabaseService database, ILogger<UpdateFriendHandler> logger)
 {
-    public async Task<BaseResponse> Handle(string friendCode, UpdateFriendRequest request, IHubCallerClients clients)
+    public async Task<UpdateFriendResponse> Handle(string friendCode, UpdateFriendRequest request, IHubCallerClients clients)
     {
-        var success = await database.UpdatePermissions(friendCode, request.TargetFriendCode, request.Permissions);
+        var databaseResult = await database.UpdatePermissions(friendCode, request.TargetFriendCode, request.Permissions);
+        var result = databaseResult switch
+        {
+            DatabaseResultEc.Success => UpdateFriendEc.Success,
+            DatabaseResultEc.NoOp => UpdateFriendEc.NoOp,
+            _ => UpdateFriendEc.Unknown
+        };
         
         if (connections.TryGetClient(request.TargetFriendCode) is not { } connectedClient)
-            return new BaseResponse { Success = success };
-
+            return new UpdateFriendResponse(result);
+        
         try
         {
-            var sync = new SyncPermissionsAction
-            {
-                SenderFriendCode = friendCode, 
-                PermissionsGrantedBySender = request.Permissions
-            };
-
+            // TODO, should this wait for a client to successfully receive the update?
+            var sync = new SyncPermissionsForwardedRequest(friendCode, request.Permissions);
             await clients.Client(connectedClient.ConnectionId).SendAsync(HubMethod.SyncPermissions, sync);
         }
         catch (Exception e)
@@ -28,6 +33,6 @@ public class UpdateFriendHandler(IClientConnectionService connections, IDatabase
             logger.LogWarning("{Issuer} send action to {Target} failed, {Error}", friendCode, request.TargetFriendCode, e.Message);
         }
 
-        return new BaseResponse { Success = success };
+        return new UpdateFriendResponse(result);
     }
 }

@@ -23,7 +23,7 @@ public static class PermissionsChecker
             ChatChannel.FreeCompany => permissions.HasFlag(PrimaryPermissions.FreeCompany),
             ChatChannel.PvPTeam => permissions.HasFlag(PrimaryPermissions.PvPTeam),
             ChatChannel.Echo => permissions.HasFlag(PrimaryPermissions.Echo),
-            ChatChannel.ChatEmote => permissions.HasFlag(PrimaryPermissions.ChatEmote),
+            ChatChannel.Roleplay => permissions.HasFlag(PrimaryPermissions.ChatEmote),
             _ => false
         };
     }

@@ -1,4 +1,5 @@
-using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.V2.Domain.Enum;
+using AetherRemoteCommon.V2.Domain.Network.AddFriend;
 using AetherRemoteServer.Domain.Interfaces;
 
 namespace AetherRemoteServer.SignalR.Handlers;
@@ -6,17 +7,24 @@ namespace AetherRemoteServer.SignalR.Handlers;
 /// <summary>
 ///     Handles the logic for fulfilling a <see cref="AddFriendRequest"/>
 /// </summary>
-public class AddFriendHandler(IClientConnectionService connections, IDatabaseService database)
+public class AddFriendHandler(IConnectionsService connections, IDatabaseService database)
 {
     /// <summary>
     ///     Handles the request
     /// </summary>
     public async Task<AddFriendResponse> Handle(string issuerFriendCode, AddFriendRequest request)
     {
-        var success = await database.CreatePermissions(issuerFriendCode, request.TargetFriendCode);
+        var result = await database.CreatePermissions(issuerFriendCode, request.TargetFriendCode);
         return new AddFriendResponse
         {
-            Success = success,
+            Result = result switch
+            {
+                DatabaseResultEc.Uninitialized => AddFriendEc.Uninitialized,
+                DatabaseResultEc.NoSuchFriendCode => AddFriendEc.NoSuchFriendCode,
+                DatabaseResultEc.AlreadyFriends => AddFriendEc.AlreadyFriends,
+                DatabaseResultEc.Success => AddFriendEc.Success,
+                _ => AddFriendEc.Unknown
+            },
             Online = connections.TryGetClient(issuerFriendCode) is not null
         };
     }

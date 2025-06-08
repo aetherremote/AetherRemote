@@ -6,6 +6,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.V2.Domain.Network.GetToken;
 using MessagePack;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
@@ -171,7 +172,7 @@ public class NetworkService : IDisposable
         try
         {
             using var client = new HttpClient();
-            var request = new FetchTokenRequest
+            var request = new GetTokenRequest
             {
                 Secret = Plugin.Configuration.Secret,
                 Version = Plugin.Version

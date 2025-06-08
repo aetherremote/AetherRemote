@@ -1,4 +1,5 @@
 using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.V2.Domain.Network.SyncOnlineStatus;
 using AetherRemoteServer.Domain;
 using AetherRemoteServer.Domain.Interfaces;
 using Microsoft.AspNetCore.SignalR;
@@ -9,7 +10,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 ///     TODO
 /// </summary>
 public class OnlineStatusUpdateHandler(
-    IClientConnectionService connections,
+    IConnectionsService connections,
     IDatabaseService database,
     ILogger<OnlineStatusUpdateHandler> logger)
 {
@@ -29,12 +30,7 @@ public class OnlineStatusUpdateHandler(
             if (connections.TryGetClient(target) is not { } friendInfo)
                 continue;
 
-            var request = new SyncOnlineStatusAction
-            {
-                SenderFriendCode = friendCode,
-                Online = online,
-                Permissions = online ? permissions : null
-            };
+            var request = new SyncOnlineStatusForwardedRequest(friendCode, online, online ? permissions : null);
 
             try
             {

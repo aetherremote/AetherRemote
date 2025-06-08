@@ -1,5 +1,5 @@
 using AetherRemoteCommon.V2.Domain.Enum;
-using AetherRemoteCommon.V2.Domain.Network.Base;
+using AetherRemoteCommon.V2.Domain.Network;
 
 namespace AetherRemoteClient.Utils;
 

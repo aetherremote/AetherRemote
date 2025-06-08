@@ -1,7 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.V2.Domain.Network.GetToken;
 using AetherRemoteServer.Domain;
 using AetherRemoteServer.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -18,18 +18,18 @@ public class AuthController(Configuration config, IDatabaseService db) : Control
 
     [AllowAnonymous]
     [HttpPost("login")]
-    public async Task<IActionResult> Login([FromBody] FetchTokenRequest request)
+    public async Task<IActionResult> Login([FromBody] GetTokenRequest request)
     {
         if (request.Version != _expectedVersion)
             return BadRequest("Version Mismatch");
 
-        var user = await db.GetUserBySecret(request.Secret);
-        if (user is null)
+        var friendCode = await db.GetFriendCodeBySecret(request.Secret);
+        if (friendCode is null)
             return Unauthorized("You are not registered");
 
         var token = GenerateJwtToken(
         [
-            new Claim(AuthClaimTypes.FriendCode, user.FriendCode)
+            new Claim(AuthClaimTypes.FriendCode, friendCode)
         ]);
 
         return Ok(token.RawData);

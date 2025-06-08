@@ -10,6 +10,7 @@ public enum ActionResultEc
     ClientHasOverride,
     ClientHasNotGrantedSenderPermissions,
     ClientBadData,
+    ClientPluginDependency,
     
     // Server -> Client
     TargetOffline,

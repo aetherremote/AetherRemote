@@ -1,5 +1,6 @@
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.V2.Domain.Enum;
 using AetherRemoteCommon.Domain.Enums.New;
 using AetherRemoteServer.Domain;
 using AetherRemoteServer.Domain.Interfaces;
@@ -32,7 +33,6 @@ public class DatabaseService : IDatabaseService
 
     // Instantiated
     private readonly SqliteConnection _db;
-    private readonly TypedMemoryCache<User> _userCache;
     private readonly TypedMemoryCache<FriendPermissions> _permissionsCache;
 
     /// <summary>
@@ -55,7 +55,6 @@ public class DatabaseService : IDatabaseService
         // Open Db
         _db = new SqliteConnection($"Data Source={path}");
         _db.Open();
-        _userCache = new TypedMemoryCache<User>();
         _permissionsCache = new TypedMemoryCache<FriendPermissions>();
 
         // Table validation
@@ -63,41 +62,9 @@ public class DatabaseService : IDatabaseService
     }
 
     /// <summary>
-    ///     Gets a user entry from the valid users table by friend code
-    /// </summary>
-    public async Task<User?> GetUserByFriendCode(string friendCode)
-    {
-        if (_userCache.Get(friendCode) is { } cachedUser)
-            return cachedUser;
-
-        await using var command = _db.CreateCommand();
-        command.CommandText = $"SELECT * FROM {ValidUsersTable} WHERE FriendCode = {FriendCodeParam}";
-        command.Parameters.AddWithValue(FriendCodeParam, friendCode);
-
-        try
-        {
-            await using var reader = await command.ExecuteReaderAsync();
-            if (await reader.ReadAsync() is false)
-                return null;
-
-            var secret = reader.GetString(1);
-            var isAdmin = reader.GetInt32(2) is 1;
-            var user = new User(friendCode, secret, isAdmin);
-            _userCache.Set(friendCode, user);
-
-            return user;
-        }
-        catch (Exception e)
-        {
-            _logger.LogWarning("Unable to get user with friend code {FriendCode}, {Exception}", friendCode, e.Message);
-            return null;
-        }
-    }
-
-    /// <summary>
     ///     Gets a user entry from the valid users table by secret 
     /// </summary>
-    public async Task<User?> GetUserBySecret(string secret)
+    public async Task<string?> GetFriendCodeBySecret(string secret)
     {
         await using var command = _db.CreateCommand();
         command.CommandText = $"SELECT * FROM {ValidUsersTable} WHERE Secret = {SecretParam}";
@@ -106,12 +73,7 @@ public class DatabaseService : IDatabaseService
         try
         {
             await using var reader = await command.ExecuteReaderAsync();
-            if (await reader.ReadAsync() is false)
-                return null;
-
-            var friendCode = reader.GetString(0);
-            var isAdmin = reader.GetInt32(2) is 1;
-            return new User(friendCode, secret, isAdmin);
+            return await reader.ReadAsync() ? reader.GetString(0) : null;
         }
         catch (Exception e)
         {
@@ -123,7 +85,7 @@ public class DatabaseService : IDatabaseService
     /// <summary>
     ///     Creates an empty set of permissions between sender and target friend codes
     /// </summary>
-    public async Task<bool> CreatePermissions(string senderFriendCode, string targetFriendCode)
+    public async Task<DatabaseResultEc> CreatePermissions(string senderFriendCode, string targetFriendCode)
     {
         await using var command = _db.CreateCommand();
         command.CommandText =
@@ -139,20 +101,38 @@ public class DatabaseService : IDatabaseService
 
         try
         {
-            return await command.ExecuteNonQueryAsync() is 1;
+            return await command.ExecuteNonQueryAsync() is 1 ? DatabaseResultEc.Success : DatabaseResultEc.NoOp;
+        }
+        catch (SqliteException e)
+        {
+            _logger.LogWarning("Unable to create {FriendCode}'s permissions for {TargetFriendCode}, {Exception}",
+                senderFriendCode, targetFriendCode, e.Message);
+            
+            // Constraint
+            if (e.SqliteErrorCode is not 19) 
+                return DatabaseResultEc.Unknown;
+
+            return e.SqliteExtendedErrorCode switch
+            {
+                // Foreign Key
+                787 => DatabaseResultEc.NoSuchFriendCode,
+                // Unique
+                2067 => DatabaseResultEc.AlreadyFriends,
+                _ => DatabaseResultEc.Unknown
+            };
         }
         catch (Exception e)
         {
             _logger.LogWarning("Unable to create {FriendCode}'s permissions for {TargetFriendCode}, {Exception}",
                 senderFriendCode, targetFriendCode, e.Message);
-            return false;
+            return DatabaseResultEc.Unknown;
         }
     }
 
     /// <summary>
     ///     Updates a set of permissions between sender and target friend codes
     /// </summary>
-    public async Task<bool> UpdatePermissions(string senderFriendCode, string targetFriendCode,
+    public async Task<DatabaseResultEc> UpdatePermissions(string senderFriendCode, string targetFriendCode,
         UserPermissions permissions)
     {
         await using var command = _db.CreateCommand();
@@ -163,7 +143,7 @@ public class DatabaseService : IDatabaseService
                  WHERE UserFriendCode = {FriendCodeParam} AND TargetFriendCode = {TargetFriendCodeParam}
              """;
         command.Parameters.AddWithValue(PrimaryPermissionsParam, permissions.Primary);
-        command.Parameters.AddWithValue(LinkshellPermissionsParam, permissions.Linkshell);
+        command.Parameters.AddWithValue(LinkshellPermissionsParam, permissions.Speak);
         command.Parameters.AddWithValue(FriendCodeParam, senderFriendCode);
         command.Parameters.AddWithValue(TargetFriendCodeParam, targetFriendCode);
 
@@ -173,13 +153,13 @@ public class DatabaseService : IDatabaseService
             if (success)
                 _permissionsCache.Remove(senderFriendCode);
 
-            return success;
+            return success ? DatabaseResultEc.Success : DatabaseResultEc.NoOp;
         }
         catch (Exception e)
         {
             _logger.LogWarning("Unable to update {FriendCode}'s permissions for {TargetFriendCode}, {Exception}",
                 senderFriendCode, targetFriendCode, e.Message);
-            return false;
+            return DatabaseResultEc.Unknown;
         }
     }
 
@@ -194,7 +174,7 @@ public class DatabaseService : IDatabaseService
         await using var command = _db.CreateCommand();
         command.CommandText =
             $"""
-                SELECT TargetFriendCode, Version, PrimaryPermissions, LinkshellPermissions 
+                SELECT TargetFriendCode, PrimaryPermissions, LinkshellPermissions 
                 FROM {PermissionsTable} 
                 WHERE UserFriendCode={FriendCodeParam}
              """;
@@ -207,16 +187,10 @@ public class DatabaseService : IDatabaseService
             while (reader.Read())
             {
                 var targetFriendCode = reader.GetString(0);
-                var version = reader.GetInt32(1);
-                var primary = reader.GetInt32(2);
-                var linkshell = reader.GetInt32(3);
-
-                var permissions = version switch
-                {
-                    _ => new UserPermissions
-                        { Primary = (PrimaryPermissions)primary, Linkshell = (LinkshellPermissions)linkshell }
-                };
-
+                var primary = reader.GetInt32(1);
+                var speak = reader.GetInt32(2);
+                
+                var permissions = new UserPermissions((PrimaryPermissions2)primary, (SpeakPermissions2)speak);
                 result.Add(targetFriendCode, permissions);
             }
 
@@ -234,7 +208,7 @@ public class DatabaseService : IDatabaseService
     /// <summary>
     ///     Deletes a set of permissions between sender and target friend code
     /// </summary>
-    public async Task<bool> DeletePermissions(string senderFriendCode, string targetFriendCode)
+    public async Task<DatabaseResultEc> DeletePermissions(string senderFriendCode, string targetFriendCode)
     {
         await using var command = _db.CreateCommand();
         command.CommandText =
@@ -247,17 +221,17 @@ public class DatabaseService : IDatabaseService
 
         try
         {
-            var rows = await command.ExecuteNonQueryAsync() is 1;
-            if (rows)
-                _permissionsCache.Remove(senderFriendCode);
-
-            return rows;
+            if (await command.ExecuteNonQueryAsync() is not 1)
+                return DatabaseResultEc.NoOp;
+            
+            _permissionsCache.Remove(senderFriendCode);
+            return DatabaseResultEc.Success;
         }
         catch (Exception e)
         {
             _logger.LogWarning("Unable to delete {FriendCode}'s permissions for {TargetFriendCode}, {Exception}",
                 senderFriendCode, targetFriendCode, e);
-            return false;
+            return DatabaseResultEc.Unknown;
         }
     }
 

@@ -1,4 +1,5 @@
-using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.V2.Domain.Enum;
+using AetherRemoteCommon.V2.Domain.Network.RemoveFriend;
 using AetherRemoteServer.Domain.Interfaces;
 
 namespace AetherRemoteServer.SignalR.Handlers;
@@ -11,9 +12,15 @@ public class RemoveFriendHandler(IDatabaseService databaseService)
     /// <summary>
     ///     Handles the request
     /// </summary>
-    public async Task<BaseResponse> Handle(string senderFriendCode, RemoveFriendRequest request)
+    public async Task<RemoveFriendResponse> Handle(string senderFriendCode, RemoveFriendRequest request)
     {
-        var success = await databaseService.DeletePermissions(senderFriendCode, request.TargetFriendCode);
-        return new BaseResponse { Success = success };
+        var result = await databaseService.DeletePermissions(senderFriendCode, request.TargetFriendCode) switch
+        {
+            DatabaseResultEc.NoOp => RemoveFriendEc.NotFriends,
+            DatabaseResultEc.Success => RemoveFriendEc.Success,
+            _ => RemoveFriendEc.Unknown
+        };
+        
+        return new RemoveFriendResponse(result);
     }
 }

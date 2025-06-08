@@ -6,6 +6,7 @@ using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Util;
+using AetherRemoteCommon.V2.Domain.Network.Moodles;
 using MemoryPack;
 using Moodles.Data;
 using Newtonsoft.Json;
@@ -13,7 +14,7 @@ using Newtonsoft.Json;
 namespace AetherRemoteClient.Handlers.Network;
 
 /// <summary>
-///     Handles a <see cref="MoodlesAction"/>
+///     Handles a <see cref="MoodlesForwardedRequest"/>
 /// </summary>
 public class MoodlesHandler(
     FriendsListService friendsListService,
@@ -31,14 +32,14 @@ public class MoodlesHandler(
     /// <summary>
     ///     <inheritdoc cref="MoodlesHandler"/>
     /// </summary>
-    public async Task Handle(MoodlesAction action)
+    public async Task Handle(MoodlesForwardedRequest forwardedRequest)
     {
-        Plugin.Log.Info($"{action}");
+        Plugin.Log.Info($"{forwardedRequest}");
 
         // Not friends
-        if (friendsListService.Get(action.SenderFriendCode) is not { } friend)
+        if (friendsListService.Get(forwardedRequest.SenderFriendCode) is not { } friend)
         {
-            logService.NotFriends("Moodles", action.SenderFriendCode);
+            logService.NotFriends("Moodles", forwardedRequest.SenderFriendCode);
             return;
         }
 
@@ -75,7 +76,7 @@ public class MoodlesHandler(
             }
 
             // Deserialize the input string into a moodle
-            var moodle = JsonConvert.DeserializeObject<MyStatus>(action.Moodle);
+            var moodle = JsonConvert.DeserializeObject<MyStatus>(forwardedRequest.Moodle);
             if (moodle is null)
             {
                 Plugin.Log.Warning("[MoodlesHandler] Moodle deserialization failed, aborting");

@@ -33,7 +33,7 @@ public class GlamourerAttribute(GlamourerIpc glamourerIpc, ushort objectIndex) :
     /// </summary>
     public async Task<bool> Apply()
     {
-        if (await glamourerIpc.ApplyDesignAsync(_glamourerData, GlamourerApplyFlag.All))
+        if (await glamourerIpc.ApplyDesignAsync(_glamourerData, GlamourerApplyFlags.All))
             return true;
 
         Plugin.Log.Warning("[ModAttribute] Could not apply glamourer data");

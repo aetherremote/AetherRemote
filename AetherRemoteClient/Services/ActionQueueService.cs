@@ -60,7 +60,7 @@ public class ActionQueueService: IDisposable
                 log = $"{sender.NoteOrFriendCode} made you send a message in {channel.Beautify()} {extra} saying {message}";
                 break;
             
-            case ChatChannel.ChatEmote:
+            case ChatChannel.Roleplay:
                 command = $"/{channel.ChatCommand()} {message}";
                 log = $"{sender.NoteOrFriendCode} made you emote the following: {message}";
                 break;
@@ -72,7 +72,6 @@ public class ActionQueueService: IDisposable
             case ChatChannel.Party:
             case ChatChannel.Alliance:
             case ChatChannel.FreeCompany:
-            case ChatChannel.NoviceNetwork:
             case ChatChannel.PvPTeam:
             default:
                 command = $"/{channel.ChatCommand()} {message}";

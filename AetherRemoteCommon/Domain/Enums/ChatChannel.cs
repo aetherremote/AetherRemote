@@ -3,7 +3,7 @@ namespace AetherRemoteCommon.Domain.Enums;
 public enum ChatChannel
 {
     Say,
-    ChatEmote,
+    Roleplay,
     Echo,
     Yell,
     Shout,
@@ -13,6 +13,5 @@ public enum ChatChannel
     FreeCompany,
     Linkshell,
     CrossWorldLinkshell,
-    NoviceNetwork,
     PvPTeam
 }

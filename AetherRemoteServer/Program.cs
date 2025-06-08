@@ -1,9 +1,9 @@
 using System.Text;
 using AetherRemoteServer.Domain;
 using AetherRemoteServer.Domain.Interfaces;
+using AetherRemoteServer.Managers;
 using AetherRemoteServer.Services;
 using AetherRemoteServer.SignalR.Handlers;
-using AetherRemoteServer.SignalR.Handlers.Helpers;
 using AetherRemoteServer.SignalR.Hubs;
 using MessagePack;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -12,6 +12,7 @@ using Microsoft.IdentityModel.Tokens;
 namespace AetherRemoteServer;
 
 // ReSharper disable once ClassNeverInstantiated.Global
+
 public class Program
 {
     private static void Main(string[] args)
@@ -34,8 +35,10 @@ public class Program
 
         // Services
         builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
-        builder.Services.AddSingleton<IClientConnectionService, ClientConnectionService>();
-        builder.Services.AddSingleton<TargetAccessResolver>();
+        builder.Services.AddSingleton<IConnectionsService, ConnectionsService>();
+        
+        // Managers
+        builder.Services.AddSingleton<IForwardedRequestManager, ForwardedRequestManager>();
 
         // Handles
         builder.Services.AddSingleton<OnlineStatusUpdateHandler>();

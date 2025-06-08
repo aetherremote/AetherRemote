@@ -4,6 +4,7 @@ using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Util;
+using AetherRemoteCommon.V2.Domain.Network.Hypnosis;
 
 namespace AetherRemoteClient.Handlers.Network;
 
@@ -16,14 +17,14 @@ public class HypnosisHandler(
     /// <summary>
     ///     <inheritdoc cref="MoodlesHandler"/>
     /// </summary>
-    public void Handle(HypnosisAction action)
+    public void Handle(HypnosisForwardedRequest forwardedRequest)
     {
-        Plugin.Log.Info($"{action}");
+        Plugin.Log.Info($"{forwardedRequest}");
 
         // Not friends
-        if (friendsListService.Get(action.SenderFriendCode) is not { } friend)
+        if (friendsListService.Get(forwardedRequest.SenderFriendCode) is not { } friend)
         {
-            logService.NotFriends("Hypnosis", action.SenderFriendCode);
+            logService.NotFriends("Hypnosis", forwardedRequest.SenderFriendCode);
             return;
         }
 
@@ -55,7 +56,7 @@ public class HypnosisHandler(
             return;
         }
         
-        spiralService.StartSpiral(action.Spiral, friend.NoteOrFriendCode);
+        spiralService.StartSpiral(forwardedRequest.Spiral, friend.NoteOrFriendCode);
         logService.Custom($"{friend.NoteOrFriendCode} began to hypnotize you");
     }
 }

@@ -1,21 +1,23 @@
 using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.V2.Domain.Network.SyncOnlineStatus;
+using AetherRemoteCommon.V2.Domain.Network.SyncPermissions;
 
 namespace AetherRemoteClient.Handlers.Network;
 
 /// <summary>
-///     Handles a <see cref="SyncPermissionsAction"/>
+///     Handles a <see cref="SyncPermissionsForwardedRequest"/>
 /// </summary>
 public class SyncPermissionsHandler(FriendsListService friendsListService)
 {
     /// <summary>
-    ///     <inheritdoc cref="SyncOnlineStatusAction"/>
+    ///     <inheritdoc cref="SyncOnlineStatusForwardedRequest"/>
     /// </summary>
-    public void Handle(SyncPermissionsAction action)
+    public void Handle(SyncPermissionsForwardedRequest forwardedRequest)
     {
-        if (friendsListService.Get(action.SenderFriendCode) is not { } friend)
+        if (friendsListService.Get(forwardedRequest.SenderFriendCode) is not { } friend)
             return;
 
-        friend.PermissionsGrantedByFriend = action.PermissionsGrantedBySender;
+        friend.PermissionsGrantedByFriend = forwardedRequest.PermissionsGrantedBySender;
     }
 }

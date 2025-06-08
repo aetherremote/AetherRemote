@@ -7,6 +7,7 @@ using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Util;
+using AetherRemoteCommon.V2.Domain.Network.Transform;
 using ImGuiNET;
 
 namespace AetherRemoteClient.UI.Views.Transformation;
@@ -88,12 +89,12 @@ public class TransformationViewUiController(
             if (GlamourerCode.Length is 0)
                 return;
 
-            var applyType = GlamourerApplyFlag.Once
-                            | (ApplyCustomization ? GlamourerApplyFlag.Customization : 0)
-                            | (ApplyEquipment ? GlamourerApplyFlag.Equipment : 0);
+            var applyType = GlamourerApplyFlags.Once
+                            | (ApplyCustomization ? GlamourerApplyFlags.Customization : 0)
+                            | (ApplyEquipment ? GlamourerApplyFlags.Equipment : 0);
             
-            if (applyType is GlamourerApplyFlag.Once)
-                applyType = GlamourerApplyFlag.All;
+            if (applyType is GlamourerApplyFlags.Once)
+                applyType = GlamourerApplyFlags.All;
             
             var input = new TransformRequest
             {

@@ -4,6 +4,7 @@ using AetherRemoteClient.Domain;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.V2.Domain.Network.AddFriend;
 
 namespace AetherRemoteClient.UI.Components.Friends;
 
@@ -39,22 +40,23 @@ public class FriendsListComponentUiController(FriendsListService friendsListServ
         if (friend is not null)
             NotificationHelper.Warning("Friend Already Exists", "Unable to add friend because friend already exists");
 
-        var request = new AddFriendRequest { TargetFriendCode = FriendCodeToAdd };
-        var result =
+        var request = new AddFriendRequest(FriendCodeToAdd);
+        var response =
             await networkService.InvokeAsync<AddFriendResponse>(HubMethod.AddFriend, request).ConfigureAwait(false);
 
-        if (result.Success)
+        if (response.Result is AddFriendEc.Success)
         {
-            friendsListService.Add(FriendCodeToAdd, null, result.Online);
-
+            friendsListService.Add(FriendCodeToAdd, null, response.Online);
+            
+            // TODO: Switch the selected friend to the one you just added
+            
+            FriendCodeToAdd = string.Empty;
             NotificationHelper.Success("Successfully Added Friend", $"Successfully added {FriendCodeToAdd} as a friend");
         }
         else
         {
-            NotificationHelper.Error("Failed to Add Friend", $"{result.Message}");
+            NotificationHelper.Error("Failed to Add Friend", $"{response.Result}");
         }
-
-        FriendCodeToAdd = string.Empty;
     }
     
     private static bool FilterPredicate(Friend friend, string searchTerm)

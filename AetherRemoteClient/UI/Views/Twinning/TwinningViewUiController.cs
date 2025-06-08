@@ -7,6 +7,7 @@ using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Util;
+using AetherRemoteCommon.V2.Domain.Network.Twinning;
 
 namespace AetherRemoteClient.UI.Views.Twinning;
 
@@ -87,7 +88,7 @@ public class TwinningViewUiController(
                 continue;
             }
             
-            if (SwapCustomizePlus && selected.PermissionsGrantedByFriend.Has(PrimaryPermissions.CustomizePlus) is false)
+            if (SwapCustomizePlus && selected.PermissionsGrantedByFriend.Has(PrimaryPermissions.Customize) is false)
             {
                 thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
             }

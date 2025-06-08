@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.V2.Domain.Enum;
+using AetherRemoteCommon.V2.Domain.Network;
+using AetherRemoteCommon.V2.Domain.Network.Customize;
 
 namespace AetherRemoteClient.UI.Views.CustomizePlus;
 
@@ -13,32 +15,21 @@ public class CustomizePlusViewUiController(FriendsListService friendsListService
     /// <summary>
     ///     Customize+ data to send
     /// </summary>
-    public string Customize = string.Empty;
+    public string CustomizeData = string.Empty;
     
     public async void SendCustomize()
     {
         try
         {
-            if (Customize.Length is 0)
+            if (CustomizeData.Length is 0)
                 return;
-
-            var input = new CustomizePlusRequest
-            {
-                TargetFriendCodes = friendsListService.Selected.Select(friend => friend.FriendCode).ToList(),
-                Customize = Customize
-            };
-
-            var response = await networkService.InvokeAsync<BaseResponse>(HubMethod.CustomizePlus, input);
-            if (response.Success)
-            {
-                Customize = string.Empty;
-                
-                NotificationHelper.Success("Successfully applied customize plus template", string.Empty);
-            }
-            else
-            {
-                NotificationHelper.Warning("Unable to apply customize plus template", response.Message);
-            }
+            
+            var request = new CustomizeRequest(friendsListService.SelectedFriendCodes, CustomizeData);
+            var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.CustomizePlus, request).ConfigureAwait(false);
+            if (response.Result is ActionResponseEc.Success)
+                CustomizeData = string.Empty;
+            
+            ActionResultParser.Parse("Customize", response);
         }
         catch (Exception e)
         {
@@ -55,7 +46,7 @@ public class CustomizePlusViewUiController(FriendsListService friendsListService
         var thoseWhoYouLackPermissionsFor = new List<string>();
         foreach (var selected in friendsListService.Selected)
         {
-            if (selected.PermissionsGrantedByFriend.Primary.HasFlag(PrimaryPermissions.CustomizePlus) is false)
+            if (selected.PermissionsGrantedByFriend.Primary.HasFlag(PrimaryPermissions.Customize) is false)
                 thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
         }
         return thoseWhoYouLackPermissionsFor;

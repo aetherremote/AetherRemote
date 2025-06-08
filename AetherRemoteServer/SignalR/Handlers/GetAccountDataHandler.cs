@@ -1,5 +1,5 @@
 using AetherRemoteCommon.Domain;
-using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.V2.Domain.Network.GetAccountData;
 using AetherRemoteServer.Domain.Interfaces;
 
 namespace AetherRemoteServer.SignalR.Handlers;
@@ -7,16 +7,22 @@ namespace AetherRemoteServer.SignalR.Handlers;
 /// <summary>
 ///     Handles the logic for fulfilling a <see cref="GetAccountDataRequest"/>
 /// </summary>
-public class GetAccountDataHandler(IClientConnectionService connections, IDatabaseService database)
+public class GetAccountDataHandler(IConnectionsService connections, IDatabaseService database)
 {
     /// <summary>
     ///     Handles the request
     /// </summary>
     public async Task<GetAccountDataResponse> Handle(string friendCode, GetAccountDataRequest request)
     {
-        var permissionsGrantedToOthers = await database.GetPermissions(friendCode);
+        if (connections.TryGetClient(friendCode) is not { } client)
+            return new GetAccountDataResponse(GetAccountDataEc.NotOnline);
+
+        client.CharacterName = request.CharacterName;
+        
+        var friendPermissions = await database.GetPermissions(friendCode);
+        var permissionsGrantedToOthers = friendPermissions.Permissions;
         var permissionsGrantedByOthers = new Dictionary<string, UserPermissions>();
-        foreach (var friend in permissionsGrantedToOthers.Permissions)
+        foreach (var friend in permissionsGrantedToOthers)
         {
             if (connections.TryGetClient(friend.Key) is null)
                 continue;
@@ -26,12 +32,6 @@ public class GetAccountDataHandler(IClientConnectionService connections, IDataba
                 permissionsGrantedByOthers[friend.Key] = permissionsGranted;
         }
 
-        return new GetAccountDataResponse
-        {
-            Success = true,
-            FriendCode = friendCode,
-            PermissionsGrantedToOthers = permissionsGrantedToOthers.Permissions,
-            PermissionsGrantedByOthers = permissionsGrantedByOthers
-        };
+        return new GetAccountDataResponse(friendCode, permissionsGrantedToOthers, permissionsGrantedByOthers);
     }
 }

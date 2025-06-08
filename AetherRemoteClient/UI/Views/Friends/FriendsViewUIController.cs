@@ -6,6 +6,8 @@ using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.V2.Domain.Network.RemoveFriend;
+using AetherRemoteCommon.V2.Domain.Network.UpdateFriend;
 
 namespace AetherRemoteClient.UI.Views.Friends;
 

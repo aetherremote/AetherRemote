@@ -4,11 +4,12 @@ using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Util;
+using AetherRemoteCommon.V2.Domain.Network.Twinning;
 
 namespace AetherRemoteClient.Handlers.Network;
 
 /// <summary>
-///     handles a <see cref="TwinningAction"/>
+///     handles a <see cref="TwinningForwardedRequest"/>
 /// </summary>
 public class TwinningHandler(
     FriendsListService friendsListService,
@@ -18,14 +19,14 @@ public class TwinningHandler(
     ModManager modManager)
 {
     /// <summary>
-    ///     <inheritdoc cref="TwinningAction"/>
+    ///     <inheritdoc cref="TwinningForwardedRequest"/>
     /// </summary>
-    public async Task Handle(TwinningAction action)
+    public async Task Handle(TwinningForwardedRequest forwardedRequest)
     {
         // Not friends
-        if (friendsListService.Get(action.SenderFriendCode) is not { } friend)
+        if (friendsListService.Get(forwardedRequest.SenderFriendCode) is not { } friend)
         {
-            logService.NotFriends("Twinning", action.SenderFriendCode);
+            logService.NotFriends("Twinning", forwardedRequest.SenderFriendCode);
             return;
         }
         
@@ -51,7 +52,7 @@ public class TwinningHandler(
         }
         
         // If mods are an attribute...
-        if (action.SwapAttributes.HasFlag(CharacterAttributes.Mods))
+        if (forwardedRequest.SwapAttributes.HasFlag(CharacterAttributes.Mods))
         {
             // Overriding mods
             if (overrideService.HasActiveOverride(PrimaryPermissions.Mods))
@@ -69,7 +70,7 @@ public class TwinningHandler(
         }
         
         // If moodles are an attribute...
-        if (action.SwapAttributes.HasFlag(CharacterAttributes.Moodles))
+        if (forwardedRequest.SwapAttributes.HasFlag(CharacterAttributes.Moodles))
         {
             // Overriding mods
             if (overrideService.HasActiveOverride(PrimaryPermissions.Moodles))
@@ -87,17 +88,17 @@ public class TwinningHandler(
         }
         
         // If customize plus is an attribute...
-        if (action.SwapAttributes.HasFlag(CharacterAttributes.CustomizePlus))
+        if (forwardedRequest.SwapAttributes.HasFlag(CharacterAttributes.CustomizePlus))
         {
             // Overriding mods
-            if (overrideService.HasActiveOverride(PrimaryPermissions.CustomizePlus))
+            if (overrideService.HasActiveOverride(PrimaryPermissions.Customize))
             {
                 logService.Override("Body Swap", friend.NoteOrFriendCode);
                 return;
             }
 
             // Lacking permissions for mods
-            if (friend.PermissionsGrantedToFriend.Has(PrimaryPermissions.CustomizePlus) is false)
+            if (friend.PermissionsGrantedToFriend.Has(PrimaryPermissions.Customize) is false)
             {
                 logService.LackingPermissions("Body Swap", friend.NoteOrFriendCode);
                 return;
@@ -112,12 +113,12 @@ public class TwinningHandler(
         }
 
         // Actually apply glamourer, mods, etc...
-        await modManager.Assimilate(action.Identity.GameObjectName, action.SwapAttributes);
+        await modManager.Assimilate(forwardedRequest.Identity.GameObjectName, forwardedRequest.SwapAttributes);
 
         // Set your new identity
-        identityService.Identity = action.Identity.CharacterName;
+        identityService.Identity = forwardedRequest.Identity.CharacterName;
         
         // Log success
-        logService.Custom($"{friend.NoteOrFriendCode} twinned you with {action.Identity.CharacterName}");
+        logService.Custom($"{friend.NoteOrFriendCode} twinned you with {forwardedRequest.Identity.CharacterName}");
     }
 }

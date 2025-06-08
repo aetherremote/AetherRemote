@@ -1,73 +1,32 @@
-using AetherRemoteCommon.Domain;
-using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Enums.New;
 using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.V2.Domain.Enum;
+using AetherRemoteCommon.V2.Domain.Network;
+using AetherRemoteCommon.V2.Domain.Network.Hypnosis;
+using AetherRemoteServer.Domain;
 using AetherRemoteServer.Domain.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AetherRemoteServer.SignalR.Handlers;
 
-public class HypnosisHandler(IClientConnectionService connections, IDatabaseService database, ILogger<HypnosisHandler> logger)
+public class HypnosisHandler(
+    IConnectionsService connections,
+    IForwardedRequestManager forwardedRequestManager,
+    ILogger<HypnosisHandler> logger)
 {
-    public async Task<BaseResponse> Handle(string friendCode, HypnosisRequest request, IHubCallerClients clients)
+    private const string Method = HubMethod.Hypnosis;
+    private const PrimaryPermissions2 Permissions = PrimaryPermissions2.Hypnosis;
+
+    public async Task<ActionResponse> Handle(string sender, HypnosisRequest request, IHubCallerClients clients)
     {
-        if (connections.IsUserExceedingRequestLimit(friendCode))
+        if (connections.IsUserExceedingRequestLimit(sender))
         {
-            logger.LogWarning("{Friend} exceeded request limit", friendCode);
-            return new BaseResponse
-            {
-                Success = false, 
-                Message = "Exceeded request limit"
-            };
+            logger.LogWarning("{Friend} exceeded request limit", sender);
+            return new ActionResponse(ActionResponseEc.TooManyRequests);
         }
 
-        foreach (var target in request.TargetFriendCodes)
-        {
-            if (connections.TryGetClient(target) is not { } connectedClient)
-            {
-                logger.LogInformation("{Issuer} targeted {Target} but they are offline, skipping", friendCode, target);
-                continue;
-            }
-            
-            var targetPermissions = await database.GetPermissions(target);
-            if (targetPermissions.Permissions.TryGetValue(friendCode, out var permissionsGranted) is false)
-            {
-                logger.LogInformation("{Issuer} targeted {Target} who is not a friend, skipping", friendCode, target);
-                continue;
-            }
-            
-            if (permissionsGranted.Primary.HasFlag(PrimaryPermissions.Hypnosis) is false)
-            {
-                logger.LogInformation("{Issuer} targeted {Target} but lacks permissions, skipping", friendCode, target);
-                continue;
-            }
-
-            try
-            {
-                var command = new HypnosisAction
-                {
-                    SenderFriendCode = friendCode,
-                    Spiral = new SpiralInfo
-                    {
-                        Duration = request.Spiral.Duration,
-                        Speed = request.Spiral.Speed,
-                        TextSpeed = request.Spiral.TextSpeed,
-                        Color = request.Spiral.Color,
-                        TextColor = request.Spiral.TextColor,
-                        TextMode = request.Spiral.TextMode,
-                        WordBank = request.Spiral.WordBank
-                    }
-                };
-                
-                logger.LogInformation("Sending {Spiral} to {FriendCode}", command, target);
-                
-                await clients.Client(connectedClient.ConnectionId).SendAsync(HubMethod.Hypnosis, command);
-            }
-            catch (Exception e)
-            {
-                logger.LogWarning("{Issuer} send action to {Target} failed, {Error}", friendCode, target, e.Message);
-            }
-        }
-        
-        return new BaseResponse { Success = true };
+        var forwardedRequest = new HypnosisForwardedRequest(sender, request.Spiral);
+        var requestInfo = new PrimaryRequestInfo(Method, Permissions, forwardedRequest);
+        return await forwardedRequestManager.Send(sender, request.TargetFriendCodes, requestInfo, clients);
     }
 }

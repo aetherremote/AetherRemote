@@ -4,12 +4,13 @@ using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Util;
+using AetherRemoteCommon.V2.Domain.Network.Speak;
 using Microsoft.Extensions.Primitives;
 
 namespace AetherRemoteClient.Handlers.Network;
 
 /// <summary>
-///     Handles a <see cref="SpeakAction"/>
+///     Handles a <see cref="SpeakForwardedRequest"/>
 /// </summary>
 public class SpeakHandler(
     FriendsListService friendsListService,
@@ -20,12 +21,12 @@ public class SpeakHandler(
     /// <summary>
     ///     <inheritdoc cref="SpeakHandler"/>
     /// </summary>
-    public void Handle(SpeakAction action)
+    public void Handle(SpeakForwardedRequest forwardedRequest)
     {
         // Not friends
-        if (friendsListService.Get(action.SenderFriendCode) is not { } friend)
+        if (friendsListService.Get(forwardedRequest.SenderFriendCode) is not { } friend)
         {
-            logService.NotFriends("Speak", action.SenderFriendCode);
+            logService.NotFriends("Speak", forwardedRequest.SenderFriendCode);
             return;
         }
 
@@ -51,17 +52,17 @@ public class SpeakHandler(
         }
 
         // Handle special cases for parsing linkshell number in action
-        if (action.ChatChannel is ChatChannel.Linkshell or ChatChannel.CrossWorldLinkshell)
+        if (forwardedRequest.ChatChannel is ChatChannel.Linkshell or ChatChannel.CrossWorldLinkshell)
         {
             // Get linkshell number
-            if (int.TryParse(action.Extra, out var linkshellNumber) is false)
+            if (int.TryParse(forwardedRequest.Extra, out var linkshellNumber) is false)
             {
                 logService.InvalidData("Speak", friend.NoteOrFriendCode);
                 return;
             }
 
             // Convert to proper enum linkshell permissions
-            var linkshellPermissions = action.ChatChannel.ToLinkshellPermissions(linkshellNumber);
+            var linkshellPermissions = forwardedRequest.ChatChannel.ToLinkshellPermissions(linkshellNumber);
             if (linkshellPermissions is LinkshellPermissions.None)
             {
                 logService.InvalidData("Speak", friend.NoteOrFriendCode);
@@ -85,7 +86,7 @@ public class SpeakHandler(
         else
         {
             // Convert to proper enum primary permissions
-            var primaryPermissions = action.ChatChannel.ToPrimaryPermissions();
+            var primaryPermissions = forwardedRequest.ChatChannel.ToPrimaryPermissions();
             if (primaryPermissions is PrimaryPermissions.None)
             {
                 logService.InvalidData("Speak", friend.NoteOrFriendCode);
@@ -108,29 +109,29 @@ public class SpeakHandler(
         }
 
         // Add the action to the action queue to be sent when available
-        actionQueueService.Enqueue(friend, action.Message, action.ChatChannel, action.Extra);
+        actionQueueService.Enqueue(friend, forwardedRequest.Message, forwardedRequest.ChatChannel, forwardedRequest.Extra);
 
         // Build a proper log message with specific formatting
         var log = new StringBuilder();
         log.Append(friend.NoteOrFriendCode);
         log.Append(" made you say ");
-        log.Append(action.Message);
-        switch (action.ChatChannel)
+        log.Append(forwardedRequest.Message);
+        switch (forwardedRequest.ChatChannel)
         {
             case ChatChannel.Linkshell:
             case ChatChannel.CrossWorldLinkshell:
                 log.Append(" in ");
-                log.Append(action.ChatChannel.Beautify());
-                log.Append(action.Extra);
+                log.Append(forwardedRequest.ChatChannel.Beautify());
+                log.Append(forwardedRequest.Extra);
                 break;
             
             case ChatChannel.Tell:
                 log.Append(" in a tell to ");
-                log.Append(action.Extra);
+                log.Append(forwardedRequest.Extra);
                 break;
 
             case ChatChannel.Say:
-            case ChatChannel.ChatEmote:
+            case ChatChannel.Roleplay:
             case ChatChannel.Echo:
             case ChatChannel.Yell:
             case ChatChannel.Shout:
@@ -141,7 +142,7 @@ public class SpeakHandler(
             case ChatChannel.PvPTeam:
             default:
                 log.Append(" in ");
-                log.Append(action.ChatChannel.Beautify());
+                log.Append(forwardedRequest.ChatChannel.Beautify());
                 log.Append(" chat");
                 break;
         }

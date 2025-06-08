@@ -31,7 +31,7 @@ public enum PrimaryPermissions
     Mods = 1 << 13,
     BodySwap = 1 << 14,
     Twinning = 1 << 15,
-    CustomizePlus = 1 << 18,
+    Customize = 1 << 18,
     
     // Misc
     Moodles = 1 << 17,

@@ -1,4 +1,5 @@
 using AetherRemoteCommon.Domain;
+using AetherRemoteCommon.V2.Domain.Enum;
 
 namespace AetherRemoteServer.Domain.Interfaces;
 
@@ -10,22 +11,17 @@ public interface IDatabaseService
     /// <summary>
     ///     TODO
     /// </summary>
-    public Task<User?> GetUserByFriendCode(string friendCode);
+    public Task<string?> GetFriendCodeBySecret(string secret);
 
     /// <summary>
     ///     TODO
     /// </summary>
-    public Task<User?> GetUserBySecret(string secret);
+    public Task<DatabaseResultEc> CreatePermissions(string senderFriendCode, string targetFriendCode);
 
     /// <summary>
     ///     TODO
     /// </summary>
-    public Task<bool> CreatePermissions(string senderFriendCode, string targetFriendCode);
-
-    /// <summary>
-    ///     TODO
-    /// </summary>
-    public Task<bool> UpdatePermissions(string senderFriendCode, string targetFriendCode, UserPermissions permissions);
+    public Task<DatabaseResultEc> UpdatePermissions(string senderFriendCode, string targetFriendCode, UserPermissions permissions);
 
     /// <summary>
     ///     TODO
@@ -35,5 +31,5 @@ public interface IDatabaseService
     /// <summary>
     ///     TODO
     /// </summary>
-    public Task<bool> DeletePermissions(string senderFriendCode, string targetFriendCode);
+    public Task<DatabaseResultEc> DeletePermissions(string senderFriendCode, string targetFriendCode);
 }

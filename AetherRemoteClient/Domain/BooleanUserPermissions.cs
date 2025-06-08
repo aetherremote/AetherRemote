@@ -96,26 +96,26 @@ public class BooleanUserPermissions
             BodySwap = (permissions.Primary & PrimaryPermissions.BodySwap) == PrimaryPermissions.BodySwap,
             Twinning = (permissions.Primary & PrimaryPermissions.Twinning) == PrimaryPermissions.Twinning,
             Moodles = (permissions.Primary & PrimaryPermissions.Moodles) == PrimaryPermissions.Moodles,
-            CustomizePlus = (permissions.Primary & PrimaryPermissions.CustomizePlus) == PrimaryPermissions.CustomizePlus,
+            CustomizePlus = (permissions.Primary & PrimaryPermissions.Customize) == PrimaryPermissions.Customize,
             Hypnosis = (permissions.Primary & PrimaryPermissions.Hypnosis) == PrimaryPermissions.Hypnosis,
             
             // Linkshell Permissions
-            Ls1 = (permissions.Linkshell & LinkshellPermissions.Ls1) == LinkshellPermissions.Ls1,
-            Ls2 = (permissions.Linkshell & LinkshellPermissions.Ls2) == LinkshellPermissions.Ls2,
-            Ls3 = (permissions.Linkshell & LinkshellPermissions.Ls3) == LinkshellPermissions.Ls3,
-            Ls4 = (permissions.Linkshell & LinkshellPermissions.Ls4) == LinkshellPermissions.Ls4,
-            Ls5 = (permissions.Linkshell & LinkshellPermissions.Ls5) == LinkshellPermissions.Ls5,
-            Ls6 = (permissions.Linkshell & LinkshellPermissions.Ls6) == LinkshellPermissions.Ls6,
-            Ls7 = (permissions.Linkshell & LinkshellPermissions.Ls7) == LinkshellPermissions.Ls7,
-            Ls8 = (permissions.Linkshell & LinkshellPermissions.Ls8) == LinkshellPermissions.Ls8,
-            Cwl1 = (permissions.Linkshell & LinkshellPermissions.Cwl1) == LinkshellPermissions.Cwl1,
-            Cwl2 = (permissions.Linkshell & LinkshellPermissions.Cwl2) == LinkshellPermissions.Cwl2,
-            Cwl3 = (permissions.Linkshell & LinkshellPermissions.Cwl3) == LinkshellPermissions.Cwl3,
-            Cwl4 = (permissions.Linkshell & LinkshellPermissions.Cwl4) == LinkshellPermissions.Cwl4,
-            Cwl5 = (permissions.Linkshell & LinkshellPermissions.Cwl5) == LinkshellPermissions.Cwl5,
-            Cwl6 = (permissions.Linkshell & LinkshellPermissions.Cwl6) == LinkshellPermissions.Cwl6,
-            Cwl7 = (permissions.Linkshell & LinkshellPermissions.Cwl7) == LinkshellPermissions.Cwl7,
-            Cwl8 = (permissions.Linkshell & LinkshellPermissions.Cwl8) == LinkshellPermissions.Cwl8
+            Ls1 = (permissions.Speak & LinkshellPermissions.Ls1) == LinkshellPermissions.Ls1,
+            Ls2 = (permissions.Speak & LinkshellPermissions.Ls2) == LinkshellPermissions.Ls2,
+            Ls3 = (permissions.Speak & LinkshellPermissions.Ls3) == LinkshellPermissions.Ls3,
+            Ls4 = (permissions.Speak & LinkshellPermissions.Ls4) == LinkshellPermissions.Ls4,
+            Ls5 = (permissions.Speak & LinkshellPermissions.Ls5) == LinkshellPermissions.Ls5,
+            Ls6 = (permissions.Speak & LinkshellPermissions.Ls6) == LinkshellPermissions.Ls6,
+            Ls7 = (permissions.Speak & LinkshellPermissions.Ls7) == LinkshellPermissions.Ls7,
+            Ls8 = (permissions.Speak & LinkshellPermissions.Ls8) == LinkshellPermissions.Ls8,
+            Cwl1 = (permissions.Speak & LinkshellPermissions.Cwl1) == LinkshellPermissions.Cwl1,
+            Cwl2 = (permissions.Speak & LinkshellPermissions.Cwl2) == LinkshellPermissions.Cwl2,
+            Cwl3 = (permissions.Speak & LinkshellPermissions.Cwl3) == LinkshellPermissions.Cwl3,
+            Cwl4 = (permissions.Speak & LinkshellPermissions.Cwl4) == LinkshellPermissions.Cwl4,
+            Cwl5 = (permissions.Speak & LinkshellPermissions.Cwl5) == LinkshellPermissions.Cwl5,
+            Cwl6 = (permissions.Speak & LinkshellPermissions.Cwl6) == LinkshellPermissions.Cwl6,
+            Cwl7 = (permissions.Speak & LinkshellPermissions.Cwl7) == LinkshellPermissions.Cwl7,
+            Cwl8 = (permissions.Speak & LinkshellPermissions.Cwl8) == LinkshellPermissions.Cwl8
         };
     }
 
@@ -148,7 +148,7 @@ public class BooleanUserPermissions
         if (permissions.BodySwap) primary |= PrimaryPermissions.BodySwap;
         if (permissions.Twinning) primary |= PrimaryPermissions.Twinning;
         if (permissions.Moodles) primary |= PrimaryPermissions.Moodles;
-        if (permissions.CustomizePlus) primary |= PrimaryPermissions.CustomizePlus;
+        if (permissions.CustomizePlus) primary |= PrimaryPermissions.Customize;
         if (permissions.Hypnosis) primary |= PrimaryPermissions.Hypnosis;
         
         // Linkshell Permissions
@@ -169,6 +169,6 @@ public class BooleanUserPermissions
         if (permissions.Cwl7) linkshell |= LinkshellPermissions.Cwl7;
         if (permissions.Cwl8) linkshell |= LinkshellPermissions.Cwl8;
 
-        return new UserPermissions { Primary = primary, Linkshell = linkshell };
+        return new UserPermissions { Primary = primary, Speak = linkshell };
     }
 }

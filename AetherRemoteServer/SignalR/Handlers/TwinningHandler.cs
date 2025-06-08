@@ -1,5 +1,10 @@
 using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Enums.New;
 using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.V2.Domain.Enum;
+using AetherRemoteCommon.V2.Domain.Network;
+using AetherRemoteCommon.V2.Domain.Network.Twinning;
+using AetherRemoteServer.Domain;
 using AetherRemoteServer.Domain.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 
@@ -8,78 +13,42 @@ namespace AetherRemoteServer.SignalR.Handlers;
 /// <summary>
 ///     Handles the logic for fulfilling a <see cref="TwinningRequest"/>
 /// </summary>
-public class TwinningHandler(IClientConnectionService connections, IDatabaseService database, ILogger<AddFriendHandler> logger)
+public class TwinningHandler(
+    IConnectionsService connections,
+    IForwardedRequestManager forwardedRequestManager,
+    ILogger<AddFriendHandler> logger)
 {
+    private const string Method = HubMethod.Hypnosis;
+
     /// <summary>
     ///     Handle the request
     /// </summary>
-    public async Task<BaseResponse> Handle(string friendCode, TwinningRequest request, IHubCallerClients clients)
+    public async Task<ActionResponse> Handle(string sender, TwinningRequest request, IHubCallerClients clients)
     {
-        if (connections.IsUserExceedingRequestLimit(friendCode))
+        if (connections.IsUserExceedingRequestLimit(sender))
         {
-            logger.LogWarning("{Friend} exceeded request limit", friendCode);
-            return new BaseResponse { Success = false, Message = "Exceeded request limit" };
-        }
-        
-        foreach (var target in request.TargetFriendCodes)
-        {
-            if (connections.TryGetClient(target) is not { } connectedClient)
-            {
-                logger.LogInformation("{Issuer} targeted {Target} but they are offline, skipping", friendCode, target);
-                continue;
-            }
-
-            var targetPermissions = await database.GetPermissions(target);
-            if (targetPermissions.Permissions.TryGetValue(friendCode, out var permissionsGranted) is false)
-            {
-                logger.LogInformation("{Issuer} targeted {Target} who is not a friend, skipping", friendCode, target);
-                continue;
-            }
-
-            if (permissionsGranted.Primary.HasFlag(PrimaryPermissions.Twinning) is false)
-            {
-                logger.LogInformation("{Issuer} targeted {Target} but lacks permissions, skipping", friendCode, target);
-                continue;
-            }
-            
-            if (request.SwapAttributes.HasFlag(CharacterAttributes.Mods) && 
-                permissionsGranted.Primary.HasFlag(PrimaryPermissions.Mods) is false)
-            {
-                logger.LogInformation("{Issuer} targeted {Target} but lacks mod permissions, skipping", friendCode, target);
-                continue;
-            }
-            
-            if (request.SwapAttributes.HasFlag(CharacterAttributes.Moodles) && 
-                permissionsGranted.Primary.HasFlag(PrimaryPermissions.Moodles) is false)
-            {
-                logger.LogInformation("{Issuer} targeted {Target} but lacks moodles permissions, skipping", friendCode, target);
-                continue;
-            }
-            
-            if (request.SwapAttributes.HasFlag(CharacterAttributes.CustomizePlus) && 
-                permissionsGranted.Primary.HasFlag(PrimaryPermissions.CustomizePlus) is false)
-            {
-                logger.LogInformation("{Issuer} targeted {Target} but lacks customize plus permissions, skipping", friendCode, target);
-                continue;
-            }
-
-            try
-            {
-                var command = new TwinningAction
-                {
-                    SenderFriendCode = friendCode,
-                    SwapAttributes = request.SwapAttributes,
-                    Identity = request.Identity,
-                };
-                
-                await clients.Client(connectedClient.ConnectionId).SendAsync(HubMethod.Twinning, command);
-            }
-            catch (Exception e)
-            {
-                logger.LogWarning("{Issuer} send action to {Target} failed, {Error}", friendCode, target, e.Message);
-            }
+            logger.LogWarning("{Friend} exceeded request limit", sender);
+            return new ActionResponse(ActionResponseEc.TooManyRequests);
         }
 
-        return new BaseResponse { Success = true };
+        var permissions = SwapAttributesToPrimaryPermissions(request.SwapAttributes);
+        var forwardedRequest = new TwinningForwardedRequest(sender, request.CharacterName, request.SwapAttributes);
+        var requestInfo = new PrimaryRequestInfo(Method, permissions, forwardedRequest);
+        return await forwardedRequestManager.Send(sender, request.TargetFriendCodes, requestInfo, clients);
+    }
+
+    private static PrimaryPermissions2 SwapAttributesToPrimaryPermissions(CharacterAttributes attributes)
+    {
+        var permissions = PrimaryPermissions2.Twinning;
+        if ((attributes & CharacterAttributes.Mods) == CharacterAttributes.Mods)
+            permissions |= PrimaryPermissions2.Mods;
+
+        if ((attributes & CharacterAttributes.Moodles) == CharacterAttributes.Moodles)
+            permissions |= PrimaryPermissions2.Moodles;
+
+        if ((attributes & CharacterAttributes.CustomizePlus) == CharacterAttributes.CustomizePlus)
+            permissions |= PrimaryPermissions2.CustomizePlus;
+
+        return permissions;
     }
 }

@@ -5,6 +5,7 @@ using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.V2.Domain.Network.Moodles;
 
 namespace AetherRemoteClient.UI.Views.Moodles;
 

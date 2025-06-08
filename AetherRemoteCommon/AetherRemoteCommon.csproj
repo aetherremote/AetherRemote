@@ -10,4 +10,14 @@
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.MessagePack" Version="8.0.11" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Remove="Domain\Network\AddFriendRequest.cs" />
+    <Compile Remove="Domain\Network\AddUserRequest.cs" />
+    <Compile Remove="Domain\Network\BaseRequest.cs" />
+    <Compile Remove="Domain\Network\BaseResponse.cs" />
+    <Compile Remove="Domain\Network\BodySwapAction.cs" />
+    <Compile Remove="Domain\Network\BodySwapQueryRequest.cs" />
+    <Compile Remove="Domain\Network\BodySwapQueryResponse.cs" />
+  </ItemGroup>
+
 </Project>

@@ -33,6 +33,11 @@ public class FriendsListService
     public Friend? Get(string friendCode) => Friends.FirstOrDefault(friend => friend.FriendCode == friendCode);
 
     /// <summary>
+    ///     Returns the currently selected targets as a list of friend codes
+    /// </summary>
+    public List<string> SelectedFriendCodes => Selected.Select(friend => friend.FriendCode).ToList();
+
+    /// <summary>
     ///     Adds a friend locally
     /// </summary>
     public void Add(string friendCode, string? note, bool online) => Friends.Add(new Friend(friendCode, note, online));

@@ -43,7 +43,7 @@ public class CustomizePlusViewUi(
         {
             SharedUserInterfaces.MediumText("Quick Actions");
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Paste, IconSize))
-                _controller.Customize = ImGui.GetClipboardText();
+                _controller.CustomizeData = ImGui.GetClipboardText();
             SharedUserInterfaces.Tooltip("Paste Customize+ data from clipboard");
         });
         
@@ -67,7 +67,7 @@ public class CustomizePlusViewUi(
 
             var width = (windowWidthHalf - ImGui.GetStyle().WindowPadding.X) * 2;
             ImGui.SetNextItemWidth(width);
-            var shouldSendCustomize = ImGui.InputTextWithHint("##CustomizeData", "Customize data", ref _controller.Customize, 5000,
+            var shouldSendCustomize = ImGui.InputTextWithHint("##CustomizeData", "Customize data", ref _controller.CustomizeData, 5000,
                 ImGuiInputTextFlags.EnterReturnsTrue);
 
             ImGui.Spacing();

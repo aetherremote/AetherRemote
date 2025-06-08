@@ -57,7 +57,6 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<IdentityService>();
         services.AddSingleton<LogService>();
         services.AddSingleton<NetworkService>();
-        services.AddSingleton<OverrideService>();
         services.AddSingleton<PauseService>();
         services.AddSingleton<SpiralService>();
         services.AddSingleton<TipService>();

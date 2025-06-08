@@ -114,7 +114,7 @@ public class BodySwapViewUiController(
                 continue;
             }
             
-            if (SwapCustomizePlus && selected.PermissionsGrantedByFriend.Has(PrimaryPermissions.CustomizePlus) is false)
+            if (SwapCustomizePlus && selected.PermissionsGrantedByFriend.Has(PrimaryPermissions.Customize) is false)
             {
                 thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
             }

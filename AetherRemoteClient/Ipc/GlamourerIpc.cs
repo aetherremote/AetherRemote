@@ -103,16 +103,16 @@ public class GlamourerIpc : IExternalPlugin, IDisposable
     ///     Applies a given design to an object index
     /// </summary>
     /// <param name="glamourerData">Glamourer data to apply</param>
-    /// <param name="flags">How should this be applied?</param>
+    /// <param name="flagses">How should this be applied?</param>
     /// <param name="index">Object table index to revert</param>
-    public async Task<bool> ApplyDesignAsync(string glamourerData, GlamourerApplyFlag flags, ushort index = 0)
+    public async Task<bool> ApplyDesignAsync(string glamourerData, GlamourerApplyFlags flagses, ushort index = 0)
     {
         if (ApiAvailable)
             return await Plugin.RunOnFramework(() =>
             {
                 try
                 {
-                    var result = _applyState.Invoke(glamourerData, index, 0, ConvertGlamourerToApplyFlags(flags));
+                    var result = _applyState.Invoke(glamourerData, index, 0, ConvertGlamourerToApplyFlags(flagses));
 
                     if (result is GlamourerApiEc.Success)
                         return true;
@@ -160,13 +160,13 @@ public class GlamourerIpc : IExternalPlugin, IDisposable
     }
 
     /// <summary>
-    ///     Converts domain <see cref="GlamourerApplyFlag"/> to Glamourer <see cref="ApplyFlag"/>
+    ///     Converts domain <see cref="GlamourerApplyFlags"/> to Glamourer <see cref="ApplyFlag"/>
     /// </summary>
-    private static ApplyFlag ConvertGlamourerToApplyFlags(GlamourerApplyFlag flags)
+    private static ApplyFlag ConvertGlamourerToApplyFlags(GlamourerApplyFlags flagses)
     {
         var applyFlags = ApplyFlag.Once;
-        if (flags.HasFlag(GlamourerApplyFlag.Customization)) applyFlags |= ApplyFlag.Customization;
-        if (flags.HasFlag(GlamourerApplyFlag.Equipment)) applyFlags |= ApplyFlag.Equipment;
+        if (flagses.HasFlag(GlamourerApplyFlags.Customization)) applyFlags |= ApplyFlag.Customization;
+        if (flagses.HasFlag(GlamourerApplyFlags.Equipment)) applyFlags |= ApplyFlag.Equipment;
         if (applyFlags is ApplyFlag.Once) applyFlags |= ApplyFlag.Customization | ApplyFlag.Equipment;
         return applyFlags;
     }

@@ -1,6 +1,10 @@
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Enums.New;
 using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.V2.Domain.Enum;
+using AetherRemoteCommon.V2.Domain.Network;
+using AetherRemoteCommon.V2.Domain.Network.BodySwap;
 using AetherRemoteServer.Domain.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 
@@ -9,198 +13,55 @@ namespace AetherRemoteServer.SignalR.Handlers;
 /// <summary>
 ///     Handles the logic for fulfilling a <see cref="BodySwapRequest"/>
 /// </summary>
-public class BodySwapHandler(IClientConnectionService connections, IDatabaseService database, ILogger<BodySwapHandler> logger)
+public class BodySwapHandler(
+    IConnectionsService connections,
+    IForwardedRequestManager forwardedRequestManager,
+    ILogger<BodySwapHandler> logger)
 {
     /// <summary>
     ///     Handles the request
     /// </summary>
-    public async Task<BodySwapResponse> Handle(string issuerFriendCode, BodySwapRequest request, IHubCallerClients clients)
+    public async Task<BodySwapResponse> Handle(string sender, BodySwapRequest request, IHubCallerClients clients)
     {
-        if (connections.IsUserExceedingRequestLimit(issuerFriendCode))
+        if (connections.IsUserExceedingRequestLimit(sender))
         {
-            logger.LogWarning("{Friend} exceeded request limit", issuerFriendCode);
-            return new BodySwapResponse { Success = false, Message = "Exceeded request limit" };
+            logger.LogWarning("{Friend} exceeded request limit", sender);
+            return new BodySwapResponse(ActionResponseEc.TooManyRequests);
         }
 
-        switch (request.TargetFriendCodes.Count)
+        var targets = request.TargetFriendCodes;
+        switch (targets.Count)
         {
-            case 0 when request.Identity is null:
-                logger.LogWarning("{Friend} tried to swap with no targets", issuerFriendCode);
-                return new BodySwapResponse { Success = false, Message = "No targets selected" };
+            case 0 when request.SenderCharacterName is null:
+                logger.LogWarning("{Friend} tried to swap with no targets", sender);
+                return new BodySwapResponse(ActionResponseEc.TooFewTargets);
 
             case 0:
-                logger.LogWarning("{Friend} tried to swap bodies with themself", issuerFriendCode);
-                return new BodySwapResponse { Success = false, Message = "Cannot body swap with just yourself" };
+                logger.LogWarning("{Friend} tried to swap bodies with themself", sender);
+                return new BodySwapResponse(ActionResponseEc.TooFewTargets);
 
-            case 1 when request.Identity is null:
-                logger.LogWarning("{Friend} tried to swap bodies with only one target", issuerFriendCode);
-                return new BodySwapResponse { Success = false, Message = "You must select more than one target" };
+            case 1 when request.SenderCharacterName is null:
+                logger.LogWarning("{Friend} tried to swap bodies with only one target", sender);
+                return new BodySwapResponse(ActionResponseEc.TooFewTargets);
         }
 
-        var cancel = new CancellationTokenSource();
-        var tasks = new Task<BodySwapQueryResponse>[request.TargetFriendCodes.Count];
-        var connectionInfo = new string[request.TargetFriendCodes.Count];
-        for (var i = 0; i < request.TargetFriendCodes.Count; i++)
+        var characterNames = new List<string>();
+        foreach (var targetFriendCode in targets)
         {
-            var target = request.TargetFriendCodes[i];
-            if (connections.TryGetClient(target) is not { } client)
-            {
-                logger.LogWarning("{Issuer} targeted {Target} but they are offline, aborting", issuerFriendCode, target);
-                await cancel.CancelAsync();
-                return new BodySwapResponse
-                {
-                    Success = false,
-                    Message = "One or more targets offline"
-                };
-            }
+            if (connections.TryGetClient(targetFriendCode) is not { } client)
+                return new BodySwapResponse(ActionResponseEc.TargetOffline);
 
-            var permissions = await database.GetPermissions(target);
-            if (permissions.Permissions.TryGetValue(issuerFriendCode, out var permissionsGranted) is false)
-            {
-                logger.LogWarning("{Issuer} targeted {Target} who is not a friend, aborting", issuerFriendCode, target);
-                await cancel.CancelAsync();
-                return new BodySwapResponse
-                {
-                    Success = false,
-                    Message = "You are not friends with one or more targets"
-                };
-            }
-
-            if (permissionsGranted.Primary.HasFlag(PrimaryPermissions.BodySwap) is false)
-            {
-                logger.LogWarning("{Issuer} targeted {Target} but lacks permissions, aborting", issuerFriendCode, target);
-                await cancel.CancelAsync();
-                return new BodySwapResponse
-                {
-                    Success = false,
-                    Message = "You are lacking body swap permissions with one or more targets"
-                };
-            }
-            
-            if (request.SwapAttributes.HasFlag(CharacterAttributes.Mods) && 
-                permissionsGranted.Primary.HasFlag(PrimaryPermissions.Mods) is false)
-            {
-                logger.LogWarning("{Issuer} targeted {Target} but lacks mod permissions, aborting", issuerFriendCode, target);
-                await cancel.CancelAsync();
-                return new BodySwapResponse
-                {
-                    Success = false,
-                    Message = "You are lacking mod permissions with one or more targets"
-                };
-            }
-            
-            if (request.SwapAttributes.HasFlag(CharacterAttributes.Moodles) && 
-                permissionsGranted.Primary.HasFlag(PrimaryPermissions.Moodles) is false)
-            {
-                logger.LogWarning("{Issuer} targeted {Target} but lacks moodles permissions, aborting", issuerFriendCode, target);
-                await cancel.CancelAsync();
-                return new BodySwapResponse
-                {
-                    Success = false,
-                    Message = "You are lacking moodles permissions with one or more targets"
-                };
-            }
-
-            if (request.SwapAttributes.HasFlag(CharacterAttributes.CustomizePlus) &&
-                permissionsGranted.Primary.HasFlag(PrimaryPermissions.CustomizePlus) is false)
-            {
-                logger.LogWarning("{Issuer} targeted {Target} but lacks customize plus permissions, aborting", issuerFriendCode, target);
-                await cancel.CancelAsync();
-                return new BodySwapResponse
-                {
-                    Success = false,
-                    Message = "You are lacking customize+ permissions with one or more targets"
-                };
-            }
-
-            var query = new BodySwapQueryRequest { SenderFriendCode = issuerFriendCode };
-            try
-            {
-                tasks[i] = clients.Client(client.ConnectionId)
-                    .InvokeAsync<BodySwapQueryResponse>(HubMethod.BodySwapQuery, query, cancel.Token);
-            }
-            catch (Exception e)
-            {
-                logger.LogError("{Issuer} query action to {Target} failed, {Error}", issuerFriendCode, target, e.Message);
-                await cancel.CancelAsync();
-                return new BodySwapResponse
-                {
-                    Success = false,
-                    Message = "Unknown Error"
-                };
-            }
-
-            connectionInfo[i] = client.ConnectionId;
+            characterNames.Add(client.CharacterName);
         }
-
-        var timeout = Task.Delay(10000, cancel.Token);
-        var pending = Task.WhenAll(tasks);
-
-        var waiting = await Task.WhenAny(pending, timeout);
-        if (waiting == timeout)
-        {
-            logger.LogError("{Issuer} request timed out, aborting", issuerFriendCode);
-            await cancel.CancelAsync();
-            return new BodySwapResponse
-            {
-                Success = false,
-                Message = "Request timed out"
-            };
-        }
-
-        var responses = await pending;
-        var identities = new List<CharacterIdentity>();
-        foreach (var response in responses)
-        {
-            if (response.Identity is null)
-            {
-                logger.LogError("{Issuer} request had a target who couldn't offer their body, aborting", issuerFriendCode);
-                await cancel.CancelAsync();
-                return new BodySwapResponse
-                {
-                    Success = false,
-                    Message = "One or more targets unavailable to swap"
-                };
-            }
-
-            identities.Add(response.Identity);
-        }
-
-        if (request.Identity is not null)
-            identities.Add(request.Identity);
-
-        var deranged = Derange(identities);
-        for (var i = 0; i < request.TargetFriendCodes.Count; i++)
-        {
-            var command = new BodySwapAction
-            {
-                SenderFriendCode = issuerFriendCode,
-                SwapAttributes = request.SwapAttributes,
-                Identity = deranged[i]
-            };
-
-            try
-            {
-                await clients.Client(connectionInfo[i]).SendAsync(HubMethod.BodySwap, command, cancel.Token);
-            }
-            catch (Exception e)
-            {
-                logger.LogError("{Issuer} request aborting due to unknown error, {Error}", issuerFriendCode, e.Message);
-                await cancel.CancelAsync();
-                return new BodySwapResponse
-                {
-                    Success = false,
-                    Message = "Unknown Error"
-                };
-            }
-        }
-
-        return new BodySwapResponse
-        {
-            Success = true,
-            Identity = request.Identity is null ? null : deranged[^1]
-        };
+        
+        if (request.SenderCharacterName is not null)
+            characterNames.Add(request.SenderCharacterName);
+        
+        var deranged = Derange(characterNames);
+        return await forwardedRequestManager.SendBodySwap(sender, targets, deranged, request.SwapAttributes, clients);
     }
+    
+    
 
     /// <summary>
     ///     Derange a list, ensuring every element ends up in an index different from its starting position

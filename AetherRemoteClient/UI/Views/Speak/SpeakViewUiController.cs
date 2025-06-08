@@ -7,6 +7,7 @@ using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Util;
+using AetherRemoteCommon.V2.Domain.Network.Speak;
 using Dalamud.Game.ClientState.Objects.Types;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 
@@ -146,12 +147,12 @@ public class SpeakViewUiController
             {
                 case ChatChannel.Linkshell:
                 case ChatChannel.CrossWorldLinkshell:
-                    if (PermissionsChecker.Speak(selected.PermissionsGrantedByFriend.Linkshell, LinkshellSelection) is false)
+                    if (PermissionsChecker.Speak(selected.PermissionsGrantedByFriend.Speak, LinkshellSelection) is false)
                         thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
                     break;
                 
                 case ChatChannel.Say:
-                case ChatChannel.ChatEmote:
+                case ChatChannel.Roleplay:
                 case ChatChannel.Echo:
                 case ChatChannel.Yell:
                 case ChatChannel.Shout:

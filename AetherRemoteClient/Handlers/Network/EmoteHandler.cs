@@ -4,6 +4,7 @@ using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.V2.Domain;
 using AetherRemoteCommon.V2.Domain.Enum;
 using AetherRemoteCommon.V2.Domain.Network;
+using AetherRemoteCommon.V2.Domain.Network.Emote;
 
 namespace AetherRemoteClient.Handlers.Network;
 

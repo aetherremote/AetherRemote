@@ -17,9 +17,8 @@ public static class ChatChannelExtensions
             ChatChannel.Linkshell => "LS",
             ChatChannel.FreeCompany => "Free Company",
             ChatChannel.CrossWorldLinkshell => "CWLS",
-            ChatChannel.NoviceNetwork => "Novice Network",
             ChatChannel.PvPTeam => "PvP Team",
-            ChatChannel.ChatEmote => "Chat Emote",
+            ChatChannel.Roleplay => "Chat Emote",
             _ => chatChannel.ToString()
         };
     }
@@ -40,9 +39,8 @@ public static class ChatChannelExtensions
             ChatChannel.FreeCompany => "fc",
             ChatChannel.Linkshell => "l",
             ChatChannel.CrossWorldLinkshell => "cwl",
-            ChatChannel.NoviceNetwork => "n",
             ChatChannel.PvPTeam => "pt",
-            ChatChannel.ChatEmote => "em",
+            ChatChannel.Roleplay => "em",
             ChatChannel.Echo => "echo",
             _ => "Not Implemented"
         };
@@ -65,7 +63,7 @@ public static class ChatChannelExtensions
             ChatChannel.FreeCompany => PrimaryPermissions.FreeCompany,
             ChatChannel.PvPTeam => PrimaryPermissions.PvPTeam,
             ChatChannel.Echo => PrimaryPermissions.Echo,
-            ChatChannel.ChatEmote => PrimaryPermissions.ChatEmote,
+            ChatChannel.Roleplay => PrimaryPermissions.ChatEmote,
             _ => PrimaryPermissions.None
         };
     }

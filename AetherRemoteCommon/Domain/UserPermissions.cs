@@ -1,21 +1,37 @@
-using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Enums.New;
 using MessagePack;
 
 namespace AetherRemoteCommon.Domain;
 
 /// <summary>
-/// Stores the primary and linkshell permissions that make up the total permissions a user can grant another
+///     Stores the primary and linkshell permissions that make up the total permissions a user can grant another
 /// </summary>
 [MessagePackObject(keyAsPropertyName: true)]
 public record UserPermissions
 {
     /// <summary>
-    /// Main permissions
+    ///     Primary permissions
     /// </summary>
-    public PrimaryPermissions Primary { get; set; }
+    public PrimaryPermissions2 Primary { get; set; }
 
     /// <summary>
-    /// Linkshell permissions
+    ///     Speak permissions
     /// </summary>
-    public LinkshellPermissions Linkshell { get; set; }
+    public SpeakPermissions2 Speak { get; set; }
+
+    /// <summary>
+    ///     TODO
+    /// </summary>
+    public UserPermissions()
+    {
+    }
+
+    /// <summary>
+    ///     TODO
+    /// </summary>
+    public UserPermissions(PrimaryPermissions2 primary, SpeakPermissions2 speak)
+    {
+        Primary = primary;
+        Speak = speak;
+    }
 }
