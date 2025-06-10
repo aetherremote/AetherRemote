@@ -3,22 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
-using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Enums.New;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Util;
+using AetherRemoteCommon.V2.Domain.Network;
 using AetherRemoteCommon.V2.Domain.Network.Twinning;
 
 namespace AetherRemoteClient.UI.Views.Twinning;
 
-public class TwinningViewUiController(
-    FriendsListService friendsListService,
-    IdentityService identityService,
-    NetworkService networkService)
+public class TwinningViewUiController(FriendsListService friendsListService, NetworkService networkService)
 {
     public bool SwapMods;
     public bool SwapMoodles;
     public bool SwapCustomizePlus;
+
+    /// <summary>
+    ///     Used to determine if all selected friends have permissions
+    /// </summary>
+    public PrimaryPermissions2 SelectedAttributesPermissions = PrimaryPermissions2.Twinning;
 
     public async void Twin()
     {
@@ -39,22 +41,11 @@ public class TwinningViewUiController(
             {
                 TargetFriendCodes = friendsListService.Selected.Select(friend => friend.FriendCode).ToList(),
                 SwapAttributes = attributes,
-                Identity = new CharacterIdentity
-                {
-                    GameObjectName = player.Name.ToString(),
-                    CharacterName = identityService.Identity
-                },
+                CharacterName = player.Name.ToString()
             };
 
-            var response = await networkService.InvokeAsync<BaseResponse>(HubMethod.Twinning, input);
-            if (response.Success)
-            {
-                NotificationHelper.Success("Successfully twinned", string.Empty);
-            }
-            else
-            {
-                NotificationHelper.Warning("Unable to twin", response.Message);
-            }
+            var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.Twinning, input);
+            ActionResponseParser.Parse("Twinning", response);
         }
         catch (Exception e)
         {
@@ -70,28 +61,8 @@ public class TwinningViewUiController(
         var thoseWhoYouLackPermissionsFor = new List<string>();
         foreach (var selected in friendsListService.Selected)
         {
-            if (selected.PermissionsGrantedByFriend.Has(PrimaryPermissions.Twinning) is false)
-            {
+            if ((selected.PermissionsGrantedByFriend.Primary & SelectedAttributesPermissions) != SelectedAttributesPermissions)
                 thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
-                continue;
-            }
-            
-            if (SwapMods && selected.PermissionsGrantedByFriend.Has(PrimaryPermissions.Mods) is false)
-            {
-                thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
-                continue;
-            }
-            
-            if (SwapMoodles && selected.PermissionsGrantedByFriend.Has(PrimaryPermissions.Moodles) is false)
-            {
-                thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
-                continue;
-            }
-            
-            if (SwapCustomizePlus && selected.PermissionsGrantedByFriend.Has(PrimaryPermissions.Customize) is false)
-            {
-                thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
-            }
         }
         
         return thoseWhoYouLackPermissionsFor;

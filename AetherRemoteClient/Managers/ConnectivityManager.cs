@@ -40,11 +40,14 @@ public class ConnectivityManager : IDisposable
 
     private async Task GetAndSetAccountData()
     {
-        var input = new GetAccountDataRequest();
+        if (await Plugin.RunOnFramework(() => Plugin.ClientState.LocalPlayer) is not { } player)
+            return;
+        
+        var input = new GetAccountDataRequest(player.Name.ToString());
         var response = await _networkService
             .InvokeAsync<GetAccountDataResponse>(HubMethod.GetAccountData, input)
             .ConfigureAwait(false);
-
+        
         if (response.Result is not GetAccountDataEc.Success)
         {
             // TODO: Maybe add a pop-up response here?   

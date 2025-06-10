@@ -66,21 +66,14 @@ public class FriendsViewUi(FriendsListService friendsListService, NetworkService
         SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
         {
             var buttonRowY = ImGui.GetCursorPosY();
-            ImGui.TextUnformatted("Speak");
-            ImGui.Checkbox("Allow##Speak", ref _controller.EditingUserPermissions.Speak);
-
             ImGui.TextUnformatted("Channels");
-
-            var shouldDisableSpeakTable = _controller.EditingUserPermissions.Speak is false;
-            if (shouldDisableSpeakTable)
-                ImGui.BeginDisabled();
 
             if (ImGui.BeginTable("SpeakPermissionsTable", 3))
             {
                 ImGui.TableNextColumn();
                 ImGui.Checkbox("Say", ref _controller.EditingUserPermissions.Say);
                 ImGui.TableNextColumn();
-                ImGui.Checkbox("Chat Emote", ref _controller.EditingUserPermissions.ChatEmote);
+                ImGui.Checkbox("Roleplay", ref _controller.EditingUserPermissions.Roleplay);
                 ImGui.TableNextColumn();
                 ImGui.Checkbox("Echo", ref _controller.EditingUserPermissions.Echo);
                 ImGui.TableNextColumn();
@@ -133,9 +126,6 @@ public class FriendsViewUi(FriendsListService friendsListService, NetworkService
             ImGui.Checkbox("7##Cwl7", ref _controller.EditingUserPermissions.Cwl7);
             ImGui.SameLine();
             ImGui.Checkbox("8##Cwl8", ref _controller.EditingUserPermissions.Cwl8);
-
-            if (shouldDisableSpeakTable)
-                ImGui.EndDisabled();
 
             var current = ImGui.GetCursorPos();
             ImGui.SetCursorPos(new Vector2(windowWidth - (windowPadding.X + SmallIconSize.X) * 2, buttonRowY));

@@ -5,7 +5,6 @@ using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using AetherRemoteClient.Utils;
-using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.V2.Domain.Network.GetToken;
 using MessagePack;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -35,8 +34,12 @@ public class NetworkService : IDisposable
     
 #if DEBUG
     // Local
-    private const string HubUrl = "https://localhost:5006/primaryHub";
-    private const string PostUrl = "https://localhost:5006/api/auth/login";
+    // private const string HubUrl = "https://localhost:5006/primaryHub";
+    // private const string PostUrl = "https://localhost:5006/api/auth/login";
+    
+    // Beta
+    private const string HubUrl = "https://foxitsvc.com:5007/primaryHub";
+    private const string PostUrl = "https://foxitsvc.com:5007/api/auth/login";
 #else
     // Prod
     private const string HubUrl = "https://foxitsvc.com:5006/primaryHub";
@@ -121,7 +124,6 @@ public class NetworkService : IDisposable
     /// </summary>
     /// <param name="method">The name of the method to call</param>
     /// <param name="request">The request object to send</param>
-    /// <typeparam name="T">Response object (Example <see cref="AddFriendResponse" />)</typeparam>
     /// <returns></returns>
     public async Task<T> InvokeAsync<T>(string method, object request)
     {

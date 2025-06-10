@@ -23,6 +23,9 @@ public class SpiralService : IDisposable
     private readonly string _spiralPath =
         Path.Combine(Plugin.PluginInterface.AssemblyLocation.Directory?.FullName!, SpiralName);
 
+    // Spiral Properties
+    private const float Zoom = 0.4f;
+    
     // Speed
     private const float SpiralSpeedMax = 0.003f;
     private const float SpiralSpeedMin = 0;
@@ -109,13 +112,13 @@ public class SpiralService : IDisposable
 
         var cos = MathF.Cos(_currentSpiralRotation);
         var sin = MathF.Sin(_currentSpiralRotation);
-
+        
         var corners = new[]
         {
-            new Vector2(-spiral.Width, -spiral.Height) * 0.4f,
-            new Vector2(spiral.Width, -spiral.Height) * 0.4f,
-            new Vector2(spiral.Width, spiral.Height) * 0.4f,
-            new Vector2(-spiral.Width, spiral.Height) * 0.4f
+            new Vector2(-spiral.Width, -spiral.Height) * Zoom,
+            new Vector2(spiral.Width, -spiral.Height) * Zoom,
+            new Vector2(spiral.Width, spiral.Height) * Zoom,
+            new Vector2(-spiral.Width, spiral.Height) * Zoom
         };
 
         var rotated = new Vector2[4];

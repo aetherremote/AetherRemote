@@ -5,8 +5,9 @@ using AetherRemoteClient.Ipc;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Enums.New;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Util;
+using AetherRemoteCommon.V2.Domain.Network;
 using AetherRemoteCommon.V2.Domain.Network.Transform;
 using ImGuiNET;
 
@@ -25,6 +26,11 @@ public class TransformationViewUiController(
     public bool ApplyCustomization = true;
     public bool ApplyEquipment = false;
 
+    /// <summary>
+    ///     Used to determine if all selected friends have permissions
+    /// </summary>
+    public PrimaryPermissions2 SelectedApplyTypePermissions = PrimaryPermissions2.GlamourerCustomization;
+    
     /// <summary>
     ///     Sets <see cref="GlamourerCode"/> to your own glamourer code
     /// </summary>
@@ -103,16 +109,8 @@ public class TransformationViewUiController(
                 GlamourerApplyType = applyType
             };
             
-            var response =
-                await networkService.InvokeAsync<BaseResponse>(HubMethod.Transform, input);
-            if (response.Success)
-            {
-                NotificationHelper.Success("Successfully transformed", string.Empty);
-            }
-            else
-            {
-                NotificationHelper.Warning("Unable to transform", response.Message);
-            }
+            var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.Transform, input);
+            ActionResponseParser.Parse("Transformation", response);
         }
         catch (Exception e)
         {
@@ -137,13 +135,7 @@ public class TransformationViewUiController(
         var thoseWhoYouLackPermissionsFor = new List<string>();
         foreach (var selected in friendsListService.Selected)
         {
-            if (ApplyCustomization && selected.PermissionsGrantedByFriend.Has(PrimaryPermissions.Customization) is false)
-            {
-                thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
-                continue;
-            }
-
-            if (ApplyEquipment && selected.PermissionsGrantedByFriend.Has(PrimaryPermissions.Equipment) is false)
+            if ((selected.PermissionsGrantedByFriend.Primary & SelectedApplyTypePermissions) != SelectedApplyTypePermissions)
                 thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
         }
         

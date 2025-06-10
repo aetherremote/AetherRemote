@@ -90,14 +90,13 @@ public class DatabaseService : IDatabaseService
         await using var command = _db.CreateCommand();
         command.CommandText =
             $"""
-                 INSERT INTO {PermissionsTable} (UserFriendCode, TargetFriendCode, Version, PrimaryPermissions, LinkshellPermissions)
-                 VALUES ({FriendCodeParam}, {TargetFriendCodeParam}, {VersionParam}, {PrimaryPermissionsParam}, {LinkshellPermissionsParam})
+                 INSERT INTO {PermissionsTableV2} (FriendCode, TargetFriendCode, PrimaryPermissions, SpeakPermissions)
+                 VALUES ({FriendCodeParam}, {TargetFriendCodeParam}, {PrimaryPermissionsParam}, {SpeakPermissionsParam})
              """;
         command.Parameters.AddWithValue(FriendCodeParam, senderFriendCode);
         command.Parameters.AddWithValue(TargetFriendCodeParam, targetFriendCode);
-        command.Parameters.AddWithValue(VersionParam, CurrentPermissionConfigurationVersion);
-        command.Parameters.AddWithValue(PrimaryPermissionsParam, PrimaryPermissions.None);
-        command.Parameters.AddWithValue(LinkshellPermissionsParam, LinkshellPermissions.None);
+        command.Parameters.AddWithValue(PrimaryPermissionsParam, PrimaryPermissions2.None);
+        command.Parameters.AddWithValue(SpeakPermissionsParam, SpeakPermissions2.None);
 
         try
         {
@@ -138,12 +137,12 @@ public class DatabaseService : IDatabaseService
         await using var command = _db.CreateCommand();
         command.CommandText =
             $"""
-                 UPDATE {PermissionsTable} 
-                 SET PrimaryPermissions = {PrimaryPermissionsParam}, LinkshellPermissions = {LinkshellPermissionsParam} 
-                 WHERE UserFriendCode = {FriendCodeParam} AND TargetFriendCode = {TargetFriendCodeParam}
+                 UPDATE {PermissionsTableV2} 
+                 SET PrimaryPermissions = {PrimaryPermissionsParam}, SpeakPermissions = {SpeakPermissionsParam} 
+                 WHERE FriendCode = {FriendCodeParam} AND TargetFriendCode = {TargetFriendCodeParam}
              """;
         command.Parameters.AddWithValue(PrimaryPermissionsParam, permissions.Primary);
-        command.Parameters.AddWithValue(LinkshellPermissionsParam, permissions.Speak);
+        command.Parameters.AddWithValue(SpeakPermissionsParam, permissions.Speak);
         command.Parameters.AddWithValue(FriendCodeParam, senderFriendCode);
         command.Parameters.AddWithValue(TargetFriendCodeParam, targetFriendCode);
 
@@ -174,9 +173,9 @@ public class DatabaseService : IDatabaseService
         await using var command = _db.CreateCommand();
         command.CommandText =
             $"""
-                SELECT TargetFriendCode, PrimaryPermissions, LinkshellPermissions 
-                FROM {PermissionsTable} 
-                WHERE UserFriendCode={FriendCodeParam}
+                SELECT TargetFriendCode, PrimaryPermissions, SpeakPermissions 
+                FROM {PermissionsTableV2} 
+                WHERE FriendCode={FriendCodeParam}
              """;
         command.Parameters.AddWithValue(FriendCodeParam, friendCode);
 
@@ -213,8 +212,8 @@ public class DatabaseService : IDatabaseService
         await using var command = _db.CreateCommand();
         command.CommandText =
             $"""
-                DELETE FROM {PermissionsTable} 
-                WHERE UserFriendCode={FriendCodeParam} AND TargetFriendCode={TargetFriendCodeParam}
+                DELETE FROM {PermissionsTableV2} 
+                WHERE FriendCode={FriendCodeParam} AND TargetFriendCode={TargetFriendCodeParam}
              """;
         command.Parameters.AddWithValue(FriendCodeParam, senderFriendCode);
         command.Parameters.AddWithValue(TargetFriendCodeParam, targetFriendCode);

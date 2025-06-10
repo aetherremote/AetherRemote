@@ -5,6 +5,7 @@ using AetherRemoteClient.Domain;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Enums.New;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.V2.Domain.Enum;
 using AetherRemoteCommon.V2.Domain.Network;
@@ -38,7 +39,7 @@ public class EmoteViewUiController(EmoteService emoteService, FriendsListService
             if (response.Result is ActionResponseEc.Success)
                 EmoteSelection = string.Empty;
             
-            ActionResultParser.Parse("Emote", response);
+            ActionResponseParser.Parse("Emote", response);
         }
         catch (Exception e)
         {
@@ -55,7 +56,7 @@ public class EmoteViewUiController(EmoteService emoteService, FriendsListService
         var thoseWhoYouLackPermissionsFor = new List<string>();
         foreach (var selected in friendsListService.Selected)
         {
-            if (selected.PermissionsGrantedByFriend.Primary.HasFlag(PrimaryPermissions.Emote) is false)
+            if ((selected.PermissionsGrantedByFriend.Primary & PrimaryPermissions2.Emote) != PrimaryPermissions2.Emote)
                 thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
         }
         return thoseWhoYouLackPermissionsFor;

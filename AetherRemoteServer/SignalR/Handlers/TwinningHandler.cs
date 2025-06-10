@@ -1,5 +1,3 @@
-using AetherRemoteCommon.Domain.Enums;
-using AetherRemoteCommon.Domain.Enums.New;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Util;
 using AetherRemoteCommon.V2.Domain.Enum;
@@ -19,7 +17,7 @@ public class TwinningHandler(
     IForwardedRequestManager forwardedRequestManager,
     ILogger<AddFriendHandler> logger)
 {
-    private const string Method = HubMethod.Hypnosis;
+    private const string Method = HubMethod.Twinning;
 
     /// <summary>
     ///     Handle the request

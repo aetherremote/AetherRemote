@@ -51,7 +51,7 @@ public class PrimaryHub(
     public async Task<AddFriendResponse> AddFriend(AddFriendRequest request)
     {
         logger.LogInformation("{Request}", request);
-        return await addFriendHandler.Handle(FriendCode, request);
+        return await addFriendHandler.Handle(FriendCode, request, Clients);
     }
 
     [HubMethodName(HubMethod.BodySwap)]

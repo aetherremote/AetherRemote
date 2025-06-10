@@ -6,8 +6,11 @@ using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Enums.New;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Util;
+using AetherRemoteCommon.V2.Domain.Enum;
+using AetherRemoteCommon.V2.Domain.Network.BodySwap;
 
 namespace AetherRemoteClient.UI.Views.BodySwap;
 
@@ -24,6 +27,11 @@ public class BodySwapViewUiController(
     public bool SwapMods;
     public bool SwapMoodles;
     public bool SwapCustomizePlus;
+    
+    /// <summary>
+    ///     Used to determine if all selected friends have permissions
+    /// </summary>
+    public PrimaryPermissions2 SelectedAttributesPermissions = PrimaryPermissions2.BodySwap;
 
     /// <summary>
     ///     Handles the swap button from the Ui
@@ -43,44 +51,38 @@ public class BodySwapViewUiController(
             if (SwapCustomizePlus)
                 attributes |= CharacterAttributes.CustomizePlus;
             
-            var input = new BodySwapRequest
+            var request = new BodySwapRequest
             {
                 TargetFriendCodes = friendsListService.Selected.Select(friend => friend.FriendCode).ToList(),
                 SwapAttributes = attributes,
-                Identity = IncludeSelfInSwap
-                    ? new CharacterIdentity
-                    {
-                        GameObjectName = player.Name.ToString(),
-                        CharacterName = identityService.Identity
-                    }
-                    : null
+                SenderCharacterName = IncludeSelfInSwap ? player.Name.ToString() : null
             };
 
-            NotificationHelper.Info("Beginning body swap, this may take a moment", string.Empty);
+            NotificationHelper.Info("Beginning body swap, this will take a moment", string.Empty);
 
-            var response =
-                await networkService.InvokeAsync<BodySwapResponse>(HubMethod.BodySwap, input);
-            if (response.Success)
+            var response = await networkService.InvokeAsync<BodySwapResponse>(HubMethod.BodySwap, request);
+            if (response.Result is ActionResponseEc.Success)
             {
-                if (response.Identity is null)
+                if (response.CharacterName is null)
                 {
-                    NotificationHelper.Warning("Unable to swap bodies", "You did not receive a valid identity after the swap");
+                    // We requested to be in the swap
+                    if (request.SenderCharacterName is not null)
+                    {
+                        // Issue
+                        Plugin.Log.Warning("[Body Swap] Expected a body in the response but none was present");
+                    }
                 }
                 else
                 {
-                    NotificationHelper.Success("Successfully swapped bodies", string.Empty);
-                    
                     // Actually apply glamourer, mods, etc...
-                    await modManager.Assimilate(response.Identity.GameObjectName, attributes).ConfigureAwait(false);
-                    
+                    await modManager.Assimilate(response.CharacterName, attributes).ConfigureAwait(false);
+                        
                     // Set your new identity
-                    identityService.Identity = response.Identity.CharacterName;
+                    identityService.Identity = response.CharacterName;
                 }
             }
-            else
-            {
-                NotificationHelper.Warning("Unable to swap bodies", response.Message);
-            }
+            
+            ActionResponseParser.Parse("Body Swap", response);
         }
         catch (Exception e)
         {
@@ -96,28 +98,8 @@ public class BodySwapViewUiController(
         var thoseWhoYouLackPermissionsFor = new List<string>();
         foreach (var selected in friendsListService.Selected)
         {
-            if (selected.PermissionsGrantedByFriend.Has(PrimaryPermissions.BodySwap) is false)
-            {
+            if ((selected.PermissionsGrantedByFriend.Primary & SelectedAttributesPermissions) != SelectedAttributesPermissions)
                 thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
-                continue;
-            }
-
-            if (SwapMods && selected.PermissionsGrantedByFriend.Has(PrimaryPermissions.Mods) is false)
-            {
-                thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
-                continue;
-            }
-
-            if (SwapMoodles && selected.PermissionsGrantedByFriend.Has(PrimaryPermissions.Moodles) is false)
-            {
-                thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
-                continue;
-            }
-            
-            if (SwapCustomizePlus && selected.PermissionsGrantedByFriend.Has(PrimaryPermissions.Customize) is false)
-            {
-                thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
-            }
         }
         
         return thoseWhoYouLackPermissionsFor;

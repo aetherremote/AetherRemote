@@ -9,7 +9,7 @@ using System.Text;
 /// <summary>
 ///     Parses any response from the server and provides a notification on the screen with the results 
 /// </summary>
-public static class ActionResultParser
+public static class ActionResponseParser
 {
     public static void Parse(string operation, ActionResponse response)
     {
@@ -78,13 +78,19 @@ public static class ActionResultParser
             ActionResultEc.ClientNotFriends or
                 ActionResultEc.TargetNotFriends => string.Concat("You are not friends with ", name),
 
-            ActionResultEc.ClientInSafeMode => string.Concat(name, " is in safe-mode"),
+            ActionResultEc.ClientInSafeMode => string.Concat(name, " is not accepting commands at the moment"),
+            ActionResultEc.ClientHasFeaturePaused => string.Concat(name, " has paused this feature"),
+            ActionResultEc.ClientHasSenderPaused => string.Concat(name, " did not process your command"),
+            
             ActionResultEc.ClientHasNotGrantedSenderPermissions or
                 ActionResultEc.TargetHasNotGrantedSenderPermissions => string.Concat(name, " has not granted you permissions for this command"),
-            ActionResultEc.ClientBadData => string.Concat(name, " could not parse the data you provided"),
             
+            ActionResultEc.ClientBadData => string.Concat(name, " could not parse the data you provided"),
+            ActionResultEc.ClientPluginDependency => string.Concat(name, " ran into an issue with another plugin"),
+            ActionResultEc.ClientBeingHypnotized => string.Concat(name, " is currently occupied elsewhere"),
             ActionResultEc.TargetTimeout => string.Concat("The command timed out to ", name),
             ActionResultEc.TargetOffline => string.Concat(name, " is offline"),
+            ActionResultEc.ValueNotSet => string.Concat(name, "Report to developer the code 730"),
 
             _ => string.Concat(name, " encountered an unknown error")
         };

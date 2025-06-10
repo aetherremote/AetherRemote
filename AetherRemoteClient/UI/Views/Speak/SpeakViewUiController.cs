@@ -7,6 +7,8 @@ using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Util;
+using AetherRemoteCommon.V2.Domain.Enum;
+using AetherRemoteCommon.V2.Domain.Network;
 using AetherRemoteCommon.V2.Domain.Network.Speak;
 using Dalamud.Game.ClientState.Objects.Types;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
@@ -109,22 +111,17 @@ public class SpeakViewUiController
                 TargetFriendCodes = _friendsListService.Selected.Select(friend => friend.FriendCode).ToList()
             };
 
-            var response = await _networkService.InvokeAsync<BaseResponse>(HubMethod.Speak, input);
-            if (response.Success)
+            var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.Speak, input);
+            if (response.Result is ActionResponseEc.Success)
             {
                 Message = string.Empty;
-                NotificationHelper.Success("Successfully issued speak command", string.Empty);
-
-                if (ChannelSelect is not ChatChannel.Echo)
-                    return;
                 
-                foreach (var friend in _friendsListService.Selected)
-                    Plugin.ChatGui.Print($">>{friend.NoteOrFriendCode}: {input.Message}");
+                if (input.ChatChannel is ChatChannel.Echo)
+                    foreach (var friend in _friendsListService.Selected)
+                        Plugin.ChatGui.Print($">>{friend.NoteOrFriendCode}: {input.Message}");
             }
-            else
-            {
-                NotificationHelper.Warning("Unable to issue speak command", response.Message);
-            }
+            
+            ActionResponseParser.Parse("Speak", response);
         }
         catch (Exception e)
         {
@@ -134,39 +131,12 @@ public class SpeakViewUiController
 
     public List<string> GetFriendsLackingPermissions()
     {
+        var permissions = ChannelSelect.ToSpeakPermissions();
         var thoseWhoYouLackPermissionsFor = new List<string>();
         foreach (var selected in _friendsListService.Selected)
         {
-            if (selected.PermissionsGrantedByFriend.Primary.HasFlag(PrimaryPermissions.Speak) is false)
-            {
+            if ((selected.PermissionsGrantedByFriend.Speak & permissions) != permissions)
                 thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
-                continue;
-            }
-
-            switch (ChannelSelect)
-            {
-                case ChatChannel.Linkshell:
-                case ChatChannel.CrossWorldLinkshell:
-                    if (PermissionsChecker.Speak(selected.PermissionsGrantedByFriend.Speak, LinkshellSelection) is false)
-                        thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
-                    break;
-                
-                case ChatChannel.Say:
-                case ChatChannel.Roleplay:
-                case ChatChannel.Echo:
-                case ChatChannel.Yell:
-                case ChatChannel.Shout:
-                case ChatChannel.Tell:
-                case ChatChannel.Party:
-                case ChatChannel.Alliance:
-                case ChatChannel.FreeCompany:
-                case ChatChannel.NoviceNetwork:
-                case ChatChannel.PvPTeam:
-                default:
-                    if (PermissionsChecker.Speak(selected.PermissionsGrantedByFriend.Primary, ChannelSelect) is false)
-                        thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
-                    break;
-            }
         }
         
         return thoseWhoYouLackPermissionsFor;

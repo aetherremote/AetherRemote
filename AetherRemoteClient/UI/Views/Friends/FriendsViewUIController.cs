@@ -22,7 +22,7 @@ public class FriendsViewUiController : IDisposable
 
     // Instantiated
     private Friend? _friendBeingEdited;
-    private BooleanUserPermissions _friendBeingEditedUserPermissionsOriginal = new();
+    private BooleanUserPermissions2 _friendBeingEditedUserPermissionsOriginal = new();
 
     /// <summary>
     ///     Friend Code is display
@@ -37,7 +37,7 @@ public class FriendsViewUiController : IDisposable
     /// <summary>
     ///     The current friend whose permissions you are editing
     /// </summary>
-    public BooleanUserPermissions EditingUserPermissions = new();
+    public BooleanUserPermissions2 EditingUserPermissions = new();
 
     /// <summary>
     ///     <inheritdoc cref="FriendsViewUiController" />
@@ -69,7 +69,7 @@ public class FriendsViewUiController : IDisposable
             if (PendingChanges() is false)
                 return;
 
-            var permissions = BooleanUserPermissions.To(EditingUserPermissions);
+            var permissions = BooleanUserPermissions2.To(EditingUserPermissions);
 
             var input = new UpdateFriendRequest
             {
@@ -77,13 +77,12 @@ public class FriendsViewUiController : IDisposable
                 Permissions = permissions
             };
 
-            var result =
-                await _networkService.InvokeAsync<BaseResponse>(HubMethod.UpdateFriend, input).ConfigureAwait(false);
-            if (result.Success)
+            var response = await _networkService.InvokeAsync<UpdateFriendResponse>(HubMethod.UpdateFriend, input).ConfigureAwait(false);
+            if (response.Result is UpdateFriendEc.Success)
             {
                 _friendBeingEdited.Note = Note == string.Empty ? null : Note;
                 _friendBeingEdited.PermissionsGrantedToFriend = permissions;
-                _friendBeingEditedUserPermissionsOriginal = BooleanUserPermissions.From(permissions);
+                _friendBeingEditedUserPermissionsOriginal = BooleanUserPermissions2.From(permissions);
                 
                 NotificationHelper.Success("Successfully saved friend", string.Empty);
             }
@@ -109,9 +108,8 @@ public class FriendsViewUiController : IDisposable
                 return;
 
             var input = new RemoveFriendRequest { TargetFriendCode = FriendCode };
-            var result =
-                await _networkService.InvokeAsync<BaseResponse>(HubMethod.RemoveFriend, input);
-            if (result.Success)
+            var response = await _networkService.InvokeAsync<RemoveFriendResponse>(HubMethod.RemoveFriend, input);
+            if (response.Result is RemoveFriendEc.Success)
             {
                 _friendsListService.Delete(_friendBeingEdited);
                 _friendBeingEdited = null;
@@ -144,9 +142,11 @@ public class FriendsViewUiController : IDisposable
         return note != _friendBeingEdited.Note;
     }
 
+    /// <summary>
+    ///     TODO
+    /// </summary>
     public void SetAllSpeakPermissions(bool allowed)
     {
-        EditingUserPermissions.Speak = allowed;
         EditingUserPermissions.Say = allowed;
         EditingUserPermissions.Yell = allowed;
         EditingUserPermissions.Shout = allowed;
@@ -156,7 +156,7 @@ public class FriendsViewUiController : IDisposable
         EditingUserPermissions.FreeCompany = allowed;
         EditingUserPermissions.PvPTeam = allowed;
         EditingUserPermissions.Echo = allowed;
-        EditingUserPermissions.ChatEmote = allowed;
+        EditingUserPermissions.Roleplay = allowed;
         EditingUserPermissions.Ls1 = allowed;
         EditingUserPermissions.Ls2 = allowed;
         EditingUserPermissions.Ls3 = allowed;
@@ -184,11 +184,11 @@ public class FriendsViewUiController : IDisposable
             return;
 
         _friendBeingEdited = e.Selected.First();
-        _friendBeingEditedUserPermissionsOriginal = BooleanUserPermissions.From(_friendBeingEdited.PermissionsGrantedToFriend);
+        _friendBeingEditedUserPermissionsOriginal = BooleanUserPermissions2.From(_friendBeingEdited.PermissionsGrantedToFriend);
 
         FriendCode = _friendBeingEdited.FriendCode;
         Note = _friendBeingEdited.Note ?? string.Empty;
-        EditingUserPermissions = BooleanUserPermissions.From(_friendBeingEdited.PermissionsGrantedToFriend);
+        EditingUserPermissions = BooleanUserPermissions2.From(_friendBeingEdited.PermissionsGrantedToFriend);
     }
 
     public void Dispose()

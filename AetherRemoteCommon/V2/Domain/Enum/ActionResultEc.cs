@@ -20,9 +20,12 @@ public enum ActionResultEc
     TargetHasNotGrantedSenderPermissions,
     TargetTimeout,
     
+    // Success
     Success,
     
+    // Should never happen
     ValueNotSet,
     
+    // Unknown & Exception
     Unknown
 }

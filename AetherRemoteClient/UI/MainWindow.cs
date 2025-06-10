@@ -94,7 +94,7 @@ public class MainWindow : Window, IDisposable
             new TransformationViewUi(commandLockoutService, friendsListService, networkService, glamourer);
         _bodySwapView = new BodySwapViewUi(commandLockoutService, identityService, friendsListService, networkService,
             modManager);
-        _twinningView = new TwinningViewUi(commandLockoutService, friendsListService, identityService, networkService);
+        _twinningView = new TwinningViewUi(commandLockoutService, friendsListService, networkService);
         _historyView = new HistoryViewUi(logService);
         _hypnosisView = new HypnosisViewUi(friendsListService, networkService, spiralService);
         _settingsView = new SettingsViewUi(actionQueueService, spiralService, customize, glamourer, moodles, penumbra);

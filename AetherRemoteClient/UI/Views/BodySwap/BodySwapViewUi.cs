@@ -3,6 +3,7 @@ using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
+using AetherRemoteCommon.Domain.Enums.New;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using ImGuiNET;
@@ -43,14 +44,17 @@ public class BodySwapViewUi(
         SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
         {
             SharedUserInterfaces.MediumText("Options");
-            ImGui.Checkbox("Swap Mods", ref _controller.SwapMods);
+            if (ImGui.Checkbox("Swap Mods", ref _controller.SwapMods))
+                _controller.SelectedAttributesPermissions ^= PrimaryPermissions2.Mods;
             
             ImGui.SameLine();
             ImGui.SetCursorPosX(half);
-            ImGui.Checkbox("Swap Moodles", ref _controller.SwapMoodles);
+            if (ImGui.Checkbox("Swap Moodles", ref _controller.SwapMoodles))
+                _controller.SelectedAttributesPermissions ^= PrimaryPermissions2.Moodles;
             
             ImGui.Spacing();
-            ImGui.Checkbox("Swap Customize+", ref _controller.SwapCustomizePlus);
+            if(ImGui.Checkbox("Swap Customize+", ref _controller.SwapCustomizePlus))
+                _controller.SelectedAttributesPermissions ^= PrimaryPermissions2.CustomizePlus;
             
             ImGui.Spacing();
             

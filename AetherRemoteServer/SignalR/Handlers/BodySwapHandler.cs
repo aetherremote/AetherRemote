@@ -61,8 +61,6 @@ public class BodySwapHandler(
         return await forwardedRequestManager.SendBodySwap(sender, targets, deranged, request.SwapAttributes, clients);
     }
     
-    
-
     /// <summary>
     ///     Derange a list, ensuring every element ends up in an index different from its starting position
     /// </summary>

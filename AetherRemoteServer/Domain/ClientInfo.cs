@@ -17,7 +17,7 @@ public class ClientInfo(string connectionId)
     ///     A regular client will only return the local player, but it is possible a modified client could return another name.
     ///     A fix can be implemented by enforcing all accounts onboard to Aether Remote to do a lodestone registration process.
     /// </summary>
-    public string CharacterName;
+    public string CharacterName = string.Empty;
     
     /// <summary>
     ///     The last time this user submitted a command

@@ -3,6 +3,7 @@ using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Ipc;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
+using AetherRemoteCommon.Domain.Enums.New;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using ImGuiNET;
@@ -40,17 +41,11 @@ public class TransformationViewUi(
             SharedUserInterfaces.MediumText("Options");
 
             if (ImGui.Checkbox("Customization", ref _controller.ApplyCustomization))
-            {
-                if (_controller.ApplyCustomization is false && _controller.ApplyEquipment is false)
-                    _controller.ApplyEquipment = true;
-            }
+                _controller.SelectedApplyTypePermissions ^= PrimaryPermissions2.GlamourerCustomization;
             
             ImGui.SameLine(windowWidth);
             if (ImGui.Checkbox("Equipment", ref _controller.ApplyEquipment))
-            {
-                if (_controller.ApplyCustomization is false && _controller.ApplyEquipment is false)
-                    _controller.ApplyCustomization = true;
-            }
+                _controller.SelectedApplyTypePermissions ^= PrimaryPermissions2.GlamourerEquipment;
         });
 
         SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
@@ -85,6 +80,14 @@ public class TransformationViewUi(
                 SharedUserInterfaces.Icon(FontAwesomeIcon.ExclamationTriangle, ImGuiColors.DalamudYellow);
                 SharedUserInterfaces.Tooltip("Commands send to these people will not be processed");
                 ImGui.TextWrapped(string.Join(", ", friendsLackingPermissions));
+            });
+        }
+
+        if (_controller.ApplyCustomization is false && _controller.ApplyEquipment is false)
+        {
+            SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+            {
+                SharedUserInterfaces.MediumText("You must select at least one transformation option", ImGuiColors.DalamudYellow);
             });
         }
 

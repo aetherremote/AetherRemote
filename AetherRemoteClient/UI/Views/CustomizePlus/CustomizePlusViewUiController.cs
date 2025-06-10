@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Enums.New;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.V2.Domain.Enum;
 using AetherRemoteCommon.V2.Domain.Network;
@@ -29,7 +30,7 @@ public class CustomizePlusViewUiController(FriendsListService friendsListService
             if (response.Result is ActionResponseEc.Success)
                 CustomizeData = string.Empty;
             
-            ActionResultParser.Parse("Customize", response);
+            ActionResponseParser.Parse("Customize", response);
         }
         catch (Exception e)
         {
@@ -46,7 +47,7 @@ public class CustomizePlusViewUiController(FriendsListService friendsListService
         var thoseWhoYouLackPermissionsFor = new List<string>();
         foreach (var selected in friendsListService.Selected)
         {
-            if (selected.PermissionsGrantedByFriend.Primary.HasFlag(PrimaryPermissions.Customize) is false)
+            if ((selected.PermissionsGrantedByFriend.Primary & PrimaryPermissions2.CustomizePlus) != PrimaryPermissions2.CustomizePlus)
                 thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
         }
         return thoseWhoYouLackPermissionsFor;

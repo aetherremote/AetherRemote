@@ -4,7 +4,10 @@ using System.Linq;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Enums.New;
 using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.V2.Domain.Enum;
+using AetherRemoteCommon.V2.Domain.Network;
 using AetherRemoteCommon.V2.Domain.Network.Moodles;
 
 namespace AetherRemoteClient.UI.Views.Moodles;
@@ -26,17 +29,11 @@ public class MoodlesViewUiController(FriendsListService friendsListService, Netw
                 Moodle = Moodle
             };
 
-            var response = await networkService.InvokeAsync<BaseResponse>(HubMethod.Moodles, input);
-            if (response.Success)
-            {
+            var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.Moodles, input);
+            if (response.Result is ActionResponseEc.Success)
                 Moodle = string.Empty;
-                
-                NotificationHelper.Success("Successfully added moodle", string.Empty);
-            }
-            else
-            {
-                NotificationHelper.Warning("Unable to add moodle", response.Message);
-            }
+            
+            ActionResponseParser.Parse("Moodles", response);
         }
         catch (Exception e)
         {
@@ -53,7 +50,7 @@ public class MoodlesViewUiController(FriendsListService friendsListService, Netw
         var thoseWhoYouLackPermissionsFor = new List<string>();
         foreach (var selected in friendsListService.Selected)
         {
-            if (selected.PermissionsGrantedByFriend.Primary.HasFlag(PrimaryPermissions.Moodles) is false)
+            if ((selected.PermissionsGrantedByFriend.Primary & PrimaryPermissions2.Moodles) != PrimaryPermissions2.Moodles)
                 thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
         }
         return thoseWhoYouLackPermissionsFor;

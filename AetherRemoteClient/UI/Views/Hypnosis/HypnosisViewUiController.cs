@@ -8,7 +8,9 @@ using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Enums.New;
 using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.V2.Domain.Network;
 using AetherRemoteCommon.V2.Domain.Network.Hypnosis;
 using ImGuiNET;
 
@@ -164,7 +166,7 @@ public class HypnosisViewUiController
             WordBank = _hypnosisTextWordBank
         };
         
-        _spiralService.StartSpiral(spiral, "Spiral Preview");
+        _spiralService.StartSpiral("Previewing Spiral", spiral);
     }
     
     public void UpdateWordBank()
@@ -196,15 +198,8 @@ public class HypnosisViewUiController
                 }
             };
             
-            var response = await _networkService.InvokeAsync<BaseResponse>(HubMethod.Hypnosis, input);
-            if (response.Success)
-            {
-                NotificationHelper.Success("Successfully sent spiral", string.Empty);
-            }
-            else
-            {
-                NotificationHelper.Warning("Unable to send spiral", response.Message);
-            }
+            var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.Hypnosis, input);
+            ActionResponseParser.Parse("Hypnosis", response);
         }
         catch (Exception e)
         {
@@ -221,7 +216,7 @@ public class HypnosisViewUiController
         var thoseWhoYouLackPermissionsFor = new List<string>();
         foreach (var selected in _friendsListService.Selected)
         {
-            if (selected.PermissionsGrantedByFriend.Primary.HasFlag(PrimaryPermissions.Hypnosis) is false)
+            if ((selected.PermissionsGrantedByFriend.Primary & PrimaryPermissions2.Hypnosis) != PrimaryPermissions2.Hypnosis)
                 thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
         }
         return thoseWhoYouLackPermissionsFor;
