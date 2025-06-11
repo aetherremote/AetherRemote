@@ -6,6 +6,7 @@ using AetherRemoteClient.Domain.Events;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Ipc;
 using AetherRemoteCommon.Domain.Enums;
+using Dalamud.Game.ClientState.Objects.Enums;
 
 namespace AetherRemoteClient.Managers;
 
@@ -55,7 +56,10 @@ public class ModManager : IDisposable
         {
             for (ushort i = 0; i < Plugin.ObjectTable.Length; i++)
             {
-                if (Plugin.ObjectTable[i]?.Name.TextValue == targetCharacterName)
+                if (Plugin.ObjectTable[i] is not { } gameObject)
+                    continue;
+
+                if (gameObject.Name.TextValue == targetCharacterName && gameObject.ObjectKind is ObjectKind.Player)
                     return Plugin.ObjectTable[i];
             }
 

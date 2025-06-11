@@ -14,7 +14,7 @@ public class PenumbraIpc : IExternalPlugin
 {
     // Const
     private const string TemporaryModName = "AetherRemoteMods";
-    private const int Priority = 99;
+    private const int Priority = 999;
     
     // Penumbra API
     private readonly AddTemporaryMod _addTemporaryMod;
@@ -80,8 +80,18 @@ public class PenumbraIpc : IExternalPlugin
                             continue;
 
                         foreach (var kvp in resource)
-                        foreach (var item in kvp.Value)
-                            paths.Add(item, kvp.Key);
+                        {
+                            foreach (var item in kvp.Value)
+                            {
+                                if (item.EndsWith(".imc") || kvp.Key.EndsWith(".imc"))
+                                {
+                                    Plugin.Log.Verbose($"Skipping .imc redirect {item} --> {kvp.Key}");
+                                    continue;
+                                }
+                                
+                                paths.Add(item, kvp.Key);
+                            }
+                        }
                     }
 
                     return paths;

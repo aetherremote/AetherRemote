@@ -18,10 +18,10 @@ public class PauseService
     }
     
     public bool IsFeaturePaused(PrimaryPermissions2 permissions) 
-        => (_pausedPrimaryPermissions & permissions) == permissions;
+        => (_pausedPrimaryPermissions & permissions) is not 0;
     
     public bool IsFeaturePaused(SpeakPermissions2 permissions) 
-        => (_pausedSpeakPermissions & permissions) == permissions;
+        => (_pausedSpeakPermissions & permissions) is not 0;
     
     public void ToggleFeature(PrimaryPermissions2 permissions) 
         => _pausedPrimaryPermissions ^= permissions;
