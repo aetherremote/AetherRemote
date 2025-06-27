@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 using System.Threading.Tasks;
@@ -196,6 +197,7 @@ public static class SharedUserInterfaces
     /// <summary>
     ///     Creates a rounded rectangle encompassing the current width of a child and the components inside the menu box
     /// </summary>
+    [Obsolete("Use ContentBoxOptimized instead")]
     public static void ContentBox(uint backgroundColor, Action contentToDraw, bool spanWindowWidth = true, bool addSpacingAtEnd = true)
     {
         var windowPadding = ImGui.GetStyle().WindowPadding;
@@ -221,6 +223,40 @@ public static class SharedUserInterfaces
         ImGui.GetWindowDrawList().AddRectFilled(min, max, backgroundColor, AetherRemoteStyle.Rounding);
         drawList.ChannelsMerge();
         ImGui.SetCursorPosY(startPosition.Y + (max.Y - min.Y) + (addSpacingAtEnd ? windowPadding.Y : 0));
+    }
+
+    private static readonly Dictionary<string, Vector2> ContextBoxSizeCache = [];
+    
+    /// <summary>
+    ///     Draws a box of arbitrary size
+    /// </summary>
+    /// <param name="id">Unique ID for caching purposes</param>
+    /// <param name="backgroundColor">Color of the background box</param>
+    /// <param name="includeEndPadding">Should padding be added at the end?</param>
+    /// <param name="contentToDraw">What should be drawn in this box</param>
+    public static void ContentBoxOptimized(string id, uint backgroundColor, bool includeEndPadding, Action contentToDraw)
+    {
+        var draw = ImGui.GetWindowDrawList();
+        var padding = ImGui.GetStyle().WindowPadding;
+        var startCursorPos = ImGui.GetCursorPos();
+        var startScreenPos = ImGui.GetCursorScreenPos();
+
+        if (ContextBoxSizeCache.TryGetValue(id, out var cached))
+            draw.AddRectFilled(startScreenPos, startScreenPos + cached, backgroundColor, AetherRemoteStyle.Rounding);
+        
+        ImGui.SetCursorPos(startCursorPos + padding);
+        
+        ImGui.BeginGroup();
+        contentToDraw.Invoke();
+        ImGui.EndGroup();
+
+        var size = ImGui.GetItemRectSize() + padding * 2;
+        size.X = startScreenPos.X + ImGui.GetWindowWidth();
+        
+        if (cached.Equals(size) is false)
+            ContextBoxSizeCache[id] = size;
+        
+        ImGui.SetCursorPosY(startCursorPos.Y + size.Y + (includeEndPadding ? padding.Y : 0));
     }
 
     /// <summary>
