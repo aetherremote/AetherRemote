@@ -142,7 +142,7 @@ public class SpiralService : IDisposable
         SharedUserInterfaces.PopMassiveFont();
 
         var textColor = ImGui.ColorConvertFloat4ToU32(_currentSpiral.TextColor);
-        drawList.AddText(SharedUserInterfaces.MassiveFontPtr, SharedUserInterfaces.MassiveFontSize,
+        drawList.AddText(SharedUserInterfaces.MassiveFont, SharedUserInterfaces.MassiveFontSize,
             center - size * 0.5f,
             textColor, _currentDisplayPhrase);
     }

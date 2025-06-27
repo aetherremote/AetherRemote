@@ -178,7 +178,6 @@ public class MainWindow : Window, IDisposable
 
         if (_currentView.Draw() is false)
             return;
-            
 
         ImGui.SameLine();
         var onFriendsView = _currentView == _friendsView;

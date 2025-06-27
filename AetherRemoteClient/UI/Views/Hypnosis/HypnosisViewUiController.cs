@@ -113,44 +113,7 @@ public class HypnosisViewUiController
 
     public void RenderPreviewSpiral()
     {
-        var spiral = Plugin.TextureProvider.GetFromFile(_spiralPath).GetWrapOrDefault();
-        if (spiral is null)
-            return;
-
-        var speed = (SpiralSpeedMax - SpiralSpeedMin) * (SpiralSpeed * 0.01f) + SpiralSpeedMin;
-        _currentSpiralRotation += Plugin.Framework.UpdateDelta.Milliseconds * speed;
-        _currentSpiralRotation %= TwoPi;
-
-        var drawList = ImGui.GetForegroundDrawList();
-        var topLeft = ImGui.GetCursorScreenPos();
-        var center = topLeft + SpiralSize * 0.5f;
         
-        var cos = MathF.Cos(_currentSpiralRotation);
-        var sin = MathF.Sin(_currentSpiralRotation);
-
-        var rotated = new Vector2[4];
-        for (var i = 0; i < 4; i++)
-        {
-            var x = _corners[i].X;
-            var y = _corners[i].Y;
-
-            rotated[i] = new Vector2(
-                center.X + (cos * x - sin * y),
-                center.Y + (sin * x + cos * y)
-            );
-        }
-        
-        var finalColor = ImGui.ColorConvertFloat4ToU32(SpiralColor);
-        drawList.PushClipRect(topLeft, topLeft + SpiralSize , true);
-        drawList.AddImageQuad(spiral.ImGuiHandle, rotated[0], rotated[1], rotated[2], rotated[3], _spiralUv[0], _spiralUv[1], _spiralUv[2], _spiralUv[3], finalColor);
-        drawList.PopClipRect();
-        
-        SharedUserInterfaces.PushMediumFont();
-        var size = ImGui.CalcTextSize(_currentDisplayPhrase);
-        SharedUserInterfaces.PopMediumFont();
-        
-        var textColor = ImGui.ColorConvertFloat4ToU32(PreviewTextColor);
-        drawList.AddText(SharedUserInterfaces.MediumFontPtr, SharedUserInterfaces.MediumFontSize, center - size * 0.5f, textColor, _currentDisplayPhrase);
     }
 
     public void PreviewSpiral()

@@ -20,19 +20,16 @@ public static class SharedUserInterfaces
     private const ImGuiWindowFlags ComboWithFilterFlags = PopupWindowFlags | ImGuiWindowFlags.ChildWindow;
     
     public const int MassiveFontSize = 300;
-    private static bool _massiveFontBuilt;
+    public static ImFontPtr MassiveFont { get; private set; }
     private static IFontHandle? _massiveFont;
-    public static ImFontPtr MassiveFontPtr;
+    
     private static readonly SafeFontConfig DefaultFontConfig = new() { SizePx = MassiveFontSize };
     
     private const int BigFontSize = 40;
-    private static bool _bigFontBuilt;
     private static IFontHandle? _bigFont;
 
-    public const int MediumFontSize = 24;
-    private static bool _mediumFontBuilt;
+    private const int MediumFontSize = 24;
     private static IFontHandle? _mediumFont;
-    public static ImFontPtr MediumFontPtr;
     
     /// <summary>
     ///     Draws a tool tip for the last hovered ImGui component
@@ -43,9 +40,7 @@ public static class SharedUserInterfaces
         if (ImGui.IsItemHovered() is false)
             return;
 
-        ImGui.BeginTooltip();
-        ImGui.Text(tip);
-        ImGui.EndTooltip();
+        ImGui.SetTooltip(tip);
     }
 
     /// <summary>
@@ -56,12 +51,8 @@ public static class SharedUserInterfaces
     {
         if (ImGui.IsItemHovered() is false)
             return;
-
-        ImGui.BeginTooltip();
-        foreach (var tip in tips)
-            ImGui.Text(tip);
-
-        ImGui.EndTooltip();
+        
+        ImGui.SetTooltip(string.Join(Environment.NewLine, tips));
     }
 
     /// <summary>
@@ -93,10 +84,7 @@ public static class SharedUserInterfaces
         if (tooltip is null || ImGui.IsItemHovered() is false)
             return result;
 
-        ImGui.BeginTooltip();
-        ImGui.TextUnformatted(tooltip);
-        ImGui.EndTooltip();
-
+        ImGui.SetTooltip(tooltip);
         return result;
     }
 
@@ -105,16 +93,14 @@ public static class SharedUserInterfaces
     /// </summary>
     public static void MediumText(string text, Vector4? color = null)
     {
-        if (_mediumFontBuilt)
-            _mediumFont?.Push();
+        _mediumFont?.Push();
         
         if (color is null)
             ImGui.TextUnformatted(text);
         else
             ImGui.TextColored(color.Value, text);
 
-        if (_mediumFontBuilt)
-            _mediumFont?.Pop();
+        _mediumFont?.Pop();
     }
 
     /// <summary>
@@ -134,8 +120,7 @@ public static class SharedUserInterfaces
     /// </summary>
     public static void BigTextCentered(string text, Vector4? color = null)
     {
-        if (_bigFontBuilt)
-            _bigFont?.Push();
+        _bigFont?.Push();
 
         ImGui.SetCursorPosX((ImGui.GetWindowWidth() - ImGui.CalcTextSize(text).X) * 0.5f);
         if (color is null)
@@ -143,16 +128,13 @@ public static class SharedUserInterfaces
         else
             ImGui.TextColored(color.Value, text);
 
-        if (_bigFontBuilt)
-            _bigFont?.Pop();
+        _bigFont?.Pop();
     }
     
     public static void PushMassiveFont() => _massiveFont?.Push();
     public static void PopMassiveFont() => _massiveFont?.Pop();
     public static void PushBigFont() => _bigFont?.Push();
     public static void PopBigFont() => _bigFont?.Pop();
-    public static void PushMediumFont() => _mediumFont?.Push();
-    public static void PopMediumFont() => _mediumFont?.Pop();
     
     /// <summary>
     ///     Creates a button the size of a <see cref="ContentBox"/> on the right
@@ -264,7 +246,7 @@ public static class SharedUserInterfaces
         {
             toolkit.OnPreBuild(preBuild =>
             {
-                MassiveFontPtr = dalamudFontDirectory is null 
+                MassiveFont = dalamudFontDirectory is null 
                     ? preBuild.AddDalamudDefaultFont(MassiveFontSize) 
                     : preBuild.AddFontFromFile(dalamudFontDirectory, DefaultFontConfig);
             });
@@ -277,15 +259,12 @@ public static class SharedUserInterfaces
 
         _mediumFont = Plugin.PluginInterface.UiBuilder.FontAtlas.NewDelegateFontHandle(toolkit =>
         {
-            toolkit.OnPreBuild(preBuild => { MediumFontPtr = preBuild.AddDalamudDefaultFont(MediumFontSize); });
+            toolkit.OnPreBuild(preBuild => { preBuild.AddDalamudDefaultFont(MediumFontSize); });
         });
 
         await _bigFont.WaitAsync().ConfigureAwait(false);
         await _mediumFont.WaitAsync().ConfigureAwait(false);
+        await _massiveFont.WaitAsync().ConfigureAwait(false);
         await Plugin.PluginInterface.UiBuilder.FontAtlas.BuildFontsAsync().ConfigureAwait(false);
-
-        _massiveFontBuilt = true;
-        _bigFontBuilt = true;
-        _mediumFontBuilt = true;
     }
 }
