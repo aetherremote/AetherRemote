@@ -9,6 +9,20 @@ using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI;
 using AetherRemoteClient.UI.Components.Friends;
+using AetherRemoteClient.UI.Views.BodySwap;
+using AetherRemoteClient.UI.Views.CustomizePlus;
+using AetherRemoteClient.UI.Views.Emote;
+using AetherRemoteClient.UI.Views.Friends;
+using AetherRemoteClient.UI.Views.History;
+using AetherRemoteClient.UI.Views.Hypnosis;
+using AetherRemoteClient.UI.Views.Login;
+using AetherRemoteClient.UI.Views.Moodles;
+using AetherRemoteClient.UI.Views.Pause;
+using AetherRemoteClient.UI.Views.Settings;
+using AetherRemoteClient.UI.Views.Speak;
+using AetherRemoteClient.UI.Views.Status;
+using AetherRemoteClient.UI.Views.Transformation;
+using AetherRemoteClient.UI.Views.Twinning;
 using AetherRemoteClient.Utils;
 using Dalamud.Game.ClientState.Objects;
 using Dalamud.IoC;
@@ -90,6 +104,38 @@ public sealed class Plugin : IDalamudPlugin
         
         // Ui - Components
         services.AddSingleton<FriendsListComponentUi>();
+        
+        // Ui - View Controllers
+        services.AddSingleton<BodySwapViewUiController>();
+        services.AddSingleton<CustomizePlusViewUiController>();
+        services.AddSingleton<EmoteViewUiController>();
+        services.AddSingleton<FriendsViewUiController>();
+        services.AddSingleton<HistoryViewUiController>();
+        services.AddSingleton<HypnosisViewUiController>();
+        services.AddSingleton<LoginViewUiController>();
+        services.AddSingleton<MoodlesViewUiController>();
+        services.AddSingleton<PauseViewUiController>();
+        services.AddSingleton<SettingsViewUiController>();
+        services.AddSingleton<SpeakViewUiController>();
+        services.AddSingleton<StatusViewUiController>();
+        services.AddSingleton<TransformationViewUiController>();
+        services.AddSingleton<TwinningViewUiController>();
+        
+        // Ui - Views
+        services.AddSingleton<BodySwapViewUi>();
+        services.AddSingleton<CustomizePlusViewUi>();
+        services.AddSingleton<EmoteViewUi>();
+        services.AddSingleton<FriendsViewUi>();
+        services.AddSingleton<HistoryViewUi>();
+        services.AddSingleton<HypnosisViewUi>();
+        services.AddSingleton<LoginViewUi>();
+        services.AddSingleton<MoodlesViewUi>();
+        services.AddSingleton<PauseViewUi>();
+        services.AddSingleton<SettingsViewUi>();
+        services.AddSingleton<SpeakViewUi>();
+        services.AddSingleton<StatusViewUi>();
+        services.AddSingleton<TransformationViewUi>();
+        services.AddSingleton<TwinningViewUi>();
         
         // Ui - Windows
         services.AddSingleton<MainWindow>();
