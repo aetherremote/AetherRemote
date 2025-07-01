@@ -26,5 +26,5 @@ public class LoginViewUiController(NetworkService networkService)
         }
     }
     
-    public static void OpenDiscordLink() => Util.OpenLink("https://discord.com/invite/yxtdENpyEg");
+    public static void OpenDiscordLink() => Util.OpenLink("https://discord.com/invite/aetherremote");
 }

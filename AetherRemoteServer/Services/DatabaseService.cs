@@ -96,7 +96,11 @@ public class DatabaseService : IDatabaseService
 
         try
         {
-            return await command.ExecuteNonQueryAsync() is 1 ? DatabaseResultEc.Success : DatabaseResultEc.NoOp;
+            if (await command.ExecuteNonQueryAsync() is 0)
+                return DatabaseResultEc.NoOp;
+            
+            _permissionsCache.Remove(senderFriendCode);
+            return DatabaseResultEc.Success;
         }
         catch (SqliteException e)
         {
@@ -104,17 +108,24 @@ public class DatabaseService : IDatabaseService
                 senderFriendCode, targetFriendCode, e.Message);
             
             // Constraint
-            if (e.SqliteErrorCode is not 19) 
-                return DatabaseResultEc.Unknown;
-
-            return e.SqliteExtendedErrorCode switch
+            if (e.SqliteErrorCode is not 19)
             {
-                // Foreign Key
-                787 => DatabaseResultEc.NoSuchFriendCode,
-                // Unique
-                2067 => DatabaseResultEc.AlreadyFriends,
-                _ => DatabaseResultEc.Unknown
-            };
+                _logger.LogWarning("{User} failed to add {Target} due to unknown error {Exception} - {ExtendedException}", senderFriendCode, targetFriendCode, e.SqliteErrorCode, e.SqliteExtendedErrorCode);
+                return DatabaseResultEc.Unknown;
+            }
+
+            switch (e.SqliteExtendedErrorCode)
+            {
+                case 787:
+                    return DatabaseResultEc.NoSuchFriendCode;
+                
+                case 2067:
+                    return DatabaseResultEc.AlreadyFriends;
+                
+                default:
+                    _logger.LogWarning("{User} failed to add {Target} due to unknown error sqlite 19 error {Exception} - {ExtendedException}", senderFriendCode, targetFriendCode, e.SqliteErrorCode, e.SqliteExtendedErrorCode);
+                    return DatabaseResultEc.Unknown;
+            }
         }
         catch (Exception e)
         {
