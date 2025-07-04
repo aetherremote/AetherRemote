@@ -1,5 +1,5 @@
+using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.V2.Domain.Enum;
 using AetherRemoteCommon.V2.Domain.Network.SyncPermissions;
 using AetherRemoteCommon.V2.Domain.Network.UpdateFriend;
 using AetherRemoteServer.Domain.Interfaces;

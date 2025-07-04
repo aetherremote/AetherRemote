@@ -4,7 +4,7 @@ using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
-using AetherRemoteCommon.Domain.Enums.New;
+using AetherRemoteCommon.Domain.Enums.Permissions;
 using Dalamud.Interface;
 using ImGuiNET;
 

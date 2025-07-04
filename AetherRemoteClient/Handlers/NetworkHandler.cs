@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using AetherRemoteClient.Handlers.Network;
 using AetherRemoteClient.Services;
+using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.V2.Domain;
 using AetherRemoteCommon.V2.Domain.Network.BodySwap;

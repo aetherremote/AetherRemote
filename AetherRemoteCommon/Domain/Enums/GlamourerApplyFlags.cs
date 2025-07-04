@@ -1,7 +1,7 @@
 namespace AetherRemoteCommon.Domain.Enums;
 
 /// <summary>
-/// Controls how glamourer will apply data to a character
+///     Controls how glamourer will apply data to a character
 /// </summary>
 [Flags]
 public enum GlamourerApplyFlags : ulong

@@ -1,5 +1,5 @@
 using AetherRemoteCommon.Domain.Enums;
-using AetherRemoteCommon.Domain.Enums.New;
+using AetherRemoteCommon.Domain.Enums.Permissions;
 
 namespace AetherRemoteCommon.Util;
 
@@ -9,7 +9,7 @@ namespace AetherRemoteCommon.Util;
 public static class GlamourerApplyFlagsExtensions
 {
     /// <summary>
-    ///     TODO
+    ///     Converts glamourer apply flags to the corresponding required permissions
     /// </summary>
     public static PrimaryPermissions2 ToPrimaryPermission(this GlamourerApplyFlags applyFlags)
     {

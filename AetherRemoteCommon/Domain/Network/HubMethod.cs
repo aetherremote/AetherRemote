@@ -16,7 +16,6 @@ public static class HubMethod
     public const string Twinning = "Twinning";
 
     public const string GetAccountData = "GetAccountData";
-    public const string BodySwapQuery = "BodySwapQuery";
     
     public const string SyncOnlineStatus = "SyncOnlineStatus";
     public const string SyncPermissions = "SyncPermissions";

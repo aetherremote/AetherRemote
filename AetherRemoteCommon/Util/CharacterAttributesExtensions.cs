@@ -1,5 +1,5 @@
 using AetherRemoteCommon.Domain.Enums;
-using AetherRemoteCommon.Domain.Enums.New;
+using AetherRemoteCommon.Domain.Enums.Permissions;
 
 namespace AetherRemoteCommon.Util;
 

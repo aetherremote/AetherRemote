@@ -1,4 +1,5 @@
-using AetherRemoteCommon.Domain.Enums.New;
+using AetherRemoteCommon.Domain.Enums.Permissions;
+using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.V2.Domain.Network;
 using AetherRemoteCommon.V2.Domain.Network.Speak;
 

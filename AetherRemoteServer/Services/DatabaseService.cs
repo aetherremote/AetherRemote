@@ -1,6 +1,6 @@
 using AetherRemoteCommon.Domain;
-using AetherRemoteCommon.V2.Domain.Enum;
-using AetherRemoteCommon.Domain.Enums.New;
+using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteServer.Domain;
 using AetherRemoteServer.Domain.Interfaces;
 using Microsoft.Data.Sqlite;
@@ -14,15 +14,14 @@ public class DatabaseService : IDatabaseService
 {
     // Constants
     private const string ValidUsersTable = "ValidUsersTable";
-    private const string PermissionsTable = "PermissionsTable";
-    
-    private const string PermissionsTableV2 = "PermissionsTableV2";
-    private const string SpeakPermissionsParam = "@SpeakPermissions";
+    private const string PermissionsTable = "PermissionsTableV2";
     
     private const string SecretParam = "@Secret";
     private const string FriendCodeParam = "@FriendCode";
     private const string TargetFriendCodeParam = "@TargetFriendCode";
     private const string PrimaryPermissionsParam = "@PrimaryPermissions";
+    private const string SpeakPermissionsParam = "@SpeakPermissions";
+    private const string ElevatedPermissionsParam = "@ElevatedPermissions";
 
     // Injected
     private readonly ILogger<DatabaseService> _logger;
@@ -86,7 +85,7 @@ public class DatabaseService : IDatabaseService
         await using var command = _db.CreateCommand();
         command.CommandText =
             $"""
-                 INSERT INTO {PermissionsTableV2} (FriendCode, TargetFriendCode, PrimaryPermissions, SpeakPermissions)
+                 INSERT INTO {PermissionsTable} (FriendCode, TargetFriendCode, PrimaryPermissions, SpeakPermissions)
                  VALUES ({FriendCodeParam}, {TargetFriendCodeParam}, {PrimaryPermissionsParam}, {SpeakPermissionsParam})
              """;
         command.Parameters.AddWithValue(FriendCodeParam, senderFriendCode);
@@ -144,7 +143,7 @@ public class DatabaseService : IDatabaseService
         await using var command = _db.CreateCommand();
         command.CommandText =
             $"""
-                 UPDATE {PermissionsTableV2} 
+                 UPDATE {PermissionsTable} 
                  SET PrimaryPermissions = {PrimaryPermissionsParam}, SpeakPermissions = {SpeakPermissionsParam} 
                  WHERE FriendCode = {FriendCodeParam} AND TargetFriendCode = {TargetFriendCodeParam}
              """;
@@ -181,7 +180,7 @@ public class DatabaseService : IDatabaseService
         command.CommandText =
             $"""
                 SELECT TargetFriendCode, PrimaryPermissions, SpeakPermissions 
-                FROM {PermissionsTableV2} 
+                FROM {PermissionsTable} 
                 WHERE FriendCode={FriendCodeParam}
              """;
         command.Parameters.AddWithValue(FriendCodeParam, friendCode);
@@ -219,7 +218,7 @@ public class DatabaseService : IDatabaseService
         await using var command = _db.CreateCommand();
         command.CommandText =
             $"""
-                DELETE FROM {PermissionsTableV2} 
+                DELETE FROM {PermissionsTable} 
                 WHERE FriendCode={FriendCodeParam} AND TargetFriendCode={TargetFriendCodeParam}
              """;
         command.Parameters.AddWithValue(FriendCodeParam, senderFriendCode);
@@ -266,31 +265,15 @@ public class DatabaseService : IDatabaseService
          * The absence of permissions from user A to user B
          * means that user A has not added user B.
          */
-        using var initializePermissionsTable = _db.CreateCommand();
-        initializePermissionsTable.CommandText =
-            $"""
-                 CREATE TABLE IF NOT EXISTS {PermissionsTable} (
-                     UserFriendCode TEXT NOT NULL,
-                     TargetFriendCode TEXT NOT NULL,
-                     Version INTEGER NOT NULL,
-                     PrimaryPermissions INTEGER NOT NULL,
-                     LinkshellPermissions INTEGER NOT NULL,
-                     PRIMARY KEY (UserFriendCode, TargetFriendCode),
-                     FOREIGN KEY (UserFriendCode) REFERENCES {ValidUsersTable}(FriendCode),
-                     FOREIGN KEY (TargetFriendCode) REFERENCES {ValidUsersTable}(FriendCode)
-                 )
-             """;
-
-        initializePermissionsTable.ExecuteNonQuery();
-        
         using var initializePermissionsTableV2 = _db.CreateCommand();
         initializePermissionsTableV2.CommandText = 
             $"""
-                CREATE TABLE IF NOT EXISTS {PermissionsTableV2} (
+                CREATE TABLE IF NOT EXISTS {PermissionsTable} (
                      FriendCode TEXT NOT NULL,
                      TargetFriendCode TEXT NOT NULL,
                      PrimaryPermissions INTEGER NOT NULL,
                      SpeakPermissions INTEGER NOT NULL,
+                     ElevatedPermissions INTEGER NOT NULL,
                      PRIMARY KEY (FriendCode, TargetFriendCode),
                      FOREIGN KEY (FriendCode) REFERENCES {ValidUsersTable} (FriendCode),
                      FOREIGN KEY (TargetFriendCode) REFERENCES {ValidUsersTable} (FriendCode)

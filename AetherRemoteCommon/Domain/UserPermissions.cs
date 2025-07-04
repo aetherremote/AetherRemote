@@ -1,4 +1,4 @@
-using AetherRemoteCommon.Domain.Enums.New;
+using AetherRemoteCommon.Domain.Enums.Permissions;
 using MessagePack;
 
 namespace AetherRemoteCommon.Domain;

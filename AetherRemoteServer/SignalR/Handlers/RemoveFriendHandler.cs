@@ -1,4 +1,4 @@
-using AetherRemoteCommon.V2.Domain.Enum;
+using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.V2.Domain.Network.RemoveFriend;
 using AetherRemoteServer.Domain.Interfaces;
 

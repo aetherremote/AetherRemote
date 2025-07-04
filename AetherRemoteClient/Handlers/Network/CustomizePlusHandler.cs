@@ -3,9 +3,11 @@ using System.Threading.Tasks;
 using AetherRemoteClient.Ipc;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
-using AetherRemoteCommon.Domain.Enums.New;
+using AetherRemoteCommon.Domain;
+using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Enums.Permissions;
+using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.V2.Domain;
-using AetherRemoteCommon.V2.Domain.Enum;
 using AetherRemoteCommon.V2.Domain.Network.Customize;
 
 namespace AetherRemoteClient.Handlers.Network;

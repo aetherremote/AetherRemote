@@ -1,8 +1,6 @@
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
-using AetherRemoteCommon.Domain.Enums.New;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.V2.Domain.Enum;
 using AetherRemoteCommon.V2.Domain.Network;
 using AetherRemoteCommon.V2.Domain.Network.BodySwap;
 using AetherRemoteServer.Domain.Interfaces;

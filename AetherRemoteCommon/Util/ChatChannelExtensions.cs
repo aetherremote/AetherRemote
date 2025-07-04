@@ -1,5 +1,5 @@
 using AetherRemoteCommon.Domain.Enums;
-using AetherRemoteCommon.Domain.Enums.New;
+using AetherRemoteCommon.Domain.Enums.Permissions;
 
 namespace AetherRemoteCommon.Util;
 
@@ -48,7 +48,7 @@ public static class ChatChannelExtensions
     }
 
     /// <summary>
-    ///     TODO
+    ///     Convert a chat channel to speak permissions
     /// </summary>
     public static SpeakPermissions2 ToSpeakPermissions(this ChatChannel chatChannel, string? extra = null)
     {
@@ -75,22 +75,5 @@ public static class ChatChannelExtensions
         return int.TryParse(extra, out var number)
             ? (SpeakPermissions2)((int)starting << (number - 1))
             : SpeakPermissions2.None;
-    }
-    
-    /// <summary>
-    ///     Converts a <see cref="ChatChannel"/> into the corresponding <see cref="LinkshellPermissions"/> or null if
-    ///     no mapping can be made.
-    /// </summary>
-    public static LinkshellPermissions ToLinkshellPermissions(this ChatChannel chatChannel, int linkshellNumber)
-    {
-        if (linkshellNumber is < 1 or > 8)
-            return LinkshellPermissions.None;
-
-        return chatChannel switch
-        {
-            ChatChannel.Linkshell => (LinkshellPermissions)((int)LinkshellPermissions.Ls1 << (linkshellNumber - 1)),
-            ChatChannel.CrossWorldLinkshell => (LinkshellPermissions)((int)LinkshellPermissions.Cwl1 << (linkshellNumber - 1)),
-            _ => LinkshellPermissions.None
-        };
     }
 }

@@ -1,8 +1,9 @@
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Services;
-using AetherRemoteCommon.Domain.Enums.New;
+using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Enums.Permissions;
+using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.V2.Domain;
-using AetherRemoteCommon.V2.Domain.Enum;
 
 namespace AetherRemoteClient.Managers;
 

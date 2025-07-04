@@ -2,9 +2,11 @@ using System.Threading.Tasks;
 using AetherRemoteClient.Ipc;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteCommon.Domain;
+using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Util;
 using AetherRemoteCommon.V2.Domain;
-using AetherRemoteCommon.V2.Domain.Enum;
 using AetherRemoteCommon.V2.Domain.Network.Transform;
 
 namespace AetherRemoteClient.Handlers.Network;

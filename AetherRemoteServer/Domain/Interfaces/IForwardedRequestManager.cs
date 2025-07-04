@@ -1,4 +1,5 @@
 using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.V2.Domain.Network;
 using AetherRemoteCommon.V2.Domain.Network.BodySwap;
 using Microsoft.AspNetCore.SignalR;
