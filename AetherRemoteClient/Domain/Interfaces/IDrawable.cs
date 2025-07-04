@@ -9,5 +9,5 @@ public interface IDrawable
     ///     Draw a view
     /// </summary>
     /// <returns>If the friend's list should be drawn too</returns>
-    public bool Draw();
+    public void Draw();
 }

@@ -1,7 +1,6 @@
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Ipc;
-using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
@@ -10,28 +9,25 @@ using ImGuiNET;
 namespace AetherRemoteClient.UI.Views.Settings;
 
 public class SettingsViewUi(
-    ActionQueueService actionQueueService,
-    SpiralService spiralService,
-    CustomizePlusIpc customize, 
-    GlamourerIpc glamourer, 
+    SettingsViewUiController controller,
+    CustomizePlusIpc customize,
+    GlamourerIpc glamourer,
     MoodlesIpc moodles,
     PenumbraIpc penumbra) : IDrawable
 {
-    private readonly SettingsViewUiController _controller = new(actionQueueService, spiralService);
-
     private static readonly Vector2 CheckboxPadding = new(8, 0);
 
-    public bool Draw()
+    public void Draw()
     {
         ImGui.BeginChild("SettingsContent", Vector2.Zero, false, AetherRemoteStyle.ContentFlags);
         ImGui.PushStyleVar(ImGuiStyleVar.ItemInnerSpacing, CheckboxPadding);
 
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.MediumText("Emergency Actions");
             ImGui.AlignTextToFramePadding();
             if (ImGui.Checkbox("Safe mode is", ref Plugin.Configuration.SafeMode))
-                _controller.UpdateSafeMode(Plugin.Configuration.SafeMode);
+                controller.UpdateSafeMode(Plugin.Configuration.SafeMode);
 
             SharedUserInterfaces.Tooltip(
             [
@@ -46,14 +42,14 @@ public class SettingsViewUi(
                 ImGui.TextColored(ImGuiColors.DalamudRed, "OFF");
         });
         
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("SettingsGeneral", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.MediumText("General");
             if (ImGui.Checkbox("Auto Connect", ref Plugin.Configuration.AutoLogin))
                 Plugin.Configuration.Save();
         });
         
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("SettingsHypnosis", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.MediumText("Hypnosis");
             ImGui.SameLine();
@@ -61,18 +57,18 @@ public class SettingsViewUi(
             SharedUserInterfaces.Tooltip("Setting Min/Max speed limits the spirals sent by others to your preferences");
             
             ImGui.TextUnformatted("Minimum Spiral Speed");
-            if (ImGui.SliderInt("##MinimumSpeed", ref _controller.MinimumSpiralSpeed, 0, 100))
-                if (_controller.MinimumSpiralSpeed > _controller.MaximumSpiralSpeed)
-                    _controller.MinimumSpiralSpeed = _controller.MaximumSpiralSpeed;
+            if (ImGui.SliderInt("##MinimumSpeed", ref controller.MinimumSpiralSpeed, 0, 100))
+                if (controller.MinimumSpiralSpeed > controller.MaximumSpiralSpeed)
+                    controller.MinimumSpiralSpeed = controller.MaximumSpiralSpeed;
             
             ImGui.TextUnformatted("Maximum Spiral Speed");
-            if(ImGui.SliderInt("##MaximumSpeed", ref _controller.MaximumSpiralSpeed, 0, 100))
-                if (_controller.MaximumSpiralSpeed < _controller.MinimumSpiralSpeed)
-                    _controller.MaximumSpiralSpeed = _controller.MinimumSpiralSpeed;
+            if(ImGui.SliderInt("##MaximumSpeed", ref controller.MaximumSpiralSpeed, 0, 100))
+                if (controller.MaximumSpiralSpeed < controller.MinimumSpiralSpeed)
+                    controller.MaximumSpiralSpeed = controller.MinimumSpiralSpeed;
             
         });
 
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("SettingsDependencies", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.MediumText("Dependencies");
             ImGui.TextColored(ImGuiColors.DalamudGrey,
@@ -99,8 +95,6 @@ public class SettingsViewUi(
 
         ImGui.PopStyleVar();
         ImGui.EndChild();
-
-        return false;
     }
 
     private static void DrawCheckmarkOrCrossOut(bool apiAvailable)

@@ -1,7 +1,7 @@
-using System;
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
@@ -10,6 +10,7 @@ using ImGuiNET;
 namespace AetherRemoteClient.UI.Views.Emote;
 
 public class EmoteViewUi(
+    FriendsListComponentUi friendsList,
     CommandLockoutService commandLockoutService,
     EmoteService emoteService,
     FriendsListService friendsListService,
@@ -17,31 +18,38 @@ public class EmoteViewUi(
 {
     private readonly EmoteViewUiController _controller = new(emoteService, friendsListService, networkService);
 
-    public bool Draw()
+    public void Draw()
     {
         ImGui.BeginChild("EmoteContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
 
         switch (friendsListService.Selected.Count)
         {
             case 0:
-                SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground,
-                    () => { SharedUserInterfaces.TextCentered("You must select at least one friend"); });
+                SharedUserInterfaces.ContentBox("EmoteSelectMoreFriends", AetherRemoteStyle.PanelBackground, true,
+                    () =>
+                    {
+                        SharedUserInterfaces.TextCentered("You must select at least one friend");
+                    });
 
                 ImGui.EndChild();
-                return true;
+                ImGui.SameLine();
+                friendsList.Draw();
+                return;
 
             case > 3:
-                SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground,
+                SharedUserInterfaces.ContentBox("EmoteLimitedSelection", AetherRemoteStyle.PanelBackground, true,
                     () =>
                     {
                         SharedUserInterfaces.TextCentered("You may only select 3 friends for in game functions");
                     });
 
                 ImGui.EndChild();
-                return true;
+                ImGui.SameLine();
+                friendsList.Draw();
+                return;
         }
 
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("EmoteOptions", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.MediumText("Options");
             ImGui.Checkbox("Display log message?", ref _controller.DisplayLogMessage);
@@ -50,7 +58,7 @@ public class EmoteViewUi(
         var friendsLackingPermissions = _controller.GetFriendsLackingPermissions();
         if (friendsLackingPermissions.Count is not 0)
         {
-            SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+            SharedUserInterfaces.ContentBox("EmoteLackingPermissions", AetherRemoteStyle.PanelBackground, true, () =>
             {
                 SharedUserInterfaces.MediumText("Lacking Permissions", ImGuiColors.DalamudYellow);
                 ImGui.SameLine();
@@ -61,7 +69,7 @@ public class EmoteViewUi(
             });
         }
 
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("EmoteSend", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.MediumText("Emote");
 
@@ -70,7 +78,7 @@ public class EmoteViewUi(
                 width, _controller.EmotesListFilter);
 
             ImGui.Spacing();
-            
+
             if (commandLockoutService.IsLocked)
             {
                 ImGui.BeginDisabled();
@@ -82,13 +90,14 @@ public class EmoteViewUi(
                 // If the button is not pressed, exit
                 if (ImGui.Button("Send", new Vector2(width, 0)) is false)
                     return;
-                
+
                 commandLockoutService.Lock();
                 _controller.Send();
             }
         });
 
         ImGui.EndChild();
-        return true;
+        ImGui.SameLine();
+        friendsList.Draw();
     }
 }

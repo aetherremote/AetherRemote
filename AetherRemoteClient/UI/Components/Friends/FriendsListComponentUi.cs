@@ -21,14 +21,14 @@ public class FriendsListComponentUi(FriendsListService friendsListService, Netwo
         ImGui.BeginGroup();
 
         var width = 0f;
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("FriendsListSearchFriend", AetherRemoteStyle.PanelBackground, true, () =>
         {
             width = ImGui.GetWindowWidth() - ImGui.GetCursorPosX() - windowPadding.X * 2;
             ImGui.TextUnformatted("Search");
             ImGui.SetNextItemWidth(width);
             if (ImGui.InputTextWithHint("###SearchFriendInputText", "Friend", ref _controller.SearchText, 128))
                 _controller.FriendListFilter.UpdateSearchTerm(_controller.SearchText);
-        }, false);
+        });
 
         float height;
         if (displayAddFriendsBox)
@@ -76,13 +76,13 @@ public class FriendsListComponentUi(FriendsListService friendsListService, Netwo
         {
             ImGui.Spacing();
 
-            SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+            SharedUserInterfaces.ContentBox("FriendsListAddFriend", AetherRemoteStyle.PanelBackground, false, () =>
             {
                 ImGui.SetNextItemWidth(width);
                 ImGui.InputTextWithHint("###AddFriendInputText", "Friend code", ref _controller.FriendCodeToAdd, 128);
                 if (ImGui.Button("Add Friend", new Vector2(width, 0)))
                     _ = _controller.Add();
-            }, false, false);
+            });
         }
         
         ImGui.EndGroup();

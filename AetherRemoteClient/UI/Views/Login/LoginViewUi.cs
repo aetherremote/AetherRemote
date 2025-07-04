@@ -7,45 +7,47 @@ using Microsoft.AspNetCore.SignalR.Client;
 
 namespace AetherRemoteClient.UI.Views.Login;
 
-public class LoginViewUi(NetworkService networkService) : IDrawable
+public class LoginViewUi(LoginViewUiController controller, NetworkService networkService) : IDrawable
 {
-    private readonly LoginViewUiController _controller = new(networkService);
-
-    public bool Draw()
+    private const ImGuiInputTextFlags SecretInputFlags =
+        ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.Password;
+    
+    public void Draw()
     {
         ImGui.BeginChild("LoginContent", Vector2.Zero, false, AetherRemoteStyle.ContentFlags);
 
         ImGui.AlignTextToFramePadding();
 
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("LoginHeader", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.BigTextCentered("Aether Remote");
             SharedUserInterfaces.TextCentered(Plugin.Version.ToString());
         });
 
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("LoginSecret", AetherRemoteStyle.PanelBackground, true, () =>
         {
             var shouldConnect = false;
 
             SharedUserInterfaces.MediumText("Enter Secret");
-            if (ImGui.InputTextWithHint("##SecretInput", "Secret", ref _controller.Secret, 100,
-                    ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.Password))
+            if (ImGui.InputTextWithHint("##SecretInput", "Secret", ref controller.Secret, 100, SecretInputFlags))
                 shouldConnect = true;
 
             ImGui.SameLine();
             var disable = networkService.Connection.State is not HubConnectionState.Disconnected;
-
             if (disable)
+            {
                 ImGui.BeginDisabled();
-
-            if (ImGui.Button("Connect"))
-                shouldConnect = true;
-
-            if (disable)
+                ImGui.Button("Connect");
                 ImGui.EndDisabled();
+            }
+            else
+            {
+                if (ImGui.Button("Connect"))
+                    shouldConnect = true;
+            }
 
             if (shouldConnect)
-                _controller.Connect();
+                controller.Connect();
 
             ImGui.Spacing();
 
@@ -66,6 +68,5 @@ public class LoginViewUi(NetworkService networkService) : IDrawable
         });
 
         ImGui.EndChild();
-        return false;
     }
 }

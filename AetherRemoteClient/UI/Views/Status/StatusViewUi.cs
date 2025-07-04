@@ -1,6 +1,5 @@
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
-using AetherRemoteClient.Ipc;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using Dalamud.Interface;
@@ -10,15 +9,12 @@ using ImGuiNET;
 namespace AetherRemoteClient.UI.Views.Status;
 
 public class StatusViewUi(
-    NetworkService networkService,
+    StatusViewUiController controller,
     IdentityService identityService,
     TipService tipService,
-    SpiralService spiralService,
-    GlamourerIpc glamourerIpc) : IDrawable
+    SpiralService spiralService) : IDrawable
 {
-    private readonly StatusViewUiController _controller = new(networkService, identityService, glamourerIpc);
-
-    public bool Draw()
+    public void Draw()
     {
         ImGui.BeginChild("SettingsContent", Vector2.Zero, false, AetherRemoteStyle.ContentFlags);
 
@@ -27,7 +23,7 @@ public class StatusViewUi(
 
         ImGui.AlignTextToFramePadding();
 
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("StatusHeader", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.PushBigFont();
 
@@ -42,29 +38,29 @@ public class StatusViewUi(
             SharedUserInterfaces.TextCentered("(click friend code to copy)", ImGuiColors.DalamudGrey);
         });
 
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("StatusServerStatus", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.MediumText("Server Status");
             ImGui.TextUnformatted("Connected");
         });
 
         if (SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.Plug, windowPadding, windowWidth))
-            _controller.Disconnect();
+            controller.Disconnect();
 
         SharedUserInterfaces.Tooltip("Disconnect");
 
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("StatusIdentity", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.MediumText("Current Identity");
             ImGui.TextUnformatted(identityService.Identity);
         });
 
         if (SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.History, windowPadding, windowWidth))
-            _controller.ResetIdentity();
+            controller.ResetIdentity();
 
         SharedUserInterfaces.Tooltip("Reset identity");
         
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("StatusHypnosis", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.MediumText("Hypnosis");
             ImGui.TextUnformatted(spiralService.IsBeingHypnotized 
@@ -77,7 +73,7 @@ public class StatusViewUi(
         
         SharedUserInterfaces.Tooltip("Stop spiral");
 
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("StatusTips", AetherRemoteStyle.PanelBackground, false, () =>
         {
             SharedUserInterfaces.MediumText("Tips");
             ImGui.TextUnformatted(tipService.CurrentTip);
@@ -89,6 +85,5 @@ public class StatusViewUi(
         SharedUserInterfaces.Tooltip("Next Tip");
 
         ImGui.EndChild();
-        return false;
     }
 }

@@ -1,7 +1,7 @@
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
-using AetherRemoteClient.Ipc;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums.New;
 using Dalamud.Interface;
@@ -11,68 +11,69 @@ using ImGuiNET;
 namespace AetherRemoteClient.UI.Views.Transformation;
 
 public class TransformationViewUi(
+    FriendsListComponentUi friendsList,
+    TransformationViewUiController controller,
     CommandLockoutService commandLockoutService,
-    FriendsListService friendsListService,
-    NetworkService networkService,
-    GlamourerIpc glamourer) : IDrawable
+    FriendsListService friendsListService) : IDrawable
 {
     // Const
     private static readonly Vector2 IconSize = new(32);
     
-    // Instantiated
-    private readonly TransformationViewUiController _controller = new(friendsListService, networkService, glamourer);
-
-    public bool Draw()
+    public void Draw()
     {
         ImGui.BeginChild("TransformationContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
 
         if (friendsListService.Selected.Count is 0)
         {
-            SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground,
-                () => { SharedUserInterfaces.TextCentered("You must select at least one friend"); });
+            SharedUserInterfaces.ContentBox("", AetherRemoteStyle.PanelBackground, true, () =>
+            {
+                SharedUserInterfaces.TextCentered("You must select at least one friend");
+            });
 
             ImGui.EndChild();
-            return true;
+            ImGui.SameLine();
+            friendsList.Draw();
+            return;
         }
         
         var windowWidth = ImGui.GetWindowWidth() * 0.5f; // 0.5 is a minor mathematical optimization
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("TransformationOptions", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.MediumText("Options");
 
-            if (ImGui.Checkbox("Customization", ref _controller.ApplyCustomization))
-                _controller.SelectedApplyTypePermissions ^= PrimaryPermissions2.GlamourerCustomization;
+            if (ImGui.Checkbox("Customization", ref controller.ApplyCustomization))
+                controller.SelectedApplyTypePermissions ^= PrimaryPermissions2.GlamourerCustomization;
             
             ImGui.SameLine(windowWidth);
-            if (ImGui.Checkbox("Equipment", ref _controller.ApplyEquipment))
-                _controller.SelectedApplyTypePermissions ^= PrimaryPermissions2.GlamourerEquipment;
+            if (ImGui.Checkbox("Equipment", ref controller.ApplyEquipment))
+                controller.SelectedApplyTypePermissions ^= PrimaryPermissions2.GlamourerEquipment;
         });
 
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("TransformationQuickActions", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.MediumText("Quick Actions");
 
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.User, IconSize))
-                _controller.CopyOwnGlamourer();
+                controller.CopyOwnGlamourer();
             SharedUserInterfaces.Tooltip("Copies your glamourer data into the box below");
             
             ImGui.SameLine();
             
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Crosshairs, IconSize))
-                _controller.CopyTargetGlamourer();
+                controller.CopyTargetGlamourer();
             SharedUserInterfaces.Tooltip("Copies your target's glamourer data into the box below");
             
             ImGui.SameLine();
             
             if(SharedUserInterfaces.IconButton(FontAwesomeIcon.Paste, IconSize))
-                _controller.CopyFromClipboard();
+                controller.CopyFromClipboard();
             SharedUserInterfaces.Tooltip("Paste glamourer data from your clipboard");
         });
         
-        var friendsLackingPermissions = _controller.GetFriendsLackingPermissions();
+        var friendsLackingPermissions = controller.GetFriendsLackingPermissions();
         if (friendsLackingPermissions.Count is not 0)
         {
-            SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+            SharedUserInterfaces.ContentBox("TransformationLackingPermissions", AetherRemoteStyle.PanelBackground, true, () =>
             {
                 SharedUserInterfaces.MediumText("Lacking Permissions", ImGuiColors.DalamudYellow);
                 ImGui.SameLine();
@@ -83,20 +84,20 @@ public class TransformationViewUi(
             });
         }
 
-        if (_controller.ApplyCustomization is false && _controller.ApplyEquipment is false)
+        if (controller.ApplyCustomization is false && controller.ApplyEquipment is false)
         {
-            SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+            SharedUserInterfaces.ContentBox("TransformationSelectOptions", AetherRemoteStyle.PanelBackground, true, () =>
             {
                 SharedUserInterfaces.MediumText("You must select at least one transformation option", ImGuiColors.DalamudYellow);
             });
         }
 
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("TransformationSend", AetherRemoteStyle.PanelBackground, false, () =>
         {
             SharedUserInterfaces.MediumText("Glamourer Data");
             var width = (windowWidth - ImGui.GetStyle().WindowPadding.X) * 2;
             ImGui.SetNextItemWidth(width);
-            var shouldSendTransform = ImGui.InputTextWithHint("##GlamourerData", "Glamourer data", ref _controller.GlamourerCode, 5000, ImGuiInputTextFlags.EnterReturnsTrue);
+            var shouldSendTransform = ImGui.InputTextWithHint("##GlamourerData", "Glamourer data", ref controller.GlamourerCode, 5000, ImGuiInputTextFlags.EnterReturnsTrue);
             
             ImGui.Spacing();
 
@@ -115,11 +116,12 @@ public class TransformationViewUi(
                     return;
                 
                 commandLockoutService.Lock();
-                _controller.Transform();
+                controller.Transform();
             }
         });
 
         ImGui.EndChild();
-        return true;
+        ImGui.SameLine();
+        friendsList.Draw();
     }
 }

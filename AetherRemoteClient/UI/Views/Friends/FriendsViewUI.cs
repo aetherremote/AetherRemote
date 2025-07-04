@@ -1,7 +1,7 @@
-using System;
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
@@ -12,17 +12,17 @@ namespace AetherRemoteClient.UI.Views.Friends;
 /// <summary>
 ///     Handles UI elements for the Friends tab
 /// </summary>
-public class FriendsViewUi(FriendsListService friendsListService, NetworkService networkService)
-    : IDrawable, IDisposable
+public class FriendsViewUi(
+    FriendsListComponentUi friendsList, 
+    FriendsViewUiController controller,
+    FriendsListService friendsListService) : IDrawable
 {
-    private readonly FriendsViewUiController _controller = new(friendsListService, networkService);
-
     private const string UnsavedChangesText = "You have unsaved changes";
     private static readonly Vector2 Half = new(0.5f);
     private static readonly Vector2 IconSize = new(40);
     private static readonly Vector2 SmallIconSize = new(24, 0);
 
-    public bool Draw()
+    public void Draw()
     {
         ImGui.BeginChild("PermissionContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
 
@@ -31,39 +31,41 @@ public class FriendsViewUi(FriendsListService friendsListService, NetworkService
 
         if (friendsListService.Selected.Count is not 1)
         {
-            SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+            SharedUserInterfaces.ContentBox("A2", AetherRemoteStyle.PanelBackground, true, () =>
             {
                 SharedUserInterfaces.TextCentered(friendsListService.Selected.Count is 0
                     ? "Select a friend to edit"
                     : "You must only edit a single person's permissions");
-            }, true, false);
+            });
 
             ImGui.EndChild();
-            return true;
+            ImGui.SameLine();
+            friendsList.Draw(true, true);
+            return;
         }
 
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("FriendsHeader", AetherRemoteStyle.PanelBackground, true, () =>
         {
             ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, AetherRemoteStyle.Rounding);
             ImGui.PushStyleVar(ImGuiStyleVar.ButtonTextAlign, Half);
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Trash, IconSize) && (ImGui.IsKeyDown(ImGuiKey.RightAlt) || ImGui.IsKeyDown(ImGuiKey.LeftAlt)))
-                _controller.Delete();
+                controller.Delete();
             SharedUserInterfaces.Tooltip("Hold Alt to remove friend");
             
             ImGui.SameLine(windowWidth - windowPadding.X * 2 - IconSize.X);
             
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Save, IconSize))
-                _controller.Save();
+                controller.Save();
             SharedUserInterfaces.Tooltip("Save permissions");
 
             ImGui.SameLine();
             ImGui.PopStyleVar(2);
 
-            SharedUserInterfaces.BigTextCentered($"{_controller.FriendCode}");
-            ImGui.InputTextWithHint("###FriendNoteTextInput", "Note", ref _controller.Note, 128);
+            SharedUserInterfaces.BigTextCentered($"{controller.FriendCode}");
+            ImGui.InputTextWithHint("###FriendNoteTextInput", "Note", ref controller.Note, 128);
         });
 
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("FriendsSpeakOptions", AetherRemoteStyle.PanelBackground, true, () =>
         {
             var buttonRowY = ImGui.GetCursorPosY();
             ImGui.TextUnformatted("Channels");
@@ -71,118 +73,118 @@ public class FriendsViewUi(FriendsListService friendsListService, NetworkService
             if (ImGui.BeginTable("SpeakPermissionsTable", 3))
             {
                 ImGui.TableNextColumn();
-                ImGui.Checkbox("Say", ref _controller.EditingUserPermissions.Say);
+                ImGui.Checkbox("Say", ref controller.EditingUserPermissions.Say);
                 ImGui.TableNextColumn();
-                ImGui.Checkbox("Roleplay", ref _controller.EditingUserPermissions.Roleplay);
+                ImGui.Checkbox("Roleplay", ref controller.EditingUserPermissions.Roleplay);
                 ImGui.TableNextColumn();
-                ImGui.Checkbox("Echo", ref _controller.EditingUserPermissions.Echo);
+                ImGui.Checkbox("Echo", ref controller.EditingUserPermissions.Echo);
                 ImGui.TableNextColumn();
-                ImGui.Checkbox("Yell", ref _controller.EditingUserPermissions.Yell);
+                ImGui.Checkbox("Yell", ref controller.EditingUserPermissions.Yell);
                 ImGui.TableNextColumn();
-                ImGui.Checkbox("Shout", ref _controller.EditingUserPermissions.Shout);
+                ImGui.Checkbox("Shout", ref controller.EditingUserPermissions.Shout);
                 ImGui.TableNextColumn();
-                ImGui.Checkbox("Tell", ref _controller.EditingUserPermissions.Tell);
+                ImGui.Checkbox("Tell", ref controller.EditingUserPermissions.Tell);
                 ImGui.TableNextColumn();
-                ImGui.Checkbox("Party", ref _controller.EditingUserPermissions.Party);
+                ImGui.Checkbox("Party", ref controller.EditingUserPermissions.Party);
                 ImGui.TableNextColumn();
-                ImGui.Checkbox("Alliance", ref _controller.EditingUserPermissions.Alliance);
+                ImGui.Checkbox("Alliance", ref controller.EditingUserPermissions.Alliance);
                 ImGui.TableNextColumn();
-                ImGui.Checkbox("Free Company", ref _controller.EditingUserPermissions.FreeCompany);
+                ImGui.Checkbox("Free Company", ref controller.EditingUserPermissions.FreeCompany);
                 ImGui.TableNextColumn();
-                ImGui.Checkbox("PVP Team", ref _controller.EditingUserPermissions.PvPTeam);
+                ImGui.Checkbox("PVP Team", ref controller.EditingUserPermissions.PvPTeam);
                 ImGui.EndTable();
             }
 
             ImGui.TextUnformatted("Linkshells");
-            ImGui.Checkbox("1##Ls", ref _controller.EditingUserPermissions.Ls1);
+            ImGui.Checkbox("1##Ls", ref controller.EditingUserPermissions.Ls1);
             ImGui.SameLine();
-            ImGui.Checkbox("2##Ls", ref _controller.EditingUserPermissions.Ls2);
+            ImGui.Checkbox("2##Ls", ref controller.EditingUserPermissions.Ls2);
             ImGui.SameLine();
-            ImGui.Checkbox("3##Ls", ref _controller.EditingUserPermissions.Ls3);
+            ImGui.Checkbox("3##Ls", ref controller.EditingUserPermissions.Ls3);
             ImGui.SameLine();
-            ImGui.Checkbox("4##Ls", ref _controller.EditingUserPermissions.Ls4);
+            ImGui.Checkbox("4##Ls", ref controller.EditingUserPermissions.Ls4);
             ImGui.SameLine();
-            ImGui.Checkbox("5##Ls", ref _controller.EditingUserPermissions.Ls5);
+            ImGui.Checkbox("5##Ls", ref controller.EditingUserPermissions.Ls5);
             ImGui.SameLine();
-            ImGui.Checkbox("6##Ls", ref _controller.EditingUserPermissions.Ls6);
+            ImGui.Checkbox("6##Ls", ref controller.EditingUserPermissions.Ls6);
             ImGui.SameLine();
-            ImGui.Checkbox("7##Ls", ref _controller.EditingUserPermissions.Ls7);
+            ImGui.Checkbox("7##Ls", ref controller.EditingUserPermissions.Ls7);
             ImGui.SameLine();
-            ImGui.Checkbox("8##Ls", ref _controller.EditingUserPermissions.Ls8);
+            ImGui.Checkbox("8##Ls", ref controller.EditingUserPermissions.Ls8);
 
             ImGui.TextUnformatted("Cross-world Linkshells");
-            ImGui.Checkbox("1##Cwl1", ref _controller.EditingUserPermissions.Cwl1);
+            ImGui.Checkbox("1##Cwl1", ref controller.EditingUserPermissions.Cwl1);
             ImGui.SameLine();
-            ImGui.Checkbox("2##Cwl2", ref _controller.EditingUserPermissions.Cwl2);
+            ImGui.Checkbox("2##Cwl2", ref controller.EditingUserPermissions.Cwl2);
             ImGui.SameLine();
-            ImGui.Checkbox("3##Cwl3", ref _controller.EditingUserPermissions.Cwl3);
+            ImGui.Checkbox("3##Cwl3", ref controller.EditingUserPermissions.Cwl3);
             ImGui.SameLine();
-            ImGui.Checkbox("4##Cwl4", ref _controller.EditingUserPermissions.Cwl4);
+            ImGui.Checkbox("4##Cwl4", ref controller.EditingUserPermissions.Cwl4);
             ImGui.SameLine();
-            ImGui.Checkbox("5##Cwl5", ref _controller.EditingUserPermissions.Cwl5);
+            ImGui.Checkbox("5##Cwl5", ref controller.EditingUserPermissions.Cwl5);
             ImGui.SameLine();
-            ImGui.Checkbox("6##Cwl6", ref _controller.EditingUserPermissions.Cwl6);
+            ImGui.Checkbox("6##Cwl6", ref controller.EditingUserPermissions.Cwl6);
             ImGui.SameLine();
-            ImGui.Checkbox("7##Cwl7", ref _controller.EditingUserPermissions.Cwl7);
+            ImGui.Checkbox("7##Cwl7", ref controller.EditingUserPermissions.Cwl7);
             ImGui.SameLine();
-            ImGui.Checkbox("8##Cwl8", ref _controller.EditingUserPermissions.Cwl8);
+            ImGui.Checkbox("8##Cwl8", ref controller.EditingUserPermissions.Cwl8);
 
             var current = ImGui.GetCursorPos();
             ImGui.SetCursorPos(new Vector2(windowWidth - (windowPadding.X + SmallIconSize.X) * 2, buttonRowY));
 
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Check, SmallIconSize))
-                _controller.SetAllSpeakPermissions(true);
+                controller.SetAllSpeakPermissions(true);
             SharedUserInterfaces.Tooltip("Allow all");
             ImGui.SameLine();
 
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Ban, SmallIconSize))
-                _controller.SetAllSpeakPermissions(false);
+                controller.SetAllSpeakPermissions(false);
             SharedUserInterfaces.Tooltip("Allow none");
             ImGui.SetCursorPos(current);
         });
 
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("FriendsEmoteOptions", AetherRemoteStyle.PanelBackground, true, () =>
         {
             ImGui.TextUnformatted("Emotes");
-            ImGui.Checkbox("Allow###Emotes", ref _controller.EditingUserPermissions.Emote);
+            ImGui.Checkbox("Allow###Emotes", ref controller.EditingUserPermissions.Emote);
         });
 
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("FriendsTransformationOptions", AetherRemoteStyle.PanelBackground, true, () =>
         {
             ImGui.TextUnformatted("Transformation");
             if (ImGui.BeginTable("TransformationPermissionsTable", 2))
             {
                 ImGui.TableNextColumn();
-                ImGui.Checkbox("Customization", ref _controller.EditingUserPermissions.Customization);
+                ImGui.Checkbox("Customization", ref controller.EditingUserPermissions.Customization);
                 ImGui.TableNextColumn();
-                ImGui.Checkbox("Equipment", ref _controller.EditingUserPermissions.Equipment);
+                ImGui.Checkbox("Equipment", ref controller.EditingUserPermissions.Equipment);
                 ImGui.TableNextColumn();
-                ImGui.Checkbox("Body Swap", ref _controller.EditingUserPermissions.BodySwap);
+                ImGui.Checkbox("Body Swap", ref controller.EditingUserPermissions.BodySwap);
                 ImGui.TableNextColumn();
-                ImGui.Checkbox("Twinning", ref _controller.EditingUserPermissions.Twinning);
+                ImGui.Checkbox("Twinning", ref controller.EditingUserPermissions.Twinning);
                 ImGui.TableNextColumn();
-                ImGui.Checkbox("Customize+", ref _controller.EditingUserPermissions.CustomizePlus);
+                ImGui.Checkbox("Customize+", ref controller.EditingUserPermissions.CustomizePlus);
                 ImGui.EndTable();
             }
 
             ImGui.TextUnformatted("Mod Swapping");
-            ImGui.Checkbox("Allow###ModSwapping", ref _controller.EditingUserPermissions.Mods);
+            ImGui.Checkbox("Allow###ModSwapping", ref controller.EditingUserPermissions.Mods);
         });
         
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("FriendsMoodlesOptions", AetherRemoteStyle.PanelBackground, true, () =>
         {
             ImGui.TextUnformatted("Moodles");
-            ImGui.Checkbox("Allow###Moodles", ref _controller.EditingUserPermissions.Moodles);
+            ImGui.Checkbox("Allow###Moodles", ref controller.EditingUserPermissions.Moodles);
         });
         
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("FriendsHypnosisOptions", AetherRemoteStyle.PanelBackground, false, () =>
         {
             ImGui.TextUnformatted("Hypnosis");
-            ImGui.Checkbox("Allow###Hypnosis", ref _controller.EditingUserPermissions.Hypnosis);
-        }, true, false);
+            ImGui.Checkbox("Allow###Hypnosis", ref controller.EditingUserPermissions.Hypnosis);
+        });
 
         // Pending Changes
-        if (_controller.PendingChanges())
+        if (controller.PendingChanges())
         {
             var drawList = ImGui.GetWindowDrawList();
             drawList.ChannelsSplit(2);
@@ -208,12 +210,7 @@ public class FriendsViewUi(FriendsListService friendsListService, NetworkService
         }
 
         ImGui.EndChild();
-        return true;
-    }
-
-    public void Dispose()
-    {
-        _controller.Dispose();
-        GC.SuppressFinalize(this);
+        ImGui.SameLine();
+        friendsList.Draw(true, true);
     }
 }

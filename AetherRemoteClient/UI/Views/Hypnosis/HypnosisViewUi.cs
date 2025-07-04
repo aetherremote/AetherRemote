@@ -2,6 +2,7 @@ using System;
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
@@ -9,13 +10,15 @@ using ImGuiNET;
 
 namespace AetherRemoteClient.UI.Views.Hypnosis;
 
-public class HypnosisViewUi(FriendsListService friendsListService, NetworkService networkService, SpiralService spiralService) : IDrawable
+public class HypnosisViewUi(
+    FriendsListComponentUi friendsList,
+    HypnosisViewUiController controller,
+    CommandLockoutService commandLockoutService,
+    FriendsListService friendsListService) : IDrawable
 {
     private static readonly Vector2 IconSize = new(40);
     
-    private readonly HypnosisViewUiController _controller = new(friendsListService, networkService, spiralService);
-
-    public bool Draw()
+    public void Draw()
     {
         ImGui.BeginChild("HypnosisContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
 
@@ -24,18 +27,22 @@ public class HypnosisViewUi(FriendsListService friendsListService, NetworkServic
         
         if (friendsListService.Selected.Count is 0)
         {
-            SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground,
-                () => { SharedUserInterfaces.TextCentered("You must select at least one friend"); });
+            SharedUserInterfaces.ContentBox("HypnosisSelectMoreFriends", AetherRemoteStyle.PanelBackground, true, () =>
+            {
+                SharedUserInterfaces.TextCentered("You must select at least one friend");
+            });
 
             ImGui.EndChild();
-            return true;
+            ImGui.SameLine();
+            friendsList.Draw();
+            return;
         }
         
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("HypnosisPreview", AetherRemoteStyle.PanelBackground, true, () =>
         {
             ImGui.BeginGroup();
             SharedUserInterfaces.MediumText("Preview");
-            _controller.RenderPreviewSpiral();
+            controller.RenderPreviewSpiral();
             ImGui.Dummy(HypnosisViewUiController.SpiralSize);
             ImGui.EndGroup();
             
@@ -47,38 +54,38 @@ public class HypnosisViewUi(FriendsListService friendsListService, NetworkServic
             var y = HypnosisViewUiController.SpiralSize.Y - ImGui.GetFontSize() - windowPadding.X;
             
             var size = new Vector2(x, y);
-            if (ImGui.InputTextMultiline("##PreviewText", ref _controller.PreviewText, 4000, size))
-                _controller.UpdateWordBank();
+            if (ImGui.InputTextMultiline("##PreviewText", ref controller.PreviewText, 4000, size))
+                controller.UpdateWordBank();
             
-            ImGui.RadioButton("Random", ref _controller.PreviewTextMode, 0);
+            ImGui.RadioButton("Random", ref controller.PreviewTextMode, 0);
             ImGui.SameLine();
-            ImGui.RadioButton("In Order", ref _controller.PreviewTextMode, 1);
+            ImGui.RadioButton("In Order", ref controller.PreviewTextMode, 1);
             ImGui.EndGroup();
             
             ImGui.TextUnformatted("Spiral Speed");
             ImGui.SetNextItemWidth(width - ImGui.GetCursorPosX() - windowPadding.X);
-            ImGui.SliderInt("##SpiralSpeed", ref _controller.SpiralSpeed, 0, 100);
+            ImGui.SliderInt("##SpiralSpeed", ref controller.SpiralSpeed, 0, 100);
             
-            ImGui.ColorEdit4("Spiral Color", ref _controller.SpiralColor);
+            ImGui.ColorEdit4("Spiral Color", ref controller.SpiralColor);
             
             ImGui.TextUnformatted("Text Speed");
             ImGui.SetNextItemWidth(width - ImGui.GetCursorPosX() - windowPadding.X);
-            if (ImGui.SliderInt("##TextSpeed", ref _controller.PreviewTextInterval, 1, 10))
-                _controller.UpdatePreviewTestSpeed();
+            if (ImGui.SliderInt("##TextSpeed", ref controller.PreviewTextInterval, 1, 10))
+                controller.UpdatePreviewTestSpeed();
             
-            ImGui.ColorEdit4("Text color", ref _controller.PreviewTextColor);
+            ImGui.ColorEdit4("Text color", ref controller.PreviewTextColor);
             ImGui.TextUnformatted("Spiral Duration");
             
             ImGui.SetNextItemWidth(120);
-            if (ImGui.InputInt("Minutes", ref _controller.SpiralDuration, 5))
-                _controller.SpiralDuration = Math.Max(0, _controller.SpiralDuration);
+            if (ImGui.InputInt("Minutes", ref controller.SpiralDuration, 5))
+                controller.SpiralDuration = Math.Max(0, controller.SpiralDuration);
             SharedUserInterfaces.Tooltip("0 Minutes for indefinitely");
         });
         
-        var friendsLackingPermissions = _controller.GetFriendsLackingPermissions();
+        var friendsLackingPermissions = controller.GetFriendsLackingPermissions();
         if (friendsLackingPermissions.Count is not 0)
         {
-            SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+            SharedUserInterfaces.ContentBox("HypnosisLackingPermissions", AetherRemoteStyle.PanelBackground, true, () =>
             {
                 SharedUserInterfaces.MediumText("Lacking Permissions", ImGuiColors.DalamudYellow);
                 ImGui.SameLine();
@@ -89,28 +96,43 @@ public class HypnosisViewUi(FriendsListService friendsListService, NetworkServic
             });
         }
         
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("HypnosisSend", AetherRemoteStyle.PanelBackground, false, () =>
         {
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Eye, IconSize, "Preview, disable with /ar stop or in the status tab"))
-                _controller.PreviewSpiral();
+                controller.PreviewSpiral();
             ImGui.SameLine();
-            if (ImGui.Button("Hypnotize", new Vector2(width - ImGui.GetCursorPosX() - windowPadding.X, 40)))
-                _controller.SendSpiral();
-        }, true, false);
+            
+            var size = new Vector2(width - ImGui.GetCursorPosX() - windowPadding.X, 40);
+            if (commandLockoutService.IsLocked)
+            {
+                ImGui.BeginDisabled();
+                ImGui.Button("Hypnotize", size);
+                ImGui.EndDisabled();
+            }
+            else
+            {
+                if (ImGui.Button("Hypnotize", size) is false)
+                    return;
+
+                commandLockoutService.Lock();
+                controller.SendSpiral();
+            }
+        });
         
         if (ImGui.BeginPopup("CR"))
         {
-            ImGui.ColorPicker4("Spiral Color", ref _controller.SpiralColor);
+            ImGui.ColorPicker4("Spiral Color", ref controller.SpiralColor);
             ImGui.EndPopup();
         }
 
         if (ImGui.BeginPopup("AR"))
         {
-            ImGui.ColorPicker4("Text Color", ref _controller.PreviewTextColor);
+            ImGui.ColorPicker4("Text Color", ref controller.PreviewTextColor);
             ImGui.EndPopup();
         }
         
         ImGui.EndChild();
-        return true;
+        ImGui.SameLine();
+        friendsList.Draw();
     }
 }

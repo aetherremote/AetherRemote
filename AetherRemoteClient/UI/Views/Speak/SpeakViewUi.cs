@@ -1,6 +1,7 @@
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
 using Dalamud.Interface;
@@ -10,96 +11,99 @@ using ImGuiNET;
 namespace AetherRemoteClient.UI.Views.Speak;
 
 public class SpeakViewUi(
+    FriendsListComponentUi friendsList,
+    SpeakViewUiController controller,
     CommandLockoutService commandLockoutService,
-    FriendsListService friendsListService,
-    NetworkService networkService,
-    WorldService worldService) : IDrawable
+    FriendsListService friendsListService) : IDrawable
 {
-    private readonly SpeakViewUiController _controller = new(friendsListService, networkService, worldService);
-
     private static readonly Vector2 IconSize = new(24);
 
-    public bool Draw()
+    public void Draw()
     {
         ImGui.BeginChild("SpeakContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
 
         switch (friendsListService.Selected.Count)
         {
             case 0:
-                SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground,
-                    () => { SharedUserInterfaces.TextCentered("You must select at least one friend"); });
+                SharedUserInterfaces.ContentBox("SpeakSelectMoreFriends", AetherRemoteStyle.PanelBackground, true, () =>
+                {
+                    SharedUserInterfaces.TextCentered("You must select at least one friend");
+                });
 
                 ImGui.EndChild();
-                return true;
+                ImGui.SameLine();
+                friendsList.Draw();
+                return;
 
             case > 3:
-                SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground,
-                    () =>
-                    {
-                        SharedUserInterfaces.TextCentered("You may only select 3 friends for in game functions");
-                    });
+                SharedUserInterfaces.ContentBox("SpeakLimitedSelection", AetherRemoteStyle.PanelBackground, true, () =>
+                {
+                    SharedUserInterfaces.TextCentered("You may only select 3 friends for in game functions");
+                });
 
                 ImGui.EndChild();
-                return true;
+                ImGui.SameLine();
+                friendsList.Draw();
+                return;
         }
 
         var windowPadding = ImGui.GetStyle().WindowPadding;
         var windowWidth = ImGui.GetWindowWidth();
 
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("SpeakChannel", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.MediumText("Channel");
 
             ImGui.SetNextItemWidth(140);
 
-            if (ImGui.Combo("##ChannelSelector", ref _controller.ChannelSelectionIndex, _controller.ChatModeOptions,
-                    _controller.ChatModeOptions.Length))
-                _controller.ChannelSelect = (ChatChannel)_controller.ChannelSelectionIndex;
+            if (ImGui.Combo("##ChannelSelector", ref controller.ChannelSelectionIndex, controller.ChatModeOptions,
+                    controller.ChatModeOptions.Length))
+                controller.ChannelSelect = (ChatChannel)controller.ChannelSelectionIndex;
         });
 
-        switch (_controller.ChannelSelectionIndex)
+        switch (controller.ChannelSelectionIndex)
         {
             case (int)ChatChannel.Linkshell or (int)ChatChannel.CrossWorldLinkshell:
-                SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+                SharedUserInterfaces.ContentBox("SpeakLinkshell", AetherRemoteStyle.PanelBackground, true, () =>
                 {
                     SharedUserInterfaces.MediumText("Linkshell Number");
                     ImGui.SetNextItemWidth(60);
-                    ImGui.Combo("##LinkshellNumberSelector", ref _controller.LinkshellSelection,
-                        _controller.LinkshellNumbers, 8);
+                    ImGui.Combo("##LinkshellNumberSelector", ref controller.LinkshellSelection,
+                        controller.LinkshellNumbers, 8);
                 });
                 break;
 
             case (int)ChatChannel.Tell:
-                SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+                SharedUserInterfaces.ContentBox("SpeakTell", AetherRemoteStyle.PanelBackground, true, () =>
                 {
                     SharedUserInterfaces.MediumText("Tell Target");
                     ImGui.SetNextItemWidth(180);
-                    ImGui.InputTextWithHint("##Wa", "Character Name", ref _controller.CharacterName, 200);
+                    ImGui.InputTextWithHint("##Wa", "Character Name", ref controller.CharacterName, 200);
                     
                     ImGui.SameLine();
                     SharedUserInterfaces.Icon(FontAwesomeIcon.At);
 
                     ImGui.SameLine();
                     SharedUserInterfaces.ComboWithFilter("##TellTargetSelector", "World",
-                        ref _controller.WorldName,
-                        windowWidth - windowPadding.X - ImGui.GetCursorPosX(), _controller.WorldsListFilter);
+                        ref controller.WorldName,
+                        windowWidth - windowPadding.X - ImGui.GetCursorPosX(), controller.WorldsListFilter);
 
                     ImGui.Spacing();
                     if (SharedUserInterfaces.IconButton(FontAwesomeIcon.User, IconSize))
-                        _controller.FillWithPlayerData();
+                        controller.FillWithPlayerData();
                     SharedUserInterfaces.Tooltip("Fill the World and Character Name with your data");
                     ImGui.SameLine();
                     if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Crosshairs, IconSize))
-                        _controller.FillWithTargetData();
+                        controller.FillWithTargetData();
                     SharedUserInterfaces.Tooltip("Fill the World and Character Name with your target's data");
                 });
                 break;
         }
         
-        var friendsLackingPermissions = _controller.GetFriendsLackingPermissions();
+        var friendsLackingPermissions = controller.GetFriendsLackingPermissions();
         if (friendsLackingPermissions.Count is not 0)
         {
-            SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+            SharedUserInterfaces.ContentBox("SpeakLackingPermissions", AetherRemoteStyle.PanelBackground, true, () =>
             {
                 SharedUserInterfaces.MediumText("Lacking Permissions", ImGuiColors.DalamudYellow);
                 ImGui.SameLine();
@@ -110,14 +114,14 @@ public class SpeakViewUi(
             });
         }
 
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("SpeakSend", AetherRemoteStyle.PanelBackground, false, () =>
         {
             var width = windowWidth - windowPadding.X * 2;
             SharedUserInterfaces.MediumText("Message");
             ImGui.SetNextItemWidth(width);
 
             var shouldSendMessage = ImGui.InputTextWithHint("##MessageContent", "Message to send",
-                ref _controller.Message, 440, ImGuiInputTextFlags.EnterReturnsTrue);
+                ref controller.Message, 440, ImGuiInputTextFlags.EnterReturnsTrue);
 
             ImGui.Spacing();
             
@@ -136,11 +140,12 @@ public class SpeakViewUi(
                     return;
                 
                 commandLockoutService.Lock();
-                _controller.SendMessage();
+                controller.SendMessage();
             }
         });
 
         ImGui.EndChild();
-        return true;
+        ImGui.SameLine();
+        friendsList.Draw();
     }
 }

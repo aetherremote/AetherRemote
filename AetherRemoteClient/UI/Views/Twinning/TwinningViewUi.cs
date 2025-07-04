@@ -1,6 +1,7 @@
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums.New;
 using Dalamud.Interface;
@@ -10,26 +11,29 @@ using ImGuiNET;
 namespace AetherRemoteClient.UI.Views.Twinning;
 
 public class TwinningViewUi(
+    FriendsListComponentUi friendsList,
+    TwinningViewUiController controller,
     CommandLockoutService commandLockoutService,
-    FriendsListService friendsListService,
-    NetworkService networkService): IDrawable
+    FriendsListService friendsListService): IDrawable
 {
-    private readonly TwinningViewUiController _controller = new(friendsListService, networkService);
-    
-    public bool Draw()
+    public void Draw()
     {
         ImGui.BeginChild("TwinningContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
         
         if (friendsListService.Selected.Count is 0)
         {
-            SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground,
-                () => { SharedUserInterfaces.TextCentered("You must select at least one friend"); });
+            SharedUserInterfaces.ContentBox("TwinningSelectMoreFriends", AetherRemoteStyle.PanelBackground, true, () =>
+            {
+                SharedUserInterfaces.TextCentered("You must select at least one friend");
+            });
 
             ImGui.EndChild();
-            return true;
+            ImGui.SameLine();
+            friendsList.Draw();
+            return;
         }
         
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("TwinningInfo", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.MediumText("Information");
             ImGui.TextWrapped(
@@ -37,27 +41,27 @@ public class TwinningViewUi(
         });
         
         var half = ImGui.GetWindowWidth() * 0.5f;
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("TwinningOptions", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.MediumText("Options");
-            if (ImGui.Checkbox("Swap Mods", ref _controller.SwapMods))
-                _controller.SelectedAttributesPermissions ^= PrimaryPermissions2.Mods;
+            if (ImGui.Checkbox("Swap Mods", ref controller.SwapMods))
+                controller.SelectedAttributesPermissions ^= PrimaryPermissions2.Mods;
             
             ImGui.SameLine();
             ImGui.SetCursorPosX(half);
-            if (ImGui.Checkbox("Swap Moodles", ref _controller.SwapMoodles))
-                _controller.SelectedAttributesPermissions ^= PrimaryPermissions2.Moodles;
+            if (ImGui.Checkbox("Swap Moodles", ref controller.SwapMoodles))
+                controller.SelectedAttributesPermissions ^= PrimaryPermissions2.Moodles;
             
             ImGui.Spacing();
             
-            if(ImGui.Checkbox("Swap Customize+", ref _controller.SwapCustomizePlus))
-                _controller.SelectedAttributesPermissions ^= PrimaryPermissions2.CustomizePlus;
+            if(ImGui.Checkbox("Swap Customize+", ref controller.SwapCustomizePlus))
+                controller.SelectedAttributesPermissions ^= PrimaryPermissions2.CustomizePlus;
         });
         
-        var friendsLackingPermissions = _controller.GetFriendsLackingPermissions();
+        var friendsLackingPermissions = controller.GetFriendsLackingPermissions();
         if (friendsLackingPermissions.Count is not 0)
         {
-            SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+            SharedUserInterfaces.ContentBox("TwinningLackingPermissions", AetherRemoteStyle.PanelBackground, true, () =>
             {
                 SharedUserInterfaces.MediumText("Lacking Permissions", ImGuiColors.DalamudYellow);
                 ImGui.SameLine();
@@ -68,7 +72,7 @@ public class TwinningViewUi(
             });
         }
         
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("TwinningSend", AetherRemoteStyle.PanelBackground, false, () =>
         {
             SharedUserInterfaces.MediumText("Twinning");
 
@@ -85,11 +89,12 @@ public class TwinningViewUi(
                     return;
                 
                 commandLockoutService.Lock();
-                _controller.Twin();
+                controller.Twin();
             }
         });
         
         ImGui.EndChild();
-        return true;
+        ImGui.SameLine();
+        friendsList.Draw();
     }
 }

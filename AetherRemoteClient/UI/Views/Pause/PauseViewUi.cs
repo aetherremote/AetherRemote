@@ -12,11 +12,12 @@ using ImGuiNET;
 
 namespace AetherRemoteClient.UI.Views.Pause;
 
-public class PauseViewUi(FriendsListService friendsListService, PauseService pauseService) : IDrawable
+public class PauseViewUi(
+    PauseViewUiController controller,
+    FriendsListService friendsListService, 
+    PauseService pauseService) : IDrawable
 {
-    private readonly PauseViewUiController _controller = new();
-    
-    public bool Draw()
+    public void Draw()
     {
         ImGui.BeginChild("OverridesContent", Vector2.Zero, false, AetherRemoteStyle.ContentFlags);
         ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, AetherRemoteStyle.Rounding);
@@ -24,12 +25,12 @@ public class PauseViewUi(FriendsListService friendsListService, PauseService pau
         var width = new Vector2(ImGui.GetWindowWidth() - AetherRemoteStyle.NavBarDimensions.X, 0);
         if (ImGui.BeginChild("PauseFeatureHeader", width, false, AetherRemoteStyle.ContentFlags))
         {
-            SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+            SharedUserInterfaces.ContentBox("PauseHeader", AetherRemoteStyle.PanelBackground, true, () =>
             {
                 ImGui.TextUnformatted("Pausing a feature disables all incoming requests of that feature");
             });
             
-            SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+            SharedUserInterfaces.ContentBox("PauseSpeakPermissions", AetherRemoteStyle.PanelBackground, true, () =>
             {
                 ImGui.TextUnformatted("Speak Permissions");
                 if (ImGui.BeginTable("GeneralSpeakPermissions", 4) is false)
@@ -61,7 +62,7 @@ public class PauseViewUi(FriendsListService friendsListService, PauseService pau
                 ImGui.EndTable();
             });
             
-            SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+            SharedUserInterfaces.ContentBox("PauseLinkshellPermissions", AetherRemoteStyle.PanelBackground, true, () =>
             {
                 ImGui.TextUnformatted("Linkshell Permissions");
                 if (ImGui.BeginTable("LinkshellSpeakPermissions", 4) is false)
@@ -87,7 +88,7 @@ public class PauseViewUi(FriendsListService friendsListService, PauseService pau
                 ImGui.EndTable();
             });
             
-            SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+            SharedUserInterfaces.ContentBox("PauseCrossWorldPermissions", AetherRemoteStyle.PanelBackground, true, () =>
             {
                 ImGui.TextUnformatted("Cross-world Linkshell Permissions");
                 if (ImGui.BeginTable("Cross-worldLinkshellPermissions", 4) is false)
@@ -113,7 +114,7 @@ public class PauseViewUi(FriendsListService friendsListService, PauseService pau
                 ImGui.EndTable();
             });
             
-            SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+            SharedUserInterfaces.ContentBox("PauseGeneralPermissions", AetherRemoteStyle.PanelBackground, true, () =>
             {
                 ImGui.TextUnformatted("General Permissions");
                 if (ImGui.BeginTable("GeneralPermissions", 2) is false)
@@ -127,7 +128,7 @@ public class PauseViewUi(FriendsListService friendsListService, PauseService pau
                 ImGui.EndTable();
             });
 
-            SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+            SharedUserInterfaces.ContentBox("PauseAttributes", AetherRemoteStyle.PanelBackground, false, () =>
             {
                 ImGui.TextUnformatted("Character Attributes");
                 if (ImGui.BeginTable("CharacterAttributes", 2) is false)
@@ -149,7 +150,7 @@ public class PauseViewUi(FriendsListService friendsListService, PauseService pau
                 BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.Moodles);
                     
                 ImGui.EndTable();
-            }, true, false);
+            });
             
             ImGui.EndChild();
         }
@@ -158,12 +159,12 @@ public class PauseViewUi(FriendsListService friendsListService, PauseService pau
 
         if (ImGui.BeginChild("PauseFriendHeader", Vector2.Zero, false, AetherRemoteStyle.ContentFlags))
         {
-            SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+            SharedUserInterfaces.ContentBox("PauseFriendList", AetherRemoteStyle.PanelBackground, true, () =>
             {
                 ImGui.TextUnformatted("Pause Friend");
                 
                 ImGui.SetNextItemWidth(ImGui.GetWindowWidth() - ImGui.GetCursorPos().X - ImGui.GetStyle().WindowPadding.X);
-                ImGui.InputTextWithHint("##SearchFriendInputText", "Search", ref _controller.SearchString, 1000);
+                ImGui.InputTextWithHint("##SearchFriendInputText", "Search", ref controller.SearchString, 1000);
             });
 
             if (ImGui.BeginChild("PauseFriendBody", Vector2.Zero, true))
@@ -180,7 +181,6 @@ public class PauseViewUi(FriendsListService friendsListService, PauseService pau
         
         ImGui.PopStyleVar();
         ImGui.EndChild();
-        return false;
     }
 
     private void BuildPauseButtonForFriend(Friend friend)

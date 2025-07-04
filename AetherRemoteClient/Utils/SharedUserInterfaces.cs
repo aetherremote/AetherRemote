@@ -193,38 +193,10 @@ public static class SharedUserInterfaces
 
         ImGui.EndPopup();
     }
-
+    
     /// <summary>
-    ///     Creates a rounded rectangle encompassing the current width of a child and the components inside the menu box
+    ///     Dictionary used to store the calculated sizes of all content boxes
     /// </summary>
-    [Obsolete("Use ContentBoxOptimized instead")]
-    public static void ContentBox(uint backgroundColor, Action contentToDraw, bool spanWindowWidth = true, bool addSpacingAtEnd = true)
-    {
-        var windowPadding = ImGui.GetStyle().WindowPadding;
-        var drawList = ImGui.GetWindowDrawList();
-        drawList.ChannelsSplit(2);
-        drawList.ChannelsSetCurrent(1);
-
-        var startPosition = ImGui.GetCursorPos();
-        var anchorPoint = ImGui.GetCursorScreenPos();
-        ImGui.SetCursorPos(startPosition + windowPadding);
-
-        ImGui.BeginGroup();
-        contentToDraw.Invoke();
-        ImGui.EndGroup();
-
-        drawList.ChannelsSetCurrent(0);
-
-        var min = ImGui.GetItemRectMin() - windowPadding;
-        var max = ImGui.GetItemRectMax() + windowPadding;
-        if (spanWindowWidth)
-            max.X = anchorPoint.X + ImGui.GetWindowWidth();
-
-        ImGui.GetWindowDrawList().AddRectFilled(min, max, backgroundColor, AetherRemoteStyle.Rounding);
-        drawList.ChannelsMerge();
-        ImGui.SetCursorPosY(startPosition.Y + (max.Y - min.Y) + (addSpacingAtEnd ? windowPadding.Y : 0));
-    }
-
     private static readonly Dictionary<string, Vector2> ContextBoxSizeCache = [];
     
     /// <summary>
@@ -234,7 +206,7 @@ public static class SharedUserInterfaces
     /// <param name="backgroundColor">Color of the background box</param>
     /// <param name="includeEndPadding">Should padding be added at the end?</param>
     /// <param name="contentToDraw">What should be drawn in this box</param>
-    public static void ContentBoxOptimized(string id, uint backgroundColor, bool includeEndPadding, Action contentToDraw)
+    public static void ContentBox(string id, uint backgroundColor, bool includeEndPadding, Action contentToDraw)
     {
         var draw = ImGui.GetWindowDrawList();
         var padding = ImGui.GetStyle().WindowPadding;
@@ -251,7 +223,7 @@ public static class SharedUserInterfaces
         ImGui.EndGroup();
 
         var size = ImGui.GetItemRectSize() + padding * 2;
-        size.X = startScreenPos.X + ImGui.GetWindowWidth();
+        size.X = ImGui.GetWindowWidth();
         
         if (cached.Equals(size) is false)
             ContextBoxSizeCache[id] = size;

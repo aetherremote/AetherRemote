@@ -9,6 +9,7 @@ using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI;
 using AetherRemoteClient.UI.Components.Friends;
+using AetherRemoteClient.UI.Components.NavigationBar;
 using AetherRemoteClient.UI.Views.BodySwap;
 using AetherRemoteClient.UI.Views.CustomizePlus;
 using AetherRemoteClient.UI.Views.Emote;
@@ -74,6 +75,7 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<PauseService>();
         services.AddSingleton<SpiralService>();
         services.AddSingleton<TipService>();
+        services.AddSingleton<ViewService>();
         services.AddSingleton<WorldService>();
         
         // Services - Ipc
@@ -104,6 +106,7 @@ public sealed class Plugin : IDalamudPlugin
         
         // Ui - Components
         services.AddSingleton<FriendsListComponentUi>();
+        services.AddSingleton<NavigationBarComponentUi>();
         
         // Ui - View Controllers
         services.AddSingleton<BodySwapViewUiController>();

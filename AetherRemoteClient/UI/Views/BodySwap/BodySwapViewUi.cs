@@ -1,7 +1,7 @@
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
-using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums.New;
 using Dalamud.Interface;
@@ -11,61 +11,59 @@ using ImGuiNET;
 namespace AetherRemoteClient.UI.Views.BodySwap;
 
 public class BodySwapViewUi(
+    FriendsListComponentUi friendsList,
+    BodySwapViewUiController controller,
     CommandLockoutService commandLockoutService,
-    IdentityService identityService,
-    FriendsListService friendsListService,
-    NetworkService networkService,
-    ModManager modManager) : IDrawable
+    FriendsListService friendsListService) : IDrawable
 {
-    private readonly BodySwapViewUiController _controller = new(identityService, friendsListService, networkService,
-        modManager);
-
-    public bool Draw()
+    public void Draw()
     {
         ImGui.BeginChild("BodySwapContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
-        
+
         if (friendsListService.Selected.Count is 0)
         {
-            SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground,
-                () => { SharedUserInterfaces.TextCentered("You must select at least one friend"); });
+            SharedUserInterfaces.ContentBox("BodySwapSelectMoreFriends", AetherRemoteStyle.PanelBackground, true, () =>
+            {
+                SharedUserInterfaces.TextCentered("You must select at least one friend");
+            });
 
             ImGui.EndChild();
-            return true;
+            ImGui.SameLine();
+            friendsList.Draw();
+            return;
         }
-
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        
+        SharedUserInterfaces.ContentBox("BodySwapInfo", AetherRemoteStyle.PanelBackground, true, () =>
         {
-            SharedUserInterfaces.MediumText("Information");
-            ImGui.TextWrapped(
-                "Body swapping must be done in rendering distance of your target(s). You can undo a body swap on yourself by going into the 'Status' tab, or reverting your character in glamourer. ");
+            ImGui.TextWrapped("Body swapping must be done in rendering distance of your target(s). You can undo a body swap on yourself by going into the 'Status' tab, or reverting your character in glamourer.");
         });
 
         var half = ImGui.GetWindowWidth() * 0.5f;
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("BodySwapOptions", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.MediumText("Options");
-            if (ImGui.Checkbox("Swap Mods", ref _controller.SwapMods))
-                _controller.SelectedAttributesPermissions ^= PrimaryPermissions2.Mods;
-            
+            if (ImGui.Checkbox("Swap Mods", ref controller.SwapMods))
+                controller.SelectedAttributesPermissions ^= PrimaryPermissions2.Mods;
+
             ImGui.SameLine();
             ImGui.SetCursorPosX(half);
-            if (ImGui.Checkbox("Swap Moodles", ref _controller.SwapMoodles))
-                _controller.SelectedAttributesPermissions ^= PrimaryPermissions2.Moodles;
-            
+            if (ImGui.Checkbox("Swap Moodles", ref controller.SwapMoodles))
+                controller.SelectedAttributesPermissions ^= PrimaryPermissions2.Moodles;
+
             ImGui.Spacing();
-            if(ImGui.Checkbox("Swap Customize+", ref _controller.SwapCustomizePlus))
-                _controller.SelectedAttributesPermissions ^= PrimaryPermissions2.CustomizePlus;
-            
+            if (ImGui.Checkbox("Swap Customize+", ref controller.SwapCustomizePlus))
+                controller.SelectedAttributesPermissions ^= PrimaryPermissions2.CustomizePlus;
+
             ImGui.Spacing();
-            
-            ImGui.Checkbox("Include Self", ref _controller.IncludeSelfInSwap);
+
+            ImGui.Checkbox("Include Self", ref controller.IncludeSelfInSwap);
             SharedUserInterfaces.Tooltip("Include yourself in the targets to body swap");
         });
 
-        var friendsLackingPermissions = _controller.GetFriendsLackingPermissions();
+        var friendsLackingPermissions = controller.GetFriendsLackingPermissions();
         if (friendsLackingPermissions.Count is not 0)
         {
-            SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+            SharedUserInterfaces.ContentBox("BodySwapLackingPermissions", AetherRemoteStyle.PanelBackground, true, () =>
             {
                 SharedUserInterfaces.MediumText("Lacking Permissions", ImGuiColors.DalamudYellow);
                 ImGui.SameLine();
@@ -76,7 +74,7 @@ public class BodySwapViewUi(
             });
         }
 
-        SharedUserInterfaces.ContentBox(AetherRemoteStyle.PanelBackground, () =>
+        SharedUserInterfaces.ContentBox("BodySwapSend", AetherRemoteStyle.PanelBackground, false, () =>
         {
             SharedUserInterfaces.MediumText("Body Swap");
 
@@ -91,13 +89,14 @@ public class BodySwapViewUi(
             {
                 if (ImGui.Button("Swap", width) is false)
                     return;
-                
+
                 commandLockoutService.Lock();
-                _controller.Swap();
+                controller.Swap();
             }
         });
 
         ImGui.EndChild();
-        return true;
+        ImGui.SameLine();
+        friendsList.Draw();
     }
 }
