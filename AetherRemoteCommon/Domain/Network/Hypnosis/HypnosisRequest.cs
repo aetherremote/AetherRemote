@@ -1,8 +1,6 @@
-using AetherRemoteCommon.Domain;
-using AetherRemoteCommon.Domain.Network;
 using MessagePack;
 
-namespace AetherRemoteCommon.V2.Domain.Network.Hypnosis;
+namespace AetherRemoteCommon.Domain.Network.Hypnosis;
 
 [MessagePackObject(keyAsPropertyName: true)]
 public record HypnosisRequest : ActionRequest

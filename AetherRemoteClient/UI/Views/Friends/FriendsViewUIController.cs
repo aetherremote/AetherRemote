@@ -6,8 +6,8 @@ using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.V2.Domain.Network.RemoveFriend;
-using AetherRemoteCommon.V2.Domain.Network.UpdateFriend;
+using AetherRemoteCommon.Domain.Network.RemoveFriend;
+using AetherRemoteCommon.Domain.Network.UpdateFriend;
 
 namespace AetherRemoteClient.UI.Views.Friends;
 
@@ -22,7 +22,7 @@ public class FriendsViewUiController : IDisposable
 
     // Instantiated
     private Friend? _friendBeingEdited;
-    private BooleanUserPermissions2 _friendBeingEditedUserPermissionsOriginal = new();
+    private BooleanUserPermissions _friendBeingEditedUserPermissionsOriginal = new();
 
     /// <summary>
     ///     Friend Code is display
@@ -37,7 +37,7 @@ public class FriendsViewUiController : IDisposable
     /// <summary>
     ///     The current friend whose permissions you are editing
     /// </summary>
-    public BooleanUserPermissions2 EditingUserPermissions = new();
+    public BooleanUserPermissions EditingUserPermissions = new();
 
     /// <summary>
     ///     <inheritdoc cref="FriendsViewUiController" />
@@ -69,7 +69,7 @@ public class FriendsViewUiController : IDisposable
             if (PendingChanges() is false)
                 return;
 
-            var permissions = BooleanUserPermissions2.To(EditingUserPermissions);
+            var permissions = BooleanUserPermissions.To(EditingUserPermissions);
 
             var input = new UpdateFriendRequest
             {
@@ -82,7 +82,7 @@ public class FriendsViewUiController : IDisposable
             {
                 _friendBeingEdited.Note = Note == string.Empty ? null : Note;
                 _friendBeingEdited.PermissionsGrantedToFriend = permissions;
-                _friendBeingEditedUserPermissionsOriginal = BooleanUserPermissions2.From(permissions);
+                _friendBeingEditedUserPermissionsOriginal = BooleanUserPermissions.From(permissions);
                 
                 NotificationHelper.Success("Successfully saved friend", string.Empty);
             }
@@ -184,11 +184,11 @@ public class FriendsViewUiController : IDisposable
             return;
 
         _friendBeingEdited = e.Selected.First();
-        _friendBeingEditedUserPermissionsOriginal = BooleanUserPermissions2.From(_friendBeingEdited.PermissionsGrantedToFriend);
+        _friendBeingEditedUserPermissionsOriginal = BooleanUserPermissions.From(_friendBeingEdited.PermissionsGrantedToFriend);
 
         FriendCode = _friendBeingEdited.FriendCode;
         Note = _friendBeingEdited.Note ?? string.Empty;
-        EditingUserPermissions = BooleanUserPermissions2.From(_friendBeingEdited.PermissionsGrantedToFriend);
+        EditingUserPermissions = BooleanUserPermissions.From(_friendBeingEdited.PermissionsGrantedToFriend);
     }
 
     public void Dispose()

@@ -1,7 +1,6 @@
-using AetherRemoteCommon.Domain.Network;
 using MessagePack;
 
-namespace AetherRemoteCommon.V2.Domain.Network.Emote;
+namespace AetherRemoteCommon.Domain.Network.Emote;
 
 [MessagePackObject(true)]
 public record EmoteRequest : ActionRequest

@@ -6,8 +6,8 @@ using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.Domain.Network.Twinning;
 using AetherRemoteCommon.V2.Domain.Network;
-using AetherRemoteCommon.V2.Domain.Network.Twinning;
 
 namespace AetherRemoteClient.UI.Views.Twinning;
 

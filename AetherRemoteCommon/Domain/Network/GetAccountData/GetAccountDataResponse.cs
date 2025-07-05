@@ -1,7 +1,6 @@
-using AetherRemoteCommon.Domain;
 using MessagePack;
 
-namespace AetherRemoteCommon.V2.Domain.Network.GetAccountData;
+namespace AetherRemoteCommon.Domain.Network.GetAccountData;
 
 // ReSharper disable PropertyCanBeMadeInitOnly.Global
 

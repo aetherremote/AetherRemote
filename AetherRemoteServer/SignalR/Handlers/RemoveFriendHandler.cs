@@ -1,5 +1,5 @@
 using AetherRemoteCommon.Domain.Enums;
-using AetherRemoteCommon.V2.Domain.Network.RemoveFriend;
+using AetherRemoteCommon.Domain.Network.RemoveFriend;
 using AetherRemoteServer.Domain.Interfaces;
 
 namespace AetherRemoteServer.SignalR.Handlers;

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using AetherRemoteCommon.Domain;
 using Dalamud.Configuration;
 
 namespace AetherRemoteClient.Domain;
@@ -32,10 +31,10 @@ public class Configuration : IPluginConfiguration
     public Dictionary<string, string> Notes { get; set; } = [];
 
     /// <summary>
-    ///     Object storing all the temporary overrides
+    ///     Maps a character in the format CharacterName@WorldName to a <see cref="PermanentTransformationData"/>
     /// </summary>
-    public UserPermissions TemporaryOverrides = new();
-
+    public Dictionary<string, PermanentTransformationData> PermanentTransformations { get; set; } = [];
+    
     /// <summary>
     ///     Plugin configuration version
     /// </summary>

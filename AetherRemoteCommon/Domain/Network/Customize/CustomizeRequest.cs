@@ -1,7 +1,6 @@
-using AetherRemoteCommon.Domain.Network;
 using MessagePack;
 
-namespace AetherRemoteCommon.V2.Domain.Network.Customize;
+namespace AetherRemoteCommon.Domain.Network.Customize;
 
 [MessagePackObject(true)]
 public record CustomizeRequest : ActionRequest

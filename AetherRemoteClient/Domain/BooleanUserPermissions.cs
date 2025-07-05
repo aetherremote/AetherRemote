@@ -3,10 +3,12 @@ using AetherRemoteCommon.Domain.Enums.Permissions;
 
 namespace AetherRemoteClient.Domain;
 
+// ReSharper disable ConvertIfStatementToReturnStatement
+
 /// <summary>
-///     TODO
+///     Class representing the <see cref="UserPermissions"/> object but as booleans for use with ImGui
 /// </summary>
-public class BooleanUserPermissions2
+public class BooleanUserPermissions
 {
     // Primary Permissions
     public bool Emote, Customization, Equipment, Mods, BodySwap, Twinning, CustomizePlus, Moodles, Hypnosis;
@@ -16,11 +18,14 @@ public class BooleanUserPermissions2
     
     // Linkshell Permissions
     public bool Ls1, Ls2, Ls3, Ls4, Ls5, Ls6, Ls7, Ls8, Cwl1, Cwl2, Cwl3, Cwl4, Cwl5, Cwl6, Cwl7, Cwl8;
+    
+    // Elevated Permissions
+    public bool PermanentTransformation;
 
     /// <summary>
-    ///     TODO
+    ///     Tests if this object is equal to another <see cref="BooleanUserPermissions"/>
     /// </summary>
-    public bool Equals(BooleanUserPermissions2 other)
+    public bool Equals(BooleanUserPermissions other)
     {
         // Primary Permissions
         if (Emote != other.Emote) return false;
@@ -61,15 +66,20 @@ public class BooleanUserPermissions2
         if (Cwl5 != other.Cwl5) return false;
         if (Cwl6 != other.Cwl6) return false;
         if (Cwl7 != other.Cwl7) return false;
-        return Cwl8 == other.Cwl8;
+        if (Cwl8 != other.Cwl8) return false;
+
+        // Elevated Permissions
+        if (PermanentTransformation != other.PermanentTransformation) return false;
+        
+        return true;
     }
 
     /// <summary>
-    ///     TODO
+    ///     Converts a <see cref="UserPermissions"/> into a <see cref="BooleanUserPermissions"/>
     /// </summary>
-    public static BooleanUserPermissions2 From(UserPermissions permissions)
+    public static BooleanUserPermissions From(UserPermissions permissions)
     {
-        return new BooleanUserPermissions2
+        return new BooleanUserPermissions
         {
             // Primary
             Emote = (permissions.Primary & PrimaryPermissions2.Emote) == PrimaryPermissions2.Emote,
@@ -110,18 +120,22 @@ public class BooleanUserPermissions2
             Cwl5 = (permissions.Speak & SpeakPermissions2.Cwl5) == SpeakPermissions2.Cwl5,
             Cwl6 = (permissions.Speak & SpeakPermissions2.Cwl6) == SpeakPermissions2.Cwl6,
             Cwl7 = (permissions.Speak & SpeakPermissions2.Cwl7) == SpeakPermissions2.Cwl7,
-            Cwl8 = (permissions.Speak & SpeakPermissions2.Cwl8) == SpeakPermissions2.Cwl8
+            Cwl8 = (permissions.Speak & SpeakPermissions2.Cwl8) == SpeakPermissions2.Cwl8,
+            
+            // Elevated Permissions
+            PermanentTransformation = (permissions.Elevated & ElevatedPermissions.PermanentTransformation) == ElevatedPermissions.PermanentTransformation 
         };
     }
 
     /// <summary>
-    ///     TODO
+    ///     Converts a <see cref="BooleanUserPermissions"/> to <see cref="UserPermissions"/>
     /// </summary>
-    public static UserPermissions To(BooleanUserPermissions2 permissions)
+    public static UserPermissions To(BooleanUserPermissions permissions)
     {
         // Initialization
         var primary = PrimaryPermissions2.None;
         var speak =  SpeakPermissions2.None;
+        var elevated = ElevatedPermissions.None;
         
         // Primary
         if (permissions.Emote) primary |= PrimaryPermissions2.Emote;
@@ -163,6 +177,10 @@ public class BooleanUserPermissions2
         if (permissions.Cwl6) speak |= SpeakPermissions2.Cwl6;
         if (permissions.Cwl7) speak |= SpeakPermissions2.Cwl7;
         if (permissions.Cwl8) speak |= SpeakPermissions2.Cwl8;
-        return new UserPermissions(primary, speak);
+        
+        // Elevated Permissions
+        if (permissions.PermanentTransformation) elevated |= ElevatedPermissions.PermanentTransformation;
+        
+        return new UserPermissions(primary, speak, elevated);
     }
 }

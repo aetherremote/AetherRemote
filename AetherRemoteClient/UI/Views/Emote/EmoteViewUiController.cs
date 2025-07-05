@@ -7,8 +7,8 @@ using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.Domain.Network.Emote;
 using AetherRemoteCommon.V2.Domain.Network;
-using AetherRemoteCommon.V2.Domain.Network.Emote;
 
 namespace AetherRemoteClient.UI.Views.Emote;
 

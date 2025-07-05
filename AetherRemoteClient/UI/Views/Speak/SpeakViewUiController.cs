@@ -6,9 +6,9 @@ using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.Domain.Network.Speak;
 using AetherRemoteCommon.Util;
 using AetherRemoteCommon.V2.Domain.Network;
-using AetherRemoteCommon.V2.Domain.Network.Speak;
 using Dalamud.Game.ClientState.Objects.Types;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
 

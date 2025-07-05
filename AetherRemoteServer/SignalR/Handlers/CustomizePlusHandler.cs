@@ -1,8 +1,8 @@
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.Domain.Network.Customize;
 using AetherRemoteCommon.V2.Domain.Network;
-using AetherRemoteCommon.V2.Domain.Network.Customize;
 using AetherRemoteServer.Domain;
 using AetherRemoteServer.Domain.Interfaces;
 using Microsoft.AspNetCore.SignalR;

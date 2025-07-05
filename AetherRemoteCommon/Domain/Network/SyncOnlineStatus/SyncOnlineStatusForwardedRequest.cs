@@ -1,8 +1,6 @@
-using AetherRemoteCommon.Domain;
-using AetherRemoteCommon.Domain.Network;
 using MessagePack;
 
-namespace AetherRemoteCommon.V2.Domain.Network.SyncOnlineStatus;
+namespace AetherRemoteCommon.Domain.Network.SyncOnlineStatus;
 
 [MessagePackObject(keyAsPropertyName: true)]
 public record SyncOnlineStatusForwardedRequest : ForwardedActionRequest

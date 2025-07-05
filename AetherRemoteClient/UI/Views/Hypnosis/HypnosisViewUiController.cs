@@ -10,8 +10,8 @@ using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.Domain.Network.Hypnosis;
 using AetherRemoteCommon.V2.Domain.Network;
-using AetherRemoteCommon.V2.Domain.Network.Hypnosis;
 using ImGuiNET;
 
 namespace AetherRemoteClient.UI.Views.Hypnosis;

@@ -8,8 +8,8 @@ using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.Domain.Network.BodySwap;
 using AetherRemoteCommon.Util;
-using AetherRemoteCommon.V2.Domain.Network.BodySwap;
 
 namespace AetherRemoteClient.UI.Views.BodySwap;
 

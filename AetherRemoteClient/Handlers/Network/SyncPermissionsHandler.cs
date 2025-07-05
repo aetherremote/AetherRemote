@@ -1,7 +1,7 @@
 using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.V2.Domain.Network.SyncOnlineStatus;
-using AetherRemoteCommon.V2.Domain.Network.SyncPermissions;
+using AetherRemoteCommon.Domain.Network.SyncOnlineStatus;
+using AetherRemoteCommon.Domain.Network.SyncPermissions;
 
 namespace AetherRemoteClient.Handlers.Network;
 

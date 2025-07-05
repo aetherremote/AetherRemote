@@ -1,6 +1,6 @@
 using MessagePack;
 
-namespace AetherRemoteCommon.V2.Domain.Network.AddFriend;
+namespace AetherRemoteCommon.Domain.Network.AddFriend;
 
 [MessagePackObject(keyAsPropertyName: true)]
 public class AddFriendRequest

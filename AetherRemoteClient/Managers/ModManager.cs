@@ -112,6 +112,8 @@ public class ModManager : IDisposable
         foreach (var attribute in assimilatedAttributes)
             await attribute.Apply().ConfigureAwait(false);
 
+        // TODO: Put Perma-TF here
+        
         return true;
     }
 

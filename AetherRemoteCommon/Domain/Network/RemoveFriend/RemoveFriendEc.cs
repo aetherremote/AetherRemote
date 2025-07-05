@@ -1,4 +1,4 @@
-namespace AetherRemoteCommon.V2.Domain.Network.RemoveFriend;
+namespace AetherRemoteCommon.Domain.Network.RemoveFriend;
 
 public enum RemoveFriendEc
 {

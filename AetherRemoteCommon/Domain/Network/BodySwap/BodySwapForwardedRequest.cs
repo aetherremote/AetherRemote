@@ -1,8 +1,7 @@
 using AetherRemoteCommon.Domain.Enums;
-using AetherRemoteCommon.Domain.Network;
 using MessagePack;
 
-namespace AetherRemoteCommon.V2.Domain.Network.BodySwap;
+namespace AetherRemoteCommon.Domain.Network.BodySwap;
 
 [MessagePackObject(keyAsPropertyName: true)]
 public record BodySwapForwardedRequest : ForwardedActionRequest

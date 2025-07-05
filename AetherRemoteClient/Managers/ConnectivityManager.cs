@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.V2.Domain.Network.GetAccountData;
+using AetherRemoteCommon.Domain.Network.GetAccountData;
 
 namespace AetherRemoteClient.Managers;
 

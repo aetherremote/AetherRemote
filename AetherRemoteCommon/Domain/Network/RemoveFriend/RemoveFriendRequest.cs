@@ -1,6 +1,6 @@
 using MessagePack;
 
-namespace AetherRemoteCommon.V2.Domain.Network.RemoveFriend;
+namespace AetherRemoteCommon.Domain.Network.RemoveFriend;
 
 [MessagePackObject(keyAsPropertyName: true)]
 public record RemoveFriendRequest

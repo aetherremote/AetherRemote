@@ -1,4 +1,4 @@
-namespace AetherRemoteCommon.V2.Domain.Network.GetToken;
+namespace AetherRemoteCommon.Domain.Network.GetToken;
 
 /// <summary>
 /// Request to log into the server

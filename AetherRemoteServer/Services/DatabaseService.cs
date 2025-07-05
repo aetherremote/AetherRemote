@@ -194,8 +194,9 @@ public class DatabaseService : IDatabaseService
                 var targetFriendCode = reader.GetString(0);
                 var primary = reader.GetInt32(1);
                 var speak = reader.GetInt32(2);
+                var elevated = reader.GetInt32(3);
                 
-                var permissions = new UserPermissions((PrimaryPermissions2)primary, (SpeakPermissions2)speak);
+                var permissions = new UserPermissions((PrimaryPermissions2)primary, (SpeakPermissions2)speak, (ElevatedPermissions)elevated);
                 result.Add(targetFriendCode, permissions);
             }
 

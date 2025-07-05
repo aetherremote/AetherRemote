@@ -1,7 +1,6 @@
-using AetherRemoteCommon.Domain.Network;
 using MessagePack;
 
-namespace AetherRemoteCommon.V2.Domain.Network.Moodles;
+namespace AetherRemoteCommon.Domain.Network.Moodles;
 
 [MessagePackObject(keyAsPropertyName: true)]
 public record MoodlesRequest : ActionRequest

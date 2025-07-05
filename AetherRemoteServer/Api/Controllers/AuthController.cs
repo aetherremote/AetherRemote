@@ -1,7 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using AetherRemoteCommon.V2.Domain.Network.GetToken;
+using AetherRemoteCommon.Domain.Network.GetToken;
 using AetherRemoteServer.Domain;
 using AetherRemoteServer.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;

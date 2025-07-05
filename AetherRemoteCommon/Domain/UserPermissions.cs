@@ -18,6 +18,11 @@ public record UserPermissions
     ///     Speak permissions
     /// </summary>
     public SpeakPermissions2 Speak { get; set; }
+    
+    /// <summary>
+    ///     Elevated permissions
+    /// </summary>
+    public ElevatedPermissions Elevated { get; set; }
 
     /// <summary>
     ///     TODO
@@ -29,9 +34,10 @@ public record UserPermissions
     /// <summary>
     ///     TODO
     /// </summary>
-    public UserPermissions(PrimaryPermissions2 primary, SpeakPermissions2 speak)
+    public UserPermissions(PrimaryPermissions2 primary, SpeakPermissions2 speak, ElevatedPermissions elevated)
     {
         Primary = primary;
         Speak = speak;
+        Elevated = elevated;
     }
 }

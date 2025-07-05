@@ -1,8 +1,7 @@
 using AetherRemoteCommon.Domain.Enums;
-using AetherRemoteCommon.Domain.Network;
 using MessagePack;
 
-namespace AetherRemoteCommon.V2.Domain.Network.Transform;
+namespace AetherRemoteCommon.Domain.Network.Transform;
 
 [MessagePackObject(keyAsPropertyName: true)]
 public record TransformForwardedRequest : ForwardedActionRequest

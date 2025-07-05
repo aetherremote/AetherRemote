@@ -1,7 +1,7 @@
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.V2.Domain.Network.SyncPermissions;
-using AetherRemoteCommon.V2.Domain.Network.UpdateFriend;
+using AetherRemoteCommon.Domain.Network.SyncPermissions;
+using AetherRemoteCommon.Domain.Network.UpdateFriend;
 using AetherRemoteServer.Domain.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 

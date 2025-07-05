@@ -1,5 +1,5 @@
 using AetherRemoteCommon.Domain;
-using AetherRemoteCommon.V2.Domain.Network.GetAccountData;
+using AetherRemoteCommon.Domain.Network.GetAccountData;
 using AetherRemoteServer.Domain.Interfaces;
 
 namespace AetherRemoteServer.SignalR.Handlers;

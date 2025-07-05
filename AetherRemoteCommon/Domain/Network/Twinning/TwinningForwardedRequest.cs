@@ -1,8 +1,7 @@
 using AetherRemoteCommon.Domain.Enums;
-using AetherRemoteCommon.Domain.Network;
 using MessagePack;
 
-namespace AetherRemoteCommon.V2.Domain.Network.Twinning;
+namespace AetherRemoteCommon.Domain.Network.Twinning;
 
 [MessagePackObject(keyAsPropertyName: true)]
 public record TwinningForwardedRequest : ForwardedActionRequest

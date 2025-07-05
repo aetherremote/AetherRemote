@@ -4,9 +4,9 @@ using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.Domain.Network.BodySwap;
 using AetherRemoteCommon.Util;
 using AetherRemoteCommon.V2.Domain;
-using AetherRemoteCommon.V2.Domain.Network.BodySwap;
 
 namespace AetherRemoteClient.Handlers.Network;
 

@@ -4,7 +4,7 @@ using AetherRemoteClient.Domain;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.V2.Domain.Network.AddFriend;
+using AetherRemoteCommon.Domain.Network.AddFriend;
 
 namespace AetherRemoteClient.UI.Components.Friends;
 

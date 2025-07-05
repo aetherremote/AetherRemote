@@ -1,4 +1,4 @@
-namespace AetherRemoteCommon.V2.Domain.Network.UpdateFriend;
+namespace AetherRemoteCommon.Domain.Network.UpdateFriend;
 
 public enum UpdateFriendEc
 {

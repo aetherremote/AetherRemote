@@ -1,8 +1,6 @@
-using AetherRemoteCommon.Domain;
-using AetherRemoteCommon.Domain.Network;
 using MessagePack;
 
-namespace AetherRemoteCommon.V2.Domain.Network.SyncPermissions;
+namespace AetherRemoteCommon.Domain.Network.SyncPermissions;
 
 [MessagePackObject(keyAsPropertyName: true)]
 public record SyncPermissionsForwardedRequest : ForwardedActionRequest

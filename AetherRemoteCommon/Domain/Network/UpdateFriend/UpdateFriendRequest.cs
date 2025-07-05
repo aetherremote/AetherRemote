@@ -1,7 +1,6 @@
-using AetherRemoteCommon.Domain;
 using MessagePack;
 
-namespace AetherRemoteCommon.V2.Domain.Network.UpdateFriend;
+namespace AetherRemoteCommon.Domain.Network.UpdateFriend;
 
 [MessagePackObject(keyAsPropertyName: true)]
 public record UpdateFriendRequest

@@ -1,8 +1,7 @@
 using AetherRemoteCommon.Domain.Enums;
-using AetherRemoteCommon.Domain.Network;
 using MessagePack;
 
-namespace AetherRemoteCommon.V2.Domain.Network.Speak;
+namespace AetherRemoteCommon.Domain.Network.Speak;
 
 [MessagePackObject(keyAsPropertyName: true)]
 public record SpeakRequest : ActionRequest

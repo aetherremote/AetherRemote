@@ -1,6 +1,6 @@
 using MessagePack;
 
-namespace AetherRemoteCommon.V2.Domain.Network.GetAccountData;
+namespace AetherRemoteCommon.Domain.Network.GetAccountData;
 
 [MessagePackObject(keyAsPropertyName: true)]
 public record GetAccountDataRequest

@@ -1,5 +1,5 @@
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.V2.Domain.Network.SyncOnlineStatus;
+using AetherRemoteCommon.Domain.Network.SyncOnlineStatus;
 using AetherRemoteServer.Domain;
 using AetherRemoteServer.Domain.Interfaces;
 using Microsoft.AspNetCore.SignalR;
