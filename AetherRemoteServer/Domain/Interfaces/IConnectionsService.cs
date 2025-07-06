@@ -24,4 +24,9 @@ public interface IConnectionsService
     ///     Checks if a friend code is sending commands too frequently
     /// </summary>
     public bool IsUserExceedingRequestLimit(string friendCode);
+    
+    /// <summary>
+    ///     Checks if a friend code is sending commands too frequently
+    /// </summary>
+    public bool IsUserExceedingRequestLimit(ClientInfo clientInfo);
 }

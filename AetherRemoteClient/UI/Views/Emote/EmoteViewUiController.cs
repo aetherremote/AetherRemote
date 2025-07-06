@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
@@ -8,7 +7,6 @@ using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Emote;
-using AetherRemoteCommon.V2.Domain.Network;
 
 namespace AetherRemoteClient.UI.Views.Emote;
 

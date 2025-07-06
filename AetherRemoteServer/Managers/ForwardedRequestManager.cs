@@ -3,8 +3,6 @@ using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.BodySwap;
-using AetherRemoteCommon.V2.Domain;
-using AetherRemoteCommon.V2.Domain.Network;
 using AetherRemoteServer.Domain;
 using AetherRemoteServer.Domain.Interfaces;
 using Microsoft.AspNetCore.SignalR;

@@ -13,7 +13,7 @@ public static class GlamourerApplyFlagsExtensions
     /// </summary>
     public static PrimaryPermissions2 ToPrimaryPermission(this GlamourerApplyFlags applyFlags)
     {
-        var permissions = PrimaryPermissions2.Twinning;
+        var permissions = PrimaryPermissions2.None;
         if ((applyFlags & GlamourerApplyFlags.Customization) == GlamourerApplyFlags.Customization)
             permissions |= PrimaryPermissions2.GlamourerCustomization;
 

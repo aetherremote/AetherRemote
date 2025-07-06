@@ -37,6 +37,11 @@ public enum ActionResponseEc
     BadDataInRequest,
     
     /// <summary>
+    ///     When the sender is in a state not expected by the server
+    /// </summary>
+    UnexpectedState,
+    
+    /// <summary>
     ///     An unknown error occurred
     /// </summary>
     Unknown,

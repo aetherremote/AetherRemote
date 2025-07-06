@@ -1,6 +1,5 @@
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.V2.Domain.Network;
 
 namespace AetherRemoteClient.Utils;
 

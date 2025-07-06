@@ -1,5 +1,4 @@
 using AetherRemoteClient.Services;
-using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.SyncOnlineStatus;
 
 namespace AetherRemoteClient.Handlers.Network;

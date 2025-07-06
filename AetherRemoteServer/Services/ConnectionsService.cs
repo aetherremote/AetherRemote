@@ -26,4 +26,9 @@ public class ConnectionsService : IConnectionsService
         
         return (DateTime.UtcNow - issuer.LastAction).TotalSeconds < Constraints.ExternalCommandCooldownInSeconds;
     }
+    
+    public bool IsUserExceedingRequestLimit(ClientInfo clientInfo)
+    {
+        return (DateTime.UtcNow - clientInfo.LastAction).TotalSeconds < Constraints.ExternalCommandCooldownInSeconds;
+    }
 }

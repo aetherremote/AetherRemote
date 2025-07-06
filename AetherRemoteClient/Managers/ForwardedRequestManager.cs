@@ -3,7 +3,6 @@ using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.V2.Domain;
 
 namespace AetherRemoteClient.Managers;
 

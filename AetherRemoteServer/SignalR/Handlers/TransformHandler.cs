@@ -3,7 +3,6 @@ using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Transform;
 using AetherRemoteCommon.Util;
-using AetherRemoteCommon.V2.Domain.Network;
 using AetherRemoteServer.Domain;
 using AetherRemoteServer.Domain.Interfaces;
 using Microsoft.AspNetCore.SignalR;
@@ -32,7 +31,7 @@ public class TransformHandler(
         }
 
         var permissions = request.GlamourerApplyType.ToPrimaryPermission();
-        if (permissions == PrimaryPermissions2.Twinning)
+        if (permissions == PrimaryPermissions2.None)
             return new ActionResponse(ActionResponseEc.BadDataInRequest);
         
         var forwardedRequest = new TransformForwardedRequest(sender, request.GlamourerData, request.GlamourerApplyType);

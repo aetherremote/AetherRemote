@@ -14,7 +14,6 @@ using AetherRemoteCommon.Domain.Network.SyncOnlineStatus;
 using AetherRemoteCommon.Domain.Network.SyncPermissions;
 using AetherRemoteCommon.Domain.Network.Transform;
 using AetherRemoteCommon.Domain.Network.Twinning;
-using AetherRemoteCommon.V2.Domain;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace AetherRemoteClient.Handlers;

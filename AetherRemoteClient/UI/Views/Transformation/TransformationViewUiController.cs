@@ -8,7 +8,6 @@ using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Transform;
-using AetherRemoteCommon.V2.Domain.Network;
 using ImGuiNET;
 
 namespace AetherRemoteClient.UI.Views.Transformation;
