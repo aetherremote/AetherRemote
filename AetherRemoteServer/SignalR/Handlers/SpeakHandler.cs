@@ -1,10 +1,10 @@
 using AetherRemoteCommon;
+using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Speak;
 using AetherRemoteCommon.Util;
-using AetherRemoteServer.Domain;
 using AetherRemoteServer.Domain.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 
@@ -25,31 +25,32 @@ public class SpeakHandler(
     /// </summary>
     public async Task<ActionResponse> Handle(string sender, SpeakRequest request, IHubCallerClients clients)
     {
-        if (connections.IsUserExceedingRequestLimit(sender))
+        if (connections.TryGetClient(sender) is not { } connectedClient)
         {
-            logger.LogWarning("{Friend} exceeded request limit", sender);
+            logger.LogWarning("{Sender} tried to issue a command but is not in the connections list", sender);
+            return new ActionResponse(ActionResponseEc.UnexpectedState);
+        }
+
+        if (connections.IsUserExceedingRequestLimit(connectedClient))
+        {
+            logger.LogWarning("{Sender} exceeded request limit", sender);
             return new ActionResponse(ActionResponseEc.TooManyRequests);
         }
 
         if (request.TargetFriendCodes.Count > Constraints.MaximumTargetsForInGameOperations)
         {
-            logger.LogWarning("{Friend} tried to target more than the allowed amount for in-game actions", sender);
+            logger.LogWarning("{Sender} tried to target more than the allowed amount for in-game actions", sender);
             return new ActionResponse(ActionResponseEc.TooManyTargets);
         }
-
-        var permissions = request.ChatChannel.ToSpeakPermissions(request.Extra);
-        if (permissions == SpeakPermissions2.None)
-            return new ActionResponse(ActionResponseEc.BadDataInRequest);
+        
+        var speak = request.ChatChannel.ToSpeakPermissions(request.Extra);
+        if (speak == SpeakPermissions2.None)
+            logger.LogWarning("{Sender} tried to request with empty permissions {Request}", sender, request);
+        
+        var permissions = new UserPermissions(PrimaryPermissions2.None, speak, ElevatedPermissions.None);
 
         var forwardedRequest = new SpeakForwardedRequest(sender, request.Message, request.ChatChannel, request.Extra);
-        var requestInfo = new SpeakRequestInfo(Method, permissions, forwardedRequest);
-        return await forwardedRequestManager.Send(sender, request.TargetFriendCodes, requestInfo, clients);
-    }
-
-    private static SpeakPermissions2 ConvertToLinkshell(SpeakPermissions2 starting, string? extra)
-    {
-        return int.TryParse(extra, out var number)
-            ? (SpeakPermissions2)((int)starting << (number - 1))
-            : SpeakPermissions2.None;
+        return await forwardedRequestManager.CheckPermissionsAndSend(sender, request.TargetFriendCodes, Method,
+            permissions, forwardedRequest, clients);
     }
 }

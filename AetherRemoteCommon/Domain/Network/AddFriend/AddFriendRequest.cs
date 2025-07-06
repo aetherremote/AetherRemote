@@ -3,7 +3,7 @@ using MessagePack;
 namespace AetherRemoteCommon.Domain.Network.AddFriend;
 
 [MessagePackObject(keyAsPropertyName: true)]
-public class AddFriendRequest
+public record AddFriendRequest
 {
     public string TargetFriendCode { get; set; } = string.Empty;
 
