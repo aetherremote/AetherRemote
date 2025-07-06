@@ -1,8 +1,8 @@
+using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Customize;
-using AetherRemoteServer.Domain;
 using AetherRemoteServer.Domain.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 
@@ -14,21 +14,28 @@ public class CustomizePlusHandler(
     ILogger<CustomizePlusHandler> logger)
 {
     private const string Method = HubMethod.CustomizePlus;
-    private const PrimaryPermissions2 Permissions = PrimaryPermissions2.CustomizePlus;
+    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.CustomizePlus, SpeakPermissions2.None,
+        ElevatedPermissions.None);
 
     /// <summary>
     ///     Handles the request
     /// </summary>
     public async Task<ActionResponse> Handle(string sender, CustomizeRequest request, IHubCallerClients clients)
     {
-        if (connections.IsUserExceedingRequestLimit(sender))
+        if (connections.TryGetClient(sender) is not { } connectedClient)
         {
-            logger.LogWarning("{Friend} exceeded request limit", sender);
+            logger.LogWarning("{Sender} tried to issue a command but is not in the connections list", sender);
+            return new ActionResponse(ActionResponseEc.UnexpectedState);
+        }
+
+        if (connections.IsUserExceedingRequestLimit(connectedClient))
+        {
+            logger.LogWarning("{Sender} exceeded request limit", sender);
             return new ActionResponse(ActionResponseEc.TooManyRequests);
         }
 
         var forwardedRequest = new CustomizeForwardedRequest(sender, request.Data);
-        var requestInfo = new PrimaryRequestInfo(Method, Permissions, forwardedRequest);
-        return await forwardedRequestManager.Send(sender, request.TargetFriendCodes, requestInfo, clients);
+        return await forwardedRequestManager.CheckPermissionsAndSend(sender, request.TargetFriendCodes, Method,
+            Permissions, forwardedRequest, clients);
     }
 }

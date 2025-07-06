@@ -1,9 +1,9 @@
+using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Transform;
 using AetherRemoteCommon.Util;
-using AetherRemoteServer.Domain;
 using AetherRemoteServer.Domain.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 
@@ -24,18 +24,26 @@ public class TransformHandler(
     /// </summary>
     public async Task<ActionResponse> Handle(string sender, TransformRequest request, IHubCallerClients clients)
     {
-        if (connections.IsUserExceedingRequestLimit(sender))
+        if (connections.TryGetClient(sender) is not { } connectedClient)
         {
-            logger.LogWarning("{Friend} exceeded request limit", sender);
+            logger.LogWarning("{Sender} tried to issue a command but is not in the connections list", sender);
+            return new ActionResponse(ActionResponseEc.UnexpectedState);
+        }
+
+        if (connections.IsUserExceedingRequestLimit(connectedClient))
+        {
+            logger.LogWarning("{Sender} exceeded request limit", sender);
             return new ActionResponse(ActionResponseEc.TooManyRequests);
         }
 
-        var permissions = request.GlamourerApplyType.ToPrimaryPermission();
-        if (permissions == PrimaryPermissions2.None)
-            return new ActionResponse(ActionResponseEc.BadDataInRequest);
+        var primary = request.GlamourerApplyType.ToPrimaryPermission();
+        if (primary == PrimaryPermissions2.None)
+            logger.LogWarning("{Sender} tried to request with empty permissions {Request}", sender, request);
+
+        var permissions = new UserPermissions(primary, SpeakPermissions2.None, ElevatedPermissions.None);
         
         var forwardedRequest = new TransformForwardedRequest(sender, request.GlamourerData, request.GlamourerApplyType);
-        var requestInfo = new PrimaryRequestInfo(Method, permissions, forwardedRequest);
-        return await forwardedRequestManager.Send(sender, request.TargetFriendCodes, requestInfo, clients);
+        return await forwardedRequestManager.CheckPermissionsAndSend(sender, request.TargetFriendCodes, Method,
+            permissions, forwardedRequest, clients);
     }
 }

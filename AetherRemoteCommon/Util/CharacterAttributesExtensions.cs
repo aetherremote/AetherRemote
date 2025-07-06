@@ -4,16 +4,16 @@ using AetherRemoteCommon.Domain.Enums.Permissions;
 namespace AetherRemoteCommon.Util;
 
 /// <summary>
-///     TODO
+///     Extension class for <see cref="CharacterAttributes"/>
 /// </summary>
 public static class CharacterAttributesExtensions
 {
     /// <summary>
-    ///     TODO
+    ///     Converts <see cref="CharacterAttributes"/> to <see cref="PrimaryPermissions2"/>
     /// </summary>
     public static PrimaryPermissions2 ToPrimaryPermission(this CharacterAttributes attributes)
     {
-        var permissions = PrimaryPermissions2.Twinning;
+        var permissions = PrimaryPermissions2.None;
         if ((attributes & CharacterAttributes.Mods) == CharacterAttributes.Mods)
             permissions |= PrimaryPermissions2.Mods;
 

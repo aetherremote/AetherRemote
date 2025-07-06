@@ -1,9 +1,9 @@
 using AetherRemoteCommon;
+using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Emote;
-using AetherRemoteServer.Domain;
 using AetherRemoteServer.Domain.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 
@@ -18,27 +18,34 @@ public class EmoteHandler(
     ILogger<EmoteHandler> logger)
 {
     private const string Method = HubMethod.Emote;
-    private const PrimaryPermissions2 Permissions = PrimaryPermissions2.Emote;
+    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.Emote, SpeakPermissions2.None,
+        ElevatedPermissions.None);
     
     /// <summary>
     ///     Handles the request
     /// </summary>
     public async Task<ActionResponse> Handle(string sender, EmoteRequest request, IHubCallerClients clients)
     {
-        if (connections.IsUserExceedingRequestLimit(sender))
+        if (connections.TryGetClient(sender) is not { } connectedClient)
         {
-            logger.LogWarning("{Friend} exceeded request limit", sender);
+            logger.LogWarning("{Sender} tried to issue a command but is not in the connections list", sender);
+            return new ActionResponse(ActionResponseEc.UnexpectedState);
+        }
+
+        if (connections.IsUserExceedingRequestLimit(connectedClient))
+        {
+            logger.LogWarning("{Sender} exceeded request limit", sender);
             return new ActionResponse(ActionResponseEc.TooManyRequests);
         }
 
         if (request.TargetFriendCodes.Count > Constraints.MaximumTargetsForInGameOperations)
         {
-            logger.LogWarning("{Friend} tried to target more than the allowed amount for in-game actions", sender);
+            logger.LogWarning("{Sender} tried to target more than the allowed amount for in-game actions", sender);
             return new ActionResponse(ActionResponseEc.TooManyTargets);
         }
         
         var forwardedRequest = new EmoteForwardedRequest(sender, request.Emote, request.DisplayLogMessage);
-        var requestInfo = new PrimaryRequestInfo(Method, Permissions, forwardedRequest);
-        return await forwardedRequestManager.Send(sender, request.TargetFriendCodes, requestInfo, clients);
+        return await forwardedRequestManager.CheckPermissionsAndSend(sender, request.TargetFriendCodes, Method,
+            Permissions, forwardedRequest, clients);
     }
 }

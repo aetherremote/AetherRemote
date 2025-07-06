@@ -1,6 +1,11 @@
+using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Enums.Permissions;
+using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.BodySwap;
+using AetherRemoteCommon.Util;
 using AetherRemoteServer.Domain.Interfaces;
+using AetherRemoteServer.Managers;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AetherRemoteServer.SignalR.Handlers;
@@ -10,7 +15,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 /// </summary>
 public class BodySwapHandler(
     IConnectionsService connections,
-    IForwardedRequestManager forwardedRequestManager,
+    IDatabaseService database,
     ILogger<BodySwapHandler> logger)
 {
     /// <summary>
@@ -18,9 +23,15 @@ public class BodySwapHandler(
     /// </summary>
     public async Task<BodySwapResponse> Handle(string sender, BodySwapRequest request, IHubCallerClients clients)
     {
-        if (connections.IsUserExceedingRequestLimit(sender))
+        if (connections.TryGetClient(sender) is not { } connectedClient)
         {
-            logger.LogWarning("{Friend} exceeded request limit", sender);
+            logger.LogWarning("{Sender} tried to issue a command but is not in the connections list", sender);
+            return new BodySwapResponse(ActionResponseEc.UnexpectedState);
+        }
+
+        if (connections.IsUserExceedingRequestLimit(connectedClient))
+        {
+            logger.LogWarning("{Sender} exceeded request limit", sender);
             return new BodySwapResponse(ActionResponseEc.TooManyRequests);
         }
 
@@ -40,22 +51,80 @@ public class BodySwapHandler(
                 return new BodySwapResponse(ActionResponseEc.TooFewTargets);
         }
 
-        var characterNames = new List<string>();
+        // Convert the swap attributes to primary permissions
+        var primary = request.SwapAttributes.ToPrimaryPermission();
+
+        // Always add the two glamourer permissions required
+        primary |= PrimaryPermissions2.GlamourerCustomization | PrimaryPermissions2.GlamourerEquipment;
+
+        // Build permission set to check against
+        var permissions = new UserPermissions(primary, SpeakPermissions2.None, ElevatedPermissions.None);
+
+        // Get the names of everyone involved in the swap
+        var characters = new List<string>();
         foreach (var targetFriendCode in targets)
         {
             if (connections.TryGetClient(targetFriendCode) is not { } client)
                 return new BodySwapResponse(ActionResponseEc.TargetOffline);
 
-            characterNames.Add(client.CharacterName);
+            characters.Add(client.CharacterName);
         }
-        
+
+        // Including yourself if you marked as such
         if (request.SenderCharacterName is not null)
-            characterNames.Add(request.SenderCharacterName);
-        
-        var deranged = Derange(characterNames);
-        return await forwardedRequestManager.SendBodySwap(sender, targets, deranged, request.SwapAttributes, clients);
+            characters.Add(request.SenderCharacterName);
+
+        // Shuffle everyone around
+        var deranged = Derange(characters);
+
+        var results = new Dictionary<string, ActionResultEc>();
+        var pending = new Task<ActionResult<Unit>>[targets.Count];
+        for (var i = 0; i < targets.Count; i++)
+        {
+            var targetFriendCode = targets[i];
+            if (connections.TryGetClient(targetFriendCode) is not { } connectionClient)
+            {
+                pending[i] = Task.FromResult(ActionResultBuilder.Fail(ActionResultEc.TargetOffline));
+                continue;
+            }
+
+            var targetPermissions = await database.GetPermissions(targetFriendCode);
+            if (targetPermissions.Permissions.TryGetValue(sender, out var permissionsGranted) is false)
+            {
+                pending[i] = Task.FromResult(ActionResultBuilder.Fail(ActionResultEc.TargetNotFriends));
+                continue;
+            }
+
+            // Body swap will only every make use of primary and elevated permissions
+            if (((permissionsGranted.Primary & permissions.Primary) == permissions.Primary) is false ||
+                ((permissionsGranted.Elevated & permissions.Elevated) == permissions.Elevated) is false)
+            {
+                pending[i] = Task.FromResult(ActionResultBuilder.Fail(ActionResultEc.TargetHasNotGrantedSenderPermissions));
+                continue;
+            }
+
+            var forwarded = new BodySwapForwardedRequest(sender, deranged[i], request.SwapAttributes);
+
+            try
+            {
+                var client = clients.Client(connectionClient.ConnectionId);
+                pending[i] = ForwardedRequestManager.ForwardRequestWithTimeout<Unit>(HubMethod.BodySwap, client, forwarded);
+            }
+            catch (Exception e)
+            {
+                logger.LogWarning("{Issuer} send action to {Target} failed, {Error}", sender, targetFriendCode,
+                    e.Message);
+                pending[i] = Task.FromResult(ActionResultBuilder.Fail(ActionResultEc.Unknown));
+            }
+        }
+
+        var completed = await Task.WhenAll(pending).ConfigureAwait(false);
+        for (var i = 0; i < completed.Length; i++)
+            results.Add(targets[i], completed[i].Result);
+
+        return new BodySwapResponse(results, targets.Count < deranged.Count ? deranged[^1] : null);
     }
-    
+
     /// <summary>
     ///     Derange a list, ensuring every element ends up in an index different from its starting position
     /// </summary>
