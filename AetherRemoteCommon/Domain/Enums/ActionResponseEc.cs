@@ -32,6 +32,16 @@ public enum ActionResponseEc
     TargetOffline,
     
     /// <summary>
+    ///     There are targets that the sender does not have sufficient permissions with
+    /// </summary>
+    TargetBodySwapLacksPermissions,
+    
+    /// <summary>
+    ///     There are targets that the sender is not friends with
+    /// </summary>
+    TargetBodySwapIsNotFriends,
+    
+    /// <summary>
     ///     When the sender did not provide valid data in a request
     /// </summary>
     BadDataInRequest,

@@ -64,10 +64,18 @@ public class BodySwapHandler(
         var characters = new List<string>();
         foreach (var targetFriendCode in targets)
         {
-            if (connections.TryGetClient(targetFriendCode) is not { } client)
+            if (connections.TryGetClient(targetFriendCode) is not { } connectionClient)
                 return new BodySwapResponse(ActionResponseEc.TargetOffline);
 
-            characters.Add(client.CharacterName);
+            var targetPermissions = await database.GetPermissions(targetFriendCode);
+            if (targetPermissions.Permissions.TryGetValue(sender, out var permissionsGranted) is false)
+                return new BodySwapResponse(ActionResponseEc.TargetBodySwapIsNotFriends);
+            
+            // Body swap will only every make use of primary and elevated permissions
+            if (((permissionsGranted.Primary & permissions.Primary) == permissions.Primary) is false || ((permissionsGranted.Elevated & permissions.Elevated) == permissions.Elevated) is false)
+                return new BodySwapResponse(ActionResponseEc.TargetBodySwapLacksPermissions);
+            
+            characters.Add(connectionClient.CharacterName);
         }
 
         // Including yourself if you marked as such
@@ -82,29 +90,14 @@ public class BodySwapHandler(
         for (var i = 0; i < targets.Count; i++)
         {
             var targetFriendCode = targets[i];
-            if (connections.TryGetClient(targetFriendCode) is not { } connectionClient)
-            {
-                pending[i] = Task.FromResult(ActionResultBuilder.Fail(ActionResultEc.TargetOffline));
-                continue;
-            }
-
-            var targetPermissions = await database.GetPermissions(targetFriendCode);
-            if (targetPermissions.Permissions.TryGetValue(sender, out var permissionsGranted) is false)
-            {
-                pending[i] = Task.FromResult(ActionResultBuilder.Fail(ActionResultEc.TargetNotFriends));
-                continue;
-            }
-
-            // Body swap will only every make use of primary and elevated permissions
-            if (((permissionsGranted.Primary & permissions.Primary) == permissions.Primary) is false ||
-                ((permissionsGranted.Elevated & permissions.Elevated) == permissions.Elevated) is false)
-            {
-                pending[i] = Task.FromResult(ActionResultBuilder.Fail(ActionResultEc.TargetHasNotGrantedSenderPermissions));
-                continue;
-            }
-
+            
+            // Construct the tailored request
             var forwarded = new BodySwapForwardedRequest(sender, deranged[i], request.SwapAttributes);
 
+            // Double-check the target is still online
+            if (connections.TryGetClient(targetFriendCode) is not { } connectionClient)
+                return new BodySwapResponse(ActionResponseEc.TargetOffline);
+            
             try
             {
                 var client = clients.Client(connectionClient.ConnectionId);

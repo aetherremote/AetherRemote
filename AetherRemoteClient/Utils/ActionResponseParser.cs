@@ -1,10 +1,9 @@
+using System.Collections.Generic;
+using System.Text;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
 
 namespace AetherRemoteClient.Utils;
-
-using System.Collections.Generic;
-using System.Text;
 
 /// <summary>
 ///     Parses any response from the server and provides a notification on the screen with the results 
@@ -58,6 +57,11 @@ public static class ActionResponseParser
             ActionResponseEc.TooManyTargets =>
                 "You have too many targets for this operation. In game operations are limited to 3 targets",
 
+            ActionResponseEc.TooFewTargets => "You have too few targets selected for this operation",
+            ActionResponseEc.TargetOffline => "One of your targets is offline",
+            ActionResponseEc.TargetBodySwapLacksPermissions => "You lack permissions for one of your targets",
+            ActionResponseEc.TargetBodySwapIsNotFriends => "You are not friends with one of your targets",
+
             // Exception
             ActionResponseEc.Unknown => "Unknown failure",
 
@@ -65,8 +69,7 @@ public static class ActionResponseParser
             _ => "The error code was uninitialized."
         };
     }
-
-    // TODO: Expand to fit ALL new action result cases
+    
     private static string BuildActionFailedNotification2(string target, ActionResultEc code)
     {
         if (code is ActionResultEc.Success)
@@ -81,10 +84,11 @@ public static class ActionResponseParser
             ActionResultEc.ClientInSafeMode => string.Concat(name, " is not accepting commands at the moment"),
             ActionResultEc.ClientHasFeaturePaused => string.Concat(name, " has paused this feature"),
             ActionResultEc.ClientHasSenderPaused => string.Concat(name, " did not process your command"),
-            
+
             ActionResultEc.ClientHasNotGrantedSenderPermissions or
-                ActionResultEc.TargetHasNotGrantedSenderPermissions => string.Concat(name, " has not granted you permissions for this command"),
-            
+                ActionResultEc.TargetHasNotGrantedSenderPermissions => string.Concat(name,
+                    " has not granted you permissions for this command"),
+
             ActionResultEc.ClientBadData => string.Concat(name, " could not parse the data you provided"),
             ActionResultEc.ClientPluginDependency => string.Concat(name, " ran into an issue with another plugin"),
             ActionResultEc.ClientBeingHypnotized => string.Concat(name, " is currently occupied elsewhere"),
