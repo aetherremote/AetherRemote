@@ -3,6 +3,7 @@ using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.BodySwap;
 using AetherRemoteCommon.Util;
@@ -16,7 +17,8 @@ public class BodySwapHandler(
     IdentityService identityService,
     LogService logService,
     ForwardedRequestManager forwardedRequestManager,
-    ModManager modManager)
+    ModManager modManager,
+    PermanentTransformationManager permanentTransformationManager)
 {
     // Const
     private const string Operation = "Body Swap";
@@ -26,10 +28,14 @@ public class BodySwapHandler(
     /// </summary>
     public async Task<ActionResult<Unit>> Handle(BodySwapForwardedRequest request)
     {
-        Plugin.Log.Info($"{request}");
+        var primary = request.SwapAttributes.ToPrimaryPermission();
+        var elevated = request.LockCode is null 
+            ? ElevatedPermissions.None 
+            : ElevatedPermissions.PermanentTransformation;
 
-        var permissions = request.SwapAttributes.ToPrimaryPermission();
-        var placeholder = forwardedRequestManager.Placehold(Operation, request.SenderFriendCode, permissions);
+        var permissions = new UserPermissions(primary, SpeakPermissions2.None, elevated);
+
+        var placeholder = forwardedRequestManager.Placeholder(Operation, request.SenderFriendCode, permissions);
         if (placeholder.Result is not ActionResultEc.Success)
             return ActionResultBuilder.Fail(placeholder.Result);
         
@@ -37,9 +43,16 @@ public class BodySwapHandler(
             return ActionResultBuilder.Fail(ActionResultEc.ValueNotSet);
         
         // Actually apply glamourer, mods, etc...
-        // TODO: Handle with return statement
-        await modManager.Assimilate(request.CharacterName, request.SwapAttributes);
-
+        if (await modManager.Assimilate(request.CharacterName, request.SwapAttributes) is { } permanentTransformationData)
+        {
+            // If there is a lock, save the permanent transformation data
+            if (request.LockCode.HasValue)
+            {
+                // Save
+                permanentTransformationManager.Save(permanentTransformationData);
+            }
+        }
+        
         // Set your new identity
         identityService.Identity = request.CharacterName;
         

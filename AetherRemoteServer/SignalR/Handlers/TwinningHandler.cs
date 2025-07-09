@@ -40,9 +40,13 @@ public class TwinningHandler(
         if (primary == PrimaryPermissions2.None)
             logger.LogWarning("{Sender} tried to request with empty permissions {Request}", sender, request);
         
-        var permissions = new UserPermissions(primary, SpeakPermissions2.None, ElevatedPermissions.None);
+        var elevated = ElevatedPermissions.None;
+        if (request.LockCode is not null)
+            elevated = ElevatedPermissions.PermanentTransformation;
         
-        var forwardedRequest = new TwinningForwardedRequest(sender, request.CharacterName, request.SwapAttributes);
+        var permissions = new UserPermissions(primary, SpeakPermissions2.None, elevated);
+        
+        var forwardedRequest = new TwinningForwardedRequest(sender, request.CharacterName, request.SwapAttributes, request.LockCode);
         return await forwardedRequestManager.CheckPermissionsAndSend(sender, request.TargetFriendCodes, Method,
             permissions, forwardedRequest, clients);
     }

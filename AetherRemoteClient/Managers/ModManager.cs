@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Attributes;
 using AetherRemoteClient.Domain.Events;
 using AetherRemoteClient.Domain.Interfaces;
@@ -43,7 +44,7 @@ public class ModManager : IDisposable
     /// <summary>
     ///     Get a target player's glamourer data along with optional additional parameters
     /// </summary>
-    public async Task<bool> Assimilate(string targetCharacterName, CharacterAttributes attributes)
+    public async Task<PermanentTransformationData?> Assimilate(string targetCharacterName, CharacterAttributes attributes)
     {
         // Get Current Collection
         var collection = await _penumbra.GetCollection().ConfigureAwait(false);
@@ -70,7 +71,7 @@ public class ModManager : IDisposable
         if (gameObject is null)
         {
             Plugin.Log.Warning($"Unable to find {targetCharacterName} in object table");
-            return false;
+            return null;
         }
 
         // Store a list of all the attributes we add
@@ -108,13 +109,14 @@ public class ModManager : IDisposable
         // Pause to allow others viewing your character details from their clients
         await Task.Delay(3000).ConfigureAwait(false);
 
+        // Pass in a permanent object to store data
+        var permanent = new PermanentTransformationData();
+        
         // Apply all the attributes we added in the above steps
         foreach (var attribute in assimilatedAttributes)
-            await attribute.Apply().ConfigureAwait(false);
-
-        // TODO: Put Perma-TF here
+            await attribute.Apply(permanent).ConfigureAwait(false);
         
-        return true;
+        return permanent;
     }
 
     /// <summary>

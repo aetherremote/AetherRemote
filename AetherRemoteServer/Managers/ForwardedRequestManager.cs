@@ -92,7 +92,7 @@ public class ForwardedRequestManager(IConnectionsService connections, IDatabaseS
                 continue;
             }
             
-            var request = new BodySwapForwardedRequest(sender, characters[i], attributes);
+            var request = new BodySwapForwardedRequest(sender, characters[i], attributes, null);
             
             try
             {

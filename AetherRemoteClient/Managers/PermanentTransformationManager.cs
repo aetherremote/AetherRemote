@@ -13,16 +13,22 @@ namespace AetherRemoteClient.Managers;
 public class PermanentTransformationManager : IDisposable
 {
     private readonly GlamourerIpc _glamourer;
+    private readonly PenumbraIpc _penumbra;
+    private readonly CustomizePlusIpc _customizePlus;
+    private readonly MoodlesIpc _moodlesIpc;
     private readonly IdentityService _identityService;
     private readonly PermanentLockService _permanentLockService;
     
-    public PermanentTransformationManager(GlamourerIpc glamourer, IdentityService identityService, PermanentLockService permanentLockService)
+    public PermanentTransformationManager(MoodlesIpc moodlesIpc, CustomizePlusIpc customizePlus, PenumbraIpc penumbra, GlamourerIpc glamourer, IdentityService identityService, PermanentLockService permanentLockService)
     {
+        _penumbra = penumbra;
+        _customizePlus = customizePlus;
+        _moodlesIpc = moodlesIpc;
         _glamourer = glamourer;
         _identityService = identityService;
         _permanentLockService = permanentLockService;
 
-        _glamourer.LocalPlayerResetOrReapply += OnAttemptedResetOrReapply;
+        _glamourer.LocalPlayerChanged += OnAttemptedResetOrReapply;
     }
 
     /// <summary>
@@ -76,10 +82,31 @@ public class PermanentTransformationManager : IDisposable
         
         // Always apply glamourer
         // We cannot apply a key here, otherwise Mare will be unable to read the local player
-        await _glamourer.ApplyDesignAsync(data.GlamourerData, data.GlamourerApplyFlags);
+        await _glamourer.ApplyDesignAsync(data.GlamourerData, data.GlamourerApplyFlags).ConfigureAwait(false);
+
+        // Apply Mods
+        if (data.ModPathData is not null)
+        {
+            var collection = await _penumbra.GetCollection();
+            await _penumbra.AddTemporaryMod(collection, data.ModPathData, data.ModMetaData!).ConfigureAwait(false);
+        }
         
-        // TODO: Other types
-        
+        // Apply Customize
+        if (data.CustomizePlusData is not null)
+        {
+            await _customizePlus.DeleteCustomize().ConfigureAwait(false);
+            await _customizePlus.ApplyCustomize(data.CustomizePlusData).ConfigureAwait(false);
+        }
+
+        // Apply Moodles
+        if (data.MoodlesData is not null)
+        {
+            if (await Plugin.RunOnFramework(() => Plugin.ObjectTable[0]?.Address).ConfigureAwait(false) is { } address)
+            {
+                await _moodlesIpc.SetMoodles(address, data.MoodlesData).ConfigureAwait(false);
+            }
+        }
+
         return true;
     }
     

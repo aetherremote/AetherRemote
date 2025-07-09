@@ -31,12 +31,16 @@ public class GlamourerAttribute(GlamourerIpc glamourerIpc, ushort objectIndex) :
     /// <summary>
     ///     <inheritdoc cref="ICharacterAttribute.Apply"/>
     /// </summary>
-    public async Task<bool> Apply()
+    public async Task<bool> Apply(PermanentTransformationData data)
     {
-        if (await glamourerIpc.ApplyDesignAsync(_glamourerData, GlamourerApplyFlags.All))
-            return true;
-
-        Plugin.Log.Warning("[ModAttribute] Could not apply glamourer data");
-        return false;
+        if (await glamourerIpc.ApplyDesignAsync(_glamourerData, GlamourerApplyFlags.All) is false)
+        {
+            Plugin.Log.Warning("[ModAttribute] Could not apply glamourer data");
+            return false;
+        }
+        
+        data.GlamourerData = _glamourerData;
+        data.GlamourerApplyFlags = GlamourerApplyFlags.All;
+        return true;
     }
 }

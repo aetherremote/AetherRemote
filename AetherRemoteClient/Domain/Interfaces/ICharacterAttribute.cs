@@ -18,5 +18,5 @@ public interface ICharacterAttribute
     /// <summary>
     ///     Apply this attribute to the local player
     /// </summary>
-    public Task<bool> Apply();
+    public Task<bool> Apply(PermanentTransformationData data);
 }

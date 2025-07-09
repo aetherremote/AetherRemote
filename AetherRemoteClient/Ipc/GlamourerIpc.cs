@@ -35,6 +35,11 @@ public class GlamourerIpc : IExternalPlugin, IDisposable
     public event EventHandler<GlamourerStateChangedEventArgs>? LocalPlayerResetOrReapply;
 
     /// <summary>
+    ///     Event fired every time glamourer detects a change
+    /// </summary>
+    public event EventHandler<GlamourerStateChangedEventArgs>? LocalPlayerChanged;
+
+    /// <summary>
     ///     Is Glamourer available for use?
     /// </summary>
     public bool ApiAvailable;
@@ -176,11 +181,15 @@ public class GlamourerIpc : IExternalPlugin, IDisposable
     {
         try
         {
-            if (stateChangeType is not (StateChangeType.Reset or StateChangeType.Reapply))
-                return;
-
             var objectIndex = (GameObject*)objectIndexPointer;
-            if (objectIndex->ObjectIndex is 0)
+            if (objectIndex->ObjectIndex is not 0)
+                return;
+            
+            // Always fire this event for the local player being updated
+            LocalPlayerChanged?.Invoke(this, new GlamourerStateChangedEventArgs());
+            
+            // Only fire this if the local player does a reset or reapply
+            if (stateChangeType is StateChangeType.Reset or StateChangeType.Reapply)
                 LocalPlayerResetOrReapply?.Invoke(this, new GlamourerStateChangedEventArgs());
         }
         catch (Exception e)

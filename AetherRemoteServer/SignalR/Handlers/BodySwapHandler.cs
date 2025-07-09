@@ -92,7 +92,7 @@ public class BodySwapHandler(
             var targetFriendCode = targets[i];
             
             // Construct the tailored request
-            var forwarded = new BodySwapForwardedRequest(sender, deranged[i], request.SwapAttributes);
+            var forwarded = new BodySwapForwardedRequest(sender, deranged[i], request.SwapAttributes, null);
 
             // Double-check the target is still online
             if (connections.TryGetClient(targetFriendCode) is not { } connectionClient)

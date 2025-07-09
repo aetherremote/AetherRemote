@@ -28,13 +28,16 @@ public class ModsAttribute(PenumbraIpc penumbraIpc, Guid collection, ushort obje
     /// <summary>
     ///     <inheritdoc cref="ICharacterAttribute.Apply"/>
     /// </summary>
-    public async Task<bool> Apply()
+    public async Task<bool> Apply(PermanentTransformationData data)
     {
-        // TODO: Verify if a body is actually needed or not
-        if (await penumbraIpc.AddTemporaryMod(collection, _modifiedPaths, _metaData).ConfigureAwait(false))
-            return true;
+        if (await penumbraIpc.AddTemporaryMod(collection, _modifiedPaths, _metaData).ConfigureAwait(false) is false)
+        {
+            Plugin.Log.Warning("[ModAttribute] Could not apply mods");
+            return false;
+        }
         
-        Plugin.Log.Warning("[ModAttribute] Could not apply mods");
-        return false;
+        data.ModPathData = _modifiedPaths;
+        data.ModMetaData = _metaData;
+        return true;
     }
 }

@@ -30,21 +30,23 @@ public class MoodlesAttribute(MoodlesIpc moodlesIpc, nint objectAddress) : IChar
     }
 
     /// <summary>
-    ///     
+    ///     <inheritdoc cref="ICharacterAttribute.Apply"/>
     /// </summary>
-    public async Task<bool> Apply()
+    public async Task<bool> Apply(PermanentTransformationData data)
     {
-        // TODO: Verify if a body is actually needed or not
         if (await Plugin.RunOnFramework(() => Plugin.ObjectTable[0]?.Address).ConfigureAwait(false) is not { } address)
         {
             Plugin.Log.Warning("[MoodlesAttribute] Could not get local character address");
             return false;
         }
-        
-        if (await moodlesIpc.SetMoodles(address, Moodles).ConfigureAwait(false))
-            return true;
-        
-        Plugin.Log.Warning("[MoodlesAttribute] Could not apply moodles");
-        return false;
+
+        if (await moodlesIpc.SetMoodles(address, Moodles).ConfigureAwait(false) is false)
+        {
+            Plugin.Log.Warning("[MoodlesAttribute] Could not apply moodles");
+            return false;
+        }
+
+        data.MoodlesData = Moodles;
+        return true;
     }
 }

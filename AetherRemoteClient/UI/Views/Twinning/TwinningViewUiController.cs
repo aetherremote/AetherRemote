@@ -15,6 +15,9 @@ public class TwinningViewUiController(FriendsListService friendsListService, Net
     public bool SwapMods;
     public bool SwapMoodles;
     public bool SwapCustomizePlus;
+    
+    public bool PermanentTransformation = false;
+    public string UnlockPin = string.Empty;
 
     /// <summary>
     ///     Used to determine if all selected friends have permissions
@@ -36,11 +39,15 @@ public class TwinningViewUiController(FriendsListService friendsListService, Net
             if (SwapCustomizePlus)
                 attributes |= CharacterAttributes.CustomizePlus;
 
+            if (uint.TryParse(UnlockPin, out var key) is false)
+                return;
+            
             var input = new TwinningRequest
             {
                 TargetFriendCodes = friendsListService.Selected.Select(friend => friend.FriendCode).ToList(),
                 SwapAttributes = attributes,
-                CharacterName = player.Name.ToString()
+                CharacterName = player.Name.ToString(),
+                LockCode = PermanentTransformation ? key : null
             };
 
             var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.Twinning, input);
@@ -50,6 +57,13 @@ public class TwinningViewUiController(FriendsListService friendsListService, Net
         {
             Plugin.Log.Warning($"Unable to twin, {e.Message}");
         }
+    }
+    
+    public bool AllSelectedTargetsHaveElevatedPermissions()
+    {
+        return friendsListService.Selected.All(friend =>
+            (friend.PermissionsGrantedByFriend.Elevated & ElevatedPermissions.PermanentTransformation) ==
+            ElevatedPermissions.PermanentTransformation);
     }
     
     /// <summary>

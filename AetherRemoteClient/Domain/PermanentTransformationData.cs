@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using AetherRemoteCommon.Domain.Enums;
 
@@ -26,9 +27,14 @@ public class PermanentTransformationData
     public Dictionary<string, string>? ModPathData { get; set; }
     
     /// <summary>
+    ///     Mod meta data
+    /// </summary>
+    public string? ModMetaData { get; set; }
+    
+    /// <summary>
     ///     Customize Plus data to be applied
     /// </summary>
-    public string? CustomizePlusData { get; set; }
+    public IList? CustomizePlusData { get; set; }
     
     /// <summary>
     ///     Moodles data to be applied
