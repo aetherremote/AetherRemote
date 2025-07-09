@@ -16,6 +16,9 @@ public class BodySwapViewUi(
     CommandLockoutService commandLockoutService,
     FriendsListService friendsListService) : IDrawable
 {
+    // Const
+    private static readonly Vector2 IconSize = new(32);
+    
     public void Draw()
     {
         ImGui.BeginChild("BodySwapContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
@@ -37,24 +40,36 @@ public class BodySwapViewUi(
         {
             ImGui.TextWrapped("Body swapping must be done in rendering distance of your target(s). You can undo a body swap on yourself by going into the 'Status' tab, or reverting your character in glamourer.");
         });
-
-        var half = ImGui.GetWindowWidth() * 0.5f;
+        
         SharedUserInterfaces.ContentBox("BodySwapOptions", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.MediumText("Options");
-            if (ImGui.Checkbox("Swap Mods", ref controller.SwapMods))
-                controller.SelectedAttributesPermissions ^= PrimaryPermissions2.Mods;
-
+            
+            SharedUserInterfaces.IconOptionButton(FontAwesomeIcon.User, IconSize, "Customization - Always Enabled", true);
+            
             ImGui.SameLine();
-            ImGui.SetCursorPosX(half);
-            if (ImGui.Checkbox("Swap Moodles", ref controller.SwapMoodles))
+            SharedUserInterfaces.IconOptionButton(FontAwesomeIcon.Tshirt, IconSize, "Equipment - Always Enabled", true);
+            
+            ImGui.SameLine();
+            if (SharedUserInterfaces.IconOptionButton(FontAwesomeIcon.Wrench, IconSize, "Mods", controller.SwapMods))
+            {
+                controller.SwapMods = !controller.SwapMods;
+                controller.SelectedAttributesPermissions ^= PrimaryPermissions2.Mods;
+            }
+            
+            ImGui.SameLine();
+            if (SharedUserInterfaces.IconOptionButton(FontAwesomeIcon.Icons, IconSize, "Moodles", controller.SwapMoodles))
+            {
+                controller.SwapMoodles = !controller.SwapMoodles;
                 controller.SelectedAttributesPermissions ^= PrimaryPermissions2.Moodles;
-
-            ImGui.Spacing();
-            if (ImGui.Checkbox("Swap Customize+", ref controller.SwapCustomizePlus))
+            }
+            
+            ImGui.SameLine();
+            if (SharedUserInterfaces.IconOptionButton(FontAwesomeIcon.Plus, IconSize, "Customize Plus", controller.SwapCustomizePlus))
+            {
+                controller.SwapCustomizePlus = !controller.SwapCustomizePlus;
                 controller.SelectedAttributesPermissions ^= PrimaryPermissions2.CustomizePlus;
-
-            ImGui.Spacing();
+            }
 
             ImGui.Checkbox("Include Self", ref controller.IncludeSelfInSwap);
             SharedUserInterfaces.Tooltip("Include yourself in the targets to body swap");

@@ -11,6 +11,7 @@ public static class AetherRemoteStyle
     public static readonly Vector2 NavBarDimensions = new(180, 0);
     public static readonly Vector4 PrimaryColor = new(0.9372f, 0.2862f, 0.3451f, 0.75f);
     public static readonly uint PanelBackground = ImGui.ColorConvertFloat4ToU32(new Vector4(0.1294f, 0.1333f, 0.1764f, 1));
+    public static readonly uint ElevatedBackground = ImGui.ColorConvertFloat4ToU32(PrimaryColor);
     public static readonly uint DiscordBlue = ImGui.ColorConvertFloat4ToU32(new Vector4(0.4666f, 0.5215f, 0.8f, 1));
 
     public const ushort TextColorGreen = 45;
@@ -21,6 +22,8 @@ public static class AetherRemoteStyle
     
     public static void Stylize()
     {
+        ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, Rounding);
+        
         ImGui.PushStyleColor(ImGuiCol.WindowBg, WindowBackground);
         ImGui.PushStyleColor(ImGuiCol.ChildBg, PanelBackground);
         ImGui.PushStyleColor(ImGuiCol.Border, PanelBackground);
@@ -31,5 +34,7 @@ public static class AetherRemoteStyle
     public static void UnStylize()
     {
         ImGui.PopStyleColor(5);
+        
+        ImGui.PopStyleVar();
     }
 }

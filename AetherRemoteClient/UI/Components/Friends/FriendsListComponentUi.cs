@@ -17,74 +17,68 @@ public class FriendsListComponentUi(FriendsListService friendsListService, Netwo
         var style = ImGui.GetStyle();
         var windowPadding = style.WindowPadding;
         var framePadding = style.FramePadding;
-
-        ImGui.BeginGroup();
-
-        var width = 0f;
-        SharedUserInterfaces.ContentBox("FriendsListSearchFriend", AetherRemoteStyle.PanelBackground, true, () =>
-        {
-            width = ImGui.GetWindowWidth() - ImGui.GetCursorPosX() - windowPadding.X * 2;
-            ImGui.TextUnformatted("Search");
-            ImGui.SetNextItemWidth(width);
-            if (ImGui.InputTextWithHint("###SearchFriendInputText", "Friend", ref _controller.SearchText, 128))
-                _controller.FriendListFilter.UpdateSearchTerm(_controller.SearchText);
-        });
-
-        float height;
-        if (displayAddFriendsBox)
-        {
-            height = windowPadding.Y * 3 + framePadding.Y * 4 + ImGui.GetFontSize() * 2 + ImGui.GetStyle().ItemSpacing.Y;
-        }
-        else
-        {
-            height = 0;
-        }
         
-        ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, AetherRemoteStyle.Rounding);
-        if (ImGui.BeginChild("###PermissionViewFriendsList", new Vector2(0, -height), true))
+        var childWidth = new Vector2(AetherRemoteStyle.NavBarDimensions.X - windowPadding.X, 0);
+        if (ImGui.BeginChild("FriendListComponentChild", childWidth, false, AetherRemoteStyle.ContentFlags))
         {
-            var online = new List<Friend>();
-            var offline = new List<Friend>();
-            
-            foreach (var friend in _controller.FriendListFilter.List)
-                (friend.Online ? online : offline).Add(friend);
-            
-            ImGui.TextColored(ImGuiColors.HealerGreen, "Online");
-            foreach (var friend in online)
+            var width = 0f;
+            SharedUserInterfaces.ContentBox("FriendsListSearchFriend", AetherRemoteStyle.PanelBackground, true, () =>
             {
-                if (ImGui.Selectable($"{friend.NoteOrFriendCode}###{friend.FriendCode}",
-                        friendsListService.Selected.Contains(friend)))
-                    friendsListService.Select(friend);
-            }
+                width = ImGui.GetWindowWidth() - ImGui.GetCursorPosX() - windowPadding.X;
+                ImGui.TextUnformatted("Search");
+                ImGui.SetNextItemWidth(width);
+                if (ImGui.InputTextWithHint("###SearchFriendInputText", "Friend", ref _controller.SearchText, 128))
+                    _controller.FriendListFilter.UpdateSearchTerm(_controller.SearchText);
+            });
 
-            if (displayOfflineFriends)
+            var height = displayAddFriendsBox
+                ? windowPadding.Y * 3 + framePadding.Y * 4 + ImGui.GetFontSize() * 2 + ImGui.GetStyle().ItemSpacing.Y
+                : 0;
+            
+            if (ImGui.BeginChild("###PermissionViewFriendsList", new Vector2(0, -height), true))
             {
-                ImGui.TextColored(ImGuiColors.DalamudRed, "Offline");
-                foreach (var friend in offline)
+                var online = new List<Friend>();
+                var offline = new List<Friend>();
+                
+                foreach (var friend in _controller.FriendListFilter.List)
+                    (friend.Online ? online : offline).Add(friend);
+                
+                ImGui.TextColored(ImGuiColors.HealerGreen, "Online");
+                foreach (var friend in online)
                 {
                     if (ImGui.Selectable($"{friend.NoteOrFriendCode}###{friend.FriendCode}",
                             friendsListService.Selected.Contains(friend)))
                         friendsListService.Select(friend);
                 }
+
+                if (displayOfflineFriends)
+                {
+                    ImGui.TextColored(ImGuiColors.DalamudRed, "Offline");
+                    foreach (var friend in offline)
+                    {
+                        if (ImGui.Selectable($"{friend.NoteOrFriendCode}###{friend.FriendCode}",
+                                friendsListService.Selected.Contains(friend)))
+                            friendsListService.Select(friend);
+                    }
+                }
+                
+                ImGui.EndChild();
+            }
+
+            if (displayAddFriendsBox)
+            {
+                ImGui.Spacing();
+
+                SharedUserInterfaces.ContentBox("FriendsListAddFriend", AetherRemoteStyle.PanelBackground, false, () =>
+                {
+                    ImGui.SetNextItemWidth(width);
+                    ImGui.InputTextWithHint("###AddFriendInputText", "Friend code", ref _controller.FriendCodeToAdd, 128);
+                    if (ImGui.Button("Add Friend", new Vector2(width, 0)))
+                        _ = _controller.Add();
+                });
             }
             
             ImGui.EndChild();
         }
-        ImGui.PopStyleVar();
-
-        if (displayAddFriendsBox)
-        {
-            ImGui.Spacing();
-
-            SharedUserInterfaces.ContentBox("FriendsListAddFriend", AetherRemoteStyle.PanelBackground, false, () =>
-            {
-                ImGui.SetNextItemWidth(width);
-                ImGui.InputTextWithHint("###AddFriendInputText", "Friend code", ref _controller.FriendCodeToAdd, 128);
-                if (ImGui.Button("Add Friend", new Vector2(width, 0)))
-                    _ = _controller.Add();
-            });
-        }
-        
-        ImGui.EndGroup();
     }
 }

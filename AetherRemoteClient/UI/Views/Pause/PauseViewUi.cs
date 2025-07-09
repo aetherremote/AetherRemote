@@ -152,6 +152,18 @@ public class PauseViewUi(
                 ImGui.EndTable();
             });
             
+            SharedUserInterfaces.ContentBox("TransformationElevatedPermissions", AetherRemoteStyle.ElevatedBackground, true, () =>
+            {
+                ImGui.TextUnformatted("Character Attributes");
+                if (ImGui.BeginTable("CharacterAttributes", 2) is false)
+                    return;
+                
+                ImGui.TableNextColumn();
+                BuildPauseButtonForElevatedFeature(ElevatedPermissions.PermanentTransformation);
+                
+                ImGui.EndTable();
+            });
+            
             ImGui.EndChild();
         }
         
@@ -222,6 +234,25 @@ public class PauseViewUi(
     }
 
     private void BuildPauseButtonForPrimaryFeature(PrimaryPermissions2 permissions)
+    {
+        if (pauseService.IsFeaturePaused(permissions))
+        {
+            ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteStyle.PrimaryColor);
+            if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Play, null, null, permissions.ToString()))
+                pauseService.ToggleFeature(permissions);
+            ImGui.PopStyleColor();
+        }
+        else
+        {
+            if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Pause, null, null, permissions.ToString()))
+                pauseService.ToggleFeature(permissions);
+        }
+
+        ImGui.SameLine();
+        ImGui.TextUnformatted(permissions.ToString());
+    }
+    
+    private void BuildPauseButtonForElevatedFeature(ElevatedPermissions permissions)
     {
         if (pauseService.IsFeaturePaused(permissions))
         {

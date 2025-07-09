@@ -73,6 +73,7 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<LogService>();
         services.AddSingleton<NetworkService>();
         services.AddSingleton<PauseService>();
+        services.AddSingleton<PermanentLockService>();
         services.AddSingleton<SpiralService>();
         services.AddSingleton<TipService>();
         services.AddSingleton<ViewService>();
@@ -86,12 +87,15 @@ public sealed class Plugin : IDalamudPlugin
         
         // Managers
         services.AddSingleton<ChatCommandManager>();
-        services.AddSingleton<ConnectivityManager>();
         services.AddSingleton<DependencyManager>();
         services.AddSingleton<ForwardedRequestManager>();
         services.AddSingleton<ModManager>();
+        services.AddSingleton<PermanentTransformationManager>();
         
         // Handlers
+        services.AddSingleton<ConnectivityHandler>();
+        
+        // Handlers Network
         services.AddSingleton<BodySwapHandler>();
         services.AddSingleton<EmoteHandler>();
         services.AddSingleton<HypnosisHandler>();
@@ -153,7 +157,7 @@ public sealed class Plugin : IDalamudPlugin
         
         // Managers
         _services.GetRequiredService<ChatCommandManager>();
-        _services.GetRequiredService<ConnectivityManager>();
+        _services.GetRequiredService<ConnectivityHandler>();
         _services.GetRequiredService<DependencyManager>();
         
         // Handlers

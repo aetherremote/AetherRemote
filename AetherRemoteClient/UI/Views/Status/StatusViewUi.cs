@@ -11,6 +11,7 @@ namespace AetherRemoteClient.UI.Views.Status;
 public class StatusViewUi(
     StatusViewUiController controller,
     IdentityService identityService,
+    PermanentLockService permanentLockService,
     TipService tipService,
     SpiralService spiralService) : IDrawable
 {
@@ -55,10 +56,18 @@ public class StatusViewUi(
             ImGui.TextUnformatted(identityService.Identity);
         });
 
-        if (SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.History, windowPadding, windowWidth))
-            controller.ResetIdentity();
+        if (permanentLockService.CurrentLock is null)
+        {
+            if (SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.History, windowPadding, windowWidth))
+                controller.ResetIdentity();
 
-        SharedUserInterfaces.Tooltip("Reset identity");
+            SharedUserInterfaces.Tooltip("Reset identity");
+        }
+        else
+        {
+            SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.Lock, windowPadding, windowWidth);
+            SharedUserInterfaces.Tooltip("Locked! You are unable to reset your identity.");
+        }
         
         SharedUserInterfaces.ContentBox("StatusHypnosis", AetherRemoteStyle.PanelBackground, true, () =>
         {
@@ -73,7 +82,7 @@ public class StatusViewUi(
         
         SharedUserInterfaces.Tooltip("Stop spiral");
 
-        SharedUserInterfaces.ContentBox("StatusTips", AetherRemoteStyle.PanelBackground, false, () =>
+        SharedUserInterfaces.ContentBox("StatusTips", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.MediumText("Tips");
             ImGui.TextUnformatted(tipService.CurrentTip);
@@ -83,6 +92,27 @@ public class StatusViewUi(
             tipService.NextTip();
 
         SharedUserInterfaces.Tooltip("Next Tip");
+        
+        SharedUserInterfaces.ContentBox("StatusUnlock", AetherRemoteStyle.PanelBackground, true, () =>
+        {
+            SharedUserInterfaces.MediumText("Unlock");
+            if (ImGui.InputTextWithHint("##A", "Pin", ref controller.UnlockPin, 4, ImGuiInputTextFlags.CallbackCharFilter, StatusViewUiController.DigitsOnlyCallbackPointer))
+            {
+                if (uint.TryParse(controller.UnlockPin, out var result))
+                {
+                    controller.UnlockPinParsed = result;
+                }
+                else
+                {
+                    controller.UnlockPin = controller.UnlockPinParsed.ToString();
+                }
+            }
+        });
+        
+        if (SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.Unlock, windowPadding, windowWidth))
+            controller.Unlock();
+
+        SharedUserInterfaces.Tooltip("Unlock");
 
         ImGui.EndChild();
     }

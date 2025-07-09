@@ -67,6 +67,12 @@ public class PenumbraIpc : IExternalPlugin
     /// <returns>A list of modified objects, mapping the modified object to the target path</returns>
     public async Task<Dictionary<string, string>> GetGameObjectResourcePaths(ushort index)
     {
+        // TODO: There is an issue with multiple named files having the same name causing issues
+        //          An example of which would be if someone has ../../something_SOMETHING.tex
+        //          and ../../something_something.tex
+        //          There is a possibility of fixing this just by forcing everything lowercase
+        //          however I don't know enough about mod paths to know if this is problematic
+        
         if (ApiAvailable)
             return await Plugin.RunOnFramework(() =>
             {
@@ -89,7 +95,8 @@ public class PenumbraIpc : IExternalPlugin
                                     continue;
                                 }
                                 
-                                paths.Add(item, kvp.Key);
+                                // TODO: Change to TryAddItem
+                                paths.TryAdd(item, kvp.Key);
                             }
                         }
                     }

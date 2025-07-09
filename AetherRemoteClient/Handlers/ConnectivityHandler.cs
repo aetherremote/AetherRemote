@@ -1,32 +1,37 @@
 using System;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.GetAccountData;
 
-namespace AetherRemoteClient.Managers;
+namespace AetherRemoteClient.Handlers;
 
 /// <summary>
 ///     Handles the state of the plugin's connectivity.
 ///     This includes connections and reconnections.
 /// </summary>
-public class ConnectivityManager : IDisposable
+public class ConnectivityHandler : IDisposable
 {
     private readonly FriendsListService _friendsListService;
     private readonly IdentityService _identityService;
     private readonly NetworkService _networkService;
     private readonly ViewService _viewService;
+    private readonly DependencyManager _dependencyManager;
+    private readonly PermanentTransformationManager _permanentTransformationManager;
 
     /// <summary>
-    /// <inheritdoc cref="ConnectivityManager"/>
+    /// <inheritdoc cref="ConnectivityHandler"/>
     /// </summary>
-    public ConnectivityManager(FriendsListService friendsListService, IdentityService identityService, NetworkService networkService, ViewService viewService)
+    public ConnectivityHandler(FriendsListService friendsListService, IdentityService identityService, NetworkService networkService, ViewService viewService, DependencyManager dependencyManager, PermanentTransformationManager permanentTransformationManager)
     {
         _friendsListService = friendsListService;
         _identityService = identityService;
         _networkService = networkService;
         _viewService = viewService;
+        _dependencyManager = dependencyManager;
+        _permanentTransformationManager = permanentTransformationManager;
         
         // Connectivity Events
         _networkService.Connected += OnConnectedToServer;
@@ -105,6 +110,21 @@ public class ConnectivityManager : IDisposable
     {
         try
         {
+            // Force a dependency retry
+            _dependencyManager.ForceTestAvailability();
+            
+            // Get the local player
+            if (await Plugin.RunOnFramework(() => Plugin.ClientState.LocalPlayer) is not { } player)
+                return;
+
+            // Store the local character for use later on in the plugin
+            _identityService.Character = new LocalCharacter(player.Name.ToString(), player.HomeWorld.Value.Name.ToString());
+            
+            // Check to see if there are any permanent transformations for this character
+            if (Plugin.Configuration.PermanentTransformations.TryGetValue(_identityService.Character.FullName, out var transformation))
+                await _permanentTransformationManager.Load(transformation);
+            
+            // Automatically log in if needed
             if (Plugin.Configuration.AutoLogin)
                 await _networkService.StartAsync().ConfigureAwait(false);
         }

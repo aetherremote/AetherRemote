@@ -143,44 +143,60 @@ public class FriendsViewUi(
             ImGui.SetCursorPos(current);
         });
 
-        SharedUserInterfaces.ContentBox("FriendsEmoteOptions", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("FriendsGeneralOptions", AetherRemoteStyle.PanelBackground, true, () =>
         {
-            ImGui.TextUnformatted("Emotes");
-            ImGui.Checkbox("Allow###Emotes", ref controller.EditingUserPermissions.Emote);
+            ImGui.TextUnformatted("General Permissions");
+            if (ImGui.BeginTable("GeneralPermissionsTable", 2))
+            {
+                ImGui.TableNextColumn();
+                ImGui.Checkbox("Emotes", ref controller.EditingUserPermissions.Emote);
+                ImGui.TableNextColumn();
+                ImGui.Checkbox("Hypnosis", ref controller.EditingUserPermissions.Hypnosis);
+                ImGui.EndTable();
+            }
         });
 
-        SharedUserInterfaces.ContentBox("FriendsTransformationOptions", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("FriendsCharacterAttributesOptions", AetherRemoteStyle.PanelBackground, true, () =>
         {
-            ImGui.TextUnformatted("Transformation");
-            if (ImGui.BeginTable("TransformationPermissionsTable", 2))
+            ImGui.TextUnformatted("Character Attributes");
+            if (ImGui.BeginTable("CharacterAttributesPermissionsTable", 2))
             {
                 ImGui.TableNextColumn();
                 ImGui.Checkbox("Customization", ref controller.EditingUserPermissions.Customization);
                 ImGui.TableNextColumn();
                 ImGui.Checkbox("Equipment", ref controller.EditingUserPermissions.Equipment);
                 ImGui.TableNextColumn();
+                ImGui.Checkbox("Mods", ref controller.EditingUserPermissions.Mods);
+                ImGui.TableNextColumn();
                 ImGui.Checkbox("Body Swap", ref controller.EditingUserPermissions.BodySwap);
                 ImGui.TableNextColumn();
                 ImGui.Checkbox("Twinning", ref controller.EditingUserPermissions.Twinning);
                 ImGui.TableNextColumn();
                 ImGui.Checkbox("Customize+", ref controller.EditingUserPermissions.CustomizePlus);
+                ImGui.TableNextColumn();
+                ImGui.Checkbox("Moodles", ref controller.EditingUserPermissions.Moodles);
                 ImGui.EndTable();
             }
-
-            ImGui.TextUnformatted("Mod Swapping");
-            ImGui.Checkbox("Allow###ModSwapping", ref controller.EditingUserPermissions.Mods);
         });
         
-        SharedUserInterfaces.ContentBox("FriendsMoodlesOptions", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("FriendsElevatedOptions", AetherRemoteStyle.ElevatedBackground, false, () =>
         {
-            ImGui.TextUnformatted("Moodles");
-            ImGui.Checkbox("Allow###Moodles", ref controller.EditingUserPermissions.Moodles);
-        });
-        
-        SharedUserInterfaces.ContentBox("FriendsHypnosisOptions", AetherRemoteStyle.PanelBackground, false, () =>
-        {
-            ImGui.TextUnformatted("Hypnosis");
-            ImGui.Checkbox("Allow###Hypnosis", ref controller.EditingUserPermissions.Hypnosis);
+            ImGui.TextUnformatted("Elevated Permissions");
+            ImGui.SameLine();
+            SharedUserInterfaces.Icon(FontAwesomeIcon.ExclamationCircle);
+            SharedUserInterfaces.Tooltip("Elevated permissions allow for more intrusive functionality and should be granted carefully");
+            
+            if (ImGui.BeginTable("CharacterAttributesPermissionsTable", 2))
+            {
+                ImGui.TableNextColumn();
+                ImGui.Checkbox("Permanent Transformations", ref controller.EditingUserPermissions.PermanentTransformation);
+                SharedUserInterfaces.Tooltip(
+                    [
+                        "Allows this friend to lock your appearance, preventing changes until you enter the PIN they created", 
+                        "You can unlock it from the Status tab or by using the safeword command or safe mode"
+                    ]);
+                ImGui.EndTable();
+            }
         });
 
         // Pending Changes

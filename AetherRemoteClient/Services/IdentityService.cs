@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using AetherRemoteClient.Domain;
 
 namespace AetherRemoteClient.Services;
 
@@ -12,6 +13,11 @@ public class IdentityService : IDisposable
     ///     Your friend code
     /// </summary>
     public string FriendCode = "Unknown Friend Code";
+
+    /// <summary>
+    ///     The local character you logged in as
+    /// </summary>
+    public LocalCharacter Character = new("Unknown", "Unknown");
     
     /// <summary>
     ///     Name of your current in-game identity you are assuming

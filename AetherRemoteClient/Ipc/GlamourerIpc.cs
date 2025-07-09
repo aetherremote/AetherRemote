@@ -103,16 +103,16 @@ public class GlamourerIpc : IExternalPlugin, IDisposable
     ///     Applies a given design to an object index
     /// </summary>
     /// <param name="glamourerData">Glamourer data to apply</param>
-    /// <param name="flagses">How should this be applied?</param>
+    /// <param name="flags">How should this be applied?</param>
     /// <param name="index">Object table index to revert</param>
-    public async Task<bool> ApplyDesignAsync(string glamourerData, GlamourerApplyFlags flagses, ushort index = 0)
+    public async Task<bool> ApplyDesignAsync(string glamourerData, GlamourerApplyFlags flags, ushort index = 0)
     {
         if (ApiAvailable)
             return await Plugin.RunOnFramework(() =>
             {
                 try
                 {
-                    var result = _applyState.Invoke(glamourerData, index, 0, ConvertGlamourerToApplyFlags(flagses));
+                    var result = _applyState.Invoke(glamourerData, index, 0, ConvertGlamourerToApplyFlags(flags));
 
                     if (result is GlamourerApiEc.Success)
                         return true;
@@ -137,14 +137,15 @@ public class GlamourerIpc : IExternalPlugin, IDisposable
     ///     Gets a design from a given index
     /// </summary>
     /// <param name="index">Object table index to get the design for</param>
-    public async Task<string?> GetDesignAsync(ushort index = 0)
+    /// <param name="key">Key to get this object</param>
+    public async Task<string?> GetDesignAsync(ushort index = 0, uint key = MareLockCode)
     {
         if (ApiAvailable)
             return await Plugin.RunOnFramework(() =>
             {
                 try
                 {
-                    var (_, data) = _getStateBase64.Invoke(index, MareLockCode);
+                    var (_, data) = _getStateBase64.Invoke(index, key);
                     return data;
                 }
                 catch (Exception e)
@@ -158,15 +159,15 @@ public class GlamourerIpc : IExternalPlugin, IDisposable
         Plugin.Log.Warning("[GlamourerIpc] Unable to get design because glamourer is not available");
         return null;
     }
-
+    
     /// <summary>
     ///     Converts domain <see cref="GlamourerApplyFlags"/> to Glamourer <see cref="ApplyFlag"/>
     /// </summary>
-    private static ApplyFlag ConvertGlamourerToApplyFlags(GlamourerApplyFlags flagses)
+    private static ApplyFlag ConvertGlamourerToApplyFlags(GlamourerApplyFlags flags)
     {
         var applyFlags = ApplyFlag.Once;
-        if (flagses.HasFlag(GlamourerApplyFlags.Customization)) applyFlags |= ApplyFlag.Customization;
-        if (flagses.HasFlag(GlamourerApplyFlags.Equipment)) applyFlags |= ApplyFlag.Equipment;
+        if (flags.HasFlag(GlamourerApplyFlags.Customization)) applyFlags |= ApplyFlag.Customization;
+        if (flags.HasFlag(GlamourerApplyFlags.Equipment)) applyFlags |= ApplyFlag.Equipment;
         if (applyFlags is ApplyFlag.Once) applyFlags |= ApplyFlag.Customization | ApplyFlag.Equipment;
         return applyFlags;
     }

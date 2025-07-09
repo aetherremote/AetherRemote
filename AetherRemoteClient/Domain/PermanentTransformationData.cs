@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using AetherRemoteCommon.Domain.Enums;
 
 namespace AetherRemoteClient.Domain;
 
@@ -13,6 +14,11 @@ public class PermanentTransformationData
     ///     Glamourer data to be applied
     /// </summary>
     public string GlamourerData { get; set; } = string.Empty;
+    
+    /// <summary>
+    ///     How should this transformation be applied?
+    /// </summary>
+    public GlamourerApplyFlags GlamourerApplyFlags { get; set; }
     
     /// <summary>
     ///     Mod path data to be applied
@@ -32,5 +38,5 @@ public class PermanentTransformationData
     /// <summary>
     ///     The code to unlock (delete) this permanent transformation
     /// </summary>
-    public string? UnlockCode { get; set; }
+    public uint UnlockCode { get; set; }
 }

@@ -90,6 +90,38 @@ public static class SharedUserInterfaces
     }
 
     /// <summary>
+    ///     For use with creating buttons in a toggleable state
+    /// </summary>
+    /// <param name="icon"></param>
+    /// <param name="size"></param>
+    /// <param name="tooltip"></param>
+    /// <param name="selected"></param>
+    /// <returns></returns>
+    public static bool IconOptionButton(FontAwesomeIcon icon, Vector2 size, string tooltip, bool selected)
+    {
+        ImGui.PushFont(UiBuilder.IconFont);
+        
+        bool result;
+        if (selected)
+        {
+            ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteStyle.PrimaryColor);
+            result = ImGui.Button(icon.ToIconString(), size);
+            ImGui.PopStyleColor();
+        }
+        else
+        {
+            result = ImGui.Button(icon.ToIconString(), size);
+        }
+        
+        ImGui.PopFont();
+        
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip(tooltip);
+        
+        return result;
+    }
+
+    /// <summary>
     ///     Draws text using the medium font with optional color.
     /// </summary>
     public static void MediumText(string text, Vector4? color = null)

@@ -1,9 +1,11 @@
 using System.Threading.Tasks;
+using AetherRemoteClient.Domain;
 using AetherRemoteClient.Ipc;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Transform;
 using AetherRemoteCommon.Util;
@@ -16,7 +18,8 @@ namespace AetherRemoteClient.Handlers.Network;
 public class TransformHandler(
     LogService logService,
     GlamourerIpc glamourerIpc,
-    ForwardedRequestManager forwardedRequestManager)
+    ForwardedRequestManager forwardedRequestManager,
+    PermanentTransformationManager permanentTransformationManager)
 {
     // Const
     private const string Operation = "Transform";
@@ -26,8 +29,17 @@ public class TransformHandler(
     /// </summary>
     public async Task<ActionResult<Unit>> Handle(TransformForwardedRequest request)
     {
-        var permissions = request.GlamourerApplyType.ToPrimaryPermission();
-        var placeholder = forwardedRequestManager.Placehold(Operation, request.SenderFriendCode, permissions);
+        // Setup permissions
+        var primary = request.GlamourerApplyType.ToPrimaryPermission();
+        var elevated = request.LockCode is null 
+            ? ElevatedPermissions.None 
+            : ElevatedPermissions.PermanentTransformation;
+        
+        // Build permissions
+        var permissions = new UserPermissions(primary, SpeakPermissions2.None, elevated);
+        
+        // Validate Permission
+        var placeholder = forwardedRequestManager.Placeholder(Operation, request.SenderFriendCode, permissions);
         if (placeholder.Result is not ActionResultEc.Success)
             return ActionResultBuilder.Fail(placeholder.Result);
         
@@ -40,6 +52,21 @@ public class TransformHandler(
             Plugin.Log.Warning($"Failed to handle transformation request from {friend.NoteOrFriendCode}");
             logService.Custom($"{friend.NoteOrFriendCode} tried to transform you, but an unexpected error occured.");
             return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
+        }
+        
+        // If there is a lock, save the permanent transformation data
+        if (request.LockCode.HasValue)
+        {
+            // Adds the parts we want to save
+            var permanent = new PermanentTransformationData
+            {
+                GlamourerData = request.GlamourerData,
+                GlamourerApplyFlags = request.GlamourerApplyType,
+                UnlockCode = request.LockCode.Value
+            };
+
+            // Save
+            permanentTransformationManager.Save(permanent);
         }
         
         // Log Success

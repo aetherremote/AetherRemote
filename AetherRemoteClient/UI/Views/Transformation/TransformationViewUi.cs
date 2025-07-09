@@ -36,19 +36,6 @@ public class TransformationViewUi(
             return;
         }
         
-        var windowWidth = ImGui.GetWindowWidth() * 0.5f; // 0.5 is a minor mathematical optimization
-        SharedUserInterfaces.ContentBox("TransformationOptions", AetherRemoteStyle.PanelBackground, true, () =>
-        {
-            SharedUserInterfaces.MediumText("Options");
-
-            if (ImGui.Checkbox("Customization", ref controller.ApplyCustomization))
-                controller.SelectedApplyTypePermissions ^= PrimaryPermissions2.GlamourerCustomization;
-            
-            ImGui.SameLine(windowWidth);
-            if (ImGui.Checkbox("Equipment", ref controller.ApplyEquipment))
-                controller.SelectedApplyTypePermissions ^= PrimaryPermissions2.GlamourerEquipment;
-        });
-
         SharedUserInterfaces.ContentBox("TransformationQuickActions", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.MediumText("Quick Actions");
@@ -70,6 +57,37 @@ public class TransformationViewUi(
             SharedUserInterfaces.Tooltip("Paste glamourer data from your clipboard");
         });
         
+        var windowWidth = ImGui.GetWindowWidth() * 0.5f; // 0.5 is a minor mathematical optimization
+        SharedUserInterfaces.ContentBox("TransformationOptions", AetherRemoteStyle.PanelBackground, true, () =>
+        {
+            SharedUserInterfaces.MediumText("Options");
+
+            if (ImGui.Checkbox("Customization", ref controller.ApplyCustomization))
+                controller.SelectedApplyTypePermissions ^= PrimaryPermissions2.GlamourerCustomization;
+            
+            ImGui.SameLine(windowWidth);
+            if (ImGui.Checkbox("Equipment", ref controller.ApplyEquipment))
+                controller.SelectedApplyTypePermissions ^= PrimaryPermissions2.GlamourerEquipment;
+        });
+        
+        if (controller.AllSelectedTargetsHaveElevatedPermissions())
+            SharedUserInterfaces.ContentBox("TransformationElevatedPermissions", AetherRemoteStyle.ElevatedBackground, true, () =>
+            {
+                SharedUserInterfaces.MediumText("Permanent Transformation");
+                ImGui.Checkbox("Enable", ref controller.PermanentTransformation);
+                if (controller.PermanentTransformation is false)
+                    return;
+                
+                ImGui.SameLine(windowWidth);
+                ImGui.SetNextItemWidth(ImGui.GetFontSize() * 4);
+                ImGui.InputText("Pin", ref controller.UnlockPin, 4);
+                SharedUserInterfaces.Tooltip(
+                    [
+                        "Your targets can use this PIN to unlock their appearance later if you provide it to them",
+                        "They can unlock it from the Status tab or by using the safeword command or safe mode"
+                    ]);
+            });
+        
         var friendsLackingPermissions = controller.GetFriendsLackingPermissions();
         if (friendsLackingPermissions.Count is not 0)
         {
@@ -88,7 +106,7 @@ public class TransformationViewUi(
         {
             SharedUserInterfaces.ContentBox("TransformationSelectOptions", AetherRemoteStyle.PanelBackground, true, () =>
             {
-                SharedUserInterfaces.MediumText("You must select at least one transformation option", ImGuiColors.DalamudYellow);
+                ImGui.TextColored(ImGuiColors.DalamudYellow, "You must select at least one transformation option");
             });
         }
 

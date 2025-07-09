@@ -24,6 +24,9 @@ public class TransformationViewUiController(
     
     public bool ApplyCustomization = true;
     public bool ApplyEquipment = false;
+    
+    public bool PermanentTransformation = false;
+    public string UnlockPin = string.Empty;
 
     /// <summary>
     ///     Used to determine if all selected friends have permissions
@@ -84,6 +87,13 @@ public class TransformationViewUiController(
         }
     }
 
+    public bool AllSelectedTargetsHaveElevatedPermissions()
+    {
+        return friendsListService.Selected.All(friend =>
+            (friend.PermissionsGrantedByFriend.Elevated & ElevatedPermissions.PermanentTransformation) ==
+            ElevatedPermissions.PermanentTransformation);
+    }
+
     /// <summary>
     ///     Handles the transform from the Ui
     /// </summary>
@@ -100,12 +110,16 @@ public class TransformationViewUiController(
             
             if (applyType is GlamourerApplyFlags.Once)
                 applyType = GlamourerApplyFlags.All;
+
+            if (uint.TryParse(UnlockPin, out var key) is false)
+                return;
             
             var input = new TransformRequest
             {
                 TargetFriendCodes = friendsListService.Selected.Select(friend => friend.FriendCode).ToList(),
                 GlamourerData = GlamourerCode,
-                GlamourerApplyType = applyType
+                GlamourerApplyType = applyType,
+                LockCode = PermanentTransformation ? key : null
             };
             
             var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.Transform, input);

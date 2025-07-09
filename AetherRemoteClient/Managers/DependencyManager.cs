@@ -26,6 +26,15 @@ public class DependencyManager : IDisposable
     }
 
     /// <summary>
+    ///     Forcefully calls an update to scan for all plugins
+    /// </summary>
+    public void ForceTestAvailability()
+    {
+        foreach (var plugin in _dependencies)
+            plugin.TestIpcAvailability();
+    }
+
+    /// <summary>
     ///     Must be called once every framework update
     /// </summary>
     private void Update()

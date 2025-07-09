@@ -39,6 +39,7 @@ public class ForwardedRequestManager(IConnectionsService connections, IDatabaseS
             var elevated = (permissionsGranted.Elevated & permissions.Elevated) == permissions.Elevated;
             if (primary is false || speak is false || elevated is false)
             {
+                logger.LogInformation("A {A} B {B} C {C}", primary, speak, elevated);
                 pending[i] = Task.FromResult(ActionResultBuilder.Fail(ActionResultEc.TargetHasNotGrantedSenderPermissions));
                 continue;
             }
@@ -59,6 +60,7 @@ public class ForwardedRequestManager(IConnectionsService connections, IDatabaseS
         for(var i = 0; i < completed.Length; i++)
             results.Add(targets[i], completed[i].Result);
 
+        logger.LogInformation("Lilly {WhatTheHeck}", results);
         return new ActionResponse(results);
     }
     

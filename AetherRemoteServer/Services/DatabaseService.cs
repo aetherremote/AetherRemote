@@ -144,11 +144,12 @@ public class DatabaseService : IDatabaseService
         command.CommandText =
             $"""
                  UPDATE {PermissionsTable} 
-                 SET PrimaryPermissions = {PrimaryPermissionsParam}, SpeakPermissions = {SpeakPermissionsParam} 
+                 SET PrimaryPermissions = {PrimaryPermissionsParam}, SpeakPermissions = {SpeakPermissionsParam}, ElevatedPermissions = {ElevatedPermissionsParam}
                  WHERE FriendCode = {FriendCodeParam} AND TargetFriendCode = {TargetFriendCodeParam}
              """;
         command.Parameters.AddWithValue(PrimaryPermissionsParam, permissions.Primary);
         command.Parameters.AddWithValue(SpeakPermissionsParam, permissions.Speak);
+        command.Parameters.AddWithValue(ElevatedPermissionsParam, permissions.Elevated);
         command.Parameters.AddWithValue(FriendCodeParam, senderFriendCode);
         command.Parameters.AddWithValue(TargetFriendCodeParam, targetFriendCode);
 
@@ -179,7 +180,7 @@ public class DatabaseService : IDatabaseService
         await using var command = _db.CreateCommand();
         command.CommandText =
             $"""
-                SELECT TargetFriendCode, PrimaryPermissions, SpeakPermissions 
+                SELECT TargetFriendCode, PrimaryPermissions, SpeakPermissions, ElevatedPermissions 
                 FROM {PermissionsTable} 
                 WHERE FriendCode={FriendCodeParam}
              """;
@@ -194,7 +195,7 @@ public class DatabaseService : IDatabaseService
                 var targetFriendCode = reader.GetString(0);
                 var primary = reader.GetInt32(1);
                 var speak = reader.GetInt32(2);
-                var elevated = 0; // reader.GetInt32(3);
+                var elevated = reader.GetInt32(3);
                 
                 var permissions = new UserPermissions((PrimaryPermissions2)primary, (SpeakPermissions2)speak, (ElevatedPermissions)elevated);
                 result.Add(targetFriendCode, permissions);
