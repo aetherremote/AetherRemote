@@ -2,7 +2,7 @@ using AetherRemoteClient.Services;
 
 namespace AetherRemoteClient.UI.Views.Settings;
 
-public class SettingsViewUiController(ActionQueueService actionQueueService, SpiralService spiralService)
+public class SettingsViewUiController(ActionQueueService actionQueueService, IdentityService identityService, PermanentLockService permanentLockService, SpiralService spiralService)
 {
     public int MinimumSpiralSpeed = 0;
     public int MaximumSpiralSpeed = 100;
@@ -15,9 +15,16 @@ public class SettingsViewUiController(ActionQueueService actionQueueService, Spi
         Plugin.Configuration.Save();
         if (safeMode is false)
             return;
+
+        // Unlock permanent transformations
+        permanentLockService.CurrentLock = null;
+        Plugin.Configuration.PermanentTransformations.Remove(identityService.Character.FullName);
+        Plugin.Configuration.Save();
         
-        // If we're in safe mode, begin disabling all active things
+        // Stop spirals
         spiralService.StopCurrentSpiral();
+        
+        // Clear action queue
         actionQueueService.Clear();
     }
 }

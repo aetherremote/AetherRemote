@@ -21,12 +21,16 @@ public class ChatCommandManager : IDisposable
     
     // Injected
     private readonly ActionQueueService _actionQueueService;
+    private readonly IdentityService _identityService;
+    private readonly PermanentLockService _permanentLockService;
     private readonly SpiralService _spiralService;
     private readonly MainWindow _mainWindow;
     
-    public ChatCommandManager(ActionQueueService actionQueueService, SpiralService spiralService, MainWindow mainWindow)
+    public ChatCommandManager(ActionQueueService actionQueueService, IdentityService identityService, PermanentLockService permanentLockService, SpiralService spiralService, MainWindow mainWindow)
     {
         _actionQueueService = actionQueueService;
+        _identityService = identityService;
+        _permanentLockService = permanentLockService;
         _spiralService = spiralService;
         _mainWindow = mainWindow;
         
@@ -72,10 +76,21 @@ public class ChatCommandManager : IDisposable
             
             case SafeMode:
             case SafeWord:
+                // Unlock any permanent transformations
+                _permanentLockService.CurrentLock = null;
+                Plugin.Configuration.PermanentTransformations.Remove(_identityService.Character.FullName);
+                Plugin.Configuration.Save();
+                
+                // Stop any spirals
                 _spiralService.StopCurrentSpiral();
+                
+                // Clear pending chat commands
                 _actionQueueService.Clear();
+                
+                // Enter safe mode
                 Plugin.Configuration.SafeMode = true;
                 Plugin.Configuration.Save();
+                
                 payloads.Add(new UIForegroundPayload(AetherRemoteStyle.TextColorPurple));
                 payloads.Add(new TextPayload("[AetherRemote] "));
                 payloads.Add(UIForegroundPayload.UIForegroundOff);
