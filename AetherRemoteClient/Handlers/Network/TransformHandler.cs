@@ -17,6 +17,7 @@ namespace AetherRemoteClient.Handlers.Network;
 /// </summary>
 public class TransformHandler(
     LogService logService,
+    PermanentLockService permanentLockService,
     GlamourerIpc glamourerIpc,
     ForwardedRequestManager forwardedRequestManager,
     PermanentTransformationManager permanentTransformationManager)
@@ -29,6 +30,9 @@ public class TransformHandler(
     /// </summary>
     public async Task<ActionResult<Unit>> Handle(TransformForwardedRequest request)
     {
+        if (permanentLockService.CurrentLock is not null)
+            return ActionResultBuilder.Fail(ActionResultEc.ClientPermanentlyTransformed);
+        
         // Setup permissions
         var primary = request.GlamourerApplyType.ToPrimaryPermission();
         var elevated = request.LockCode is null 

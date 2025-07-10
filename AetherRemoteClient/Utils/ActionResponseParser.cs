@@ -92,6 +92,8 @@ public static class ActionResponseParser
             ActionResultEc.ClientBadData => string.Concat(name, " could not parse the data you provided"),
             ActionResultEc.ClientPluginDependency => string.Concat(name, " ran into an issue with another plugin"),
             ActionResultEc.ClientBeingHypnotized => string.Concat(name, " is currently occupied elsewhere"),
+            ActionResultEc.ClientPermanentlyTransformed => string.Concat(name, " is permanently transformed and cannot change form"),
+            
             ActionResultEc.TargetTimeout => string.Concat("The command timed out to ", name),
             ActionResultEc.TargetOffline => string.Concat(name, " is offline"),
             ActionResultEc.ValueNotSet => string.Concat(name, "Report to developer the code 730"),

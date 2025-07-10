@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using AetherRemoteClient.Domain;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain;
@@ -17,6 +16,7 @@ namespace AetherRemoteClient.Handlers.Network;
 public class TwinningHandler(
     IdentityService identityService,
     LogService logService,
+    PermanentLockService permanentLockService,
     ForwardedRequestManager forwardedRequestManager,
     ModManager modManager,
     PermanentTransformationManager permanentTransformationManager)
@@ -29,6 +29,9 @@ public class TwinningHandler(
     /// </summary>
     public async Task<ActionResult<Unit>> Handle(TwinningForwardedRequest request)
     {
+        if (permanentLockService.CurrentLock is not null)
+            return ActionResultBuilder.Fail(ActionResultEc.ClientPermanentlyTransformed);
+        
         var primary = request.SwapAttributes.ToPrimaryPermission();
         var elevated = request.LockCode is null 
             ? ElevatedPermissions.None 

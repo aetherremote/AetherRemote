@@ -51,6 +51,11 @@ public enum ActionResultEc
     ClientBeingHypnotized,
     
     /// <summary>
+    ///     The client is permanently transformed and cannot change
+    /// </summary>
+    ClientPermanentlyTransformed,
+    
+    /// <summary>
     ///     Target client is offline
     /// </summary>
     TargetOffline,

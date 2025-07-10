@@ -16,6 +16,7 @@ namespace AetherRemoteClient.Handlers.Network;
 public class BodySwapHandler(
     IdentityService identityService,
     LogService logService,
+    PermanentLockService permanentLockService,
     ForwardedRequestManager forwardedRequestManager,
     ModManager modManager,
     PermanentTransformationManager permanentTransformationManager)
@@ -28,6 +29,9 @@ public class BodySwapHandler(
     /// </summary>
     public async Task<ActionResult<Unit>> Handle(BodySwapForwardedRequest request)
     {
+        if (permanentLockService.CurrentLock is not null)
+            return ActionResultBuilder.Fail(ActionResultEc.ClientPermanentlyTransformed);
+        
         var primary = request.SwapAttributes.ToPrimaryPermission();
         var elevated = request.LockCode is null 
             ? ElevatedPermissions.None 

@@ -44,6 +44,7 @@ public class ModManager : IDisposable
     /// <summary>
     ///     Get a target player's glamourer data along with optional additional parameters
     /// </summary>
+    /// <returns>The <see cref="PermanentTransformationData"/> containing all the data about the current swap / twinning</returns>
     public async Task<PermanentTransformationData?> Assimilate(string targetCharacterName, CharacterAttributes attributes)
     {
         // Get Current Collection
