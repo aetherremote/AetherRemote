@@ -12,13 +12,13 @@ public record TransformRequest : ActionRequest
     /// <summary>
     ///     Set this code to include a lock on the transform request
     /// </summary>
-    public uint? LockCode { get; set; }
+    public string? LockCode { get; set; }
     
     public TransformRequest()
     {
     }
     
-    public TransformRequest(List<string> targets, string data, GlamourerApplyFlags flags, uint? lockCode)
+    public TransformRequest(List<string> targets, string data, GlamourerApplyFlags flags, string? lockCode)
     {
         TargetFriendCodes = targets;
         GlamourerData = data;

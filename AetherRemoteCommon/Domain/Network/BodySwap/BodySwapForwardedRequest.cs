@@ -13,13 +13,13 @@ public record BodySwapForwardedRequest : ForwardedActionRequest
     /// <summary>
     ///     Set this code to include a lock on the transform request
     /// </summary>
-    public uint? LockCode { get; set; }
+    public string? LockCode { get; set; }
 
     public BodySwapForwardedRequest()
     {
     }
     
-    public BodySwapForwardedRequest(string sender, string characterName, CharacterAttributes swapAttributes, uint? lockCode)
+    public BodySwapForwardedRequest(string sender, string characterName, CharacterAttributes swapAttributes, string? lockCode)
     {
         SenderFriendCode = sender;
         CharacterName = characterName;

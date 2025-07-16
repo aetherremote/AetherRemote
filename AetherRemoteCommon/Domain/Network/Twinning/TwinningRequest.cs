@@ -13,13 +13,13 @@ public record TwinningRequest : ActionRequest
     /// <summary>
     ///     Set this code to include a lock on the transform request
     /// </summary>
-    public uint? LockCode { get; set; }
+    public string? LockCode { get; set; }
     
     public TwinningRequest()
     {
     }
 
-    public TwinningRequest(List<string> targets, string characterName, CharacterAttributes swapAttributes, uint? lockCode)
+    public TwinningRequest(List<string> targets, string characterName, CharacterAttributes swapAttributes, string? lockCode)
     {
         TargetFriendCodes = targets;
         CharacterName = characterName;

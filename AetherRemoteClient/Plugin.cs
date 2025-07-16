@@ -60,7 +60,16 @@ public sealed class Plugin : IDalamudPlugin
     
     public Plugin()
     {
-        Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+        try
+        {
+            Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
+        }
+        catch (Exception e)
+        {
+            NotificationHelper.Warning("Unable to load plugin configuration", "You should not continue to use the plugin and tell the developer immediately", false);
+            Log.Fatal($"Could not load plugin configuration, {e}");
+            Configuration = new Configuration();
+        }
 
         var services = new ServiceCollection();
 
@@ -86,13 +95,13 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<PenumbraIpc>();
         
         // Managers
-        services.AddSingleton<ChatCommandManager>();
         services.AddSingleton<DependencyManager>();
-        services.AddSingleton<ForwardedRequestManager>();
+        services.AddSingleton<PermissionManager>();
         services.AddSingleton<ModManager>();
         services.AddSingleton<PermanentTransformationManager>();
         
         // Handlers
+        services.AddSingleton<ChatCommandHandler>();
         services.AddSingleton<ConnectivityHandler>();
         
         // Handlers Network
@@ -156,11 +165,11 @@ public sealed class Plugin : IDalamudPlugin
         _services.GetRequiredService<SpiralService>();
         
         // Managers
-        _services.GetRequiredService<ChatCommandManager>();
-        _services.GetRequiredService<ConnectivityHandler>();
         _services.GetRequiredService<DependencyManager>();
         
         // Handlers
+        _services.GetRequiredService<ChatCommandHandler>();
+        _services.GetRequiredService<ConnectivityHandler>();
         _services.GetRequiredService<NetworkHandler>();
         
         // Ui - Windows

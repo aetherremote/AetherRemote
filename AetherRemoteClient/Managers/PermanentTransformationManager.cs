@@ -4,6 +4,8 @@ using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Events;
 using AetherRemoteClient.Ipc;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Utils;
+using Newtonsoft.Json.Linq;
 
 namespace AetherRemoteClient.Managers;
 
@@ -12,14 +14,34 @@ namespace AetherRemoteClient.Managers;
 /// </summary>
 public class PermanentTransformationManager : IDisposable
 {
+    // Const
+    private const string EquipmentJObjectName = "Equipment";
+    private const string MainHandJObjectName = "MainHand";
+    private const string OffHandJObjectName = "OffHand";
+    
+    // Injected
     private readonly GlamourerIpc _glamourer;
     private readonly PenumbraIpc _penumbra;
     private readonly CustomizePlusIpc _customizePlus;
     private readonly MoodlesIpc _moodlesIpc;
     private readonly IdentityService _identityService;
     private readonly PermanentLockService _permanentLockService;
+
+    /// <summary>
+    ///     The current saved appearance when the client was originally locked
+    /// </summary>
+    private JObject? _currentSavedAppearance;
     
-    public PermanentTransformationManager(MoodlesIpc moodlesIpc, CustomizePlusIpc customizePlus, PenumbraIpc penumbra, GlamourerIpc glamourer, IdentityService identityService, PermanentLockService permanentLockService)
+    /// <summary>
+    ///     <inheritdoc cref="PermanentTransformationManager"/>
+    /// </summary>
+    public PermanentTransformationManager(
+        MoodlesIpc moodlesIpc, 
+        CustomizePlusIpc customizePlus, 
+        PenumbraIpc penumbra, 
+        GlamourerIpc glamourer, 
+        IdentityService identityService, 
+        PermanentLockService permanentLockService)
     {
         _penumbra = penumbra;
         _customizePlus = customizePlus;
@@ -28,42 +50,77 @@ public class PermanentTransformationManager : IDisposable
         _identityService = identityService;
         _permanentLockService = permanentLockService;
 
-        _glamourer.LocalPlayerChanged += OnAttemptedResetOrReapply;
+        _glamourer.LocalPlayerChanged += OnPlayerGlamourerUpdated;
+    }
+
+    public void Purge()
+    {
+        Plugin.Log.Info("Local transformation purged");
+        Plugin.Configuration.PermanentTransformations.Remove(_identityService.Character.FullName);
+        Plugin.Configuration.Save();
     }
 
     /// <summary>
     ///     Saves a new permanent transformation for the local character
     /// </summary>
-    public bool Save(PermanentTransformationData data)
+    public async Task<bool> Lock(PermanentTransformationData data)
     {
         // Save the unlock code
-        _permanentLockService.CurrentLock = data.UnlockCode;
+        if (_permanentLockService.Lock(data.UnlockCode) is false)
+        {
+            Plugin.Log.Warning("[PermanentTransformationManager] Could not lock because the client is already locked");
+            return false;
+        }
         
         // Add the configuration values
         if (Plugin.Configuration.PermanentTransformations.TryAdd(_identityService.Character.FullName, data) is false)
+        {
+            Plugin.Log.Warning("[PermanentTransformationManager] Couldn't add the transformation because one already exists");
             return false;
+        }
         
-        // Save the configuration
+        // Save
         Plugin.Configuration.Save();
+        
+        // Get the current appearance
+        if (await _glamourer.GetDesignComponentsAsync() is not { } components)
+        {
+            Plugin.Log.Warning("[PermanentTransformationManager] Couldn't get the design components");
+            return false;
+        }
+        
+        // Notify the client
+        NotificationHelper.Info("You have been permanently transformed", "One of your friends has locked you in your current form. You will need to retrieve the key from them or use safe mode in an emergency.");
+        
+        // Remove any fields we don't want to check
+        RemoveUnwantedFields(components);
+        
+        // Set the local cached appearance JObject data
+        _currentSavedAppearance = components;
         return true;
     }
 
     /// <summary>
     ///     Unlock the current permanent transformation
     /// </summary>
-    public void Unlock(uint key)
+    public void Unlock(string key)
     {
-        // If there is not a lock
-        if (_permanentLockService.CurrentLock is null)
+        // Already unlocked
+        if (_permanentLockService.IsLocked is false)
+        {
+            Plugin.Log.Info("[PermanentTransformationManager] There is nothing to unlock, skipping...");
             return;
+        }
 
-        // Incorrect key
-        // TODO: Add notification for incorrect key
-        if (_permanentLockService.CurrentLock != key)
+        // Try to unlock
+        if (_permanentLockService.Unlock(key) is false)
+        {
+            NotificationHelper.Warning("Incorrect Pin", $"\"{key}\" was not the correct pin, \"{_permanentLockService.CurrentLock}\" is correct");
             return;
+        }
         
-        // Remove the lock from the service
-        _permanentLockService.CurrentLock = null;
+        // Success, notify the client
+        NotificationHelper.Success("Successfully Unlocked", string.Empty);
         
         // Remove the current permanent swap
         Plugin.Configuration.PermanentTransformations.Remove(_identityService.Character.FullName);
@@ -71,17 +128,58 @@ public class PermanentTransformationManager : IDisposable
     }
 
     /// <summary>
+    ///     Forcefully unlock the appearance
+    /// </summary>
+    public void ForceUnlock()
+    {
+        Plugin.Log.Info("[PermanentTransformationManager] Initiated forceful unlocking");
+        Unlock(_permanentLockService.CurrentLock);
+    }
+
+    /// <summary>
     ///     Attempts to load the provided permanent transformation
     /// </summary>
     /// <param name="data"></param>
     /// <returns></returns>
-    public async Task<bool> Load(PermanentTransformationData data)
+    public async Task Load(PermanentTransformationData data)
     {
-        // Set the current unlock code
-        _permanentLockService.CurrentLock = data.UnlockCode;
+        // Already locked
+        if (_permanentLockService.IsLocked)
+        {
+            Plugin.Log.Warning("[PermanentTransformationManager] Unable to load because the client is already locked");
+            return;
+        }
+
+        // Lock the account
+        if (_permanentLockService.Lock(data.UnlockCode) is false)
+        {
+            Plugin.Log.Warning("[PermanentTransformationManager] Unable to lock");
+            return;
+        }
+
+        // Apply the data
+        await ApplySavedAppearance(data);
+
+        // Get the appearance to save the components
+        if (await _glamourer.GetDesignComponentsAsync() is not { } components)
+        {
+            Plugin.Log.Warning("[PermanentTransformationManager] Design components are empty");
+            return;
+        }
+            
+        // Remove any fields we don't want to check
+        RemoveUnwantedFields(components);
         
+        // Set the current saved appearance to be the components
+        _currentSavedAppearance = components;
+    }
+    
+    /// <summary>
+    ///     Applies a given <see cref="PermanentTransformationData"/> to the client
+    /// </summary>
+    private async Task ApplySavedAppearance(PermanentTransformationData data)
+    {
         // Always apply glamourer
-        // We cannot apply a key here, otherwise Mare will be unable to read the local player
         await _glamourer.ApplyDesignAsync(data.GlamourerData, data.GlamourerApplyFlags).ConfigureAwait(false);
 
         // Apply Mods
@@ -95,7 +193,12 @@ public class PermanentTransformationManager : IDisposable
         if (data.CustomizePlusData is not null)
         {
             await _customizePlus.DeleteCustomize().ConfigureAwait(false);
-            await _customizePlus.ApplyCustomize(data.CustomizePlusData).ConfigureAwait(false);
+            if (await _customizePlus.DeserializeAndApplyCustomize(data.CustomizePlusData).ConfigureAwait(false) is false)
+            {
+                Plugin.Log.Warning("[PermanentTransformationManager] Failed to deserialized saved C+ template data");
+                await _customizePlus.DeleteCustomize().ConfigureAwait(false);
+                return;
+            }
         }
 
         // Apply Moodles
@@ -106,44 +209,81 @@ public class PermanentTransformationManager : IDisposable
                 await _moodlesIpc.SetMoodles(address, data.MoodlesData).ConfigureAwait(false);
             }
         }
-
-        return true;
     }
     
     /// <summary>
     ///     This function is responsible for reapplying the stored permanent transformation is the player is currently under a permanent transformation
     /// </summary>
-    private async void OnAttemptedResetOrReapply(object? sender, GlamourerStateChangedEventArgs _)
+    private async void OnPlayerGlamourerUpdated(object? sender, GlamourerStateChangedEventArgs args)
     {
         try
         {
+            // Wait a moment for the changes to register
+            await Task.Delay(1000).ConfigureAwait(false);
+            
             // If the player isn't under any kind of permanent transformation, ignore
-            if (_permanentLockService.CurrentLock is null)
-                return;
-        
-            // Load whatever the current data is and apply it again
-            if (Plugin.Configuration.PermanentTransformations.TryGetValue(_identityService.Character.FullName, out var transformation) is false)
+            if (_permanentLockService.IsLocked is false)
             {
-                Plugin.Log.Warning("Could not find permanent transformation when one was expected");
+                Plugin.Log.Info("Not locked, skipping...");
                 return;
             }
             
-            // TODO: Add revert notification that you are permanently locked
-            Plugin.Log.Info("Local player attempted to reload with a permanent transformation, reverting...");
-            await Task.Delay(1000);
+            // Get the design as components
+            if (await _glamourer.GetDesignComponentsAsync().ConfigureAwait(false) is not { } components)
+            {
+                Plugin.Log.Warning("[PermanentTransformationManager] Could not get design components");
+                return;
+            }
+
+            // Remove the fields we don't want to check
+            RemoveUnwantedFields(components);
+
+            // Check to see if there are differences and exit if there are none
+            if (JToken.DeepEquals(_currentSavedAppearance, components))
+            {
+                Plugin.Log.Info("[PermanentTransformationManager] Local client changed, but not anything outward on their appearance");
+                return;
+            }
             
-            // Load the transformation data
-            await Load(transformation);
+            // A change has been detected, reverting the player
+            Plugin.Log.Info("Local player attempted to reload with a permanent transformation, reverting...");
+            
+            // Get the local saved permanent transformation data
+            if (Plugin.Configuration.PermanentTransformations.TryGetValue(_identityService.Character.FullName, out var data) is false)
+            {
+                // No local character data
+                Plugin.Log.Warning("[PermanentTransformationManager] No permanent transformation data set for local character");
+                return;
+            }
+            
+            await ApplySavedAppearance(data);
         }
         catch (Exception e)
         {
             Plugin.Log.Warning($"Unexpected issue enforcing a permanent transformation {e.Message}");
         }
     }
+    
+    /// <summary>
+    ///     Removes unwanted fields from the JSON object returned from glamourer's <see cref="GlamourerIpc"/>
+    /// </summary>
+    private static void RemoveUnwantedFields(JObject components)
+    {
+        // Get the equipment, which should always exist
+        if (components[EquipmentJObjectName] is not JObject equipment)
+        {
+            Plugin.Log.Warning("[PermanentTransformationManager] No equipment found when one was expected");
+            return;
+        }
+        
+        // Remove these two fields
+        equipment.Remove(MainHandJObjectName);
+        equipment.Remove(OffHandJObjectName);
+    }
 
     public void Dispose()
     {
-        _glamourer.LocalPlayerResetOrReapply -= OnAttemptedResetOrReapply;
+        _glamourer.LocalPlayerResetOrReapply -= OnPlayerGlamourerUpdated;
         GC.SuppressFinalize(this);
     }
 }

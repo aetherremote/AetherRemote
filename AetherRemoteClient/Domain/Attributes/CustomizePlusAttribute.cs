@@ -1,4 +1,6 @@
+using System;
 using System.Collections;
+using System.Text.Json;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Ipc;
@@ -46,7 +48,15 @@ public class CustomizePlusAttribute(CustomizePlusIpc customizePlusIpc, string ch
             return false;
         }
 
-        data.CustomizePlusData = _customizePlusTemplates;
-        return true;
+        try
+        {
+            data.CustomizePlusData = JsonSerializer.Serialize(_customizePlusTemplates);
+            return true;
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Info($"[CustomizePlusAttribute] Could not serialize customize plus templates, {e.Message}");
+            return false;
+        }
     }
 }

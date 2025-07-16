@@ -14,7 +14,7 @@ namespace AetherRemoteClient.Handlers.Network;
 public class CustomizePlusHandler(
     LogService logService,
     CustomizePlusIpc customize,
-    ForwardedRequestManager forwardedRequestManager)
+    PermissionManager permissionManager)
 {
     // Const
     private const string Operation = "Customize+";
@@ -27,7 +27,7 @@ public class CustomizePlusHandler(
     {
         Plugin.Log.Info($"{request}");
         
-        var placeholder = forwardedRequestManager.Placehold(Operation, request.SenderFriendCode, Permissions);
+        var placeholder = permissionManager.GetAndCheckSenderByPrimaryPermissions(Operation, request.SenderFriendCode, Permissions);
         if (placeholder.Result is not ActionResultEc.Success)
             return ActionResultBuilder.Fail(placeholder.Result);
         

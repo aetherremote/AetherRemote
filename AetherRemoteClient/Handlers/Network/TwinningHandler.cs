@@ -17,7 +17,7 @@ public class TwinningHandler(
     IdentityService identityService,
     LogService logService,
     PermanentLockService permanentLockService,
-    ForwardedRequestManager forwardedRequestManager,
+    PermissionManager permissionManager,
     ModManager modManager,
     PermanentTransformationManager permanentTransformationManager)
 {
@@ -29,31 +29,36 @@ public class TwinningHandler(
     /// </summary>
     public async Task<ActionResult<Unit>> Handle(TwinningForwardedRequest request)
     {
-        if (permanentLockService.CurrentLock is not null)
+        Plugin.Log.Verbose($"{request}");
+        
+        if (permanentLockService.IsLocked)
             return ActionResultBuilder.Fail(ActionResultEc.ClientPermanentlyTransformed);
         
         var primary = request.SwapAttributes.ToPrimaryPermission();
+        primary |= PrimaryPermissions2.Twinning;
+        
         var elevated = request.LockCode is null 
             ? ElevatedPermissions.None 
             : ElevatedPermissions.PermanentTransformation;
         
         var permissions = new UserPermissions(primary, SpeakPermissions2.None, elevated);
         
-        var placeholder = forwardedRequestManager.Placeholder(Operation, request.SenderFriendCode, permissions);
-        if (placeholder.Result is not ActionResultEc.Success)
-            return ActionResultBuilder.Fail(placeholder.Result);
+        var result = permissionManager.GetAndCheckSenderByUserPermissions(Operation, request.SenderFriendCode, permissions);
+        if (result.Result is not ActionResultEc.Success)
+            return ActionResultBuilder.Fail(result.Result);
         
-        if (placeholder.Value is not { } friend)
+        if (result.Value is not { } friend)
             return ActionResultBuilder.Fail(ActionResultEc.ValueNotSet);
 
         // Actually apply glamourer, mods, etc...
         if (await modManager.Assimilate(request.CharacterName, request.SwapAttributes) is { } permanentTransformationData)
         {
             // If there is a lock, save the permanent transformation data
-            if (request.LockCode.HasValue)
+            if (request.LockCode is not null)
             {
                 // Save
-                permanentTransformationManager.Save(permanentTransformationData);
+                permanentTransformationData.UnlockCode = request.LockCode;
+                await permanentTransformationManager.Lock(permanentTransformationData);
             }
         }
         

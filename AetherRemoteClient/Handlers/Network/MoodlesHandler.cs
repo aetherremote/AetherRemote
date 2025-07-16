@@ -22,7 +22,7 @@ public class MoodlesHandler(
     LogService logService,
     MoodlesIpc moodles,
     PenumbraIpc penumbra,
-    ForwardedRequestManager forwardedRequestManager)
+    PermissionManager permissionManager)
 {
     // Const
     private const string Operation = "Moodles";
@@ -41,7 +41,7 @@ public class MoodlesHandler(
     {
         Plugin.Log.Info($"{request}");
 
-        var placeholder = forwardedRequestManager.Placehold(Operation, request.SenderFriendCode, Permissions);
+        var placeholder = permissionManager.GetAndCheckSenderByPrimaryPermissions(Operation, request.SenderFriendCode, Permissions);
         if (placeholder.Result is not ActionResultEc.Success)
             return ActionResultBuilder.Fail(placeholder.Result);
         

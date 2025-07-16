@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -130,6 +131,20 @@ public class CustomizePlusIpc : IExternalPlugin, IDisposable
         Plugin.Log.Warning("[CustomizePlusIpc] Failed to deserialize CustomizePlus template");
         return false;
     }
+
+    /// <summary>
+    ///     Deserialize templates from JSON string and apply them
+    /// </summary>
+    /// <param name="serializedData"></param>
+    /// <returns></returns>
+    public async Task<bool> DeserializeAndApplyCustomize(string serializedData)
+    {
+        if (_templateManager.DeserializeTemplates(serializedData) is { } templates)
+            return await ApplyCustomize(templates).ConfigureAwait(false);
+        
+        Plugin.Log.Warning("[CustomizePlusIpc] Failed to deserialize saved template data");
+        return false;
+    }
     
     /// <summary>
     ///     Creates and applies a special CustomizePlus profile to the local player with provided template data
@@ -151,6 +166,19 @@ public class CustomizePlusIpc : IExternalPlugin, IDisposable
                     return false;
                 }
 
+                // Check Type
+                if (templates is List<object>)
+                {
+                    var converted = _templateManager.ConvertToTemplateType(templates);
+                    if (converted is null)
+                    {
+                        Plugin.Log.Warning("[CustomizePlusIpc] Failed to convert templates");
+                        return false;
+                    }
+
+                    templates = converted;
+                }
+                
                 foreach (var template in templates)
                 {
                     if (_profileManager.AddTemplate(profile, template))

@@ -7,6 +7,7 @@ using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using Glamourer.Api.Enums;
 using Glamourer.Api.Helpers;
 using Glamourer.Api.IpcSubscribers;
+using Newtonsoft.Json.Linq;
 
 namespace AetherRemoteClient.Ipc;
 
@@ -23,6 +24,7 @@ public class GlamourerIpc : IExternalPlugin, IDisposable
     // Glamourer Api
     private readonly ApiVersion _apiVersion;
     private readonly ApplyState _applyState;
+    private readonly GetState _getState;
     private readonly GetStateBase64 _getStateBase64;
     private readonly RevertToAutomation _revertToAutomation;
 
@@ -51,6 +53,7 @@ public class GlamourerIpc : IExternalPlugin, IDisposable
     {
         _apiVersion = new ApiVersion(Plugin.PluginInterface);
         _applyState = new ApplyState(Plugin.PluginInterface);
+        _getState = new GetState(Plugin.PluginInterface);
         _getStateBase64 = new GetStateBase64(Plugin.PluginInterface);
         _revertToAutomation = new RevertToAutomation(Plugin.PluginInterface);
 
@@ -164,6 +167,32 @@ public class GlamourerIpc : IExternalPlugin, IDisposable
         Plugin.Log.Warning("[GlamourerIpc] Unable to get design because glamourer is not available");
         return null;
     }
+
+    /// <summary>
+    ///     Gets a design from a given index as a JSON object that contains all changed parts of a glamourer character
+    /// </summary>
+    /// <param name="index"></param>
+    public async Task<JObject?> GetDesignComponentsAsync(ushort index = 0)
+    {
+        if (ApiAvailable)
+            return await Plugin.RunOnFramework(() =>
+            {
+                try
+                {
+                    var (_, data) = _getState.Invoke(index);
+                    return data;
+                }
+                catch (Exception e)
+                {
+                    Plugin.Log.Error(
+                        $"[GlamourerIpc] Failed unexpectedly to get design components for object index {index}, {e.Message}");
+                    return null;
+                }
+            }).ConfigureAwait(false);
+
+        Plugin.Log.Warning("[GlamourerIpc] Unable to get design because glamourer is not available");
+        return null;
+    }
     
     /// <summary>
     ///     Converts domain <see cref="GlamourerApplyFlags"/> to Glamourer <see cref="ApplyFlag"/>
@@ -185,12 +214,10 @@ public class GlamourerIpc : IExternalPlugin, IDisposable
             if (objectIndex->ObjectIndex is not 0)
                 return;
             
-            // Always fire this event for the local player being updated
-            LocalPlayerChanged?.Invoke(this, new GlamourerStateChangedEventArgs());
+            LocalPlayerChanged?.Invoke(this, new GlamourerStateChangedEventArgs(stateChangeType));
             
-            // Only fire this if the local player does a reset or reapply
             if (stateChangeType is StateChangeType.Reset or StateChangeType.Reapply)
-                LocalPlayerResetOrReapply?.Invoke(this, new GlamourerStateChangedEventArgs());
+                LocalPlayerResetOrReapply?.Invoke(this, new GlamourerStateChangedEventArgs(stateChangeType));
         }
         catch (Exception e)
         {

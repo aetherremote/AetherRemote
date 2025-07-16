@@ -19,7 +19,7 @@ public class TransformHandler(
     LogService logService,
     PermanentLockService permanentLockService,
     GlamourerIpc glamourerIpc,
-    ForwardedRequestManager forwardedRequestManager,
+    PermissionManager permissionManager,
     PermanentTransformationManager permanentTransformationManager)
 {
     // Const
@@ -30,7 +30,9 @@ public class TransformHandler(
     /// </summary>
     public async Task<ActionResult<Unit>> Handle(TransformForwardedRequest request)
     {
-        if (permanentLockService.CurrentLock is not null)
+        Plugin.Log.Verbose($"{request}");
+        
+        if (permanentLockService.IsLocked)
             return ActionResultBuilder.Fail(ActionResultEc.ClientPermanentlyTransformed);
         
         // Setup permissions
@@ -43,11 +45,11 @@ public class TransformHandler(
         var permissions = new UserPermissions(primary, SpeakPermissions2.None, elevated);
         
         // Validate Permission
-        var placeholder = forwardedRequestManager.Placeholder(Operation, request.SenderFriendCode, permissions);
-        if (placeholder.Result is not ActionResultEc.Success)
-            return ActionResultBuilder.Fail(placeholder.Result);
+        var result = permissionManager.GetAndCheckSenderByUserPermissions(Operation, request.SenderFriendCode, permissions);
+        if (result.Result is not ActionResultEc.Success)
+            return ActionResultBuilder.Fail(result.Result);
         
-        if (placeholder.Value is not { } friend)
+        if (result.Value is not { } friend)
             return ActionResultBuilder.Fail(ActionResultEc.ValueNotSet);
         
         // Attempt to apply
@@ -59,18 +61,18 @@ public class TransformHandler(
         }
         
         // If there is a lock, save the permanent transformation data
-        if (request.LockCode.HasValue)
+        if (request.LockCode is not null)
         {
             // Adds the parts we want to save
             var permanent = new PermanentTransformationData
             {
                 GlamourerData = request.GlamourerData,
                 GlamourerApplyFlags = request.GlamourerApplyType,
-                UnlockCode = request.LockCode.Value
+                UnlockCode = request.LockCode
             };
 
             // Save
-            permanentTransformationManager.Save(permanent);
+            await permanentTransformationManager.Lock(permanent);
         }
         
         // Log Success

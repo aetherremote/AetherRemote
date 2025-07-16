@@ -1,6 +1,6 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using AetherRemoteClient.Ipc;
 using AetherRemoteCommon.Domain.Enums;
 
 namespace AetherRemoteClient.Domain;
@@ -32,9 +32,11 @@ public class PermanentTransformationData
     public string? ModMetaData { get; set; }
     
     /// <summary>
-    ///     Customize Plus data to be applied
+    ///     Customize Plus data to be applied.
+    ///     This should be serialized from the IList directly in the <see cref="CustomizePlusIpc"/> service,
+    ///     then reserialized in that same service
     /// </summary>
-    public IList? CustomizePlusData { get; set; }
+    public string? CustomizePlusData { get; set; }
     
     /// <summary>
     ///     Moodles data to be applied
@@ -44,5 +46,5 @@ public class PermanentTransformationData
     /// <summary>
     ///     The code to unlock (delete) this permanent transformation
     /// </summary>
-    public uint UnlockCode { get; set; }
+    public string UnlockCode { get; set; } = string.Empty;
 }

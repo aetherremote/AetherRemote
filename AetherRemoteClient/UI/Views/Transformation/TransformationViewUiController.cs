@@ -110,16 +110,13 @@ public class TransformationViewUiController(
             
             if (applyType is GlamourerApplyFlags.Once)
                 applyType = GlamourerApplyFlags.All;
-
-            if (uint.TryParse(UnlockPin, out var key) is false)
-                return;
             
             var input = new TransformRequest
             {
                 TargetFriendCodes = friendsListService.Selected.Select(friend => friend.FriendCode).ToList(),
                 GlamourerData = GlamourerCode,
                 GlamourerApplyType = applyType,
-                LockCode = PermanentTransformation ? key : null
+                LockCode = PermanentTransformation ? UnlockPin : null
             };
             
             var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.Transform, input);

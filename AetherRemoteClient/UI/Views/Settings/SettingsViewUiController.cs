@@ -1,8 +1,9 @@
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 
 namespace AetherRemoteClient.UI.Views.Settings;
 
-public class SettingsViewUiController(ActionQueueService actionQueueService, IdentityService identityService, PermanentLockService permanentLockService, SpiralService spiralService)
+public class SettingsViewUiController(ActionQueueService actionQueueService, IdentityService identityService, SpiralService spiralService, PermanentTransformationManager permanentTransformationManager)
 {
     public int MinimumSpiralSpeed = 0;
     public int MaximumSpiralSpeed = 100;
@@ -17,9 +18,7 @@ public class SettingsViewUiController(ActionQueueService actionQueueService, Ide
             return;
 
         // Unlock permanent transformations
-        permanentLockService.CurrentLock = null;
-        Plugin.Configuration.PermanentTransformations.Remove(identityService.Character.FullName);
-        Plugin.Configuration.Save();
+        permanentTransformationManager.ForceUnlock();
         
         // Stop spirals
         spiralService.StopCurrentSpiral();

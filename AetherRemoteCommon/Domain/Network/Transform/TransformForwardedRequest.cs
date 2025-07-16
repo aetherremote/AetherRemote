@@ -12,17 +12,17 @@ public record TransformForwardedRequest : ForwardedActionRequest
     /// <summary>
     ///     Set this code to include a lock on the transform request
     /// </summary>
-    public uint? LockCode { get; set; }
+    public string? LockCode { get; set; }
 
     public TransformForwardedRequest()
     {
     }
     
-    public TransformForwardedRequest(string sender, string data, GlamourerApplyFlags flags, uint? lockCode)
+    public TransformForwardedRequest(string sender, string data, GlamourerApplyFlags flags, string? lockCode)
     {
         SenderFriendCode = sender;
         GlamourerData = data;
         GlamourerApplyType = flags;
-        LockCode =  lockCode;
+        LockCode = lockCode;
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI;
 using AetherRemoteClient.Utils;
@@ -7,9 +8,9 @@ using Dalamud.Game.Command;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 
-namespace AetherRemoteClient.Managers;
+namespace AetherRemoteClient.Handlers;
 
-public class ChatCommandManager : IDisposable
+public class ChatCommandHandler : IDisposable
 {
     private const string CommandNameShort = "/ar";
     private const string CommandNameFull = "/aetherremote";
@@ -22,15 +23,15 @@ public class ChatCommandManager : IDisposable
     // Injected
     private readonly ActionQueueService _actionQueueService;
     private readonly IdentityService _identityService;
-    private readonly PermanentLockService _permanentLockService;
     private readonly SpiralService _spiralService;
+    private readonly PermanentTransformationManager _permanentTransformationManager;
     private readonly MainWindow _mainWindow;
     
-    public ChatCommandManager(ActionQueueService actionQueueService, IdentityService identityService, PermanentLockService permanentLockService, SpiralService spiralService, MainWindow mainWindow)
+    public ChatCommandHandler(ActionQueueService actionQueueService, IdentityService identityService, SpiralService spiralService, PermanentTransformationManager permanentTransformationManager, MainWindow mainWindow)
     {
         _actionQueueService = actionQueueService;
         _identityService = identityService;
-        _permanentLockService = permanentLockService;
+        _permanentTransformationManager = permanentTransformationManager;
         _spiralService = spiralService;
         _mainWindow = mainWindow;
         
@@ -77,9 +78,7 @@ public class ChatCommandManager : IDisposable
             case SafeMode:
             case SafeWord:
                 // Unlock any permanent transformations
-                _permanentLockService.CurrentLock = null;
-                Plugin.Configuration.PermanentTransformations.Remove(_identityService.Character.FullName);
-                Plugin.Configuration.Save();
+                _permanentTransformationManager.ForceUnlock();
                 
                 // Stop any spirals
                 _spiralService.StopCurrentSpiral();

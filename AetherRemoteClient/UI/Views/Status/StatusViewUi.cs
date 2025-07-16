@@ -56,17 +56,17 @@ public class StatusViewUi(
             ImGui.TextUnformatted(identityService.Identity);
         });
 
-        if (permanentLockService.CurrentLock is null)
+        if (permanentLockService.IsLocked)
+        {
+            SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.Lock, windowPadding, windowWidth);
+            SharedUserInterfaces.Tooltip("Locked! You are unable to reset your identity.");
+        }
+        else
         {
             if (SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.History, windowPadding, windowWidth))
                 controller.ResetIdentity();
 
             SharedUserInterfaces.Tooltip("Reset identity");
-        }
-        else
-        {
-            SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.Lock, windowPadding, windowWidth);
-            SharedUserInterfaces.Tooltip("Locked! You are unable to reset your identity.");
         }
         
         SharedUserInterfaces.ContentBox("StatusHypnosis", AetherRemoteStyle.PanelBackground, true, () =>
@@ -89,24 +89,14 @@ public class StatusViewUi(
         });
 
         if (SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.Forward, windowPadding, windowWidth))
-            tipService.NextTip();
+            controller.Purge(); //tipService.NextTip();
 
         SharedUserInterfaces.Tooltip("Next Tip");
         
         SharedUserInterfaces.ContentBox("StatusUnlock", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.MediumText("Unlock");
-            if (ImGui.InputTextWithHint("##A", "Pin", ref controller.UnlockPin, 4, ImGuiInputTextFlags.CallbackCharFilter, StatusViewUiController.DigitsOnlyCallbackPointer))
-            {
-                if (uint.TryParse(controller.UnlockPin, out var result))
-                {
-                    controller.UnlockPinParsed = result;
-                }
-                else
-                {
-                    controller.UnlockPin = controller.UnlockPinParsed.ToString();
-                }
-            }
+            ImGui.InputTextWithHint("##A", "Pin", ref controller.UnlockPin, 4);
         });
         
         if (SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.Unlock, windowPadding, windowWidth))

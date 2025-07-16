@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 using Newtonsoft.Json;
 
@@ -80,5 +82,73 @@ public class TemplateManager(object pluginInstance)
         
         Plugin.Log.Warning("Unable to deserialize template, aborting");
         return null;
+    }
+
+    public IList? DeserializeTemplates(string templateData)
+    {
+        try
+        {
+            if (_templateType is null)
+            {
+                Plugin.Log.Warning("[TemplateManager] Unable to convert list to template type because type was not loaded");
+                return null;
+            }
+        
+            var result = (IList?)Activator.CreateInstance(typeof(List<>).MakeGenericType(_templateType));
+            if (result is null)
+            {
+                Plugin.Log.Warning("[TemplateManager] Failed to create generic list for reflected type");
+                return null;
+            }
+            
+            var deserialized = JsonConvert.DeserializeObject(templateData, _templateType);
+            if (deserialized is not null)
+                return (IList)deserialized;
+            
+            Plugin.Log.Warning("[TemplateManager] Failed to deserialize template data");
+            return null;
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Warning($"[TemplateManager] Unexpected error occurred: {e}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    ///     Converts a generic List[Object] to the internal reflected customize List[Template]
+    /// </summary>
+    /// <returns></returns>
+    public IList? ConvertToTemplateType(IList deserialized)
+    {
+        try
+        {
+            if (_templateType is null)
+            {
+                Plugin.Log.Warning("[TemplateManager] Unable to convert list to template type because type was not loaded");
+                return null;
+            }
+        
+            var result = (IList?)Activator.CreateInstance(typeof(List<>).MakeGenericType(_templateType));
+            if (result is null)
+            {
+                Plugin.Log.Warning("[TemplateManager] Failed to create generic list for reflected type");
+                return null;
+            }
+
+            foreach (var template in deserialized)
+            {
+                var json = JsonConvert.SerializeObject(template);
+                var converted = JsonConvert.DeserializeObject(json, _templateType);
+                result.Add(converted);
+            }
+        
+            return result;
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Warning($"[TemplateManager] Unexpected error occurred: {e}");
+            return null;
+        }
     }
 }

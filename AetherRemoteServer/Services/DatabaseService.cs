@@ -85,13 +85,14 @@ public class DatabaseService : IDatabaseService
         await using var command = _db.CreateCommand();
         command.CommandText =
             $"""
-                 INSERT INTO {PermissionsTable} (FriendCode, TargetFriendCode, PrimaryPermissions, SpeakPermissions)
-                 VALUES ({FriendCodeParam}, {TargetFriendCodeParam}, {PrimaryPermissionsParam}, {SpeakPermissionsParam})
+                 INSERT INTO {PermissionsTable} (FriendCode, TargetFriendCode, PrimaryPermissions, SpeakPermissions, ElevatedPermissions)
+                 VALUES ({FriendCodeParam}, {TargetFriendCodeParam}, {PrimaryPermissionsParam}, {SpeakPermissionsParam}, {ElevatedPermissionsParam})
              """;
         command.Parameters.AddWithValue(FriendCodeParam, senderFriendCode);
         command.Parameters.AddWithValue(TargetFriendCodeParam, targetFriendCode);
         command.Parameters.AddWithValue(PrimaryPermissionsParam, PrimaryPermissions2.None);
         command.Parameters.AddWithValue(SpeakPermissionsParam, SpeakPermissions2.None);
+        command.Parameters.AddWithValue(ElevatedPermissionsParam, ElevatedPermissions.None);
 
         try
         {

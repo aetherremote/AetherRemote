@@ -4,12 +4,10 @@ using System.Linq;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
-using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.BodySwap;
-using AetherRemoteCommon.Util;
 
 namespace AetherRemoteClient.UI.Views.BodySwap;
 
@@ -20,12 +18,16 @@ public class BodySwapViewUiController(
     IdentityService identityService,
     FriendsListService friendsListService,
     NetworkService networkService,
-    ModManager modManager)
+    ModManager modManager,
+    PermanentTransformationManager permanentTransformationManager)
 {
     public bool IncludeSelfInSwap;
     public bool SwapMods;
     public bool SwapMoodles;
     public bool SwapCustomizePlus;
+    
+    public bool PermanentTransformation = false;
+    public string UnlockPin = string.Empty;
     
     /// <summary>
     ///     Used to determine if all selected friends have permissions
@@ -54,7 +56,8 @@ public class BodySwapViewUiController(
             {
                 TargetFriendCodes = friendsListService.Selected.Select(friend => friend.FriendCode).ToList(),
                 SwapAttributes = attributes,
-                SenderCharacterName = IncludeSelfInSwap ? player.Name.ToString() : null
+                SenderCharacterName = IncludeSelfInSwap ? player.Name.ToString() : null,
+                LockCode = PermanentTransformation ? UnlockPin : null
             };
 
             NotificationHelper.Info("Beginning body swap, this will take a moment", string.Empty);
@@ -74,7 +77,15 @@ public class BodySwapViewUiController(
                 else
                 {
                     // Actually apply glamourer, mods, etc...
-                    await modManager.Assimilate(response.CharacterName, attributes).ConfigureAwait(false);
+                    if (await modManager.Assimilate(response.CharacterName, attributes).ConfigureAwait(false) is { } permanentTransformationData)
+                    {
+                        // If there is a lock code present, attempt to lock
+                        if (request.LockCode is not null)
+                        {
+                            permanentTransformationData.UnlockCode = request.LockCode;
+                            await permanentTransformationManager.Lock(permanentTransformationData);
+                        }
+                    }
                         
                     // Set your new identity
                     identityService.Identity = response.CharacterName;
@@ -87,6 +98,13 @@ public class BodySwapViewUiController(
         {
             Plugin.Log.Warning($"Unable to swap bodies, {e.Message}");
         }
+    }
+    
+    public bool AllSelectedTargetsHaveElevatedPermissions()
+    {
+        return friendsListService.Selected.All(friend =>
+            (friend.PermissionsGrantedByFriend.Elevated & ElevatedPermissions.PermanentTransformation) ==
+            ElevatedPermissions.PermanentTransformation);
     }
     
     /// <summary>

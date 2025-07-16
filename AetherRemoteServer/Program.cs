@@ -57,8 +57,9 @@ public class Program
         builder.Services.AddSingleton<UpdateFriendHandler>();
 
 #if DEBUG
-        // builder.WebHost.UseUrls("https://localhost:5006");
+        builder.WebHost.UseUrls("https://localhost:5006");
         
+        /*
         builder.WebHost.ConfigureKestrel(options =>
         {
             var ip = IPAddress.Parse("192.168.1.14");
@@ -67,6 +68,7 @@ public class Program
                 listenOptions.UseHttps($"{configuration.CertificatePath}", $"{configuration.CertificatePasswordPath}");
             });
         });
+        */
 #else
         builder.WebHost.ConfigureKestrel(options =>
         {

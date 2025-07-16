@@ -14,7 +14,7 @@ namespace AetherRemoteClient.Handlers.Network;
 public class HypnosisHandler(
     LogService logService,
     SpiralService spiralService,
-    ForwardedRequestManager forwardedRequestManager)
+    PermissionManager permissionManager)
 {
     // Const
     private const string Operation = "Hypnosis";
@@ -27,7 +27,7 @@ public class HypnosisHandler(
     {
         Plugin.Log.Info($"{request}");
 
-        var placeholder = forwardedRequestManager.Placehold(Operation, request.SenderFriendCode, Permissions);
+        var placeholder = permissionManager.GetAndCheckSenderByPrimaryPermissions(Operation, request.SenderFriendCode, Permissions);
         if (placeholder.Result is not ActionResultEc.Success)
             return ActionResultBuilder.Fail(placeholder.Result);
         

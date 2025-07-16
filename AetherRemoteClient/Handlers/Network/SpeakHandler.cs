@@ -15,7 +15,7 @@ namespace AetherRemoteClient.Handlers.Network;
 public class SpeakHandler(
     ActionQueueService actionQueueService,
     LogService logService,
-    ForwardedRequestManager forwardedRequestManager)
+    PermissionManager permissionManager)
 {
     // Const
     private const string Operation = "Speak";
@@ -28,7 +28,7 @@ public class SpeakHandler(
         Plugin.Log.Info($"{request}");
 
         var permissions = request.ChatChannel.ToSpeakPermissions(request.Extra);
-        var placeholder = forwardedRequestManager.Placehold(Operation, request.SenderFriendCode, permissions);
+        var placeholder = permissionManager.GetAndCheckSenderBySpeakPermissions(Operation, request.SenderFriendCode, permissions);
         if (placeholder.Result is not ActionResultEc.Success)
             return ActionResultBuilder.Fail(placeholder.Result);
         

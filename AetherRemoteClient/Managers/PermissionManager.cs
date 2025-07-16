@@ -8,14 +8,14 @@ using AetherRemoteCommon.Domain.Network;
 namespace AetherRemoteClient.Managers;
 
 /// <summary>
-///     TODO
+///     Provides useful operations for testing generic permissions
 /// </summary>
-public class ForwardedRequestManager(FriendsListService friendsListService, LogService logService, PauseService pauseService)
+public class PermissionManager(FriendsListService friendsListService, LogService logService, PauseService pauseService)
 {
     /// <summary>
     ///     TODO
     /// </summary>
-    public ActionResult<Friend> Placehold(string operation, string friendCode, PrimaryPermissions2 permissions)
+    public ActionResult<Friend> GetAndCheckSenderByPrimaryPermissions(string operation, string friendCode, PrimaryPermissions2 permissions)
     {
         // Not friends
         if (friendsListService.Get(friendCode) is not { } friend)
@@ -55,13 +55,13 @@ public class ForwardedRequestManager(FriendsListService friendsListService, LogS
     }
 
     /// <summary>
-    ///     
+    ///     Retrieves a friend and checks to see if you contain the provided permissions with them
     /// </summary>
-    /// <param name="operation"></param>
-    /// <param name="friendCode"></param>
-    /// <param name="permissions"></param>
-    /// <returns></returns>
-    public ActionResult<Friend> Placeholder(string operation, string friendCode, UserPermissions permissions)
+    /// <param name="operation">The name of the operation we're checking</param>
+    /// <param name="friendCode">The friend code to retrieve</param>
+    /// <param name="permissions">The permissions to test</param>
+    /// <returns>The <see cref="Friend"/> corresponding to the friend code provided</returns>
+    public ActionResult<Friend> GetAndCheckSenderByUserPermissions(string operation, string friendCode, UserPermissions permissions)
     {
         // Not friends
         if (friendsListService.Get(friendCode) is not { } friend)
@@ -118,7 +118,7 @@ public class ForwardedRequestManager(FriendsListService friendsListService, LogS
     /// <summary>
     ///     TODO
     /// </summary>
-    public ActionResult<Friend> Placehold(string operation, string friendCode, SpeakPermissions2 permissions)
+    public ActionResult<Friend> GetAndCheckSenderBySpeakPermissions(string operation, string friendCode, SpeakPermissions2 permissions)
     {
         // Not friends
         if (friendsListService.Get(friendCode) is not { } friend)

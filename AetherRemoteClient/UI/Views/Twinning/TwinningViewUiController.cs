@@ -38,16 +38,13 @@ public class TwinningViewUiController(FriendsListService friendsListService, Net
                 attributes |= CharacterAttributes.Moodles;
             if (SwapCustomizePlus)
                 attributes |= CharacterAttributes.CustomizePlus;
-
-            if (uint.TryParse(UnlockPin, out var key) is false)
-                return;
             
             var input = new TwinningRequest
             {
                 TargetFriendCodes = friendsListService.Selected.Select(friend => friend.FriendCode).ToList(),
                 SwapAttributes = attributes,
                 CharacterName = player.Name.ToString(),
-                LockCode = PermanentTransformation ? key : null
+                LockCode = PermanentTransformation ? UnlockPin : null
             };
 
             var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.Twinning, input);

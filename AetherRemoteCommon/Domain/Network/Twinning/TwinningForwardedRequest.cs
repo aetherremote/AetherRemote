@@ -12,13 +12,13 @@ public record TwinningForwardedRequest : ForwardedActionRequest
     /// <summary>
     ///     Set this code to include a lock on the transform request
     /// </summary>
-    public uint? LockCode { get; set; }
+    public string? LockCode { get; set; }
     
     public TwinningForwardedRequest()
     {
     }
 
-    public TwinningForwardedRequest(string sender, string characterName, CharacterAttributes swapAttributes, uint? lockCode)
+    public TwinningForwardedRequest(string sender, string characterName, CharacterAttributes swapAttributes, string? lockCode)
     {
         SenderFriendCode = sender;
         CharacterName = characterName;

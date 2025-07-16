@@ -1,7 +1,6 @@
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Domain.Network.BodySwap;
 using AetherRemoteServer.Domain.Interfaces;
 using Microsoft.AspNetCore.SignalR;
 
@@ -39,7 +38,6 @@ public class ForwardedRequestManager(IConnectionsService connections, IDatabaseS
             var elevated = (permissionsGranted.Elevated & permissions.Elevated) == permissions.Elevated;
             if (primary is false || speak is false || elevated is false)
             {
-                logger.LogInformation("A {A} B {B} C {C}", primary, speak, elevated);
                 pending[i] = Task.FromResult(ActionResultBuilder.Fail(ActionResultEc.TargetHasNotGrantedSenderPermissions));
                 continue;
             }
@@ -59,58 +57,8 @@ public class ForwardedRequestManager(IConnectionsService connections, IDatabaseS
         var completed = await Task.WhenAll(pending).ConfigureAwait(false);
         for(var i = 0; i < completed.Length; i++)
             results.Add(targets[i], completed[i].Result);
-
-        logger.LogInformation("Lilly {WhatTheHeck}", results);
+        
         return new ActionResponse(results);
-    }
-    
-    public async Task<BodySwapResponse> CheckPermissionsAndSendBodySwap(string sender, List<string> targets, List<string> characters, CharacterAttributes attributes, UserPermissions permissions, IHubCallerClients clients)
-    {
-        var results = new Dictionary<string, ActionResultEc>();
-        var pending = new Task<ActionResult<Unit>>[targets.Count];
-        for (var i = 0; i < targets.Count; i++)
-        {
-            var targetFriendCode = targets[i];
-            if (connections.TryGetClient(targetFriendCode) is not { } connectionClient)
-            {
-                pending[i] = Task.FromResult(ActionResultBuilder.Fail(ActionResultEc.TargetOffline));
-                continue;
-            }
-
-            var targetPermissions = await database.GetPermissions(targetFriendCode);
-            if (targetPermissions.Permissions.TryGetValue(sender, out var permissionsGranted) is false)
-            {
-                pending[i] = Task.FromResult(ActionResultBuilder.Fail(ActionResultEc.TargetNotFriends));
-                continue;
-            }
-            
-            var primary = (permissionsGranted.Primary & permissions.Primary) == permissions.Primary;
-            var elevated = (permissionsGranted.Elevated & permissions.Elevated) == permissions.Elevated;
-            if (primary is false || elevated is false)
-            {
-                pending[i] = Task.FromResult(ActionResultBuilder.Fail(ActionResultEc.TargetHasNotGrantedSenderPermissions));
-                continue;
-            }
-            
-            var request = new BodySwapForwardedRequest(sender, characters[i], attributes, null);
-            
-            try
-            {
-                var client = clients.Client(connectionClient.ConnectionId);
-                pending[i] = ForwardRequestWithTimeout<Unit>(HubMethod.BodySwap, client, request);
-            }
-            catch (Exception e)
-            {
-                logger.LogWarning("{Issuer} send action to {Target} failed, {Error}", sender, targetFriendCode, e.Message);
-                pending[i] = Task.FromResult(ActionResultBuilder.Fail(ActionResultEc.Unknown));
-            }
-        }
-        
-        var completed = await Task.WhenAll(pending).ConfigureAwait(false);
-        for(var i = 0; i < completed.Length; i++)
-            results.Add(targets[i], completed[i].Result);
-        
-        return new BodySwapResponse(results, targets.Count < characters.Count ? characters[^1] : null);
     }
     
     /// <summary>

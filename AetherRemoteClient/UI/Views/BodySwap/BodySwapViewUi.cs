@@ -74,6 +74,25 @@ public class BodySwapViewUi(
             ImGui.Checkbox("Include Self", ref controller.IncludeSelfInSwap);
             SharedUserInterfaces.Tooltip("Include yourself in the targets to body swap");
         });
+        
+        var windowWidth = ImGui.GetWindowWidth() * 0.5f; // 0.5 is a minor mathematical optimization
+        if (controller.AllSelectedTargetsHaveElevatedPermissions())
+            SharedUserInterfaces.ContentBox("TransformationElevatedPermissions", AetherRemoteStyle.ElevatedBackground, true, () =>
+            {
+                SharedUserInterfaces.MediumText("Permanent Transformation");
+                ImGui.Checkbox("Enable", ref controller.PermanentTransformation);
+                if (controller.PermanentTransformation is false)
+                    return;
+                
+                ImGui.SameLine(windowWidth);
+                ImGui.SetNextItemWidth(ImGui.GetFontSize() * 4);
+                ImGui.InputText("Pin", ref controller.UnlockPin, 4);
+                SharedUserInterfaces.Tooltip(
+                [
+                    "Your targets can use this PIN to unlock their appearance later if you provide it to them",
+                    "They can unlock it from the Status tab or by using the safeword command or safe mode"
+                ]);
+            });
 
         var friendsLackingPermissions = controller.GetFriendsLackingPermissions();
         if (friendsLackingPermissions.Count is not 0)

@@ -37,8 +37,7 @@ public class TwinningHandler(
         }
         
         var primary = request.SwapAttributes.ToPrimaryPermission();
-        if (primary == PrimaryPermissions2.None)
-            logger.LogWarning("{Sender} tried to request with empty permissions {Request}", sender, request);
+        primary |= PrimaryPermissions2.Twinning;
         
         var elevated = ElevatedPermissions.None;
         if (request.LockCode is not null)

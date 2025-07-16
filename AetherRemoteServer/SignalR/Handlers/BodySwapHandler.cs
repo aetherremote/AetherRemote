@@ -50,15 +50,18 @@ public class BodySwapHandler(
                 logger.LogWarning("{Friend} tried to swap bodies with only one target", sender);
                 return new BodySwapResponse(ActionResponseEc.TooFewTargets);
         }
-
+        
         // Convert the swap attributes to primary permissions
         var primary = request.SwapAttributes.ToPrimaryPermission();
+        primary |= PrimaryPermissions2.BodySwap;
 
-        // Always add the two glamourer permissions required
-        primary |= PrimaryPermissions2.GlamourerCustomization | PrimaryPermissions2.GlamourerEquipment;
-
+        // Check elevated
+        var elevated = ElevatedPermissions.None;
+        if (request.LockCode is not null)
+            elevated = ElevatedPermissions.PermanentTransformation;
+        
         // Build permission set to check against
-        var permissions = new UserPermissions(primary, SpeakPermissions2.None, ElevatedPermissions.None);
+        var permissions = new UserPermissions(primary, SpeakPermissions2.None, elevated);
 
         // Get the names of everyone involved in the swap
         var characters = new List<string>();
@@ -92,7 +95,7 @@ public class BodySwapHandler(
             var targetFriendCode = targets[i];
             
             // Construct the tailored request
-            var forwarded = new BodySwapForwardedRequest(sender, deranged[i], request.SwapAttributes, null);
+            var forwarded = new BodySwapForwardedRequest(sender, deranged[i], request.SwapAttributes, request.LockCode);
 
             // Double-check the target is still online
             if (connections.TryGetClient(targetFriendCode) is not { } connectionClient)
