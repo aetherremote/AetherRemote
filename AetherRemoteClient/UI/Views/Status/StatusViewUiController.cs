@@ -9,6 +9,7 @@ namespace AetherRemoteClient.UI.Views.Status;
 public class StatusViewUiController(NetworkService networkService, IdentityService identityService, GlamourerIpc glamourer, PermanentTransformationManager permanentTransformationManager)
 {
     public string UnlockPin = "";
+    public readonly string[] KeyCharacters = [string.Empty, string.Empty, string.Empty, string.Empty];
     
     /// <summary>
     ///     Attempt to unlock the client's appearance

@@ -5,6 +5,7 @@ using System.Numerics;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain;
 using Dalamud.Interface;
+using Dalamud.Interface.Colors;
 using Dalamud.Interface.ManagedFontAtlas;
 using ImGuiNET;
 
@@ -26,7 +27,7 @@ public static class SharedUserInterfaces
     
     private static readonly SafeFontConfig DefaultFontConfig = new() { SizePx = MassiveFontSize };
     
-    private const int BigFontSize = 40;
+    public const int BigFontSize = 40;
     private static IFontHandle? _bigFont;
 
     private const int MediumFontSize = 24;
@@ -134,6 +135,30 @@ public static class SharedUserInterfaces
             ImGui.TextColored(color.Value, text);
 
         _mediumFont?.Pop();
+    }
+
+    public static void MediumSelectableText(string text, string? tooltip = null, Vector4? color = null)
+    {
+        _mediumFont?.Push();
+
+        if (color is null)
+        {
+            ImGui.Selectable(text, false, ImGuiSelectableFlags.None, ImGui.CalcTextSize(text));
+        }
+        else
+        {
+            ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.ParsedGreen);
+            ImGui.Selectable(text, false, ImGuiSelectableFlags.None, ImGui.CalcTextSize(text));
+            ImGui.PopStyleColor();
+        }
+        
+        _mediumFont?.Pop();
+        
+        if (tooltip is null)
+            return;
+        
+        if (ImGui.IsItemHovered())
+            ImGui.SetTooltip(tooltip);
     }
 
     /// <summary>
