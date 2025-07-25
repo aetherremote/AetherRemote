@@ -2,7 +2,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace AetherRemoteClient.Ipc.Domain;
 
@@ -12,7 +14,9 @@ namespace AetherRemoteClient.Ipc.Domain;
 public class TemplateManager(object pluginInstance)
 {
     private Type? _templateType;
-    private MethodInfo? _deserializeMethod;
+    private MethodInfo? _importFromBase64Method;
+    private MethodInfo? _jsonSerializeMethod;
+    private MethodInfo? _jsonDeserializeMethod;
 
     /// <summary>
     ///     Initialize the manager. This must be called before calling any function on this manager
@@ -38,8 +42,10 @@ public class TemplateManager(object pluginInstance)
             }
             
             var deserializationType = assembly.GetType("CustomizePlus.Core.Helpers.Base64Helper");
-            _deserializeMethod = deserializationType?.GetMethod("ImportFromBase64", BindingFlags.Public | BindingFlags.Static);
             _templateType = assembly.GetType("CustomizePlus.Templates.Data.Template");
+            _importFromBase64Method = deserializationType?.GetMethod("ImportFromBase64", BindingFlags.Public | BindingFlags.Static);
+            _jsonSerializeMethod = _templateType?.GetMethod("JsonSerialize", BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
+            _jsonDeserializeMethod = _templateType?.GetMethod("Load", BindingFlags.Static | BindingFlags.Public);
             
             return true;
         }
@@ -58,7 +64,7 @@ public class TemplateManager(object pluginInstance)
     public object? CreateTemplate(string templateData)
     {
         object?[] parameters = [templateData, null];
-        if (_deserializeMethod?.Invoke(null, parameters) is not { } version)
+        if (_importFromBase64Method?.Invoke(null, parameters) is not { } version)
         {
             Plugin.Log.Warning("Unable to deserialize template");
             return null;
@@ -84,6 +90,95 @@ public class TemplateManager(object pluginInstance)
         return null;
     }
 
+    /// <summary>
+    ///     TODO
+    /// </summary>
+    /// <param name="templates"></param>
+    /// <returns></returns>
+    public string? SerializeList(IList templates)
+    {
+        if (_jsonSerializeMethod is null)
+        {
+            Plugin.Log.Error("[TemplateManager] Unable to serialize list because serialize method was not found");
+            return null;
+        }
+
+        var result = new JArray();
+        foreach (var template in templates)
+        {
+            if (template is null || template.GetType() != _templateType)
+            {
+                Plugin.Log.Warning($"[TemplateManager] Template was null or not an expected template {template}");
+                continue;
+            }
+
+            try
+            {
+                if (_jsonSerializeMethod.Invoke(template, null) is not JObject json)
+                {
+                    Plugin.Log.Warning($"[TemplateManager] Unable to serialize template {template}");
+                    continue;
+                }
+            
+                result.Add(json);
+            }
+            catch (Exception e)
+            {
+                Plugin.Log.Warning($"[TemplateManager] Unknown error serializing template {template}, {e}");
+            }
+        }
+
+        var raw = result.ToString(Formatting.None);
+        var bytes = Encoding.UTF8.GetBytes(raw);
+        return Convert.ToBase64String(bytes);
+    }
+
+    /// <summary>
+    ///     TODO
+    /// </summary>
+    /// <param name="templatesBase64"></param>
+    /// <returns></returns>
+    public IList? DeserializeList(string templatesBase64)
+    {
+        if (_jsonDeserializeMethod is null)
+        {
+            Plugin.Log.Error("[TemplateManager] Unable to deserialize string because deserialize method was not found");
+            return null;
+        }
+        
+        var bytes = Convert.FromBase64String(templatesBase64);
+        var raw =  Encoding.UTF8.GetString(bytes);
+        var array = JArray.Parse(raw);
+        
+        var result = new List<object>();
+        foreach (var token in array)
+        {
+            if (token is not JObject json)
+            {
+                Plugin.Log.Warning($"[TemplateManager] Token was null or not a JObject {token}");
+                continue;
+            }
+
+            try
+            {
+                var args = new object[] { json };
+                if (_jsonDeserializeMethod.Invoke(null, args) is not { } template)
+                {
+                    Plugin.Log.Warning($"[TemplateManager] Deserialization returned null for {args}");
+                    continue;
+                }
+                
+                result.Add(template);
+            }
+            catch (Exception e)
+            {
+                Plugin.Log.Warning($"[TemplateManager] Unknown error deserializing template {json}, {e}");
+            }
+        }
+        
+        return result;
+    }
+
     public IList? DeserializeTemplates(string templateData)
     {
         try
@@ -101,7 +196,8 @@ public class TemplateManager(object pluginInstance)
                 return null;
             }
             
-            var deserialized = JsonConvert.DeserializeObject(templateData, _templateType);
+            var type = typeof(List<>).MakeGenericType(_templateType);
+            var deserialized = JsonConvert.DeserializeObject(templateData, type);
             if (deserialized is not null)
                 return (IList)deserialized;
             

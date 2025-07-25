@@ -16,6 +16,7 @@ namespace AetherRemoteClient.Handlers.Network;
 ///     Handles a <see cref="TransformForwardedRequest"/>
 /// </summary>
 public class TransformHandler(
+    IdentityService identityService,
     LogService logService,
     PermanentLockService permanentLockService,
     GlamourerIpc glamourerIpc,
@@ -55,7 +56,7 @@ public class TransformHandler(
         // Attempt to apply
         if (await glamourerIpc.ApplyDesignAsync(request.GlamourerData, request.GlamourerApplyType).ConfigureAwait(false) is false)
         {
-            Plugin.Log.Warning($"Failed to handle transformation request from {friend.NoteOrFriendCode}");
+            Plugin.Log.Warning($"[TransformHandler] Failed to process transformation request from {friend.NoteOrFriendCode}");
             logService.Custom($"{friend.NoteOrFriendCode} tried to transform you, but an unexpected error occured.");
             return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
         }
@@ -63,10 +64,17 @@ public class TransformHandler(
         // If there is a lock, save the permanent transformation data
         if (request.LockCode is not null)
         {
+            // Get the components of what we just applied
+            if (await glamourerIpc.GetDesignComponentsAsync().ConfigureAwait(false) is not { } components)
+            {
+                Plugin.Log.Warning("[TransformHandler] Unable to save components for locking");
+                return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
+            }
+            
             // Adds the parts we want to save
             var permanent = new PermanentTransformationData
             {
-                GlamourerData = request.GlamourerData,
+                GlamourerData = components,
                 GlamourerApplyFlags = request.GlamourerApplyType,
                 UnlockCode = request.LockCode
             };
@@ -74,6 +82,9 @@ public class TransformHandler(
             // Save
             await permanentTransformationManager.Lock(permanent);
         }
+        
+        // Set your new identity
+        identityService.AddAlteration(IdentityAlterationType.Transformation, friend.NoteOrFriendCode);
         
         // Log Success
         logService.Custom($"{friend.NoteOrFriendCode} transformed you");

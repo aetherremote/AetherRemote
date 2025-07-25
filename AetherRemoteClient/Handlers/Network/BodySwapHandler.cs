@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using AetherRemoteClient.Domain;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain;
@@ -62,7 +63,7 @@ public class BodySwapHandler(
         }
         
         // Set your new identity
-        identityService.Identity = request.CharacterName;
+        identityService.AddAlteration(IdentityAlterationType.BodySwap, friend.NoteOrFriendCode);
         
         // Log Success
         logService.Custom($"{friend.NoteOrFriendCode} swapped your body with {request.CharacterName}'s");

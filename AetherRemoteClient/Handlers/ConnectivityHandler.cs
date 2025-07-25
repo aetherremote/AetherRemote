@@ -83,7 +83,7 @@ public class ConnectivityHandler : IDisposable
         }
 
         _identityService.FriendCode = response.FriendCode;
-        await _identityService.SetIdentityToCurrentCharacter().ConfigureAwait(false);
+        _identityService.ClearAlterations();
 
         _friendsListService.Clear();
         foreach (var (friendCode, permissionsGrantedToFriend) in response.PermissionsGrantedToOthers)

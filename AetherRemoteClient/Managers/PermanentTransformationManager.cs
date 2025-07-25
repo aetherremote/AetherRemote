@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using System.Timers;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Events;
 using AetherRemoteClient.Ipc;
@@ -26,6 +27,11 @@ public class PermanentTransformationManager : IDisposable
     private readonly MoodlesIpc _moodlesIpc;
     private readonly IdentityService _identityService;
     private readonly PermanentLockService _permanentLockService;
+    
+    /// <summary>
+    ///     A timer that will be used so not as to spam glamourer with requests.
+    /// </summary>
+    private readonly Timer _revertTimer = new(2000);
 
     /// <summary>
     ///     The current saved appearance when the client was originally locked
@@ -50,14 +56,11 @@ public class PermanentTransformationManager : IDisposable
         _identityService = identityService;
         _permanentLockService = permanentLockService;
 
+        _revertTimer.AutoReset = false;
+        _revertTimer.Enabled = false;
+        _revertTimer.Elapsed += RevertToLockedTransformation;
+        
         _glamourer.LocalPlayerChanged += OnPlayerGlamourerUpdated;
-    }
-
-    public void Purge()
-    {
-        Plugin.Log.Info("Local transformation purged");
-        Plugin.Configuration.PermanentTransformations.Remove(_identityService.Character.FullName);
-        Plugin.Configuration.Save();
     }
 
     /// <summary>
@@ -132,6 +135,8 @@ public class PermanentTransformationManager : IDisposable
     /// </summary>
     public void ForceUnlock()
     {
+        // Stop the timer
+        _revertTimer.Stop();
         Plugin.Log.Info("[PermanentTransformationManager] Initiated forceful unlocking");
         Unlock(_permanentLockService.CurrentLock);
     }
@@ -150,7 +155,7 @@ public class PermanentTransformationManager : IDisposable
             return;
         }
 
-        // Lock the account
+        // Lock the client
         if (_permanentLockService.Lock(data.UnlockCode) is false)
         {
             Plugin.Log.Warning("[PermanentTransformationManager] Unable to lock");
@@ -192,11 +197,22 @@ public class PermanentTransformationManager : IDisposable
         // Apply Customize
         if (data.CustomizePlusData is not null)
         {
+            // Delete any existing profiles
             await _customizePlus.DeleteCustomize().ConfigureAwait(false);
-            if (await _customizePlus.DeserializeAndApplyCustomize(data.CustomizePlusData).ConfigureAwait(false) is false)
+            
+            // Deserialize back into a list of templates
+            if (await _customizePlus.DeserializeTemplates(data.CustomizePlusData).ConfigureAwait(false) is not { } templates)
             {
                 Plugin.Log.Warning("[PermanentTransformationManager] Failed to deserialized saved C+ template data");
+                return;
+            }
+            
+            // Apply templates
+            if (await _customizePlus.ApplyCustomize(templates).ConfigureAwait(false) is false)
+            {
+                // Delete any partial profiles that were created
                 await _customizePlus.DeleteCustomize().ConfigureAwait(false);
+                Plugin.Log.Warning("[PermanentTransformationManager] Failed to apply saved C+ template data");
                 return;
             }
         }
@@ -211,23 +227,27 @@ public class PermanentTransformationManager : IDisposable
         }
     }
     
+    private void OnPlayerGlamourerUpdated(object? sender, GlamourerStateChangedEventArgs args)
+    {
+        // Skip starting the timer if there is no lock
+        if (_permanentLockService.IsLocked is false)
+        {
+            Plugin.Log.Verbose("[PermanentTransformationManager] Skipping update from glamourer because local player is not locked");
+            return;
+        }
+        
+        // Restart the timer
+        _revertTimer.Stop();
+        _revertTimer.Start();
+    }
+    
     /// <summary>
-    ///     This function is responsible for reapplying the stored permanent transformation is the player is currently under a permanent transformation
+    ///     Reverts the local player to the locked appearance 
     /// </summary>
-    private async void OnPlayerGlamourerUpdated(object? sender, GlamourerStateChangedEventArgs args)
+    private async void RevertToLockedTransformation(object? sender, ElapsedEventArgs e)
     {
         try
         {
-            // Wait a moment for the changes to register
-            await Task.Delay(1000).ConfigureAwait(false);
-            
-            // If the player isn't under any kind of permanent transformation, ignore
-            if (_permanentLockService.IsLocked is false)
-            {
-                Plugin.Log.Info("Not locked, skipping...");
-                return;
-            }
-            
             // Get the design as components
             if (await _glamourer.GetDesignComponentsAsync().ConfigureAwait(false) is not { } components)
             {
@@ -247,6 +267,7 @@ public class PermanentTransformationManager : IDisposable
             
             // A change has been detected, reverting the player
             Plugin.Log.Info("Local player attempted to reload with a permanent transformation, reverting...");
+
             
             // Get the local saved permanent transformation data
             if (Plugin.Configuration.PermanentTransformations.TryGetValue(_identityService.Character.FullName, out var data) is false)
@@ -258,9 +279,9 @@ public class PermanentTransformationManager : IDisposable
             
             await ApplySavedAppearance(data);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            Plugin.Log.Warning($"Unexpected issue enforcing a permanent transformation {e.Message}");
+            Plugin.Log.Warning($"Unexpected issue enforcing a permanent transformation {ex.Message}");
         }
     }
     
@@ -283,6 +304,7 @@ public class PermanentTransformationManager : IDisposable
 
     public void Dispose()
     {
+        _revertTimer.Elapsed -= RevertToLockedTransformation;
         _glamourer.LocalPlayerResetOrReapply -= OnPlayerGlamourerUpdated;
         GC.SuppressFinalize(this);
     }

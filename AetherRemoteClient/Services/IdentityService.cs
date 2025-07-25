@@ -1,5 +1,3 @@
-using System;
-using System.Threading.Tasks;
 using AetherRemoteClient.Domain;
 
 namespace AetherRemoteClient.Services;
@@ -7,7 +5,7 @@ namespace AetherRemoteClient.Services;
 /// <summary>
 ///     Manages a flavor aspect of body swapping and twinning
 /// </summary>
-public class IdentityService : IDisposable
+public class IdentityService
 {
     /// <summary>
     ///     Your friend code
@@ -18,51 +16,30 @@ public class IdentityService : IDisposable
     ///     The local character you logged in as
     /// </summary>
     public LocalCharacter Character = new("Unknown", "Unknown");
-    
+
     /// <summary>
-    ///     Name of your current in-game identity you are assuming
+    ///     The current alteration to the local character
     /// </summary>
-    public string Identity = "Unknown Identity";
-    
+    public IdentityAlteration? Alteration { get; private set; }
+
     /// <summary>
-    ///     <inheritdoc cref="IdentityService"/>
+    ///     Returns if the local player is being altered in any way
     /// </summary>
-    public IdentityService()
+    public bool IsAltered => Alteration is not null;
+
+    /// <summary>
+    ///     Clears any alterations made to the local player
+    /// </summary>
+    public void ClearAlterations()
     {
-        Plugin.ClientState.Login += OnLogin;
-        Plugin.ClientState.Logout += OnLogout;
-        //Identity = Plugin.ClientState.LocalPlayer?.Name.TextValue ?? Identity;
+        Alteration = null;
     }
 
     /// <summary>
-    ///     Reset identity to in-game character
+    ///     Adds an alteration to thecurrent identity
     /// </summary>
-    public async Task SetIdentityToCurrentCharacter()
+    public void AddAlteration(IdentityAlterationType type, string sender)
     {
-        Identity = await Plugin.RunOnFramework(() => Plugin.ClientState.LocalPlayer?.Name.TextValue).ConfigureAwait(false) ?? "Unknown Identity";
-    }
-    
-    private async void OnLogin()
-    {
-        try
-        {
-            Identity = await Plugin.RunOnFramework(() => Plugin.ClientState.LocalPlayer?.Name.TextValue).ConfigureAwait(false) ?? "Unknown Identity";
-        }
-        catch (Exception)
-        {
-            // Ignored
-        }
-    }
-    
-    private void OnLogout(int _, int __)
-    {
-        Identity = "Unknown Identity";
-    }
-
-    public void Dispose()
-    {
-        Plugin.ClientState.Login -= OnLogin;
-        Plugin.ClientState.Logout -= OnLogout;
-        GC.SuppressFinalize(this);
+        Alteration = new IdentityAlteration(type, sender);
     }
 }

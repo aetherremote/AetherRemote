@@ -1,6 +1,5 @@
 using System;
 using System.Collections;
-using System.Text.Json;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Ipc;
@@ -12,7 +11,7 @@ namespace AetherRemoteClient.Domain.Attributes;
 /// </summary>
 public class CustomizePlusAttribute(CustomizePlusIpc customizePlusIpc, string character) : ICharacterAttribute
 {
-    // Instantiated
+    // Instantiated/
     private IList _customizePlusTemplates = new ArrayList();
 
     /// <summary>
@@ -50,7 +49,15 @@ public class CustomizePlusAttribute(CustomizePlusIpc customizePlusIpc, string ch
 
         try
         {
-            data.CustomizePlusData = JsonSerializer.Serialize(_customizePlusTemplates);
+            // Convert template list
+            if (await customizePlusIpc.SerializeTemplates(_customizePlusTemplates).ConfigureAwait(false) is not { } text)
+            {
+                Plugin.Log.Warning("[CustomizePlusAttribute] Could not convert templates to string");
+                return false;
+            }
+            
+            // Save to permanent transformation data
+            data.CustomizePlusData = text;
             return true;
         }
         catch (Exception e)

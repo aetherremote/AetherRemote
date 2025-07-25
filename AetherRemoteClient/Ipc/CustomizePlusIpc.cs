@@ -233,6 +233,34 @@ public class CustomizePlusIpc : IExternalPlugin, IDisposable
     }
 
     /// <summary>
+    ///     Converts a list of templates into a String64
+    /// </summary>
+    /// <param name="templates">List of templates retrieved from <see cref="GetActiveTemplates"/></param>
+    /// <returns></returns>
+    public async Task<string?> SerializeTemplates(IList templates)
+    {
+        if (ApiAvailable)
+            return await Plugin.RunOnFramework(() => _templateManager.SerializeList(templates)).ConfigureAwait(false);
+        
+        Plugin.Log.Warning("[CustomizePlusIpc] Failed to serialize templates because api is not available");
+        return null;
+    }
+    
+    /// <summary>
+    ///     Converts a string64 into a list of templates
+    /// </summary>
+    /// <param name="string64">Previously serialized list of templates retrieved from <see cref="GetActiveTemplates"/></param>
+    /// <returns></returns>
+    public async Task<IList?> DeserializeTemplates(string string64)
+    {
+        if (ApiAvailable)
+            return await Plugin.RunOnFramework(() => _templateManager.DeserializeList(string64)).ConfigureAwait(false);
+        
+        Plugin.Log.Warning("[CustomizePlusIpc] Failed to deserialize templates because api is not available");
+        return null;
+    }
+
+    /// <summary>
     ///     Get the Customize plus plugin assembly from loaded into dalamud services
     /// </summary>
     private static object? TryGetCustomizePluginInstance()

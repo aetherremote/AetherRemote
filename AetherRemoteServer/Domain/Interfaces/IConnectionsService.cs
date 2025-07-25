@@ -1,7 +1,7 @@
 namespace AetherRemoteServer.Domain.Interfaces;
 
 /// <summary>
-///     TODO
+///     Manages a list of connected clients
 /// </summary>
 public interface IConnectionsService
 {
@@ -19,11 +19,6 @@ public interface IConnectionsService
     ///     Retrieves a <see cref="ClientInfo"/> corresponding to friend code
     /// </summary>
     public ClientInfo? TryGetClient(string friendCode);
-    
-    /// <summary>
-    ///     Checks if a friend code is sending commands too frequently
-    /// </summary>
-    public bool IsUserExceedingRequestLimit(string friendCode);
     
     /// <summary>
     ///     Checks if a friend code is sending commands too frequently

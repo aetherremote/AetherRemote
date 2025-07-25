@@ -4,32 +4,32 @@ using AetherRemoteCommon.Domain.Enums;
 namespace AetherRemoteServer.Domain.Interfaces;
 
 /// <summary>
-///     TODO
+///     Provides access to the underlying Sqlite3 database
 /// </summary>
 public interface IDatabaseService
 {
     /// <summary>
-    ///     TODO
+    ///     Retrieves a friend code by secret, for use when first connecting to the server
     /// </summary>
     public Task<string?> GetFriendCodeBySecret(string secret);
 
     /// <summary>
-    ///     TODO
+    ///     Creates a new blank permission set between two users
     /// </summary>
     public Task<DatabaseResultEc> CreatePermissions(string senderFriendCode, string targetFriendCode);
 
     /// <summary>
-    ///     TODO
+    ///     Updates a permission set between two users
     /// </summary>
     public Task<DatabaseResultEc> UpdatePermissions(string senderFriendCode, string targetFriendCode, UserPermissions permissions);
 
     /// <summary>
-    ///     TODO
+    ///     Retrieves all the permission sets for a specific user
     /// </summary>
     public Task<FriendPermissions> GetPermissions(string friendCode);
 
     /// <summary>
-    ///     TODO
+    ///     Deletes a permission set between two users
     /// </summary>
     public Task<DatabaseResultEc> DeletePermissions(string senderFriendCode, string targetFriendCode);
 }

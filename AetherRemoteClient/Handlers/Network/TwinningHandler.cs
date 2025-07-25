@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using AetherRemoteClient.Domain;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain;
@@ -60,10 +61,10 @@ public class TwinningHandler(
                 permanentTransformationData.UnlockCode = request.LockCode;
                 await permanentTransformationManager.Lock(permanentTransformationData);
             }
+            
+            // Set your new identity
+            identityService.AddAlteration(IdentityAlterationType.Twinning, friend.NoteOrFriendCode);
         }
-        
-        // Set your new identity
-        identityService.Identity = request.CharacterName;
         
         // Log success
         logService.Custom($"{friend.NoteOrFriendCode} twinned you with {request.CharacterName}");

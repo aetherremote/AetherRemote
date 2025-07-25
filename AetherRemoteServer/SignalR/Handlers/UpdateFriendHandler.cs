@@ -24,7 +24,6 @@ public class UpdateFriendHandler(IConnectionsService connections, IDatabaseServi
         
         try
         {
-            // TODO, should this wait for a client to successfully receive the update?
             var sync = new SyncPermissionsForwardedRequest(friendCode, request.Permissions);
             await clients.Client(connectedClient.ConnectionId).SendAsync(HubMethod.SyncPermissions, sync);
         }

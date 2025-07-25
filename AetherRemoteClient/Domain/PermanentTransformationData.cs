@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using AetherRemoteClient.Ipc;
 using AetherRemoteCommon.Domain.Enums;
+using Newtonsoft.Json.Linq;
 
 namespace AetherRemoteClient.Domain;
 
@@ -14,7 +15,7 @@ public class PermanentTransformationData
     /// <summary>
     ///     Glamourer data to be applied
     /// </summary>
-    public string GlamourerData { get; set; } = string.Empty;
+    public JObject GlamourerData { get; set; } = new();
     
     /// <summary>
     ///     How should this transformation be applied?

@@ -29,7 +29,7 @@ public class GlamourerIpc : IExternalPlugin, IDisposable
     private readonly RevertToAutomation _revertToAutomation;
 
     // Glamourer Events
-    private readonly EventSubscriber<IntPtr, StateChangeType> _stateChangedWithType;
+    private readonly EventSubscriber<IntPtr, StateFinalizationType> _stateFinalizedWithType;
 
     /// <summary>
     ///     Event fired when the local player's character is reverted to game or automation
@@ -57,8 +57,8 @@ public class GlamourerIpc : IExternalPlugin, IDisposable
         _getStateBase64 = new GetStateBase64(Plugin.PluginInterface);
         _revertToAutomation = new RevertToAutomation(Plugin.PluginInterface);
 
-        _stateChangedWithType = StateChangedWithType.Subscriber(Plugin.PluginInterface);
-        _stateChangedWithType.Event += OnGlamourerStateChanged;
+        _stateFinalizedWithType = StateFinalized.Subscriber(Plugin.PluginInterface);
+        _stateFinalizedWithType.Event += OnGlamourerStateChanged;
 
         TestIpcAvailability();
     }
@@ -115,28 +115,58 @@ public class GlamourerIpc : IExternalPlugin, IDisposable
     /// <param name="index">Object table index to revert</param>
     public async Task<bool> ApplyDesignAsync(string glamourerData, GlamourerApplyFlags flags, ushort index = 0)
     {
+        return await ApplyDesign(glamourerData, flags, index);
+    }
+
+    /// <summary>
+    ///     Applies a given design to an object index
+    /// </summary>
+    /// <param name="glamourerData">Glamourer data to apply</param>
+    /// <param name="flags">How should this be applied?</param>
+    /// <param name="index">Object table index to revert</param>
+    public async Task<bool> ApplyDesignAsync(JObject glamourerData, GlamourerApplyFlags flags, ushort index = 0)
+    {
+        return await ApplyDesign(glamourerData, flags, index);
+    }
+
+    /// <summary>
+    ///     Applies a given design to an object index by <see cref="string"/> or <see cref="JObject"/>
+    /// </summary>
+    private async Task<bool> ApplyDesign(object glamourerData, GlamourerApplyFlags flags, ushort index)
+    {
         if (ApiAvailable)
             return await Plugin.RunOnFramework(() =>
             {
                 try
                 {
-                    var result = _applyState.Invoke(glamourerData, index, 0, ConvertGlamourerToApplyFlags(flags));
+                    GlamourerApiEc result;
+                    switch (glamourerData)
+                    {
+                        case JObject data:
+                            result = _applyState.Invoke(data, index, 0, ConvertGlamourerToApplyFlags(flags));
+                            break;
+                        case string data:
+                            result = _applyState.Invoke(data, index, 0, ConvertGlamourerToApplyFlags(flags));
+                            break;
+                        default:
+                            Plugin.Log.Warning(
+                                $"[GlamourerIpc] Unsupported glamourer data type while applying design {glamourerData.GetType().Name}");
+                            return false;
+                    }
 
                     if (result is GlamourerApiEc.Success)
                         return true;
 
-                    Plugin.Log.Warning(
-                        $"[GlamourerIpc] Applying design for object index {index} unsuccessful, {result}");
+                    Plugin.Log.Warning($"[GlamourerIpc] Unable to apply design to object {index}, {result}");
                     return false;
                 }
                 catch (Exception e)
                 {
-                    Plugin.Log.Error(
-                        $"[GlamourerIpc] Applying design for object index {index} failed, {e.Message}");
+                    Plugin.Log.Error($"[GlamourerIpc] Unexpected error while applying design to object {index}, {e}");
                     return false;
                 }
-            }).ConfigureAwait(false);
-
+            });
+        
         Plugin.Log.Warning("[GlamourerIpc] Unable to revert to automation because glamourer is not available");
         return false;
     }
@@ -206,7 +236,7 @@ public class GlamourerIpc : IExternalPlugin, IDisposable
         return applyFlags;
     }
 
-    private unsafe void OnGlamourerStateChanged(IntPtr objectIndexPointer, StateChangeType stateChangeType)
+    private unsafe void OnGlamourerStateChanged(IntPtr objectIndexPointer, StateFinalizationType stateChangeType)
     {
         try
         {
@@ -215,9 +245,26 @@ public class GlamourerIpc : IExternalPlugin, IDisposable
                 return;
             
             LocalPlayerChanged?.Invoke(this, new GlamourerStateChangedEventArgs(stateChangeType));
-            
-            if (stateChangeType is StateChangeType.Reset or StateChangeType.Reapply)
-                LocalPlayerResetOrReapply?.Invoke(this, new GlamourerStateChangedEventArgs(stateChangeType));
+
+            switch (stateChangeType)
+            {
+                case StateFinalizationType.Revert:
+                case StateFinalizationType.RevertCustomize:
+                case StateFinalizationType.RevertEquipment:
+                case StateFinalizationType.RevertAdvanced:
+                case StateFinalizationType.RevertAutomation:
+                case StateFinalizationType.Reapply:
+                case StateFinalizationType.ReapplyAutomation:
+                    LocalPlayerResetOrReapply?.Invoke(this, new GlamourerStateChangedEventArgs(stateChangeType));
+                    break;
+                
+                case StateFinalizationType.ModelChange:
+                case StateFinalizationType.DesignApplied:
+                case StateFinalizationType.Gearset:
+                default:
+                    Plugin.Log.Verbose("[GlamourerIpc] Ignored state change type {0}", stateChangeType);
+                    break;
+            }
         }
         catch (Exception e)
         {
@@ -227,8 +274,8 @@ public class GlamourerIpc : IExternalPlugin, IDisposable
 
     public void Dispose()
     {
-        _stateChangedWithType.Event -= OnGlamourerStateChanged;
-        _stateChangedWithType.Disable();
+        _stateFinalizedWithType.Event -= OnGlamourerStateChanged;
+        _stateFinalizedWithType.Disable();
         GC.SuppressFinalize(this);
     }
 }

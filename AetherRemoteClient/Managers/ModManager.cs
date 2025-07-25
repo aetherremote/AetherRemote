@@ -79,7 +79,7 @@ public class ModManager : IDisposable
         var assimilatedAttributes = new List<ICharacterAttribute>();
 
         // Store Glamourer always
-        var glamourerAttribute = new GlamourerAttribute(_glamourer, gameObject.ObjectIndex);
+        var glamourerAttribute = new GlamourerAttribute(_glamourer);
         if (await glamourerAttribute.Store().ConfigureAwait(false))
             assimilatedAttributes.Add(glamourerAttribute);
 

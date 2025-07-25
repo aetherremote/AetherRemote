@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AetherRemoteClient.Domain;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
@@ -88,7 +89,7 @@ public class BodySwapViewUiController(
                     }
                         
                     // Set your new identity
-                    identityService.Identity = response.CharacterName;
+                    identityService.AddAlteration(IdentityAlterationType.BodySwap, "Yourself");
                 }
             }
             

@@ -1,7 +1,5 @@
-using System;
-using System.Collections.Generic;
 using System.Numerics;
-using System.Runtime.CompilerServices;
+using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
@@ -21,7 +19,7 @@ public class StatusViewUi(
     private const int Size = SharedUserInterfaces.BigFontSize;
     private const float ButtonSpacing = 8f;
     
-    private bool _drawStatusMenu;
+    private bool _drawStatusMenu = false;
 
     public void Draw()
     {
@@ -63,30 +61,18 @@ public class StatusViewUi(
         SharedUserInterfaces.ContentBox("StatusButtons", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.MediumText("Statuses");
-            ImGui.TextUnformatted("Below are your current statuses. Remove a status by clicking the name.");
+            ImGui.TextUnformatted("Below are all the statuses affecting you, if any");
         });
         
-        SharedUserInterfaces.ContentBox("StatusLock", AetherRemoteStyle.ElevatedBackground, true, () =>
-        {
-            SharedUserInterfaces.MediumText("Permanently Transformed");
-            ImGui.TextUnformatted("Mist Mageborn has locked your appearance.");
-        });
-        
-        if (SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.Unlock, windowPadding, windowWidth))
-        {
-            _drawStatusMenu = false;
-        }
-        
-        SharedUserInterfaces.ContentBox("StatusNothing", AetherRemoteStyle.PanelBackground, true, () =>
-        {
-            SharedUserInterfaces.MediumSelectableText("Hypnosis", "Click to wake up");
-            ImGui.TextUnformatted("You are being hypnotized by Plapnessa Plapmeat.");
-        });
-        
-        if (SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.CaretSquareRight, windowPadding, windowWidth))
-        {
-            
-        }
+        if (permanentLockService.IsLocked)
+            RenderPermanentTransformationComponent(windowPadding, windowWidth);
+
+        if (identityService.IsAltered)
+            RenderTransformationComponent(windowPadding, windowWidth);
+
+        if (spiralService.IsBeingHypnotized)
+            RenderHypnosisComponent(windowPadding, windowWidth);
+
         
         ImGui.EndChild();
     }
@@ -223,5 +209,67 @@ public class StatusViewUi(
         
         // Pop the ID now that we're done with it
         ImGui.PopID();
+    }
+
+    private void RenderPermanentTransformationComponent(Vector2 windowPadding, float windowWidth)
+    {
+        SharedUserInterfaces.ContentBox("StatusLock", AetherRemoteStyle.ElevatedBackground, true, () =>
+        {
+            SharedUserInterfaces.MediumText("Permanently Transformed");
+            ImGui.TextUnformatted($"{identityService.Alteration?.Sender ?? "Unknown"} has locked your appearance");
+        });
+        
+        if (SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.Unlock, windowPadding, windowWidth))
+        {
+            _drawStatusMenu = false;
+        }
+    }
+
+    private void RenderTransformationComponent(Vector2 windowPadding, float windowWidth)
+    {
+        SharedUserInterfaces.ContentBox("StatusTransformation", AetherRemoteStyle.PanelBackground, true, () =>
+        {
+            SharedUserInterfaces.MediumText("Identity Altered");
+
+            if (identityService.Alteration is not { } alteration)
+            {
+                ImGui.TextUnformatted("An unknown friend altered your identity");
+                return;
+            }
+
+            var type = alteration.Type switch
+            {
+                IdentityAlterationType.Transformation => $"{alteration.Sender} transformed you or your clothing",
+                IdentityAlterationType.Twinning => $"{alteration.Sender} twinned with you",
+                IdentityAlterationType.BodySwap => $"{alteration.Sender} swapped your body",
+                _ => $"{alteration.Sender} altered your identity"
+            };
+            
+            ImGui.TextUnformatted(type);
+        });
+
+        if (permanentLockService.IsLocked)
+        {
+            ImGui.BeginDisabled();
+            SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.History, windowPadding, windowWidth);
+            ImGui.EndDisabled();
+        }
+        else
+        {
+            if (SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.History, windowPadding, windowWidth))
+                controller.ResetIdentity();
+        }
+    }
+
+    private void RenderHypnosisComponent(Vector2 windowPadding, float windowWidth)
+    {
+        SharedUserInterfaces.ContentBox("StatusHypnosis", AetherRemoteStyle.PanelBackground, true, () =>
+        {
+            SharedUserInterfaces.MediumText("Hypnosis");
+            ImGui.TextUnformatted($"{identityService.Alteration?.Sender ?? "Unknown"} is hypnotizing you");
+        });
+        
+        if (SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.Square, windowPadding, windowWidth))
+            spiralService.StopCurrentSpiral();
     }
 }

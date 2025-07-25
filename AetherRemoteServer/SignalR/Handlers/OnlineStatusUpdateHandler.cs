@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.SignalR;
 namespace AetherRemoteServer.SignalR.Handlers;
 
 /// <summary>
-///     TODO
+///     Processes clients connecting and disconnecting from the server
 /// </summary>
 public class OnlineStatusUpdateHandler(
     IConnectionsService connections,
@@ -15,7 +15,7 @@ public class OnlineStatusUpdateHandler(
     ILogger<OnlineStatusUpdateHandler> logger)
 {
     /// <summary>
-    ///     TODO
+    ///     Handle the event, removing or adding from the current client list, and updating all the user's friends who are online
     /// </summary>
     public async Task Handle(string friendCode, bool online, HubCallerContext context, IHubCallerClients clients)
     {

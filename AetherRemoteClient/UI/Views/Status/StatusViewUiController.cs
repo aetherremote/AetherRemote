@@ -15,8 +15,7 @@ public class StatusViewUiController(NetworkService networkService, IdentityServi
     ///     Attempt to unlock the client's appearance
     /// </summary>
     public void Unlock() => permanentTransformationManager.Unlock(UnlockPin);
-
-    public void Purge() => permanentTransformationManager.Purge();
+    
     
     public async void Disconnect()
     {
@@ -36,8 +35,8 @@ public class StatusViewUiController(NetworkService networkService, IdentityServi
         {
             if (await glamourer.RevertToAutomation().ConfigureAwait(false) is false)
                 return;
-            
-            await identityService.SetIdentityToCurrentCharacter().ConfigureAwait(false);
+
+            identityService.ClearAlterations();
         }
         catch (Exception e)
         {

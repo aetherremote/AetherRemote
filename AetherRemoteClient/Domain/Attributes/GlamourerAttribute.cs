@@ -2,25 +2,26 @@ using System.Threading.Tasks;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Ipc;
 using AetherRemoteCommon.Domain.Enums;
+using Newtonsoft.Json.Linq;
 
 namespace AetherRemoteClient.Domain.Attributes;
 
 /// <summary>
 ///     Handles storing and applying of glamourer attributes
 /// </summary>
-public class GlamourerAttribute(GlamourerIpc glamourerIpc, ushort objectIndex) : ICharacterAttribute
+public class GlamourerAttribute(GlamourerIpc glamourerIpc) : ICharacterAttribute
 {
     // Instantiated
-    private string _glamourerData = string.Empty;
+    private JObject _glamourerData = new();
 
     /// <summary>
     ///     <inheritdoc cref="ICharacterAttribute.Store"/>
     /// </summary>
     public async Task<bool> Store()
     {
-        if (await glamourerIpc.GetDesignAsync(objectIndex).ConfigureAwait(false) is { } glamourerData)
+        if (await glamourerIpc.GetDesignComponentsAsync().ConfigureAwait(false) is { } components)
         {
-            _glamourerData = glamourerData;
+            _glamourerData = components;
             return true;
         }
 

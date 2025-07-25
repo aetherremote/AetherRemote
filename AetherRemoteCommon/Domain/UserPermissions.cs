@@ -25,14 +25,14 @@ public record UserPermissions
     public ElevatedPermissions Elevated { get; set; }
 
     /// <summary>
-    ///     TODO
+    ///     <inheritdoc cref="UserPermissions"/>
     /// </summary>
     public UserPermissions()
     {
     }
 
     /// <summary>
-    ///     TODO
+    ///     <inheritdoc cref="UserPermissions"/>
     /// </summary>
     public UserPermissions(PrimaryPermissions2 primary, SpeakPermissions2 speak, ElevatedPermissions elevated)
     {
