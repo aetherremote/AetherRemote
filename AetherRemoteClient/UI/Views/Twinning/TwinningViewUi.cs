@@ -69,7 +69,11 @@ public class TwinningViewUi(
                 
                 ImGui.SameLine(windowWidth);
                 ImGui.SetNextItemWidth(ImGui.GetFontSize() * 4);
-                ImGui.InputText("Pin", ref controller.UnlockPin, 4);
+               
+                controller.PinInput.Draw();
+                ImGui.SameLine();
+                SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
+                
                 SharedUserInterfaces.Tooltip(
                 [
                     "Your targets can use this PIN to unlock their appearance later if you provide it to them",

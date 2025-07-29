@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AetherRemoteClient.Ipc;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.UI.Components.Input;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
@@ -21,12 +22,10 @@ public class TransformationViewUiController(
     GlamourerIpc glamourer)
 {
     public string GlamourerCode = string.Empty;
-    
     public bool ApplyCustomization = true;
     public bool ApplyEquipment = false;
-    
     public bool PermanentTransformation = false;
-    public string UnlockPin = string.Empty;
+    public readonly FourDigitInput PinInput = new("TransformationInput");
 
     /// <summary>
     ///     Used to determine if all selected friends have permissions
@@ -110,16 +109,29 @@ public class TransformationViewUiController(
             
             if (applyType is GlamourerApplyFlags.Once)
                 applyType = GlamourerApplyFlags.All;
-            
-            var input = new TransformRequest
+
+            var request = new TransformRequest
             {
                 TargetFriendCodes = friendsListService.Selected.Select(friend => friend.FriendCode).ToList(),
                 GlamourerData = GlamourerCode,
-                GlamourerApplyType = applyType,
-                LockCode = PermanentTransformation ? UnlockPin : null
+                GlamourerApplyType = applyType
             };
             
-            var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.Transform, input);
+            if (PermanentTransformation)
+            {
+                var pin = PinInput.Value;
+                if (pin.Length is 4)
+                {
+                    request.LockCode = pin;
+                }
+                else
+                {
+                    Plugin.Log.Warning("[TransformationViewUiController] Pin is not 4 characters");
+                    return;
+                }
+            }
+            
+            var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.Transform, request);
             ActionResponseParser.Parse("Transformation", response);
         }
         catch (Exception e)

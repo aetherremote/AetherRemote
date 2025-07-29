@@ -4,6 +4,7 @@ using System.Linq;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.UI.Components.Input;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
@@ -26,9 +27,8 @@ public class BodySwapViewUiController(
     public bool SwapMods;
     public bool SwapMoodles;
     public bool SwapCustomizePlus;
-    
     public bool PermanentTransformation = false;
-    public string UnlockPin = string.Empty;
+    public readonly FourDigitInput PinInput = new("TransformationInput");
     
     /// <summary>
     ///     Used to determine if all selected friends have permissions
@@ -57,9 +57,22 @@ public class BodySwapViewUiController(
             {
                 TargetFriendCodes = friendsListService.Selected.Select(friend => friend.FriendCode).ToList(),
                 SwapAttributes = attributes,
-                SenderCharacterName = IncludeSelfInSwap ? player.Name.ToString() : null,
-                LockCode = PermanentTransformation ? UnlockPin : null
+                SenderCharacterName = IncludeSelfInSwap ? player.Name.ToString() : null
             };
+            
+            if (PermanentTransformation)
+            {
+                var pin = PinInput.Value;
+                if (pin.Length is 4)
+                {
+                    request.LockCode = pin;
+                }
+                else
+                {
+                    Plugin.Log.Warning("[BodySwapViewUiController] Pin is not 4 characters");
+                    return;
+                }
+            }
 
             NotificationHelper.Info("Beginning body swap, this will take a moment", string.Empty);
 

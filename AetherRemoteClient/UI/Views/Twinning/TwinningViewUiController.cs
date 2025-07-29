@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.UI.Components.Input;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
@@ -15,9 +16,8 @@ public class TwinningViewUiController(FriendsListService friendsListService, Net
     public bool SwapMods;
     public bool SwapMoodles;
     public bool SwapCustomizePlus;
-    
     public bool PermanentTransformation = false;
-    public string UnlockPin = string.Empty;
+    public readonly FourDigitInput PinInput = new("TransformationInput");
 
     /// <summary>
     ///     Used to determine if all selected friends have permissions
@@ -39,15 +39,28 @@ public class TwinningViewUiController(FriendsListService friendsListService, Net
             if (SwapCustomizePlus)
                 attributes |= CharacterAttributes.CustomizePlus;
             
-            var input = new TwinningRequest
+            var request = new TwinningRequest
             {
                 TargetFriendCodes = friendsListService.Selected.Select(friend => friend.FriendCode).ToList(),
                 SwapAttributes = attributes,
-                CharacterName = player.Name.ToString(),
-                LockCode = PermanentTransformation ? UnlockPin : null
+                CharacterName = player.Name.ToString()
             };
+            
+            if (PermanentTransformation)
+            {
+                var pin = PinInput.Value;
+                if (pin.Length is 4)
+                {
+                    request.LockCode = pin;
+                }
+                else
+                {
+                    Plugin.Log.Warning("[TwinningViewUiController] Pin is not 4 characters");
+                    return;
+                }
+            }
 
-            var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.Twinning, input);
+            var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.Twinning, request);
             ActionResponseParser.Parse("Twinning", response);
         }
         catch (Exception e)

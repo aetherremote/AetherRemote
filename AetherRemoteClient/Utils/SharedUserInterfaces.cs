@@ -27,7 +27,7 @@ public static class SharedUserInterfaces
     
     private static readonly SafeFontConfig DefaultFontConfig = new() { SizePx = MassiveFontSize };
     
-    public const int BigFontSize = 40;
+    public const int BigFontSize = 38;
     private static IFontHandle? _bigFont;
 
     private const int MediumFontSize = 24;
