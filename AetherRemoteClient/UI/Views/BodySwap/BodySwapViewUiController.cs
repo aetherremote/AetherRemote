@@ -96,6 +96,8 @@ public class BodySwapViewUiController(
                         // If there is a lock code present, attempt to lock
                         if (request.LockCode is not null)
                         {
+                            permanentTransformationData.Sender = "Yourself";
+                            permanentTransformationData.AlterationType = IdentityAlterationType.BodySwap;
                             permanentTransformationData.UnlockCode = request.LockCode;
                             await permanentTransformationManager.Lock(permanentTransformationData);
                         }

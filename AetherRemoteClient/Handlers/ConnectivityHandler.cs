@@ -83,7 +83,6 @@ public class ConnectivityHandler : IDisposable
         }
 
         _identityService.FriendCode = response.FriendCode;
-        _identityService.ClearAlterations();
 
         _friendsListService.Clear();
         foreach (var (friendCode, permissionsGrantedToFriend) in response.PermissionsGrantedToOthers)

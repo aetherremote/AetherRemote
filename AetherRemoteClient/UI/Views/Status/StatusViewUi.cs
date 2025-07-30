@@ -14,11 +14,9 @@ public class StatusViewUi(
     StatusViewUiController controller,
     IdentityService identityService,
     PermanentLockService permanentLockService,
+    TipService tipService,
     SpiralService spiralService) : IDrawable
 {
-    // UI Component
-    private readonly FourDigitInput _input = new("Status");
-    
     public void Draw()
     {
         ImGui.BeginChild("SettingsContent", Vector2.Zero, false, AetherRemoteStyle.ContentFlags);
@@ -43,10 +41,33 @@ public class StatusViewUi(
             SharedUserInterfaces.TextCentered("(click friend code to copy)", ImGuiColors.DalamudGrey);
         });
         
+        SharedUserInterfaces.ContentBox("StatusLogout", AetherRemoteStyle.PanelBackground, true, () =>
+        {
+            SharedUserInterfaces.MediumText("Welcome");
+            ImGui.TextUnformatted(tipService.CurrentTip);
+        });
+
+        if (SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.Plug, windowPadding, windowWidth))
+            controller.Disconnect();
+        
+        SharedUserInterfaces.Tooltip("Disconnect");
+        
         SharedUserInterfaces.ContentBox("StatusButtons", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.MediumText("Statuses");
-            ImGui.TextUnformatted("Below are all the statuses affecting you, if any");
+            ImGui.TextUnformatted("Various aspects of the plugin have lingering affects. You can find them below.");
+            
+            ImGui.SameLine();
+            SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
+            SharedUserInterfaces.Tooltip(
+                [
+                    "Only active statuses will be displayed. Such statuses include:",
+                    "- Being permanently transformed",
+                    "- Being transformed",
+                    "- Being body swapped",
+                    "- Being twinned",
+                    "- Being hypnotized"
+                ]);
         });
         
         if (permanentLockService.IsLocked)
@@ -63,8 +84,6 @@ public class StatusViewUi(
     
     private void RenderPermanentTransformationComponent(Vector2 windowPadding, float windowWidth)
     {
-        identityService.AddAlteration(IdentityAlterationType.Transformation, "Obedient Pet");
-        
         SharedUserInterfaces.ContentBox("StatusLock", AetherRemoteStyle.ElevatedBackground, true, () =>
         {
             SharedUserInterfaces.MediumText("Permanently Transformed");
@@ -79,15 +98,13 @@ public class StatusViewUi(
         var start = new Vector2(cursorPositionStartX ,endingCursorPosition - previousContextBoxSize.Y - windowPadding.Y * 2);
         ImGui.SetCursorPos(start);
         
-        _input.Draw();
+        controller.PinInput.Draw();
         SharedUserInterfaces.PopBigFont();
         
         ImGui.SameLine();
 
         if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Unlock, new Vector2(previousContextBoxSize.Y)))
-        {
-            // Do something
-        }
+            controller.Unlock();
         
         ImGui.SetCursorPosY(endingCursorPosition);
     }

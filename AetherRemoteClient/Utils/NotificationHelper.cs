@@ -22,7 +22,7 @@ public static class NotificationHelper
             Type = NotificationType.Info,
             Icon = INotificationIcon.From(FontAwesomeIcon.ExclamationCircle),
             Minimized = true,
-            InitialDuration = SuccessDuration,
+            InitialDuration = WarningDuration,
             ExtensionDurationSinceLastInterest = TimeSpan.Zero,
             MinimizedText = title,
             Title = title,

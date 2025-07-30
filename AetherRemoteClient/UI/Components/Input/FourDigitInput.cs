@@ -16,7 +16,7 @@ public class FourDigitInput(string id)
     /// <summary>
     ///     Gets the contents of the input
     /// </summary>
-    public string Value => string.Join("", _characters);
+    public string Value => string.Join(string.Empty, _characters);
 
     // Labels for all four character input fields
     private readonly string[] _ids = [string.Concat("##1", id), string.Concat("##2", id), string.Concat("##3", id), string.Concat("##4", id)];
@@ -37,6 +37,15 @@ public class FourDigitInput(string id)
         DrawInput(1, size); ImGui.SameLine();
         DrawInput(2, size); ImGui.SameLine();
         DrawInput(3, size);
+    }
+
+    /// <summary>
+    ///     Clears the contents of the input
+    /// </summary>
+    public void Clear()
+    {
+        for (var i = 0; i < _characters.Length; i++)
+            _characters[i] = string.Empty;
     }
 
     private void DrawInput(int index, float width)

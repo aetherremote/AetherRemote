@@ -20,7 +20,7 @@ public class IdentityService
     /// <summary>
     ///     The current alteration to the local character
     /// </summary>
-    public IdentityAlteration? Alteration { get; private set; }
+    public IdentityAlteration? Alteration;
 
     /// <summary>
     ///     Returns if the local player is being altered in any way
@@ -36,7 +36,7 @@ public class IdentityService
     }
 
     /// <summary>
-    ///     Adds an alteration to thecurrent identity
+    ///     Adds an alteration to the current identity
     /// </summary>
     public void AddAlteration(IdentityAlterationType type, string sender)
     {

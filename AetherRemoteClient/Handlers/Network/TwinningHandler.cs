@@ -58,6 +58,8 @@ public class TwinningHandler(
             if (request.LockCode is not null)
             {
                 // Save
+                permanentTransformationData.Sender = result.Value.NoteOrFriendCode;
+                permanentTransformationData.AlterationType = IdentityAlterationType.Twinning;
                 permanentTransformationData.UnlockCode = request.LockCode;
                 await permanentTransformationManager.Lock(permanentTransformationData);
             }

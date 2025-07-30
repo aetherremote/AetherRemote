@@ -13,6 +13,16 @@ namespace AetherRemoteClient.Domain;
 public class PermanentTransformationData
 {
     /// <summary>
+    ///     The name or note of the person who initiated the alteration
+    /// </summary>
+    public string Sender { get; set; } = string.Empty;
+    
+    /// <summary>
+    ///     The type of the alteration
+    /// </summary>
+    public IdentityAlterationType AlterationType { get; set; }
+    
+    /// <summary>
     ///     Glamourer data to be applied
     /// </summary>
     public JObject GlamourerData { get; set; } = new();

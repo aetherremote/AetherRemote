@@ -2,7 +2,6 @@ using System;
 using System.Threading.Tasks;
 using System.Timers;
 using AetherRemoteClient.Domain;
-using AetherRemoteClient.Domain.Events;
 using AetherRemoteClient.Ipc;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
@@ -31,12 +30,17 @@ public class PermanentTransformationManager : IDisposable
     /// <summary>
     ///     A timer that will be used so not as to spam glamourer with requests.
     /// </summary>
-    private readonly Timer _revertTimer = new(2000);
+    private readonly Timer _revertTimer = new(200);
 
     /// <summary>
     ///     The current saved appearance when the client was originally locked
     /// </summary>
     private JObject? _currentSavedAppearance;
+
+    /// <summary>
+    ///     Variable to track if AR is currently in the middle of reverting a locked character
+    /// </summary>
+    private bool _processingRevert;
     
     /// <summary>
     ///     <inheritdoc cref="PermanentTransformationManager"/>
@@ -58,7 +62,7 @@ public class PermanentTransformationManager : IDisposable
 
         _revertTimer.AutoReset = false;
         _revertTimer.Enabled = false;
-        _revertTimer.Elapsed += RevertToLockedTransformation;
+        _revertTimer.Elapsed += CheckForDifferences;
         
         _glamourer.LocalPlayerChanged += OnPlayerGlamourerUpdated;
     }
@@ -106,20 +110,20 @@ public class PermanentTransformationManager : IDisposable
     /// <summary>
     ///     Unlock the current permanent transformation
     /// </summary>
-    public void Unlock(string key)
+    public bool Unlock(string key)
     {
         // Already unlocked
         if (_permanentLockService.IsLocked is false)
         {
             Plugin.Log.Info("[PermanentTransformationManager] There is nothing to unlock, skipping...");
-            return;
+            return false;
         }
 
         // Try to unlock
         if (_permanentLockService.Unlock(key) is false)
         {
-            NotificationHelper.Warning("Incorrect Pin", $"\"{key}\" was not the correct pin, \"{_permanentLockService.CurrentLock}\" is correct");
-            return;
+            NotificationHelper.Warning("Incorrect Pin", string.Empty);
+            return false;
         }
         
         // Success, notify the client
@@ -128,6 +132,9 @@ public class PermanentTransformationManager : IDisposable
         // Remove the current permanent swap
         Plugin.Configuration.PermanentTransformations.Remove(_identityService.Character.FullName);
         Plugin.Configuration.Save();
+        
+        // Return
+        return true;
     }
 
     /// <summary>
@@ -164,6 +171,9 @@ public class PermanentTransformationManager : IDisposable
 
         // Apply the data
         await ApplySavedAppearance(data);
+        
+        // Mark who sent it
+        _identityService.AddAlteration(data.AlterationType, data.Sender);
 
         // Get the appearance to save the components
         if (await _glamourer.GetDesignComponentsAsync() is not { } components)
@@ -178,6 +188,82 @@ public class PermanentTransformationManager : IDisposable
         // Set the current saved appearance to be the components
         _currentSavedAppearance = components;
     }
+    
+    /// <summary>
+    ///     Handle the event from glamourer updating
+    /// </summary>
+    private void OnPlayerGlamourerUpdated(object? sender, EventArgs args)
+    {
+        // Skip starting the timer if there is no lock
+        if (_permanentLockService.IsLocked is false)
+            return;
+        
+        // If we are in the middle of reverting, there is no need to process any differences
+        if (_processingRevert)
+            return;
+        
+        // Restart the timer
+        _revertTimer.Stop();
+        _revertTimer.Start();
+    }
+    
+    /// <summary>
+    ///     Checks to see if the local character has differed from the local saved
+    /// </summary>
+    private async void CheckForDifferences(object? sender, ElapsedEventArgs e)
+    {
+        try
+        {
+            // If we are in the middle of reverting, there is no need to process any differences
+            if (_processingRevert)
+                return;
+            
+            // Get the design as components
+            if (await _glamourer.GetDesignComponentsAsync().ConfigureAwait(false) is not { } components)
+            {
+                Plugin.Log.Warning("[PermanentTransformationManager] Could not get design components");
+                return;
+            }
+
+            // Remove the fields we don't want to check
+            RemoveUnwantedFields(components);
+
+            // Check to see if there are differences and exit if there are none
+            if (JToken.DeepEquals(_currentSavedAppearance, components))
+            {
+                Plugin.Log.Info("[PermanentTransformationManager] Local client changed, but not anything outward on their appearance");
+                return;
+            }
+            
+            // A change has been detected, reverting the player
+            Plugin.Log.Info("Local player attempted to reload with a permanent transformation, reverting...");
+
+            // Mark that a revert is now in progress
+            _processingRevert = true;
+            
+            // We need to revert to the game to clear any advanced dyes
+            await _glamourer.RevertToGame();
+            
+            // Get the local saved permanent transformation data
+            if (Plugin.Configuration.PermanentTransformations.TryGetValue(_identityService.Character.FullName, out var data) is false)
+            {
+                // No local character data
+                Plugin.Log.Warning("[PermanentTransformationManager] Nothing saved for local character");
+                return;
+            }
+            
+            // Apply the saved data
+            await ApplySavedAppearance(data);
+            
+            // Mark that we have finished reverting
+            _processingRevert = false;
+        }
+        catch (Exception ex)
+        {
+            Plugin.Log.Warning($"Unexpected issue enforcing a permanent transformation {ex.Message}");
+        }
+    }
+    
     
     /// <summary>
     ///     Applies a given <see cref="PermanentTransformationData"/> to the client
@@ -227,64 +313,6 @@ public class PermanentTransformationManager : IDisposable
         }
     }
     
-    private void OnPlayerGlamourerUpdated(object? sender, GlamourerStateChangedEventArgs args)
-    {
-        // Skip starting the timer if there is no lock
-        if (_permanentLockService.IsLocked is false)
-        {
-            Plugin.Log.Verbose("[PermanentTransformationManager] Skipping update from glamourer because local player is not locked");
-            return;
-        }
-        
-        // Restart the timer
-        _revertTimer.Stop();
-        _revertTimer.Start();
-    }
-    
-    /// <summary>
-    ///     Reverts the local player to the locked appearance 
-    /// </summary>
-    private async void RevertToLockedTransformation(object? sender, ElapsedEventArgs e)
-    {
-        try
-        {
-            // Get the design as components
-            if (await _glamourer.GetDesignComponentsAsync().ConfigureAwait(false) is not { } components)
-            {
-                Plugin.Log.Warning("[PermanentTransformationManager] Could not get design components");
-                return;
-            }
-
-            // Remove the fields we don't want to check
-            RemoveUnwantedFields(components);
-
-            // Check to see if there are differences and exit if there are none
-            if (JToken.DeepEquals(_currentSavedAppearance, components))
-            {
-                Plugin.Log.Info("[PermanentTransformationManager] Local client changed, but not anything outward on their appearance");
-                return;
-            }
-            
-            // A change has been detected, reverting the player
-            Plugin.Log.Info("Local player attempted to reload with a permanent transformation, reverting...");
-
-            
-            // Get the local saved permanent transformation data
-            if (Plugin.Configuration.PermanentTransformations.TryGetValue(_identityService.Character.FullName, out var data) is false)
-            {
-                // No local character data
-                Plugin.Log.Warning("[PermanentTransformationManager] No permanent transformation data set for local character");
-                return;
-            }
-            
-            await ApplySavedAppearance(data);
-        }
-        catch (Exception ex)
-        {
-            Plugin.Log.Warning($"Unexpected issue enforcing a permanent transformation {ex.Message}");
-        }
-    }
-    
     /// <summary>
     ///     Removes unwanted fields from the JSON object returned from glamourer's <see cref="GlamourerIpc"/>
     /// </summary>
@@ -304,7 +332,7 @@ public class PermanentTransformationManager : IDisposable
 
     public void Dispose()
     {
-        _revertTimer.Elapsed -= RevertToLockedTransformation;
+        _revertTimer.Elapsed -= CheckForDifferences;
         _glamourer.LocalPlayerResetOrReapply -= OnPlayerGlamourerUpdated;
         GC.SuppressFinalize(this);
     }

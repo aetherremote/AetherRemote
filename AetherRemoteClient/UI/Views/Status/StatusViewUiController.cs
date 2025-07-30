@@ -2,20 +2,22 @@ using System;
 using AetherRemoteClient.Ipc;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
-using ImGuiNET;
+using AetherRemoteClient.UI.Components.Input;
 
 namespace AetherRemoteClient.UI.Views.Status;
 
-public class StatusViewUiController(NetworkService networkService, IdentityService identityService, GlamourerIpc glamourer, PermanentTransformationManager permanentTransformationManager)
+public class StatusViewUiController(
+    NetworkService networkService,
+    IdentityService identityService,
+    GlamourerIpc glamourer,
+    PermanentTransformationManager permanentTransformationManager)
 {
-    public string UnlockPin = "";
-    public readonly string[] KeyCharacters = [string.Empty, string.Empty, string.Empty, string.Empty];
+    public readonly FourDigitInput PinInput = new("StatusInput");
     
     /// <summary>
     ///     Attempt to unlock the client's appearance
     /// </summary>
-    public void Unlock() => permanentTransformationManager.Unlock(UnlockPin);
-    
+    public void Unlock() => permanentTransformationManager.Unlock(PinInput.Value);
     
     public async void Disconnect()
     {

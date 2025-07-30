@@ -25,12 +25,11 @@ public class PermanentLockService
         if (CurrentLock == string.Empty)
         {
             CurrentLock = key;
-            Plugin.Log.Info($"[PermanentLockService] Successfully set key to {key}");
             return true;
         }
         
         // Cannot set a new lock because one already exists
-        Plugin.Log.Info($"[PermanentLockService] CurrentLock is already set, cannot add new key of {key}");
+        Plugin.Log.Info("[PermanentLockService] CurrentLock is already set");
         return false;
     }
 
@@ -46,7 +45,7 @@ public class PermanentLockService
             return true;
         }
         
-        // Current key did not match
+        // The current key did not match
         Plugin.Log.Info($"[PermanentLockService] Incorrect key {key}");
         return false;
     }

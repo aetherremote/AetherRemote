@@ -64,16 +64,22 @@ public class TransformHandler(
         // If there is a lock, save the permanent transformation data
         if (request.LockCode is not null)
         {
+            // Wait a second just in case
+            await Task.Delay(1000).ConfigureAwait(false);
+            
             // Get the components of what we just applied
             if (await glamourerIpc.GetDesignComponentsAsync().ConfigureAwait(false) is not { } components)
             {
                 Plugin.Log.Warning("[TransformHandler] Unable to save components for locking");
+                await glamourerIpc.RevertToAutomation().ConfigureAwait(false);
                 return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
             }
             
             // Adds the parts we want to save
             var permanent = new PermanentTransformationData
             {
+                Sender = result.Value.NoteOrFriendCode,
+                AlterationType = IdentityAlterationType.Transformation,
                 GlamourerData = components,
                 GlamourerApplyFlags = request.GlamourerApplyType,
                 UnlockCode = request.LockCode

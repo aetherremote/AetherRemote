@@ -9,7 +9,7 @@ namespace AetherRemoteClient.Domain.Attributes;
 /// <summary>
 ///     Handles storing and applying of glamourer attributes
 /// </summary>
-public class GlamourerAttribute(GlamourerIpc glamourerIpc) : ICharacterAttribute
+public class GlamourerAttribute(GlamourerIpc glamourerIpc, ushort objectIndex) : ICharacterAttribute
 {
     // Instantiated
     private JObject _glamourerData = new();
@@ -19,7 +19,7 @@ public class GlamourerAttribute(GlamourerIpc glamourerIpc) : ICharacterAttribute
     /// </summary>
     public async Task<bool> Store()
     {
-        if (await glamourerIpc.GetDesignComponentsAsync().ConfigureAwait(false) is { } components)
+        if (await glamourerIpc.GetDesignComponentsAsync(objectIndex).ConfigureAwait(false) is { } components)
         {
             _glamourerData = components;
             return true;

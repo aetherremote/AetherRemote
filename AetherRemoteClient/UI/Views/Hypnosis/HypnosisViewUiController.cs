@@ -11,6 +11,7 @@ using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Hypnosis;
+using ImGuiNET;
 
 namespace AetherRemoteClient.UI.Views.Hypnosis;
 
@@ -111,7 +112,12 @@ public class HypnosisViewUiController
 
     public void RenderPreviewSpiral()
     {
-        
+        ImGui.BeginGroup();
+        ImGui.TextUnformatted("Preview Disabled");
+        ImGui.TextUnformatted("Will be re-enabled");
+        ImGui.TextUnformatted("with the following");
+        ImGui.TextUnformatted("update to hypnosis");//
+        ImGui.EndGroup();
     }
 
     public void PreviewSpiral()

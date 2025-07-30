@@ -79,7 +79,7 @@ public class ModManager : IDisposable
         var assimilatedAttributes = new List<ICharacterAttribute>();
 
         // Store Glamourer always
-        var glamourerAttribute = new GlamourerAttribute(_glamourer);
+        var glamourerAttribute = new GlamourerAttribute(_glamourer, gameObject.ObjectIndex);
         if (await glamourerAttribute.Store().ConfigureAwait(false))
             assimilatedAttributes.Add(glamourerAttribute);
 
@@ -127,8 +127,13 @@ public class ModManager : IDisposable
     {
         try
         {
+            // Delete the AR customize set
             await _customizePlus.DeleteCustomize();
+            
+            // Get the current collection
             var current = await _penumbra.GetCollection().ConfigureAwait(false);
+            
+            // Remove any AR created mods from the collection
             await _penumbra.CallRemoveTemporaryMod(current).ConfigureAwait(false);
         }
         catch (Exception exception)
