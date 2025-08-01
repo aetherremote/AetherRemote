@@ -34,6 +34,12 @@ public class GlamourerAttribute(GlamourerIpc glamourerIpc, ushort objectIndex) :
     /// </summary>
     public async Task<bool> Apply(PermanentTransformationData data)
     {
+        if (await glamourerIpc.RevertToGame() is false)
+        {
+            Plugin.Log.Warning("[ModAttribute] Could not revert to game");
+            return false;
+        }
+        
         if (await glamourerIpc.ApplyDesignAsync(_glamourerData, GlamourerApplyFlags.All) is false)
         {
             Plugin.Log.Warning("[ModAttribute] Could not apply glamourer data");
@@ -41,7 +47,6 @@ public class GlamourerAttribute(GlamourerIpc glamourerIpc, ushort objectIndex) :
         }
         
         data.GlamourerData = _glamourerData;
-        data.GlamourerApplyFlags = GlamourerApplyFlags.All;
         return true;
     }
 }

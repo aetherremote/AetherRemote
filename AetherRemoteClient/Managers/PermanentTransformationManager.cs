@@ -5,6 +5,7 @@ using AetherRemoteClient.Domain;
 using AetherRemoteClient.Ipc;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
+using AetherRemoteCommon.Domain.Enums;
 using Newtonsoft.Json.Linq;
 
 namespace AetherRemoteClient.Managers;
@@ -271,7 +272,7 @@ public class PermanentTransformationManager : IDisposable
     private async Task ApplySavedAppearance(PermanentTransformationData data)
     {
         // Always apply glamourer
-        await _glamourer.ApplyDesignAsync(data.GlamourerData, data.GlamourerApplyFlags).ConfigureAwait(false);
+        await _glamourer.ApplyDesignAsync(data.GlamourerData, GlamourerApplyFlags.All).ConfigureAwait(false);
 
         // Apply Mods
         if (data.ModPathData is not null)

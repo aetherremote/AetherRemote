@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using AetherRemoteClient.Ipc;
-using AetherRemoteCommon.Domain.Enums;
 using Newtonsoft.Json.Linq;
 
 namespace AetherRemoteClient.Domain;
@@ -26,11 +25,6 @@ public class PermanentTransformationData
     ///     Glamourer data to be applied
     /// </summary>
     public JObject GlamourerData { get; set; } = new();
-    
-    /// <summary>
-    ///     How should this transformation be applied?
-    /// </summary>
-    public GlamourerApplyFlags GlamourerApplyFlags { get; set; }
     
     /// <summary>
     ///     Mod path data to be applied

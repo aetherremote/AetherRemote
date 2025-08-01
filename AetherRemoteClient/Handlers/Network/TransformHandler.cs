@@ -81,7 +81,6 @@ public class TransformHandler(
                 Sender = result.Value.NoteOrFriendCode,
                 AlterationType = IdentityAlterationType.Transformation,
                 GlamourerData = components,
-                GlamourerApplyFlags = request.GlamourerApplyType,
                 UnlockCode = request.LockCode
             };
 
