@@ -34,15 +34,20 @@ public class GlamourerAttribute(GlamourerIpc glamourerIpc, ushort objectIndex) :
     /// </summary>
     public async Task<bool> Apply(PermanentTransformationData data)
     {
-        if (await glamourerIpc.RevertToGame() is false)
+        // Get local character data
+        if (await glamourerIpc.GetDesignComponentsAsync().ConfigureAwait(false) is not { } local)
         {
-            Plugin.Log.Warning("[ModAttribute] Could not revert to game");
+            Plugin.Log.Warning("[GlamourerAttribute] Unable to get local player design components");
             return false;
         }
         
+        // Merge the required advanced dyes to reset
+        GlamourerIpc.ModifyJObjectToRevertExistingAdvancedDyes(local, _glamourerData);
+        
+        // Apply the newly converted design
         if (await glamourerIpc.ApplyDesignAsync(_glamourerData, GlamourerApplyFlags.All) is false)
         {
-            Plugin.Log.Warning("[ModAttribute] Could not apply glamourer data");
+            Plugin.Log.Warning("[GlamourerAttribute] Could not apply glamourer data");
             return false;
         }
         

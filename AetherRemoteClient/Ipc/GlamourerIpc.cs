@@ -1,4 +1,7 @@
 using System;
+using System.IO;
+using System.IO.Compression;
+using System.Text;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain.Events;
 using AetherRemoteClient.Domain.Interfaces;
@@ -95,7 +98,7 @@ public class GlamourerIpc : IExternalPlugin, IDisposable
             {
                 try
                 {
-                    var result = _revertState.Invoke(index);
+                    var result = _revertState.Invoke(index, 0, ApplyFlag.Equipment | ApplyFlag.Customization | ApplyFlag.Once);
                     if (result is GlamourerApiEc.Success)
                         return true;
 
@@ -141,7 +144,7 @@ public class GlamourerIpc : IExternalPlugin, IDisposable
         Plugin.Log.Warning($"[GlamourerIpc] Unable to revert index {index} because glamourer is not available");
         return false;
     }
-
+    
     /// <summary>
     ///     Applies a given design to an object index
     /// </summary>
@@ -320,6 +323,95 @@ public class GlamourerIpc : IExternalPlugin, IDisposable
         {
             Plugin.Log.Error($"[GlamourerIpc] Unexpectedly failed processing glamourer state finalization, {e.Message}");
         }
+    }
+
+    /// <summary>
+    ///     Add any advanced dyes from an old JObject to a new JObject with the revert property set to true.
+    ///     This will only add dyes not present in the new JObject.
+    /// </summary>
+    public static void ModifyJObjectToRevertExistingAdvancedDyes(JObject existing, JObject target)
+    {
+        // Get the materials section of the old JObject
+        if (existing["Materials"] is not JObject existingMaterials)
+        {
+            Plugin.Log.Warning("[GlamourerIpc] Existing JObject does not contain required field Materials");
+            return;
+        }
+
+        // Get the materials section of the new JObject
+        if (target["Materials"] is not JObject targetMaterials)
+        {
+            Plugin.Log.Warning("[GlamourerIpc] Target JObject does not contain required field Materials");
+            return;
+        }
+
+        // Iterate over all the advanced dyes from the existing JObject
+        foreach (var material in existingMaterials.Properties())
+        {
+            // Target has the material, which will always get updated
+            if (targetMaterials.ContainsKey(material.Name))
+                continue;
+            
+            // Copy to a new object to avoid referencing even though this is just a JObject
+            if (material.Value.DeepClone() is not JObject copy)
+            {
+                Plugin.Log.Warning($"[GlamourerIpc] Could not clone material {material.Value}");
+                continue;
+            }
+
+            // Set the revert field to be true
+            copy["Revert"] = true;
+
+            // Assign that newly created material (which contains pending revert data) to the target properties.
+            targetMaterials[material.Name] = copy;
+        }
+    }
+
+    /// <summary>
+    ///     Converts a glamourer string of character data into a JObject
+    /// </summary>
+    public static JObject? ConvertGlamourerBase64StringToJObject(string base64String)
+    {
+        try
+        {
+            // Convert from string64 to bytes
+            var compressedBytes = Convert.FromBase64String(base64String);
+        
+            // Glamourer compresses bytes, see https://github.com/Ottermandias/Glamourer/blob/main/Glamourer/Api/StateApi.cs#L311
+            var decompressedBytes = Decompress(compressedBytes);
+        
+            // Convert to raw JSON string
+            var raw = Encoding.UTF8.GetString(decompressedBytes);
+        
+            // Parse
+            return JObject.Parse(raw);
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Warning($"[GlamourerIpc] Unexpectedly failed converting glamourer base 64 string, {e}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    ///     <see href="https://github.com/Ottermandias/Glamourer/blob/d6df9885dcc15940e1263d50533b1afd3d6c05a8/Glamourer/Utility/CompressExtensions.cs#L32-L42">Decompression method matching glamourer</see>
+    /// </summary>
+    private static byte[] Decompress(byte[] compressed)
+    {
+        // Add the bytes to a stream
+        using var stream = new MemoryStream(compressed, 1, compressed.Length - 1);
+        
+        // Decompress the stream 
+        using var zip = new GZipStream(stream, CompressionMode.Decompress);
+        
+        // Create a results buffer
+        using var results = new MemoryStream();
+        
+        // Copy the decompressed bytes to the new buffer
+        zip.CopyTo(results);
+        
+        // Convert stream to byte array and return
+        return results.ToArray();
     }
 
     public void Dispose()

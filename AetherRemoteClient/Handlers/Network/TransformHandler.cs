@@ -53,8 +53,25 @@ public class TransformHandler(
         if (result.Value is not { } friend)
             return ActionResultBuilder.Fail(ActionResultEc.ValueNotSet);
         
-        // Attempt to apply
-        if (await glamourerIpc.ApplyDesignAsync(request.GlamourerData, request.GlamourerApplyType).ConfigureAwait(false) is false)
+        // Convert to JObject
+        if (GlamourerIpc.ConvertGlamourerBase64StringToJObject(request.GlamourerData) is not { } converted)
+        {
+            Plugin.Log.Warning("[GlamourerIpc] Unable to serialize string JObject");
+            return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
+        }
+        
+        // Get local character data
+        if (await glamourerIpc.GetDesignComponentsAsync().ConfigureAwait(false) is not { } local)
+        {
+            Plugin.Log.Warning("[GlamourerIpc] Unable to get local player design components");
+            return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
+        }
+        
+        // Merge the required advanced dyes to reset
+        GlamourerIpc.ModifyJObjectToRevertExistingAdvancedDyes(local, converted);
+        
+        // Apply the newly converted design
+        if (await glamourerIpc.ApplyDesignAsync(converted, request.GlamourerApplyType).ConfigureAwait(false) is false)
         {
             Plugin.Log.Warning($"[TransformHandler] Failed to process transformation request from {friend.NoteOrFriendCode}");
             logService.Custom($"{friend.NoteOrFriendCode} tried to transform you, but an unexpected error occured.");
@@ -64,23 +81,12 @@ public class TransformHandler(
         // If there is a lock, save the permanent transformation data
         if (request.LockCode is not null)
         {
-            // Wait a second just in case
-            await Task.Delay(1000).ConfigureAwait(false);
-            
-            // Get the components of what we just applied
-            if (await glamourerIpc.GetDesignComponentsAsync().ConfigureAwait(false) is not { } components)
-            {
-                Plugin.Log.Warning("[TransformHandler] Unable to save components for locking");
-                await glamourerIpc.RevertToAutomation().ConfigureAwait(false);
-                return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
-            }
-            
             // Adds the parts we want to save
             var permanent = new PermanentTransformationData
             {
                 Sender = result.Value.NoteOrFriendCode,
                 AlterationType = IdentityAlterationType.Transformation,
-                GlamourerData = components,
+                GlamourerData = converted,
                 UnlockCode = request.LockCode
             };
 
