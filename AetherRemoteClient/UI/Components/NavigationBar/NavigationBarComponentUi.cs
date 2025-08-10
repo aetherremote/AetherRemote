@@ -2,8 +2,8 @@ using System.Numerics;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using ImGuiNET;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace AetherRemoteClient.UI.Components.NavigationBar;

@@ -2,7 +2,7 @@ using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace AetherRemoteClient.UI.Views.Login;

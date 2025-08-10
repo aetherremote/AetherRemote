@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Events;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 
 namespace AetherRemoteClient.Services;
 

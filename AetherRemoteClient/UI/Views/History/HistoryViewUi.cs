@@ -1,7 +1,7 @@
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Utils;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 
 namespace AetherRemoteClient.UI.Views.History;
 

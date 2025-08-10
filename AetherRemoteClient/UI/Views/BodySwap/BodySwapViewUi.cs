@@ -2,12 +2,11 @@ using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.Friends;
-using AetherRemoteClient.UI.Components.Input;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums.Permissions;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
-using ImGuiNET;
 
 namespace AetherRemoteClient.UI.Views.BodySwap;
 

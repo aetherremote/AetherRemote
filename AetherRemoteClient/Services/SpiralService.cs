@@ -5,7 +5,7 @@ using System.Timers;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 
 namespace AetherRemoteClient.Services;
 
@@ -134,7 +134,7 @@ public class SpiralService : IDisposable
         }
 
         var finalColor = ImGui.ColorConvertFloat4ToU32(_currentSpiral.Color);
-        drawList.AddImageQuad(spiral.ImGuiHandle, rotated[0], rotated[1], rotated[2], rotated[3], _spiralUv[0],
+        drawList.AddImageQuad(spiral.Handle, rotated[0], rotated[1], rotated[2], rotated[3], _spiralUv[0],
             _spiralUv[1], _spiralUv[2], _spiralUv[3], finalColor);
 
         SharedUserInterfaces.PushMassiveFont();

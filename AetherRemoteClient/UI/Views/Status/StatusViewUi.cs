@@ -1,18 +1,14 @@
 using System;
-using System.IO;
-using System.IO.Compression;
 using System.Numerics;
-using System.Text;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Ipc;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.Input;
 using AetherRemoteClient.Utils;
-using AetherRemoteCommon.Domain.Enums;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
-using ImGuiNET;
 using Newtonsoft.Json.Linq;
 
 namespace AetherRemoteClient.UI.Views.Status;

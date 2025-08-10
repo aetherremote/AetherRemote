@@ -398,7 +398,7 @@ public class CustomizePlusIpc : IExternalPlugin, IDisposable
     }
     
     // Updating Customize+ while the plugin is active will cause the assembly reference to become stale
-    private void PluginInterfaceOnActivePluginsChanged(PluginListInvalidationKind kind, bool _)
+    private void PluginInterfaceOnActivePluginsChanged(IActivePluginsChangedEventArgs args)
     {
         TestIpcAvailabilityAsync();
     }

@@ -11,7 +11,7 @@ using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Hypnosis;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 
 namespace AetherRemoteClient.UI.Views.Hypnosis;
 

@@ -2,9 +2,9 @@ using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Ipc;
 using AetherRemoteClient.Utils;
+using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
-using ImGuiNET;
 
 namespace AetherRemoteClient.UI.Views.Settings;
 
