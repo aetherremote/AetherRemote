@@ -15,11 +15,10 @@ namespace AetherRemoteClient.Handlers.Network;
 ///     handles a <see cref="TwinningForwardedRequest"/>
 /// </summary>
 public class TwinningHandler(
+    CharacterTransformationService characterTransformationService,
     IdentityService identityService,
     LogService logService,
-    PermanentLockService permanentLockService,
     PermissionManager permissionManager,
-    ModManager modManager,
     PermanentTransformationManager permanentTransformationManager)
 {
     // Const
@@ -32,7 +31,7 @@ public class TwinningHandler(
     {
         Plugin.Log.Verbose($"{request}");
         
-        if (permanentLockService.IsLocked)
+        if (permanentTransformationManager.IsPermanentTransformed)
             return ActionResultBuilder.Fail(ActionResultEc.ClientPermanentlyTransformed);
         
         var primary = request.SwapAttributes.ToPrimaryPermission();
@@ -44,29 +43,25 @@ public class TwinningHandler(
         
         var permissions = new UserPermissions(primary, SpeakPermissions2.None, elevated);
         
-        var result = permissionManager.GetAndCheckSenderByUserPermissions(Operation, request.SenderFriendCode, permissions);
-        if (result.Result is not ActionResultEc.Success)
-            return ActionResultBuilder.Fail(result.Result);
+        var friendActionResult = permissionManager.GetAndCheckSenderByUserPermissions(Operation, request.SenderFriendCode, permissions);
+        if (friendActionResult.Result is not ActionResultEc.Success)
+            return ActionResultBuilder.Fail(friendActionResult.Result);
         
-        if (result.Value is not { } friend)
+        if (friendActionResult.Value is not { } friend)
             return ActionResultBuilder.Fail(ActionResultEc.ValueNotSet);
 
-        // Actually apply glamourer, mods, etc...
-        if (await modManager.Assimilate(request.CharacterName, request.SwapAttributes) is { } permanentTransformationData)
+        if (request.LockCode is not null)
         {
-            // If there is a lock, save the permanent transformation data
-            if (request.LockCode is not null)
-            {
-                // Save
-                permanentTransformationData.Sender = result.Value.NoteOrFriendCode;
-                permanentTransformationData.AlterationType = IdentityAlterationType.Twinning;
-                permanentTransformationData.UnlockCode = request.LockCode;
-                await permanentTransformationManager.Lock(permanentTransformationData);
-            }
-            
-            // Set your new identity
-            identityService.AddAlteration(IdentityAlterationType.Twinning, friend.NoteOrFriendCode);
+            await permanentTransformationManager.ApplyPermanentCharacterTransformation(friend.NoteOrFriendCode,
+                request.LockCode, request.CharacterName, request.SwapAttributes);
         }
+        else
+        {
+            await characterTransformationService.ApplyCharacterTransformation(request.CharacterName, request.SwapAttributes);
+        }
+        
+        // Set your new identity
+        identityService.AddAlteration(IdentityAlterationType.Twinning, friend.NoteOrFriendCode);
         
         // Log success
         logService.Custom($"{friend.NoteOrFriendCode} twinned you with {request.CharacterName}");

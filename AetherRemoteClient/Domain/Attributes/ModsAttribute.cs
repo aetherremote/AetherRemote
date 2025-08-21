@@ -1,15 +1,15 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AetherRemoteClient.Dependencies;
 using AetherRemoteClient.Domain.Interfaces;
-using AetherRemoteClient.Ipc;
 
 namespace AetherRemoteClient.Domain.Attributes;
 
 /// <summary>
 ///     Handles storing and applying of mod attributes
 /// </summary>
-public class ModsAttribute(PenumbraIpc penumbraIpc, Guid collection, ushort objectIndex) : ICharacterAttribute
+public class ModsAttribute(PenumbraDependency penumbraDependency, Guid collection, ushort objectIndex) : ICharacterAttribute
 {
     // Instantiated
     private Dictionary<string, string> _modifiedPaths = [];
@@ -20,8 +20,8 @@ public class ModsAttribute(PenumbraIpc penumbraIpc, Guid collection, ushort obje
     /// </summary>
     public async Task<bool> Store()
     {
-        _modifiedPaths = await penumbraIpc.GetGameObjectResourcePaths(objectIndex).ConfigureAwait(false);
-        _metaData = await penumbraIpc.GetMetaManipulations(objectIndex).ConfigureAwait(false);
+        _modifiedPaths = await penumbraDependency.GetGameObjectResourcePaths(objectIndex).ConfigureAwait(false);
+        _metaData = await penumbraDependency.GetMetaManipulations(objectIndex).ConfigureAwait(false);
         return true;
     }
     
@@ -30,7 +30,7 @@ public class ModsAttribute(PenumbraIpc penumbraIpc, Guid collection, ushort obje
     /// </summary>
     public async Task<bool> Apply(PermanentTransformationData data)
     {
-        if (await penumbraIpc.AddTemporaryMod(collection, _modifiedPaths, _metaData).ConfigureAwait(false) is false)
+        if (await penumbraDependency.AddTemporaryMod(collection, _modifiedPaths, _metaData).ConfigureAwait(false) is false)
         {
             Plugin.Log.Warning("[ModAttribute] Could not apply mods");
             return false;

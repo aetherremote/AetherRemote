@@ -1,15 +1,19 @@
 using System;
-using AetherRemoteClient.Ipc;
+using AetherRemoteClient.Dependencies;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.Input;
+using AetherRemoteCommon.Domain.Enums;
+using Dalamud.Bindings.ImGui;
+using Newtonsoft.Json.Linq;
 
 namespace AetherRemoteClient.UI.Views.Status;
 
 public class StatusViewUiController(
-    NetworkService networkService,
+    GlamourerDependency g,
+    NetworkManager networkManager,
     IdentityService identityService,
-    GlamourerIpc glamourer,
+    GlamourerDependency glamourer,
     PermanentTransformationManager permanentTransformationManager)
 {
     public readonly FourDigitInput PinInput = new("StatusInput");
@@ -17,13 +21,14 @@ public class StatusViewUiController(
     /// <summary>
     ///     Attempt to unlock the client's appearance
     /// </summary>
-    public void Unlock() => permanentTransformationManager.Unlock(PinInput.Value);
+    public void Unlock() => permanentTransformationManager.TryClearPermanentTransformation(PinInput.Value);
+    // TODO: Make this async or handled properly
     
     public async void Disconnect()
     {
         try
         {
-            await networkService.StopAsync().ConfigureAwait(false);
+            await networkManager.StopAsync().ConfigureAwait(false);
         }
         catch (Exception e)
         {

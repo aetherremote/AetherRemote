@@ -1,6 +1,9 @@
 using System.Threading.Tasks;
+using AetherRemoteClient.Dependencies;
+using AetherRemoteClient.Domain.Enums;
 using AetherRemoteClient.Domain.Interfaces;
-using AetherRemoteClient.Ipc;
+using AetherRemoteClient.Services;
+using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
 using Newtonsoft.Json.Linq;
 
@@ -9,7 +12,7 @@ namespace AetherRemoteClient.Domain.Attributes;
 /// <summary>
 ///     Handles storing and applying of glamourer attributes
 /// </summary>
-public class GlamourerAttribute(GlamourerIpc glamourerIpc, ushort objectIndex) : ICharacterAttribute
+public class GlamourerAttribute(CharacterTransformationService characterTransformationService, GlamourerDependency glamourerDependency, ushort objectIndex) : ICharacterAttribute
 {
     // Instantiated
     private JObject _glamourerData = new();
@@ -19,7 +22,7 @@ public class GlamourerAttribute(GlamourerIpc glamourerIpc, ushort objectIndex) :
     /// </summary>
     public async Task<bool> Store()
     {
-        if (await glamourerIpc.GetDesignComponentsAsync(objectIndex).ConfigureAwait(false) is { } components)
+        if (await glamourerDependency.GetDesignComponentsAsync(objectIndex).ConfigureAwait(false) is { } components)
         {
             _glamourerData = components;
             return true;
@@ -34,24 +37,21 @@ public class GlamourerAttribute(GlamourerIpc glamourerIpc, ushort objectIndex) :
     /// </summary>
     public async Task<bool> Apply(PermanentTransformationData data)
     {
-        // Get local character data
-        if (await glamourerIpc.GetDesignComponentsAsync().ConfigureAwait(false) is not { } local)
+        var result = await characterTransformationService.ApplyGenericTransformation(_glamourerData, GlamourerApplyFlags.All);
+        if (result.Success is not ApplyGenericTransformationErrorCode.Success)
         {
-            Plugin.Log.Warning("[GlamourerAttribute] Unable to get local player design components");
+            // TODO: Logging
+            return false;
+        }
+
+        if (GlamourerDesignHelper.FromJObject(result.GlamourerJObject) is not { } design)
+        {
+            // TODO: Logging
             return false;
         }
         
-        // Merge the required advanced dyes to reset
-        GlamourerIpc.ModifyJObjectToRevertExistingAdvancedDyes(local, _glamourerData);
-        
-        // Apply the newly converted design
-        if (await glamourerIpc.ApplyDesignAsync(_glamourerData, GlamourerApplyFlags.All) is false)
-        {
-            Plugin.Log.Warning("[GlamourerAttribute] Could not apply glamourer data");
-            return false;
-        }
-        
-        data.GlamourerData = _glamourerData;
+        data.GlamourerDesign = design;
+        data.GlamourerApplyType = GlamourerApplyFlags.All;
         return true;
     }
 }

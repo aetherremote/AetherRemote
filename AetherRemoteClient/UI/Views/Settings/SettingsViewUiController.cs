@@ -18,7 +18,8 @@ public class SettingsViewUiController(ActionQueueService actionQueueService, Ide
             return;
 
         // Unlock permanent transformations
-        permanentTransformationManager.ForceUnlock();
+        // TODO: Make this async or hanlded properly
+        permanentTransformationManager.ForceClearPermanentTransformation();
         
         // Stop spirals
         spiralService.StopCurrentSpiral();

@@ -1,5 +1,6 @@
 using System.Numerics;
 using AetherRemoteClient.Domain;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
@@ -8,7 +9,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 
 namespace AetherRemoteClient.UI.Components.NavigationBar;
 
-public class NavigationBarComponentUi(FriendsListService friendsListService, NetworkService networkService, ViewService viewService)
+public class NavigationBarComponentUi(FriendsListService friendsListService, NetworkManager networkManager, ViewService viewService)
 {
     // Const
     private static readonly Vector2 AlignButtonTextLeft = new(0, 0.5f);
@@ -27,7 +28,7 @@ public class NavigationBarComponentUi(FriendsListService friendsListService, Net
         {
             ImGui.PushStyleVar(ImGuiStyleVar.ButtonTextAlign, AlignButtonTextLeft);
 
-            if (networkService.Connection.State is HubConnectionState.Connected)
+            if (networkManager.Connection.State is HubConnectionState.Connected)
             {
                 ImGui.TextUnformatted("General");
                 NavBarButton(FontAwesomeIcon.User, "Status", View.Status, size, offset, spacing);

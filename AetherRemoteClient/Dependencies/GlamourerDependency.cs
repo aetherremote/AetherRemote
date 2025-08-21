@@ -12,12 +12,12 @@ using Glamourer.Api.Helpers;
 using Glamourer.Api.IpcSubscribers;
 using Newtonsoft.Json.Linq;
 
-namespace AetherRemoteClient.Ipc;
+namespace AetherRemoteClient.Dependencies;
 
 /// <summary>
 ///     Provides access to Glamourer
 /// </summary>
-public class GlamourerIpc : IExternalPlugin, IDisposable
+public class GlamourerDependency : IExternalPlugin, IDisposable
 {
     // When Mare updates a local glamourer profile, it locks to prevent local tampering.
     // Unfortunately, we need this key to unlock the profile to get the state.
@@ -52,9 +52,9 @@ public class GlamourerIpc : IExternalPlugin, IDisposable
     public bool ApiAvailable;
 
     /// <summary>
-    ///     <inheritdoc cref="GlamourerIpc"/>
+    ///     <inheritdoc cref="GlamourerDependency"/>
     /// </summary>
-    public GlamourerIpc()
+    public GlamourerDependency()
     {
         _apiVersion = new ApiVersion(Plugin.PluginInterface);
         _applyState = new ApplyState(Plugin.PluginInterface);
@@ -325,31 +325,31 @@ public class GlamourerIpc : IExternalPlugin, IDisposable
         }
     }
 
-    /// <summary>
-    ///     Add any advanced dyes from an old JObject to a new JObject with the revert property set to true.
-    ///     This will only add dyes not present in the new JObject.
-    /// </summary>
-    public static void ModifyJObjectToRevertExistingAdvancedDyes(JObject existing, JObject target)
+    public static JObject? CreateJObjectToRevertExistingAdvancedDyes(JObject currentDesign, JObject targetDesign)
     {
-        // Get the materials section of the old JObject
-        if (existing["Materials"] is not JObject existingMaterials)
+        // Create a new copy
+        if (targetDesign.DeepClone() is not JObject copiedTargetDesign)
         {
-            Plugin.Log.Warning("[GlamourerIpc] Existing JObject does not contain required field Materials");
-            return;
+            Plugin.Log.Warning("[GlamourerIpc] Could not clone target JObject");
+            return null;
         }
-
-        // Get the materials section of the new JObject
-        if (target["Materials"] is not JObject targetMaterials)
+        
+        // Get materials of both sets
+        if (currentDesign["Materials"] is not JObject currentDesignMaterials)
         {
-            Plugin.Log.Warning("[GlamourerIpc] Target JObject does not contain required field Materials");
-            return;
+            return null;
+        }
+        
+        if (targetDesign["Materials"] is not JObject targetDesignMaterials)
+        {
+            return null;
         }
 
         // Iterate over all the advanced dyes from the existing JObject
-        foreach (var material in existingMaterials.Properties())
+        foreach (var material in currentDesignMaterials.Properties())
         {
             // Target has the material, which will always get updated
-            if (targetMaterials.ContainsKey(material.Name))
+            if (targetDesign.ContainsKey(material.Name))
                 continue;
             
             // Copy to a new object to avoid referencing even though this is just a JObject
@@ -358,13 +358,14 @@ public class GlamourerIpc : IExternalPlugin, IDisposable
                 Plugin.Log.Warning($"[GlamourerIpc] Could not clone material {material.Value}");
                 continue;
             }
-
             // Set the revert field to be true
             copy["Revert"] = true;
 
             // Assign that newly created material (which contains pending revert data) to the target properties.
-            targetMaterials[material.Name] = copy;
+            targetDesignMaterials[material.Name] = copy;
         }
+
+        return copiedTargetDesign;
     }
 
     /// <summary>

@@ -1,10 +1,11 @@
 using System;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using Dalamud.Utility;
 
 namespace AetherRemoteClient.UI.Views.Login;
 
-public class LoginViewUiController(NetworkService networkService)
+public class LoginViewUiController(NetworkManager networkManager)
 {
     /// <summary>
     ///     User inputted secret
@@ -18,7 +19,7 @@ public class LoginViewUiController(NetworkService networkService)
             Plugin.Configuration.Secret = Secret;
             Plugin.Configuration.Save();
             
-            await networkService.StartAsync();
+            await networkManager.StartAsync();
         }
         catch (Exception)
         {

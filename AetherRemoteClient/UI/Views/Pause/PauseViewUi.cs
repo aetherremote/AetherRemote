@@ -128,7 +128,7 @@ public class PauseViewUi(
                 ImGui.EndTable();
             });
 
-            SharedUserInterfaces.ContentBox("PauseAttributes", AetherRemoteStyle.PanelBackground, false, () =>
+            SharedUserInterfaces.ContentBox("PauseAttributes", AetherRemoteStyle.PanelBackground, true, () =>
             {
                 ImGui.TextUnformatted("Character Attributes");
                 if (ImGui.BeginTable("CharacterAttributes", 2) is false)
@@ -152,7 +152,7 @@ public class PauseViewUi(
                 ImGui.EndTable();
             });
             
-            SharedUserInterfaces.ContentBox("TransformationElevatedPermissions", AetherRemoteStyle.ElevatedBackground, true, () =>
+            SharedUserInterfaces.ContentBox("TransformationElevatedPermissions", AetherRemoteStyle.ElevatedBackground, false, () =>
             {
                 ImGui.TextUnformatted("Character Attributes");
                 if (ImGui.BeginTable("CharacterAttributes", 2) is false)

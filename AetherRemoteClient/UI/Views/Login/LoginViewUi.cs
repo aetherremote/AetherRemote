@@ -1,5 +1,6 @@
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
@@ -7,7 +8,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 
 namespace AetherRemoteClient.UI.Views.Login;
 
-public class LoginViewUi(LoginViewUiController controller, NetworkService networkService) : IDrawable
+public class LoginViewUi(LoginViewUiController controller, NetworkManager networkManager) : IDrawable
 {
     private const ImGuiInputTextFlags SecretInputFlags =
         ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.Password;
@@ -33,7 +34,7 @@ public class LoginViewUi(LoginViewUiController controller, NetworkService networ
                 shouldConnect = true;
 
             ImGui.SameLine();
-            var disable = networkService.Connection.State is not HubConnectionState.Disconnected;
+            var disable = networkManager.Connection.State is not HubConnectionState.Disconnected;
             if (disable)
             {
                 ImGui.BeginDisabled();

@@ -15,11 +15,10 @@ namespace AetherRemoteClient.Handlers.Network;
 ///     Handles a <see cref="BodySwapForwardedRequest"/>
 /// </summary>
 public class BodySwapHandler(
+    CharacterTransformationService characterTransformationService,
     IdentityService identityService,
     LogService logService,
-    PermanentLockService permanentLockService,
     PermissionManager permissionManager,
-    ModManager modManager,
     PermanentTransformationManager permanentTransformationManager)
 {
     // Const
@@ -32,7 +31,7 @@ public class BodySwapHandler(
     {
         Plugin.Log.Verbose($"{request}");
         
-        if (permanentLockService.IsLocked)
+        if (permanentTransformationManager.IsPermanentTransformed)
             return ActionResultBuilder.Fail(ActionResultEc.ClientPermanentlyTransformed);
         
         var primary = request.SwapAttributes.ToPrimaryPermission();
@@ -50,18 +49,16 @@ public class BodySwapHandler(
         
         if (result.Value is not { } friend)
             return ActionResultBuilder.Fail(ActionResultEc.ValueNotSet);
-        
-        // Actually apply glamourer, mods, etc...
-        if (await modManager.Assimilate(request.CharacterName, request.SwapAttributes) is { } permanentTransformationData)
+
+        // TODO: Error handling
+        if (request.LockCode is not null)
         {
-            // If there is a lock code present, attempt to lock
-            if (request.LockCode is not null)
-            {
-                permanentTransformationData.Sender = result.Value.NoteOrFriendCode;
-                permanentTransformationData.AlterationType = IdentityAlterationType.BodySwap;
-                permanentTransformationData.UnlockCode = request.LockCode;
-                await permanentTransformationManager.Lock(permanentTransformationData);
-            }
+            await permanentTransformationManager.ApplyPermanentCharacterTransformation(friend.NoteOrFriendCode,
+                request.LockCode, request.CharacterName, request.SwapAttributes);
+        }
+        else
+        {
+            await characterTransformationService.ApplyCharacterTransformation(request.CharacterName, request.SwapAttributes);
         }
         
         // Set your new identity

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Numerics;
 using AetherRemoteClient.Domain;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
@@ -8,9 +9,9 @@ using Dalamud.Interface.Colors;
 
 namespace AetherRemoteClient.UI.Components.Friends;
 
-public class FriendsListComponentUi(FriendsListService friendsListService, NetworkService networkService)
+public class FriendsListComponentUi(FriendsListService friendsListService, NetworkManager networkManager)
 {
-    private readonly FriendsListComponentUiController _controller = new(friendsListService, networkService);
+    private readonly FriendsListComponentUiController _controller = new(friendsListService, networkManager);
 
     public void Draw(bool displayAddFriendsBox = false, bool displayOfflineFriends = false)
     {

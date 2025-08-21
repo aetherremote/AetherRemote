@@ -1,340 +1,266 @@
-using System;
 using System.Threading.Tasks;
-using System.Timers;
+using AetherRemoteClient.Dependencies;
 using AetherRemoteClient.Domain;
-using AetherRemoteClient.Ipc;
+using AetherRemoteClient.Domain.Enums;
+using AetherRemoteClient.Domain.Glamourer;
+using AetherRemoteClient.Infrastructure;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
-using Newtonsoft.Json.Linq;
 
 namespace AetherRemoteClient.Managers;
 
 /// <summary>
-///     Manages saving and loading of permanent transformations
+///     Manages aspects of keeping a character in a permanently transformed state
 /// </summary>
-public class PermanentTransformationManager : IDisposable
+public class PermanentTransformationManager(
+    DatabaseInfrastructure databaseInfrastructure,
+    CharacterTransformationService characterTransformationService,
+    PermanentTransformationLockService permanentTransformationLockService,
+    GlamourerDependency glamourerDependency)
 {
-    // Const
-    private const string EquipmentJObjectName = "Equipment";
-    private const string MainHandJObjectName = "MainHand";
-    private const string OffHandJObjectName = "OffHand";
-    
-    // Injected
-    private readonly GlamourerIpc _glamourer;
-    private readonly PenumbraIpc _penumbra;
-    private readonly CustomizePlusIpc _customizePlus;
-    private readonly MoodlesIpc _moodlesIpc;
-    private readonly IdentityService _identityService;
-    private readonly PermanentLockService _permanentLockService;
-    
-    /// <summary>
-    ///     A timer that will be used so not as to spam glamourer with requests.
-    /// </summary>
-    private readonly Timer _revertTimer = new(200);
+    // Instantiated
+    private PermanentTransformationData? _permanentTransformationData;
 
     /// <summary>
-    ///     The current saved appearance when the client was originally locked
+    ///     <inheritdoc cref="PermanentTransformationLockService.Locked"/>
     /// </summary>
-    private JObject? _currentSavedAppearance;
-
-    /// <summary>
-    ///     Variable to track if AR is currently in the middle of reverting a locked character
-    /// </summary>
-    private bool _processingRevert;
+    public bool IsPermanentTransformed => permanentTransformationLockService.Locked;
     
     /// <summary>
-    ///     <inheritdoc cref="PermanentTransformationManager"/>
+    ///     Load a permanent transformation from the stored configuration
     /// </summary>
-    public PermanentTransformationManager(
-        MoodlesIpc moodlesIpc, 
-        CustomizePlusIpc customizePlus, 
-        PenumbraIpc penumbra, 
-        GlamourerIpc glamourer, 
-        IdentityService identityService, 
-        PermanentLockService permanentLockService)
+    public async Task Load(string characterName, string characterWorld)
     {
-        _penumbra = penumbra;
-        _customizePlus = customizePlus;
-        _moodlesIpc = moodlesIpc;
-        _glamourer = glamourer;
-        _identityService = identityService;
-        _permanentLockService = permanentLockService;
+        if (await databaseInfrastructure.GetPermanentTransformationForPlayer(characterName, characterWorld) is not { } permanentTransformationData)
+        {
+            Plugin.Log.Verbose($"[PermanentTransformationManager] No permanent transformation found for player {characterName} - {characterWorld}");
+            return;
+        }
 
-        _revertTimer.AutoReset = false;
-        _revertTimer.Enabled = false;
-        _revertTimer.Elapsed += CheckForDifferences;
+        // TODO: Error handle
+        await characterTransformationService.ApplyPerm(permanentTransformationData);//
         
-        _glamourer.LocalPlayerChanged += OnPlayerGlamourerUpdated;
+        
+        permanentTransformationLockService.Lock(permanentTransformationData.Key);
+        
+        _permanentTransformationData = permanentTransformationData;
     }
 
     /// <summary>
-    ///     Saves a new permanent transformation for the local character
+    ///     Permanently apply a character transformation to the local player
     /// </summary>
-    public async Task<bool> Lock(PermanentTransformationData data)
+    public async Task<bool> ApplyPermanentCharacterTransformation(string sender, string key, string characterName, CharacterAttributes characterAttributes)
     {
-        // Save the unlock code
-        if (_permanentLockService.Lock(data.UnlockCode) is false)
+        if (permanentTransformationLockService.Locked)
         {
-            Plugin.Log.Warning("[PermanentTransformationManager] Could not lock because the client is already locked");
+            Plugin.Log.Warning("[PermanentTransformationManager] Cannot apply permanent character transformation because local player is already locked");
             return false;
         }
         
-        // Add the configuration values
-        if (Plugin.Configuration.PermanentTransformations.TryAdd(_identityService.Character.FullName, data) is false)
+        var result = await characterTransformationService.ApplyCharacterTransformation(characterName, characterAttributes);
+        if (result.Success is not ApplyCharacterTransformationErrorCode.Success)
         {
-            Plugin.Log.Warning("[PermanentTransformationManager] Couldn't add the transformation because one already exists");
+            Plugin.Log.Error($"[PermanentTransformationManager] Unable to apply character transformation of {characterName}");
             return false;
         }
-        
-        // Save
-        Plugin.Configuration.Save();
-        
-        // Get the current appearance
-        if (await _glamourer.GetDesignComponentsAsync() is not { } components)
+
+        if (result.Data is not { } permanentTransformationData)
         {
-            Plugin.Log.Warning("[PermanentTransformationManager] Couldn't get the design components");
+            Plugin.Log.Error("[PermanentTransformationManager] Expected data was not present after character transformation");
             return false;
         }
+
+        permanentTransformationLockService.Lock(permanentTransformationData.Key);
         
-        // Notify the client
-        NotificationHelper.Info("You have been permanently transformed", "One of your friends has locked you in your current form. You will need to retrieve the key from them or use safe mode in an emergency.");
+        _permanentTransformationData = permanentTransformationData;
+        _permanentTransformationData.Sender = sender;
+        _permanentTransformationData.Key = key;
         
-        // Remove any fields we don't want to check
-        RemoveUnwantedFields(components);
-        
-        // Set the local cached appearance JObject data
-        _currentSavedAppearance = components;
         return true;
     }
 
-    /// <summary>
-    ///     Unlock the current permanent transformation
-    /// </summary>
-    public bool Unlock(string key)
+    public async Task<bool> ApplyPermanentTransformation(string sender, string key, string design, GlamourerApplyFlags glamourerApplyFlags)
     {
-        // Already unlocked
-        if (_permanentLockService.IsLocked is false)
+        if (permanentTransformationLockService.Locked)
         {
-            Plugin.Log.Info("[PermanentTransformationManager] There is nothing to unlock, skipping...");
+            Plugin.Log.Warning("[PermanentTransformationManager] Cannot apply permanent character transformation because local player is already locked");
             return false;
         }
 
-        // Try to unlock
-        if (_permanentLockService.Unlock(key) is false)
+        var result = await characterTransformationService.ApplyGenericTransformation(design, glamourerApplyFlags);
+        if (result.Success is not ApplyGenericTransformationErrorCode.Success)
         {
-            NotificationHelper.Warning("Incorrect Pin", string.Empty);
+            Plugin.Log.Error("[PermanentTransformationManager] Unable to apply generic transformation");
+            return false;
+        }
+
+        if (result.GlamourerJObject is not { } glamourerJObject)
+        {
+            Plugin.Log.Error("[PermanentTransformationManager] Expected data was not present after character transformation");
+            return false;
+        }
+
+        if (GlamourerDesignHelper.FromJObject(glamourerJObject) is not { } glamourerDesign)
+        {
+            // TODO: Logging
             return false;
         }
         
-        // Success, notify the client
-        NotificationHelper.Success("Successfully Unlocked", string.Empty);
+        permanentTransformationLockService.Lock(key);
         
-        // Remove the current permanent swap
-        Plugin.Configuration.PermanentTransformations.Remove(_identityService.Character.FullName);
-        Plugin.Configuration.Save();
-        
-        // Return
+        _permanentTransformationData = new PermanentTransformationData
+        {
+            Sender = sender,
+            GlamourerDesign = glamourerDesign,
+            GlamourerApplyType = glamourerApplyFlags,
+            Key = key
+        };
+
         return true;
     }
 
-    /// <summary>
-    ///     Forcefully unlock the appearance
-    /// </summary>
-    public void ForceUnlock()
+    public bool TryClearPermanentTransformation(string key)
     {
-        // Stop the timer
-        _revertTimer.Stop();
-        Plugin.Log.Info("[PermanentTransformationManager] Initiated forceful unlocking");
-        Unlock(_permanentLockService.CurrentLock);
+        if (permanentTransformationLockService.Unlock(key) is false)
+            return false;
+
+        _permanentTransformationData = null;
+        return true;
+    }
+
+    public void ForceClearPermanentTransformation()
+    {
+        if (permanentTransformationLockService.Key is null)
+            return;
+
+        TryClearPermanentTransformation(permanentTransformationLockService.Key);
     }
 
     /// <summary>
-    ///     Attempts to load the provided permanent transformation
+    ///     Resolves any differences between the stored permanent transformation and the current character
+    ///     if a permanent transformation is present
     /// </summary>
-    /// <param name="data"></param>
-    /// <returns></returns>
-    public async Task Load(PermanentTransformationData data)
+    // TODO: Logging
+    public async Task ResolveDifferencesAfterGlamourerUpdate()
     {
-        // Already locked
-        if (_permanentLockService.IsLocked)
+        if (permanentTransformationLockService.Locked is false || _permanentTransformationData is not { } data)
         {
-            Plugin.Log.Warning("[PermanentTransformationManager] Unable to load because the client is already locked");
+            Plugin.Log.Verbose("[PermanentTransformationManager] Local character is not locked, ignoring glamourer update");
             return;
         }
 
-        // Lock the client
-        if (_permanentLockService.Lock(data.UnlockCode) is false)
-        {
-            Plugin.Log.Warning("[PermanentTransformationManager] Unable to lock");
+        if (await glamourerDependency.GetDesignComponentsAsync() is not { } localCharacterDesign)
             return;
-        }
 
-        // Apply the data
-        await ApplySavedAppearance(data);
-        
-        // Mark who sent it
-        _identityService.AddAlteration(data.AlterationType, data.Sender);
-
-        // Get the appearance to save the components
-        if (await _glamourer.GetDesignComponentsAsync() is not { } components)
-        {
-            Plugin.Log.Warning("[PermanentTransformationManager] Design components are empty");
+        if (GlamourerDesignHelper.FromJObject(localCharacterDesign) is not { } design)
             return;
-        }
-            
-        // Remove any fields we don't want to check
-        RemoveUnwantedFields(components);
-        
-        // Set the current saved appearance to be the components
-        _currentSavedAppearance = components;
+
+        if (LocalPlayerDesignChanged(design, data))
+            await characterTransformationService.ApplyPerm(data);
     }
-    
+
+    private static bool LocalPlayerDesignChanged(GlamourerDesign localDesign, PermanentTransformationData data)
+    {
+        if ((data.GlamourerApplyType & GlamourerApplyFlags.Equipment) is GlamourerApplyFlags.Equipment)
+        {
+            // Check if the equipped items differ
+            if (LocalPlayerEquippedItemsChanged(localDesign.Equipment, data.GlamourerDesign.Equipment))
+                return true;
+            
+            // Check if dictionary size for the materials is different
+            if (localDesign.Materials.Count != data.GlamourerDesign.Materials.Count)
+                return true;
+            
+            // Iterate over all the local design keys
+            foreach (var kvp in localDesign.Materials)
+            {
+                // Check if the key is present in the permanent design
+                if (data.GlamourerDesign.Materials.TryGetValue(kvp.Key, out var material) is false)
+                    return true;
+
+                // Check if the objects differ
+                if (material.IsEqualTo(kvp.Value) is false)
+                    return true;
+            }
+        }
+        
+        if ((data.GlamourerApplyType & GlamourerApplyFlags.Customization) is GlamourerApplyFlags.Customization)
+        {
+            // Check if customize differs
+            if (LocalPlayerCustomizeChanged(localDesign.Customize, data.GlamourerDesign.Customize))
+                return true;
+            
+            // Check if parameters differ
+            if (localDesign.Parameters.IsEqualTo(data.GlamourerDesign.Parameters) is false)
+                return true;
+        }
+
+        return false;
+    }
+
     /// <summary>
-    ///     Handle the event from glamourer updating
+    ///     Tests to see if any equipment marked with 'apply' are different
     /// </summary>
-    private void OnPlayerGlamourerUpdated(object? sender, EventArgs args)
+    private static bool LocalPlayerEquippedItemsChanged(GlamourerEquipment localEquipment, GlamourerEquipment permanentEquipment)
     {
-        // Skip starting the timer if there is no lock
-        if (_permanentLockService.IsLocked is false)
-            return;
-        
-        // If we are in the middle of reverting, there is no need to process any differences
-        if (_processingRevert)
-            return;
-        
-        // Restart the timer
-        _revertTimer.Stop();
-        _revertTimer.Start();
+        // Only check if the permanent transformation affects a certain item
+        if (permanentEquipment.Head.Apply && permanentEquipment.Head.IsEqualTo(localEquipment.Head) is false) return true;
+        if (permanentEquipment.Body.Apply && permanentEquipment.Body.IsEqualTo(localEquipment.Body) is false) return true;
+        if (permanentEquipment.Hands.Apply && permanentEquipment.Hands.IsEqualTo(localEquipment.Hands) is false) return true;
+        if (permanentEquipment.Legs.Apply && permanentEquipment.Legs.IsEqualTo(localEquipment.Legs) is false) return true;
+        if (permanentEquipment.Feet.Apply && permanentEquipment.Feet.IsEqualTo(localEquipment.Feet) is false) return true;
+        if (permanentEquipment.Ears.Apply && permanentEquipment.Ears.IsEqualTo(localEquipment.Ears) is false) return true;
+        if (permanentEquipment.Neck.Apply && permanentEquipment.Neck.IsEqualTo(localEquipment.Neck) is false) return true;
+        if (permanentEquipment.Wrists.Apply && permanentEquipment.Wrists.IsEqualTo(localEquipment.Wrists) is false) return true;
+        if (permanentEquipment.RFinger.Apply && permanentEquipment.RFinger.IsEqualTo(localEquipment.RFinger) is false) return true;
+        if (permanentEquipment.LFinger.Apply && permanentEquipment.LFinger.IsEqualTo(localEquipment.LFinger) is false) return true;
+        return false;
     }
-    
+
     /// <summary>
-    ///     Checks to see if the local character has differed from the local saved
+    ///     Tests to see if any Customize marked with 'apply' are different
     /// </summary>
-    private async void CheckForDifferences(object? sender, ElapsedEventArgs e)
+    private static bool LocalPlayerCustomizeChanged(GlamourerCustomize localCustomize, GlamourerCustomize permanentCustomize)
     {
-        try
-        {
-            // If we are in the middle of reverting, there is no need to process any differences
-            if (_processingRevert)
-                return;
-            
-            // Get the design as components
-            if (await _glamourer.GetDesignComponentsAsync().ConfigureAwait(false) is not { } components)
-            {
-                Plugin.Log.Warning("[PermanentTransformationManager] Could not get design components");
-                return;
-            }
-
-            // Remove the fields we don't want to check
-            RemoveUnwantedFields(components);
-
-            // Check to see if there are differences and exit if there are none
-            if (JToken.DeepEquals(_currentSavedAppearance, components))
-            {
-                Plugin.Log.Info("[PermanentTransformationManager] Local client changed, but not anything outward on their appearance");
-                return;
-            }
-            
-            // A change has been detected, reverting the player
-            Plugin.Log.Info("Local player attempted to reload with a permanent transformation, reverting...");
-
-            // Mark that a revert is now in progress
-            _processingRevert = true;
-            
-            // We need to revert to the game to clear any advanced dyes
-            await _glamourer.RevertToGame();
-            
-            // Get the local saved permanent transformation data
-            if (Plugin.Configuration.PermanentTransformations.TryGetValue(_identityService.Character.FullName, out var data) is false)
-            {
-                // No local character data
-                Plugin.Log.Warning("[PermanentTransformationManager] Nothing saved for local character");
-                return;
-            }
-            
-            // Apply the saved data
-            await ApplySavedAppearance(data);
-            
-            // Mark that we have finished reverting
-            _processingRevert = false;
-        }
-        catch (Exception ex)
-        {
-            Plugin.Log.Warning($"Unexpected issue enforcing a permanent transformation {ex.Message}");
-        }
-    }
-    
-    
-    /// <summary>
-    ///     Applies a given <see cref="PermanentTransformationData"/> to the client
-    /// </summary>
-    private async Task ApplySavedAppearance(PermanentTransformationData data)
-    {
-        // Always apply glamourer
-        await _glamourer.ApplyDesignAsync(data.GlamourerData, GlamourerApplyFlags.All).ConfigureAwait(false);
-
-        // Apply Mods
-        if (data.ModPathData is not null)
-        {
-            var collection = await _penumbra.GetCollection();
-            await _penumbra.AddTemporaryMod(collection, data.ModPathData, data.ModMetaData!).ConfigureAwait(false);
-        }
-        
-        // Apply Customize
-        if (data.CustomizePlusData is not null)
-        {
-            // Delete any existing profiles
-            await _customizePlus.DeleteCustomize().ConfigureAwait(false);
-            
-            // Deserialize back into a list of templates
-            if (await _customizePlus.DeserializeTemplates(data.CustomizePlusData).ConfigureAwait(false) is not { } templates)
-            {
-                Plugin.Log.Warning("[PermanentTransformationManager] Failed to deserialized saved C+ template data");
-                return;
-            }
-            
-            // Apply templates
-            if (await _customizePlus.ApplyCustomize(templates).ConfigureAwait(false) is false)
-            {
-                // Delete any partial profiles that were created
-                await _customizePlus.DeleteCustomize().ConfigureAwait(false);
-                Plugin.Log.Warning("[PermanentTransformationManager] Failed to apply saved C+ template data");
-                return;
-            }
-        }
-
-        // Apply Moodles
-        if (data.MoodlesData is not null)
-        {
-            if (await Plugin.RunOnFramework(() => Plugin.ObjectTable[0]?.Address).ConfigureAwait(false) is { } address)
-            {
-                await _moodlesIpc.SetMoodles(address, data.MoodlesData).ConfigureAwait(false);
-            }
-        }
-    }
-    
-    /// <summary>
-    ///     Removes unwanted fields from the JSON object returned from glamourer's <see cref="GlamourerIpc"/>
-    /// </summary>
-    private static void RemoveUnwantedFields(JObject components)
-    {
-        // Get the equipment, which should always exist
-        if (components[EquipmentJObjectName] is not JObject equipment)
-        {
-            Plugin.Log.Warning("[PermanentTransformationManager] No equipment found when one was expected");
-            return;
-        }
-        
-        // Remove these two fields
-        equipment.Remove(MainHandJObjectName);
-        equipment.Remove(OffHandJObjectName);
-    }
-
-    public void Dispose()
-    {
-        _revertTimer.Elapsed -= CheckForDifferences;
-        _glamourer.LocalPlayerResetOrReapply -= OnPlayerGlamourerUpdated;
-        GC.SuppressFinalize(this);
+        // Only check if permanent transformation affects a certain item
+        if (permanentCustomize.BodyType.Apply && localCustomize.BodyType.IsEqualTo(permanentCustomize.BodyType) is false) return true;
+        if (permanentCustomize.BustSize.Apply && localCustomize.BustSize.IsEqualTo(permanentCustomize.BustSize) is false) return true;
+        if (permanentCustomize.Clan.Apply && localCustomize.Clan.IsEqualTo(permanentCustomize.Clan) is false) return true;
+        if (permanentCustomize.Eyebrows.Apply && localCustomize.Eyebrows.IsEqualTo(permanentCustomize.Eyebrows) is false) return true;
+        if (permanentCustomize.EyeColorLeft.Apply && localCustomize.EyeColorLeft.IsEqualTo(permanentCustomize.EyeColorLeft) is false) return true;
+        if (permanentCustomize.EyeColorRight.Apply && localCustomize.EyeColorRight.IsEqualTo(permanentCustomize.EyeColorRight) is false) return true;
+        if (permanentCustomize.EyeShape.Apply && localCustomize.EyeShape.IsEqualTo(permanentCustomize.EyeShape) is false) return true;
+        if (permanentCustomize.Face.Apply && localCustomize.Face.IsEqualTo(permanentCustomize.Face) is false) return true;
+        if (permanentCustomize.FacePaint.Apply && localCustomize.FacePaint.IsEqualTo(permanentCustomize.FacePaint) is false) return true;
+        if (permanentCustomize.FacePaintColor.Apply && localCustomize.FacePaintColor.IsEqualTo(permanentCustomize.FacePaintColor) is false) return true;
+        if (permanentCustomize.FacePaintReversed.Apply && localCustomize.FacePaintReversed.IsEqualTo(permanentCustomize.FacePaintReversed) is false) return true;
+        if (permanentCustomize.FacialFeature1.Apply && localCustomize.FacialFeature1.IsEqualTo(permanentCustomize.FacialFeature1) is false) return true;
+        if (permanentCustomize.FacialFeature2.Apply && localCustomize.FacialFeature2.IsEqualTo(permanentCustomize.FacialFeature2) is false) return true;
+        if (permanentCustomize.FacialFeature3.Apply && localCustomize.FacialFeature3.IsEqualTo(permanentCustomize.FacialFeature3) is false) return true;
+        if (permanentCustomize.FacialFeature4.Apply && localCustomize.FacialFeature4.IsEqualTo(permanentCustomize.FacialFeature4) is false) return true;
+        if (permanentCustomize.FacialFeature5.Apply && localCustomize.FacialFeature5.IsEqualTo(permanentCustomize.FacialFeature5) is false) return true;
+        if (permanentCustomize.FacialFeature6.Apply && localCustomize.FacialFeature6.IsEqualTo(permanentCustomize.FacialFeature6) is false) return true;
+        if (permanentCustomize.FacialFeature7.Apply && localCustomize.FacialFeature7.IsEqualTo(permanentCustomize.FacialFeature7) is false) return true;
+        if (permanentCustomize.Gender.Apply && localCustomize.Gender.IsEqualTo(permanentCustomize.Gender) is false) return true;
+        if (permanentCustomize.HairColor.Apply && localCustomize.HairColor.IsEqualTo(permanentCustomize.HairColor) is false) return true;
+        if (permanentCustomize.Hairstyle.Apply && localCustomize.Hairstyle.IsEqualTo(permanentCustomize.Hairstyle) is false) return true;
+        if (permanentCustomize.Height.Apply && localCustomize.Height.IsEqualTo(permanentCustomize.Height) is false) return true;
+        if (permanentCustomize.Highlights.Apply && localCustomize.Highlights.IsEqualTo(permanentCustomize.Highlights) is false) return true;
+        if (permanentCustomize.HighlightsColor.Apply && localCustomize.HighlightsColor.IsEqualTo(permanentCustomize.HighlightsColor) is false) return true;
+        if (permanentCustomize.Jaw.Apply && localCustomize.Jaw.IsEqualTo(permanentCustomize.Jaw) is false) return true;
+        if (permanentCustomize.LegacyTattoo.Apply && localCustomize.LegacyTattoo.IsEqualTo(permanentCustomize.LegacyTattoo) is false) return true;
+        if (permanentCustomize.LipColor.Apply && localCustomize.LipColor.IsEqualTo(permanentCustomize.LipColor) is false) return true;
+        if (permanentCustomize.Lipstick.Apply && localCustomize.Lipstick.IsEqualTo(permanentCustomize.Lipstick) is false) return true;
+        if (permanentCustomize.Mouth.Apply && localCustomize.Mouth.IsEqualTo(permanentCustomize.Mouth) is false) return true;
+        if (permanentCustomize.MuscleMass.Apply && localCustomize.MuscleMass.IsEqualTo(permanentCustomize.MuscleMass) is false) return true;
+        if (permanentCustomize.Nose.Apply && localCustomize.Nose.IsEqualTo(permanentCustomize.Nose) is false) return true;
+        if (permanentCustomize.Race.Apply && localCustomize.Race.IsEqualTo(permanentCustomize.Race) is false) return true;
+        if (permanentCustomize.SkinColor.Apply && localCustomize.SkinColor.IsEqualTo(permanentCustomize.SkinColor) is false) return true;
+        if (permanentCustomize.SmallIris.Apply && localCustomize.SmallIris.IsEqualTo(permanentCustomize.SmallIris) is false) return true;
+        if (permanentCustomize.TailShape.Apply && localCustomize.TailShape.IsEqualTo(permanentCustomize.TailShape) is false) return true;
+        if (permanentCustomize.TattooColor.Apply && localCustomize.TattooColor.IsEqualTo(permanentCustomize.TattooColor) is false) return true;
+        // Skip Wetness
+        return false;
     }
 }

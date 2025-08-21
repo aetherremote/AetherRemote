@@ -58,7 +58,6 @@ public class Program
 
 #if DEBUG
         builder.WebHost.UseUrls("https://localhost:5006");
-        
         /*
         builder.WebHost.ConfigureKestrel(options =>
         {

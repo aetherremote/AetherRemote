@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using AetherRemoteClient.Domain;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
@@ -19,7 +20,7 @@ namespace AetherRemoteClient.UI.Views.Speak;
 public class SpeakViewUiController
 {
     private readonly FriendsListService _friendsListService;
-    private readonly NetworkService _networkService;
+    private readonly NetworkManager _networkManager;
     private readonly WorldService _worldService;
 
     public readonly string[] LinkshellNumbers = ["1", "2", "3", "4", "5", "6", "7", "8"];
@@ -37,11 +38,11 @@ public class SpeakViewUiController
     /// <summary>
     ///     <inheritdoc cref="SpeakViewUiController"/>
     /// </summary>
-    public SpeakViewUiController(FriendsListService friendsListService, NetworkService networkService,
+    public SpeakViewUiController(FriendsListService friendsListService, NetworkManager networkManager,
         WorldService worldService)
     {
         _friendsListService = friendsListService;
-        _networkService = networkService;
+        _networkManager = networkManager;
         _worldService = worldService;
         
         WorldsListFilter = new ListFilter<string>(worldService.WorldNames, FilterWorld);
@@ -109,7 +110,7 @@ public class SpeakViewUiController
                 TargetFriendCodes = _friendsListService.Selected.Select(friend => friend.FriendCode).ToList()
             };
 
-            var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.Speak, input);
+            var response = await _networkManager.InvokeAsync<ActionResponse>(HubMethod.Speak, input);
             if (response.Result is ActionResponseEc.Success)
             {
                 Message = string.Empty;

@@ -1,10 +1,11 @@
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
+using AetherRemoteClient.Dependencies;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Handlers;
 using AetherRemoteClient.Handlers.Network;
-using AetherRemoteClient.Ipc;
+using AetherRemoteClient.Infrastructure;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI;
@@ -73,36 +74,41 @@ public sealed class Plugin : IDalamudPlugin
 
         var services = new ServiceCollection();
 
+        // Infrastructure
+        services.AddSingleton<DatabaseInfrastructure>();
+        
+        // Dependencies
+        services.AddSingleton<CustomizePlusDependency>();
+        services.AddSingleton<GlamourerDependency>();
+        services.AddSingleton<MoodlesDependency>();
+        services.AddSingleton<PenumbraDependency>();
+        
         // Services
         services.AddSingleton<ActionQueueService>();
+        services.AddSingleton<CharacterTransformationService>();
         services.AddSingleton<CommandLockoutService>();
+        services.AddSingleton<ConfigurationService>();
         services.AddSingleton<EmoteService>();
         services.AddSingleton<FriendsListService>();
         services.AddSingleton<IdentityService>();
         services.AddSingleton<LogService>();
-        services.AddSingleton<NetworkService>();
         services.AddSingleton<PauseService>();
-        services.AddSingleton<PermanentLockService>();
+        services.AddSingleton<PermanentTransformationLockService>();
         services.AddSingleton<SpiralService>();
         services.AddSingleton<TipService>();
         services.AddSingleton<ViewService>();
         services.AddSingleton<WorldService>();
         
-        // Services - Ipc
-        services.AddSingleton<CustomizePlusIpc>();
-        services.AddSingleton<GlamourerIpc>();
-        services.AddSingleton<MoodlesIpc>();
-        services.AddSingleton<PenumbraIpc>();
-        
         // Managers
         services.AddSingleton<DependencyManager>();
         services.AddSingleton<PermissionManager>();
-        services.AddSingleton<ModManager>();
+        services.AddSingleton<NetworkManager>();
         services.AddSingleton<PermanentTransformationManager>();
         
         // Handlers
         services.AddSingleton<ChatCommandHandler>();
         services.AddSingleton<ConnectivityHandler>();
+        services.AddSingleton<GlamourerEventHandler>();
         
         // Handlers Network
         services.AddSingleton<BodySwapHandler>();
@@ -170,6 +176,7 @@ public sealed class Plugin : IDalamudPlugin
         // Handlers
         _services.GetRequiredService<ChatCommandHandler>();
         _services.GetRequiredService<ConnectivityHandler>();
+        _services.GetRequiredService<GlamourerEventHandler>();
         _services.GetRequiredService<NetworkHandler>();
         
         // Ui - Windows

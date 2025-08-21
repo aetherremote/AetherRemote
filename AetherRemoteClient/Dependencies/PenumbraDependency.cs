@@ -5,12 +5,12 @@ using AetherRemoteClient.Domain.Interfaces;
 using Penumbra.Api.Enums;
 using Penumbra.Api.IpcSubscribers;
 
-namespace AetherRemoteClient.Ipc;
+namespace AetherRemoteClient.Dependencies;
 
 /// <summary>
 ///     Provides access to Penumbra
 /// </summary>
-public class PenumbraIpc : IExternalPlugin
+public class PenumbraDependency : IExternalPlugin
 {
     // Const
     private const string TemporaryModName = "AetherRemoteMods";
@@ -31,9 +31,9 @@ public class PenumbraIpc : IExternalPlugin
     public bool ApiAvailable;
 
     /// <summary>
-    ///     <see cref="PenumbraIpc"/>
+    ///     <see cref="PenumbraDependency"/>
     /// </summary>
-    public PenumbraIpc()
+    public PenumbraDependency()
     {
         _addTemporaryMod = new AddTemporaryMod(Plugin.PluginInterface);
         _getGameObjectResourcePaths = new GetGameObjectResourcePaths(Plugin.PluginInterface);

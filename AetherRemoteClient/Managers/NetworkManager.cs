@@ -10,12 +10,12 @@ using MessagePack;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace AetherRemoteClient.Services;
+namespace AetherRemoteClient.Managers;
 
 /// <summary>
 ///     Provides methods to interact with the server
 /// </summary>
-public class NetworkService : IDisposable
+public class NetworkManager : IDisposable
 {
     /// <summary>
     ///     The Signal R connection
@@ -33,23 +33,19 @@ public class NetworkService : IDisposable
     public event Func<Task>? Disconnected;
     
 #if DEBUG
-    // Local
     private const string HubUrl = "https://localhost:5006/primaryHub";
     private const string PostUrl = "https://localhost:5006/api/auth/login";
-    
-    // Beta
     // private const string HubUrl = "https://foxitsvc.com:5007/primaryHub";
     // private const string PostUrl = "https://foxitsvc.com:5007/api/auth/login";
 #else
-    // Prod
     private const string HubUrl = "https://foxitsvc.com:5006/primaryHub";
     private const string PostUrl = "https://foxitsvc.com:5006/api/auth/login";
 #endif
 
     /// <summary>
-    ///     <inheritdoc cref="NetworkService"/>
+    ///     <inheritdoc cref="NetworkManager"/>
     /// </summary>
-    public NetworkService()
+    public NetworkManager()
     {
         Connection = new HubConnectionBuilder().WithUrl(HubUrl, options =>
             {
@@ -58,8 +54,7 @@ public class NetworkService : IDisposable
             .WithAutomaticReconnect()
             .AddMessagePackProtocol(options =>
             {
-                options.SerializerOptions = MessagePackSerializerOptions.Standard
-                    .WithSecurity(MessagePackSecurity.UntrustedData);
+                options.SerializerOptions = MessagePackSerializerOptions.Standard.WithSecurity(MessagePackSecurity.UntrustedData);
             })
             .Build();
 

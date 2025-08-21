@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Network;
@@ -11,7 +12,7 @@ namespace AetherRemoteClient.UI.Components.Friends;
 /// <summary>
 ///     Handles events and other tasks for <see cref="FriendsListComponentUi" />
 /// </summary>
-public class FriendsListComponentUiController(FriendsListService friendsListService, NetworkService networkService)
+public class FriendsListComponentUiController(FriendsListService friendsListService, NetworkManager networkManager)
 {
     /// <summary>
     ///     String containing the friend code you intend to add
@@ -42,7 +43,7 @@ public class FriendsListComponentUiController(FriendsListService friendsListServ
 
         var request = new AddFriendRequest(FriendCodeToAdd);
         var response =
-            await networkService.InvokeAsync<AddFriendResponse>(HubMethod.AddFriend, request).ConfigureAwait(false);
+            await networkManager.InvokeAsync<AddFriendResponse>(HubMethod.AddFriend, request).ConfigureAwait(false);
 
         if (response.Result is AddFriendEc.Success)
         {

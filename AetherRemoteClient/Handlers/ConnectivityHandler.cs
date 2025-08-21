@@ -14,9 +14,10 @@ namespace AetherRemoteClient.Handlers;
 /// </summary>
 public class ConnectivityHandler : IDisposable
 {
+    private readonly ConfigurationService _configurationService;
     private readonly FriendsListService _friendsListService;
     private readonly IdentityService _identityService;
-    private readonly NetworkService _networkService;
+    private readonly NetworkManager _networkManager;
     private readonly ViewService _viewService;
     private readonly DependencyManager _dependencyManager;
     private readonly PermanentTransformationManager _permanentTransformationManager;
@@ -24,18 +25,19 @@ public class ConnectivityHandler : IDisposable
     /// <summary>
     /// <inheritdoc cref="ConnectivityHandler"/>
     /// </summary>
-    public ConnectivityHandler(FriendsListService friendsListService, IdentityService identityService, NetworkService networkService, ViewService viewService, DependencyManager dependencyManager, PermanentTransformationManager permanentTransformationManager)
+    public ConnectivityHandler(ConfigurationService configurationService, FriendsListService friendsListService, IdentityService identityService, NetworkManager networkManager, ViewService viewService, DependencyManager dependencyManager, PermanentTransformationManager permanentTransformationManager)
     {
+        _configurationService = configurationService;
         _friendsListService = friendsListService;
         _identityService = identityService;
-        _networkService = networkService;
+        _networkManager = networkManager;
         _viewService = viewService;
         _dependencyManager = dependencyManager;
         _permanentTransformationManager = permanentTransformationManager;
         
         // Connectivity Events
-        _networkService.Connected += OnConnectedToServer;
-        _networkService.Disconnected += OnDisconnectedFromServer;
+        _networkManager.Connected += OnConnectedToServer;
+        _networkManager.Disconnected += OnDisconnectedFromServer;
         Plugin.ClientState.Login += ClientLoggedIntoGame;
         Plugin.ClientState.Logout += ClientLoggedOutOfGame;
 
@@ -71,14 +73,14 @@ public class ConnectivityHandler : IDisposable
             return;
         
         var input = new GetAccountDataRequest(player.Name.ToString());
-        var response = await _networkService
+        var response = await _networkManager
             .InvokeAsync<GetAccountDataResponse>(HubMethod.GetAccountData, input)
             .ConfigureAwait(false);
         
         if (response.Result is not GetAccountDataEc.Success)
         {
             Plugin.Log.Fatal($"[NetworkHandler] Failed to get account data, {response.Result}");
-            await _networkService.StopAsync().ConfigureAwait(false);
+            await _networkManager.StopAsync().ConfigureAwait(false);
             return;
         }
 
@@ -116,16 +118,21 @@ public class ConnectivityHandler : IDisposable
             if (await Plugin.RunOnFramework(() => Plugin.ClientState.LocalPlayer) is not { } player)
                 return;
 
-            // Store the local character for use later on in the plugin
-            _identityService.Character = new LocalCharacter(player.Name.ToString(), player.HomeWorld.Value.Name.ToString());
+            var name = player.Name.ToString();
+            var world = player.HomeWorld.Value.Name.ToString();
             
-            // Check to see if there are any permanent transformations for this character
-            if (Plugin.Configuration.PermanentTransformations.TryGetValue(_identityService.Character.FullName, out var transformation))
-                await _permanentTransformationManager.Load(transformation);
+            // Store the local character for use later on in the plugin
+            _identityService.Character = new LocalCharacter(name, world);
+            
+            // Load the character configuration file for this character
+            await _configurationService.Load(name, world);
+            
+            // Check for any permanent transformations for this character
+            await _permanentTransformationManager.Load(name, world);
             
             // Automatically log in if needed
             if (Plugin.Configuration.AutoLogin)
-                await _networkService.StartAsync().ConfigureAwait(false);
+                await _networkManager.StartAsync().ConfigureAwait(false);
         }
         catch (Exception)
         {
@@ -137,7 +144,7 @@ public class ConnectivityHandler : IDisposable
     {
         try
         {
-            await _networkService.StopAsync().ConfigureAwait(false);
+            await _networkManager.StopAsync().ConfigureAwait(false);
         }
         catch (Exception)
         {
@@ -147,8 +154,8 @@ public class ConnectivityHandler : IDisposable
 
     public void Dispose()
     {
-        _networkService.Connected -= OnConnectedToServer;
-        _networkService.Disconnected -= OnDisconnectedFromServer;
+        _networkManager.Connected -= OnConnectedToServer;
+        _networkManager.Disconnected -= OnDisconnectedFromServer;
         Plugin.ClientState.Login -= ClientLoggedIntoGame;
         Plugin.ClientState.Logout -= ClientLoggedOutOfGame;
         GC.SuppressFinalize(this);

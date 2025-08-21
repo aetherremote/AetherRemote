@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Timers;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain;
@@ -66,13 +67,13 @@ public class HypnosisViewUiController
     
     // Injected
     private readonly FriendsListService _friendsListService;
-    private readonly NetworkService _networkService;
+    private readonly NetworkManager _networkManager;
     private readonly SpiralService _spiralService;
 
-    public HypnosisViewUiController(FriendsListService friendsListService, NetworkService networkService, SpiralService spiralService)
+    public HypnosisViewUiController(FriendsListService friendsListService, NetworkManager networkManager, SpiralService spiralService)
     {
         _friendsListService = friendsListService;
-        _networkService = networkService;
+        _networkManager = networkManager;
         _spiralService = spiralService;
         _currentDisplayPhraseTimer = new Timer(SpiralSpeed);
         _currentDisplayPhraseTimer.Interval = PreviewSpeeds[PreviewTextInterval];
@@ -165,7 +166,7 @@ public class HypnosisViewUiController
                 }
             };
             
-            var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.Hypnosis, input);
+            var response = await _networkManager.InvokeAsync<ActionResponse>(HubMethod.Hypnosis, input);
             ActionResponseParser.Parse("Hypnosis", response);
         }
         catch (Exception e)

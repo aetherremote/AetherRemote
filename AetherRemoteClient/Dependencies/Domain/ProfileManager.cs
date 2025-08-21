@@ -3,7 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace AetherRemoteClient.Ipc.Domain;
+namespace AetherRemoteClient.Dependencies.Domain;
 
 /// <summary>
 ///     Provides access to the Customize profile manager via reflection

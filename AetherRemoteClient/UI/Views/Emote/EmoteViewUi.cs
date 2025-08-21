@@ -1,5 +1,6 @@
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
@@ -14,9 +15,9 @@ public class EmoteViewUi(
     CommandLockoutService commandLockoutService,
     EmoteService emoteService,
     FriendsListService friendsListService,
-    NetworkService networkService) : IDrawable
+    NetworkManager networkManager) : IDrawable
 {
-    private readonly EmoteViewUiController _controller = new(emoteService, friendsListService, networkService);
+    private readonly EmoteViewUiController _controller = new(emoteService, friendsListService, networkManager);
 
     public void Draw()
     {

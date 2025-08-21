@@ -4,11 +4,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using AetherRemoteClient.Dependencies.Domain;
 using AetherRemoteClient.Domain.Interfaces;
-using AetherRemoteClient.Ipc.Domain;
 using Dalamud.Plugin;
 
-namespace AetherRemoteClient.Ipc;
+namespace AetherRemoteClient.Dependencies;
 
 /*  ==================================
  *  To the developers of CustomizePlus
@@ -23,7 +23,7 @@ namespace AetherRemoteClient.Ipc;
 /// <summary>
 ///     Provides access to CustomizePlus
 /// </summary>
-public class CustomizePlusIpc : IExternalPlugin, IDisposable
+public class CustomizePlusDependency : IExternalPlugin, IDisposable
 {
     // Instantiated
     private ProfileManager _profileManager = null!;
@@ -40,9 +40,9 @@ public class CustomizePlusIpc : IExternalPlugin, IDisposable
     public bool ApiAvailable;
 
     /// <summary>
-    ///     <inheritdoc cref="CustomizePlusIpc"/>
+    ///     <inheritdoc cref="CustomizePlusDependency"/>
     /// </summary>
-    public CustomizePlusIpc()
+    public CustomizePlusDependency()
     {
         TestIpcAvailability();
         Plugin.PluginInterface.ActivePluginsChanged += PluginInterfaceOnActivePluginsChanged;

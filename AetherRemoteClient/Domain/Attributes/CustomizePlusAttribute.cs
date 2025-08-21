@@ -1,15 +1,15 @@
 using System;
 using System.Collections;
 using System.Threading.Tasks;
+using AetherRemoteClient.Dependencies;
 using AetherRemoteClient.Domain.Interfaces;
-using AetherRemoteClient.Ipc;
 
 namespace AetherRemoteClient.Domain.Attributes;
 
 /// <summary>
 ///     Handles storing and applying of CustomizePlus attributes
 /// </summary>
-public class CustomizePlusAttribute(CustomizePlusIpc customizePlusIpc, string character) : ICharacterAttribute
+public class CustomizePlusAttribute(CustomizePlusDependency customizePlusDependency, string character) : ICharacterAttribute
 {
     // Instantiated/
     private IList _customizePlusTemplates = new ArrayList();
@@ -19,7 +19,7 @@ public class CustomizePlusAttribute(CustomizePlusIpc customizePlusIpc, string ch
     /// </summary>
     public async Task<bool> Store()
     {
-        if (await Task.Run(() => customizePlusIpc.GetActiveTemplates(character)).ConfigureAwait(false) is { } templates)
+        if (await Task.Run(() => customizePlusDependency.GetActiveTemplates(character)).ConfigureAwait(false) is { } templates)
         {
             _customizePlusTemplates = templates;
             return true;
@@ -34,15 +34,15 @@ public class CustomizePlusAttribute(CustomizePlusIpc customizePlusIpc, string ch
     /// </summary>
     public async Task<bool> Apply(PermanentTransformationData data)
     {
-        if (await customizePlusIpc.DeleteCustomize().ConfigureAwait(false) is false)
+        if (await customizePlusDependency.DeleteCustomize().ConfigureAwait(false) is false)
         {
             Plugin.Log.Warning("[CustomizePlusAttribute] Could not deleting existing profile before applying new one");
             return false;
         }
 
-        if (await customizePlusIpc.ApplyCustomize(_customizePlusTemplates).ConfigureAwait(false) is false)
+        if (await customizePlusDependency.ApplyCustomize(_customizePlusTemplates).ConfigureAwait(false) is false)
         {
-            await customizePlusIpc.DeleteCustomize().ConfigureAwait(false);
+            await customizePlusDependency.DeleteCustomize().ConfigureAwait(false);
             Plugin.Log.Warning("[CustomizePlusAttribute] Could not apply customize plus templates");
             return false;
         }
@@ -50,7 +50,7 @@ public class CustomizePlusAttribute(CustomizePlusIpc customizePlusIpc, string ch
         try
         {
             // Convert template list
-            if (await customizePlusIpc.SerializeTemplates(_customizePlusTemplates).ConfigureAwait(false) is not { } text)
+            if (await customizePlusDependency.SerializeTemplates(_customizePlusTemplates).ConfigureAwait(false) is not { } text)
             {
                 Plugin.Log.Warning("[CustomizePlusAttribute] Could not convert templates to string");
                 return false;

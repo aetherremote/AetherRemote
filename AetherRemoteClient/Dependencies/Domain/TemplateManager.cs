@@ -6,7 +6,7 @@ using System.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace AetherRemoteClient.Ipc.Domain;
+namespace AetherRemoteClient.Dependencies.Domain;
 
 /// <summary>
 ///     Provides access to the Customize template manager via reflection

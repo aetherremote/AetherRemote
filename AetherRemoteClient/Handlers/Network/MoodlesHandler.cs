@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AetherRemoteClient.Ipc;
+using AetherRemoteClient.Dependencies;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain;
@@ -20,8 +20,8 @@ namespace AetherRemoteClient.Handlers.Network;
 /// </summary>
 public class MoodlesHandler(
     LogService logService,
-    MoodlesIpc moodles,
-    PenumbraIpc penumbra,
+    MoodlesDependency moodles,
+    PenumbraDependency penumbra,
     PermissionManager permissionManager)
 {
     // Const

@@ -1,6 +1,6 @@
 using System;
 using System.Threading.Tasks;
-using AetherRemoteClient.Ipc;
+using AetherRemoteClient.Dependencies;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain;
@@ -13,7 +13,7 @@ namespace AetherRemoteClient.Handlers.Network;
 
 public class CustomizePlusHandler(
     LogService logService,
-    CustomizePlusIpc customize,
+    CustomizePlusDependency customize,
     PermissionManager permissionManager)
 {
     // Const

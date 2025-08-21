@@ -17,10 +17,10 @@ namespace AetherRemoteClient.UI.Views.BodySwap;
 ///     Handles events from the <see cref="BodySwapViewUi"/>
 /// </summary>
 public class BodySwapViewUiController(
+    CharacterTransformationService characterTransformationService,
     IdentityService identityService,
     FriendsListService friendsListService,
-    NetworkService networkService,
-    ModManager modManager,
+    NetworkManager networkManager,
     PermanentTransformationManager permanentTransformationManager)
 {
     public bool IncludeSelfInSwap;
@@ -76,7 +76,7 @@ public class BodySwapViewUiController(
 
             NotificationHelper.Info("Beginning body swap, this will take a moment", string.Empty);
 
-            var response = await networkService.InvokeAsync<BodySwapResponse>(HubMethod.BodySwap, request);
+            var response = await networkManager.InvokeAsync<BodySwapResponse>(HubMethod.BodySwap, request);
             if (response.Result is ActionResponseEc.Success)
             {
                 if (response.CharacterName is null)
@@ -90,21 +90,19 @@ public class BodySwapViewUiController(
                 }
                 else
                 {
-                    // Actually apply glamourer, mods, etc...
-                    if (await modManager.Assimilate(response.CharacterName, attributes).ConfigureAwait(false) is { } permanentTransformationData)
+                    // TODO: Error handling
+                    if (request.LockCode is not null)
                     {
-                        // If there is a lock code present, attempt to lock
-                        if (request.LockCode is not null)
-                        {
-                            permanentTransformationData.Sender = "Yourself";
-                            permanentTransformationData.AlterationType = IdentityAlterationType.BodySwap;
-                            permanentTransformationData.UnlockCode = request.LockCode;
-                            await permanentTransformationManager.Lock(permanentTransformationData);
-                        }
+                        await permanentTransformationManager.ApplyPermanentCharacterTransformation("You", 
+                            request.LockCode, response.CharacterName, request.SwapAttributes);
+                    }
+                    else
+                    {
+                        await characterTransformationService.ApplyCharacterTransformation(response.CharacterName, request.SwapAttributes);
                     }
                         
                     // Set your new identity
-                    identityService.AddAlteration(IdentityAlterationType.BodySwap, "Yourself");
+                    identityService.AddAlteration(IdentityAlterationType.BodySwap, "You");
                 }
             }
             

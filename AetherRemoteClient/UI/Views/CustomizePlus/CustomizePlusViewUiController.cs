@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
@@ -9,7 +10,7 @@ using AetherRemoteCommon.Domain.Network.Customize;
 
 namespace AetherRemoteClient.UI.Views.CustomizePlus;
 
-public class CustomizePlusViewUiController(FriendsListService friendsListService, NetworkService networkService)
+public class CustomizePlusViewUiController(FriendsListService friendsListService, NetworkManager networkManager)
 {
     /// <summary>
     ///     Customize+ data to send
@@ -24,7 +25,7 @@ public class CustomizePlusViewUiController(FriendsListService friendsListService
                 return;
             
             var request = new CustomizeRequest(friendsListService.SelectedFriendCodes, CustomizeData);
-            var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.CustomizePlus, request).ConfigureAwait(false);
+            var response = await networkManager.InvokeAsync<ActionResponse>(HubMethod.CustomizePlus, request).ConfigureAwait(false);
             if (response.Result is ActionResponseEc.Success)
                 CustomizeData = string.Empty;
             

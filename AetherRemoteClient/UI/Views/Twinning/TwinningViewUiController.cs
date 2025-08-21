@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.Input;
 using AetherRemoteClient.Utils;
@@ -11,7 +12,7 @@ using AetherRemoteCommon.Domain.Network.Twinning;
 
 namespace AetherRemoteClient.UI.Views.Twinning;
 
-public class TwinningViewUiController(FriendsListService friendsListService, NetworkService networkService)
+public class TwinningViewUiController(FriendsListService friendsListService, NetworkManager networkManager)
 {
     public bool SwapMods;
     public bool SwapMoodles;
@@ -60,7 +61,7 @@ public class TwinningViewUiController(FriendsListService friendsListService, Net
                 }
             }
 
-            var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.Twinning, request);
+            var response = await networkManager.InvokeAsync<ActionResponse>(HubMethod.Twinning, request);
             ActionResponseParser.Parse("Twinning", response);
         }
         catch (Exception e)

@@ -1,6 +1,6 @@
 using System.Numerics;
+using AetherRemoteClient.Dependencies;
 using AetherRemoteClient.Domain.Interfaces;
-using AetherRemoteClient.Ipc;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
@@ -10,10 +10,10 @@ namespace AetherRemoteClient.UI.Views.Settings;
 
 public class SettingsViewUi(
     SettingsViewUiController controller,
-    CustomizePlusIpc customize,
-    GlamourerIpc glamourer,
-    MoodlesIpc moodles,
-    PenumbraIpc penumbra) : IDrawable
+    CustomizePlusDependency customize,
+    GlamourerDependency glamourer,
+    MoodlesDependency moodles,
+    PenumbraDependency penumbra) : IDrawable
 {
     private static readonly Vector2 CheckboxPadding = new(8, 0);
 

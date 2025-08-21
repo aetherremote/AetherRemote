@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Events;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
@@ -18,7 +19,7 @@ public class FriendsViewUiController : IDisposable
 {
     // Injected
     private readonly FriendsListService _friendsListService;
-    private readonly NetworkService _networkService;
+    private readonly NetworkManager _networkManager;
 
     // Instantiated
     private Friend? _friendBeingEdited;
@@ -42,9 +43,9 @@ public class FriendsViewUiController : IDisposable
     /// <summary>
     ///     <inheritdoc cref="FriendsViewUiController" />
     /// </summary>
-    public FriendsViewUiController(FriendsListService friendsListService, NetworkService networkService)
+    public FriendsViewUiController(FriendsListService friendsListService, NetworkManager networkManager)
     {
-        _networkService = networkService;
+        _networkManager = networkManager;
         _friendsListService = friendsListService;
         _friendsListService.SelectedChangedEvent += OnSelectedChangedEvent;
     }
@@ -77,7 +78,7 @@ public class FriendsViewUiController : IDisposable
                 Permissions = permissions
             };
 
-            var response = await _networkService.InvokeAsync<UpdateFriendResponse>(HubMethod.UpdateFriend, input).ConfigureAwait(false);
+            var response = await _networkManager.InvokeAsync<UpdateFriendResponse>(HubMethod.UpdateFriend, input).ConfigureAwait(false);
             if (response.Result is UpdateFriendEc.Success)
             {
                 _friendBeingEdited.Note = Note == string.Empty ? null : Note;
@@ -108,7 +109,7 @@ public class FriendsViewUiController : IDisposable
                 return;
 
             var input = new RemoveFriendRequest { TargetFriendCode = FriendCode };
-            var response = await _networkService.InvokeAsync<RemoveFriendResponse>(HubMethod.RemoveFriend, input);
+            var response = await _networkManager.InvokeAsync<RemoveFriendResponse>(HubMethod.RemoveFriend, input);
             if (response.Result is RemoveFriendEc.Success)
             {
                 _friendsListService.Delete(_friendBeingEdited);

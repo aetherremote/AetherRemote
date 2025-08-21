@@ -3,12 +3,12 @@ using System.Threading.Tasks;
 using AetherRemoteClient.Domain.Interfaces;
 using Dalamud.Plugin.Ipc;
 
-namespace AetherRemoteClient.Ipc;
+namespace AetherRemoteClient.Dependencies;
 
 /// <summary>
 ///     Provides access to Moodles
 /// </summary>
-public class MoodlesIpc : IExternalPlugin
+public class MoodlesDependency : IExternalPlugin
 {
     // Moodles API
     private readonly ICallGateSubscriber<nint, string> _get;
@@ -21,9 +21,9 @@ public class MoodlesIpc : IExternalPlugin
     public bool ApiAvailable;
 
     /// <summary>
-    ///     <inheritdoc cref="MoodlesIpc"/>
+    ///     <inheritdoc cref="MoodlesDependency"/>
     /// </summary>
-    public MoodlesIpc()
+    public MoodlesDependency()
     {
         _get = Plugin.PluginInterface.GetIpcSubscriber<nint, string>("Moodles.GetStatusManagerByPtr");
         _set = Plugin.PluginInterface.GetIpcSubscriber<nint, string, object>("Moodles.SetStatusManagerByPtr");

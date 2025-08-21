@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
+using AetherRemoteClient.Dependencies;
 using AetherRemoteClient.Domain.Interfaces;
-using AetherRemoteClient.Ipc;
 
 namespace AetherRemoteClient.Managers;
 
@@ -18,8 +18,8 @@ public class DependencyManager : IDisposable
     /// <summary>
     ///     <inheritdoc cref="DependencyManager"/>
     /// </summary>
-    public DependencyManager(CustomizePlusIpc customize, GlamourerIpc glamourer, MoodlesIpc moodles,
-        PenumbraIpc penumbra)
+    public DependencyManager(CustomizePlusDependency customize, GlamourerDependency glamourer, MoodlesDependency moodles,
+        PenumbraDependency penumbra)
     {
         _dependencies = [customize, glamourer, moodles, penumbra];
         Plugin.PluginInterface.UiBuilder.Draw += Update;

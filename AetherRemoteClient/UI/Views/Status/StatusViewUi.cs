@@ -1,39 +1,25 @@
-using System;
 using System.Numerics;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
-using AetherRemoteClient.Ipc;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.Input;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
-using Newtonsoft.Json.Linq;
 
 namespace AetherRemoteClient.UI.Views.Status;
 
 public class StatusViewUi(
-    GlamourerIpc glamourer,
     StatusViewUiController controller,
+    PermanentTransformationLockService permanentTransformationLockService,
     IdentityService identityService,
-    PermanentLockService permanentLockService,
     TipService tipService,
     SpiralService spiralService) : IDrawable
 {
     public void Draw()
     {
         ImGui.BeginChild("SettingsContent", Vector2.Zero, false, AetherRemoteStyle.ContentFlags);
-
-        if (ImGui.Button("A"))
-        {
-            PrivateA();
-        }
-        ImGui.SameLine();
-        if (ImGui.Button("B"))
-        {
-            PrivateB();
-        }
         
         var windowWidth = ImGui.GetWindowWidth();
         var windowPadding = ImGui.GetStyle().WindowPadding;
@@ -84,7 +70,7 @@ public class StatusViewUi(
                 ]);
         });
         
-        if (permanentLockService.IsLocked)
+        if (permanentTransformationLockService.Locked)
             RenderPermanentTransformationComponent(windowPadding, windowWidth);
 
         if (identityService.IsAltered)
@@ -146,7 +132,7 @@ public class StatusViewUi(
             ImGui.TextUnformatted(type);
         });
 
-        if (permanentLockService.IsLocked)
+        if (permanentTransformationLockService.Locked)
         {
             ImGui.BeginDisabled();
             SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.History, windowPadding, windowWidth);
@@ -169,59 +155,5 @@ public class StatusViewUi(
         
         if (SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.Square, windowPadding, windowWidth))
             spiralService.StopCurrentSpiral();
-    }
-
-    private async void PrivateA()
-    {
-        try
-        {
-            var g = await glamourer.GetDesignAsync();
-            var k = GlamourerIpc.ConvertGlamourerBase64StringToJObject(g);
-            
-            var t = await glamourer.GetDesignComponentsAsync();
-            ImGui.SetClipboardText(t.ToString());
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Info($"{e}");
-        }
-    }
-
-    private async void PrivateB()
-    {
-        try
-        {
-           
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Info($"{e}");
-        }
-    }
-    
-    
-    
-    public void MergeMissingMaterialsWithRevert(JObject oldObj, JObject newObj)
-    {
-        var oldMaterials = oldObj["Materials"] as JObject;
-        var newMaterials = newObj["Materials"] as JObject;
-
-        if (oldMaterials == null || newMaterials == null)
-            return;
-
-        foreach (var oldMat in oldMaterials.Properties())
-        {
-            if (!newMaterials.ContainsKey(oldMat.Name))
-            {
-                // Deep clone the material to avoid reference issues
-                var newMat = (JObject)oldMat.Value.DeepClone();
-
-                // Set Revert = true
-                newMat["Revert"] = true;
-
-                // Add to new materials
-                newMaterials[oldMat.Name] = newMat;
-            }
-        }
     }
 }

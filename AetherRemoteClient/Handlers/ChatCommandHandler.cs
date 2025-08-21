@@ -77,8 +77,8 @@ public class ChatCommandHandler : IDisposable
             
             case SafeMode:
             case SafeWord:
-                // Unlock any permanent transformations
-                _permanentTransformationManager.ForceUnlock();
+                // TODO: Make this either async or properly handled
+                _permanentTransformationManager.ForceClearPermanentTransformation();
                 
                 // Stop any spirals
                 _spiralService.StopCurrentSpiral();
