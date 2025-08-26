@@ -179,6 +179,9 @@ public sealed class Plugin : IDalamudPlugin
         // Ui - Windows
         _services.GetRequiredService<WindowManager>();
         
+        // Ui - Controllers
+        _services.GetRequiredService<LoginViewUiController>();
+        
         Task.Run(SharedUserInterfaces.InitializeFonts);
     }
     

@@ -11,6 +11,9 @@ public class LoginManager : IDisposable
     // Injected
     private readonly NetworkService _networkService;
 
+    /// <summary>
+    ///     If we have finished processing all the login events
+    /// </summary>
     public event Action? LoginFinished;
     
     /// <summary>
@@ -35,8 +38,7 @@ public class LoginManager : IDisposable
         try
         {
             // Make sure the local player is present
-            if (await Plugin.RunOnFramework(() => Plugin.ClientState.LocalPlayer).ConfigureAwait(false) is not
-                { } player)
+            if (await Plugin.RunOnFramework(() => Plugin.ClientState.LocalPlayer).ConfigureAwait(false) is not { } player)
                 return;
 
             // Store the name and world for readability

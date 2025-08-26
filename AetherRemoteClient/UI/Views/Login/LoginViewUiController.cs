@@ -33,6 +33,10 @@ public class LoginViewUiController : IDisposable
             // Only save if the configuration is set
             if (Plugin.CharacterConfiguration is null)
                 return;
+
+            // Don't save if the string is empty
+            if (Secret == string.Empty)
+                return;
             
             // Set the secret
             Plugin.CharacterConfiguration.Secret = Secret;
