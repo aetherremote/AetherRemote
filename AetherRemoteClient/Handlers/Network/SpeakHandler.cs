@@ -3,19 +3,19 @@ using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Speak;
 using AetherRemoteCommon.Util;
 
 namespace AetherRemoteClient.Handlers.Network;
 
+// ReSharper disable once ConvertToPrimaryConstructor
+
 /// <summary>
 ///     Handles a <see cref="SpeakForwardedRequest"/>
 /// </summary>
-public class SpeakHandler(
-    ActionQueueService actionQueueService,
-    LogService logService,
-    PermissionManager permissionManager)
+public class SpeakHandler(ActionQueueService actionQueueService, LogService logService, PermissionsCheckerManager permissionsCheckerManager)
 {
     // Const
     private const string Operation = "Speak";
@@ -27,8 +27,9 @@ public class SpeakHandler(
     {
         Plugin.Log.Info($"{request}");
 
-        var permissions = request.ChatChannel.ToSpeakPermissions(request.Extra);
-        var placeholder = permissionManager.GetAndCheckSenderBySpeakPermissions(Operation, request.SenderFriendCode, permissions);
+        var speak = request.ChatChannel.ToSpeakPermissions(request.Extra);
+        var permissions = new UserPermissions(PrimaryPermissions2.None, speak, ElevatedPermissions.None);
+        var placeholder = permissionsCheckerManager.GetSenderAndCheckPermissions(Operation, request.SenderFriendCode, permissions);
         if (placeholder.Result is not ActionResultEc.Success)
             return ActionResultBuilder.Fail(placeholder.Result);
         

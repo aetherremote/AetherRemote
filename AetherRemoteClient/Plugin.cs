@@ -1,13 +1,12 @@
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
-using AetherRemoteClient.Dependencies;
-using AetherRemoteClient.Domain;
+using AetherRemoteClient.Domain.Configurations;
 using AetherRemoteClient.Handlers;
 using AetherRemoteClient.Handlers.Network;
-using AetherRemoteClient.Infrastructure;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Services.Dependencies;
 using AetherRemoteClient.UI;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.UI.Components.NavigationBar;
@@ -20,6 +19,7 @@ using AetherRemoteClient.UI.Views.Hypnosis;
 using AetherRemoteClient.UI.Views.Login;
 using AetherRemoteClient.UI.Views.Moodles;
 using AetherRemoteClient.UI.Views.Pause;
+using AetherRemoteClient.UI.Views.Possession;
 using AetherRemoteClient.UI.Views.Settings;
 using AetherRemoteClient.UI.Views.Speak;
 using AetherRemoteClient.UI.Views.Status;
@@ -49,6 +49,8 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static INotificationManager NotificationManager { get; private set; } = null!;
     [PluginService] internal static ITextureProvider TextureProvider { get; private set; } = null!;
     internal static Configuration Configuration { get; private set; } = null!;
+    internal static CharacterConfiguration? CharacterConfiguration { get; set; }
+    internal static LegacyConfiguration? LegacyConfiguration { get; private set; }
 
     /// <summary>
     ///     Internal plugin version
@@ -61,37 +63,24 @@ public sealed class Plugin : IDalamudPlugin
     
     public Plugin()
     {
-        try
-        {
-            Configuration = PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
-        }
-        catch (Exception e)
-        {
-            NotificationHelper.Warning("Unable to load plugin configuration", "You should not continue to use the plugin and tell the developer immediately", false);
-            Log.Fatal($"Could not load plugin configuration, {e}");
-            Configuration = new Configuration();
-        }
-
-        var services = new ServiceCollection();
-
-        // Infrastructure
-        services.AddSingleton<DatabaseInfrastructure>();
+        // TODO: Remove after 10-25-2025
+        // Load the legacy configuration
+        LegacyConfiguration = PluginInterface.GetPluginConfig() as LegacyConfiguration;
         
-        // Dependencies
-        services.AddSingleton<CustomizePlusDependency>();
-        services.AddSingleton<GlamourerDependency>();
-        services.AddSingleton<MoodlesDependency>();
-        services.AddSingleton<PenumbraDependency>();
+        // Load the default configuration
+        Configuration = ConfigurationService.LoadConfiguration() ?? new Configuration();
+        
+        // Create a collection of services
+        var services = new ServiceCollection();
         
         // Services
         services.AddSingleton<ActionQueueService>();
-        services.AddSingleton<CharacterTransformationService>();
         services.AddSingleton<CommandLockoutService>();
-        services.AddSingleton<ConfigurationService>();
         services.AddSingleton<EmoteService>();
         services.AddSingleton<FriendsListService>();
         services.AddSingleton<IdentityService>();
         services.AddSingleton<LogService>();
+        services.AddSingleton<NetworkService>();
         services.AddSingleton<PauseService>();
         services.AddSingleton<PermanentTransformationLockService>();
         services.AddSingleton<SpiralService>();
@@ -99,15 +88,21 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<ViewService>();
         services.AddSingleton<WorldService>();
         
+        // Services - Dependencies
+        services.AddSingleton<CustomizePlusService>();
+        services.AddSingleton<GlamourerService>();
+        services.AddSingleton<MoodlesService>();
+        services.AddSingleton<PenumbraService>();
+        
         // Managers
+        services.AddSingleton<CharacterTransformationManager>();
         services.AddSingleton<DependencyManager>();
-        services.AddSingleton<PermissionManager>();
-        services.AddSingleton<NetworkManager>();
-        services.AddSingleton<PermanentTransformationManager>();
+        services.AddSingleton<LoginManager>();
+        services.AddSingleton<PermanentTransformationHandler>();
+        services.AddSingleton<PermissionsCheckerManager>();
         
         // Handlers
         services.AddSingleton<ChatCommandHandler>();
-        services.AddSingleton<ConnectivityHandler>();
         services.AddSingleton<GlamourerEventHandler>();
         
         // Handlers Network
@@ -137,6 +132,7 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<LoginViewUiController>();
         services.AddSingleton<MoodlesViewUiController>();
         services.AddSingleton<PauseViewUiController>();
+        services.AddSingleton<PossessionViewUiController>();
         services.AddSingleton<SettingsViewUiController>();
         services.AddSingleton<SpeakViewUiController>();
         services.AddSingleton<StatusViewUiController>();
@@ -153,6 +149,7 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<LoginViewUi>();
         services.AddSingleton<MoodlesViewUi>();
         services.AddSingleton<PauseViewUi>();
+        services.AddSingleton<PossessionViewUi>();
         services.AddSingleton<SettingsViewUi>();
         services.AddSingleton<SpeakViewUi>();
         services.AddSingleton<StatusViewUi>();
@@ -172,10 +169,10 @@ public sealed class Plugin : IDalamudPlugin
         
         // Managers
         _services.GetRequiredService<DependencyManager>();
+        _services.GetRequiredService<LoginManager>();
         
         // Handlers
         _services.GetRequiredService<ChatCommandHandler>();
-        _services.GetRequiredService<ConnectivityHandler>();
         _services.GetRequiredService<GlamourerEventHandler>();
         _services.GetRequiredService<NetworkHandler>();
         

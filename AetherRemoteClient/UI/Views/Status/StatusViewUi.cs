@@ -59,6 +59,10 @@ public class StatusViewUi(
             
             ImGui.SameLine();
             SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
+            SharedUserInterfaces.Tooltip("Only active statuses will be displayed");
+            
+            // TODO: Re-enable when mare solution has been found
+            /*
             SharedUserInterfaces.Tooltip(
                 [
                     "Only active statuses will be displayed. Such statuses include:",
@@ -68,6 +72,7 @@ public class StatusViewUi(
                     "- Being twinned",
                     "- Being hypnotized"
                 ]);
+                */
         });
         
         if (permanentTransformationLockService.Locked)

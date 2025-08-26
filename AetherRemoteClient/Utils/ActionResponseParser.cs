@@ -62,6 +62,9 @@ public static class ActionResponseParser
             ActionResponseEc.TargetBodySwapLacksPermissions => "You lack permissions for one of your targets",
             ActionResponseEc.TargetBodySwapIsNotFriends => "You are not friends with one of your targets",
 
+            // Disabled
+            ActionResponseEc.Disabled => "This feature is temporarily disabled - How did you call this?!",
+            
             // Exception
             ActionResponseEc.Unknown => "Unknown failure",
 

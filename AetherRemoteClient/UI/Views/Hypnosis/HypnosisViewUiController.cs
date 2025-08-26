@@ -67,14 +67,15 @@ public class HypnosisViewUiController
     
     // Injected
     private readonly FriendsListService _friendsListService;
-    private readonly NetworkManager _networkManager;
+    private readonly NetworkService _networkService;
     private readonly SpiralService _spiralService;
 
-    public HypnosisViewUiController(FriendsListService friendsListService, NetworkManager networkManager, SpiralService spiralService)
+    public HypnosisViewUiController(FriendsListService friendsListService, NetworkService networkService, SpiralService spiralService)
     {
         _friendsListService = friendsListService;
-        _networkManager = networkManager;
+        _networkService = networkService;
         _spiralService = spiralService;
+        
         _currentDisplayPhraseTimer = new Timer(SpiralSpeed);
         _currentDisplayPhraseTimer.Interval = PreviewSpeeds[PreviewTextInterval];
         _currentDisplayPhraseTimer.Elapsed += ChangeDisplayPhrase;
@@ -166,7 +167,7 @@ public class HypnosisViewUiController
                 }
             };
             
-            var response = await _networkManager.InvokeAsync<ActionResponse>(HubMethod.Hypnosis, input);
+            var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.Hypnosis, input);
             ActionResponseParser.Parse("Hypnosis", response);
         }
         catch (Exception e)

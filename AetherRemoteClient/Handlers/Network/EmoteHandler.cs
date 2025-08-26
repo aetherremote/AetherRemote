@@ -9,17 +9,16 @@ using AetherRemoteCommon.Domain.Network.Emote;
 
 namespace AetherRemoteClient.Handlers.Network;
 
+// ReSharper disable once ConvertToPrimaryConstructor
+
 /// <summary>
 ///     Handles a <see cref="EmoteForwardedRequest"/>
 /// </summary>
-public class EmoteHandler(
-    EmoteService emoteService,
-    LogService logService,
-    PermissionManager permissionManager)
+public class EmoteHandler(EmoteService emoteService, LogService logService, PermissionsCheckerManager permissionsCheckerManager)
 {
     // Const
     private const string Operation = "Emote";
-    private const PrimaryPermissions2 Permissions = PrimaryPermissions2.Emote;
+    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.Emote, SpeakPermissions2.None, ElevatedPermissions.None);
     
     /// <summary>
     ///     <inheritdoc cref="EmoteHandler"/>
@@ -28,7 +27,7 @@ public class EmoteHandler(
     {
         Plugin.Log.Info($"{request}");
         
-        var placeholder = permissionManager.GetAndCheckSenderByPrimaryPermissions(Operation, request.SenderFriendCode, Permissions);
+        var placeholder = permissionsCheckerManager.GetSenderAndCheckPermissions(Operation, request.SenderFriendCode, Permissions);
         if (placeholder.Result is not ActionResultEc.Success)
             return ActionResultBuilder.Fail(placeholder.Result);
         

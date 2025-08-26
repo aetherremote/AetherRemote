@@ -12,6 +12,7 @@ using AetherRemoteClient.UI.Views.Hypnosis;
 using AetherRemoteClient.UI.Views.Login;
 using AetherRemoteClient.UI.Views.Moodles;
 using AetherRemoteClient.UI.Views.Pause;
+using AetherRemoteClient.UI.Views.Possession;
 using AetherRemoteClient.UI.Views.Settings;
 using AetherRemoteClient.UI.Views.Speak;
 using AetherRemoteClient.UI.Views.Status;
@@ -43,6 +44,7 @@ public class MainWindow : Window
     private readonly LoginViewUi _loginView;
     private readonly MoodlesViewUi _moodlesView;
     private readonly PauseViewUi _pauseView;
+    private readonly PossessionViewUi _possessionView;
     private readonly SettingsViewUi _settingsView;
     private readonly SpeakViewUi _speakView;
     private readonly StatusViewUi _statusView;
@@ -61,6 +63,7 @@ public class MainWindow : Window
         LoginViewUi loginView,
         MoodlesViewUi moodlesView,
         PauseViewUi pauseView,
+        PossessionViewUi possessionView,
         SettingsViewUi settingsView,
         SpeakViewUi speakView,
         StatusViewUi statusView,
@@ -86,6 +89,7 @@ public class MainWindow : Window
         _loginView = loginView;
         _moodlesView = moodlesView;
         _pauseView = pauseView;
+        _possessionView = possessionView;
         _settingsView = settingsView;
         _speakView = speakView;
         _statusView = statusView;
@@ -110,6 +114,7 @@ public class MainWindow : Window
             View.Login => _loginView,
             View.Moodles => _moodlesView,
             View.Pause => _pauseView,
+            View.Possession => _possessionView,
             View.Settings => _settingsView,
             View.Speak => _speakView,
             View.Status => _statusView,

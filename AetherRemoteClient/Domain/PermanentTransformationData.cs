@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using AetherRemoteClient.Domain.Glamourer;
+using AetherRemoteClient.Domain.Dependencies.Glamourer;
 using AetherRemoteCommon.Domain.Enums;
 
 namespace AetherRemoteClient.Domain;

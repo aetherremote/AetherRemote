@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using AetherRemoteClient.Domain;
-using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
@@ -14,7 +13,7 @@ namespace AetherRemoteClient.UI.Views.Emote;
 /// <summary>
 ///     Handles events from the <see cref="EmoteViewUi"/>
 /// </summary>
-public class EmoteViewUiController(EmoteService emoteService, FriendsListService friendsListService, NetworkManager networkManager)
+public class EmoteViewUiController(EmoteService emoteService, FriendsListService friendsListService, NetworkService networkService)
 {
     public readonly ListFilter<string> EmotesListFilter = new(emoteService.Emotes, FilterEmote);
     public string EmoteSelection = string.Empty;
@@ -33,7 +32,7 @@ public class EmoteViewUiController(EmoteService emoteService, FriendsListService
                 return;
 
             var request = new EmoteRequest(friendsListService.SelectedFriendCodes, EmoteSelection, DisplayLogMessage);
-            var response = await networkManager.InvokeAsync<ActionResponse>(HubMethod.Emote, request).ConfigureAwait(false);
+            var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.Emote, request).ConfigureAwait(false);
             if (response.Result is ActionResponseEc.Success)
                 EmoteSelection = string.Empty;
             

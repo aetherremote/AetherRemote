@@ -1,7 +1,8 @@
 using System;
-using AetherRemoteClient.Dependencies;
+using AetherRemoteClient.Handlers;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Services.Dependencies;
 using AetherRemoteClient.UI.Components.Input;
 using AetherRemoteCommon.Domain.Enums;
 using Dalamud.Bindings.ImGui;
@@ -10,25 +11,27 @@ using Newtonsoft.Json.Linq;
 namespace AetherRemoteClient.UI.Views.Status;
 
 public class StatusViewUiController(
-    GlamourerDependency g,
-    NetworkManager networkManager,
+    GlamourerService g,
+    NetworkService networkService,
     IdentityService identityService,
-    GlamourerDependency glamourer,
-    PermanentTransformationManager permanentTransformationManager)
+    GlamourerService glamourer,
+    PermanentTransformationHandler permanentTransformationHandler)
 {
     public readonly FourDigitInput PinInput = new("StatusInput");
     
     /// <summary>
     ///     Attempt to unlock the client's appearance
     /// </summary>
-    public void Unlock() => permanentTransformationManager.TryClearPermanentTransformation(PinInput.Value);
-    // TODO: Make this async or handled properly
+    public void Unlock() => permanentTransformationHandler.TryClearPermanentTransformation(PinInput.Value);
     
+    /// <summary>
+    ///     Button event to trigger a server disconnect
+    /// </summary>
     public async void Disconnect()
     {
         try
         {
-            await networkManager.StopAsync().ConfigureAwait(false);
+            await networkService.StopAsync().ConfigureAwait(false);
         }
         catch (Exception e)
         {
@@ -36,6 +39,9 @@ public class StatusViewUiController(
         }
     }
 
+    /// <summary>
+    ///     Button event to trigger an identity reset
+    /// </summary>
     public async void ResetIdentity()
     {
         try

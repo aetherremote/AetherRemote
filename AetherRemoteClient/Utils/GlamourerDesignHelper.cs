@@ -1,6 +1,5 @@
 using System.Globalization;
-using AetherRemoteClient.Domain;
-using AetherRemoteClient.Domain.Glamourer;
+using AetherRemoteClient.Domain.Dependencies.Glamourer;
 using Newtonsoft.Json.Linq;
 
 namespace AetherRemoteClient.Utils;

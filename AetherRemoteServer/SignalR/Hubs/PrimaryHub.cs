@@ -1,3 +1,4 @@
+using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.AddFriend;
 using AetherRemoteCommon.Domain.Network.BodySwap;
@@ -57,6 +58,7 @@ public class PrimaryHub(
     public async Task<ActionResponse> BodySwap(BodySwapRequest request)
     {
         logger.LogInformation("{Request}", request);
+        return new BodySwapResponse(ActionResponseEc.Disabled);
         return await bodySwapHandler.Handle(FriendCode, request, Clients);
     }
 
@@ -76,6 +78,7 @@ public class PrimaryHub(
     [HubMethodName(HubMethod.Moodles)]
     public async Task<ActionResponse> GetMoodlesAction(MoodlesRequest request)
     {
+        return new ActionResponse(ActionResponseEc.Disabled);
         return await moodlesHandler.Handle(FriendCode, request, Clients);
     }
 
@@ -97,6 +100,7 @@ public class PrimaryHub(
     public async Task<ActionResponse> Transform(TransformRequest request)
     {
         logger.LogInformation("{Request}", request);
+        return new ActionResponse(ActionResponseEc.Disabled);
         return await transformHandler.Handle(FriendCode, request, Clients);
     }
 
@@ -104,6 +108,7 @@ public class PrimaryHub(
     public async Task<ActionResponse> Twinning(TwinningRequest request)
     {
         logger.LogInformation("{Request}", request);
+        return new ActionResponse(ActionResponseEc.Disabled);
         return await twinningHandler.Handle(FriendCode, request, Clients);
     }
 
@@ -118,6 +123,7 @@ public class PrimaryHub(
     public async Task<ActionResponse> CustomizePlus(CustomizeRequest request)
     {
         logger.LogInformation("{Request}", request);
+        return new ActionResponse(ActionResponseEc.Disabled);
         return await customizePlusHandler.Handle(FriendCode, request, Clients);
     }
 
@@ -125,6 +131,7 @@ public class PrimaryHub(
     public async Task<ActionResponse> Hypnosis(HypnosisRequest request)
     {
         logger.LogInformation("{Request}", request);
+        return new ActionResponse(ActionResponseEc.Disabled);
         return await hypnosisHandler.Handle(FriendCode, request, Clients);
     }
 

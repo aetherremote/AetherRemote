@@ -1,8 +1,9 @@
 using System.Threading.Tasks;
-using AetherRemoteClient.Dependencies;
 using AetherRemoteClient.Domain.Enums;
 using AetherRemoteClient.Domain.Interfaces;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Services.Dependencies;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
 using Newtonsoft.Json.Linq;
@@ -12,7 +13,7 @@ namespace AetherRemoteClient.Domain.Attributes;
 /// <summary>
 ///     Handles storing and applying of glamourer attributes
 /// </summary>
-public class GlamourerAttribute(CharacterTransformationService characterTransformationService, GlamourerDependency glamourerDependency, ushort objectIndex) : ICharacterAttribute
+public class GlamourerAttribute(CharacterTransformationManager characterTransformationManager, GlamourerService glamourerService, ushort objectIndex) : ICharacterAttribute
 {
     // Instantiated
     private JObject _glamourerData = new();
@@ -22,7 +23,7 @@ public class GlamourerAttribute(CharacterTransformationService characterTransfor
     /// </summary>
     public async Task<bool> Store()
     {
-        if (await glamourerDependency.GetDesignComponentsAsync(objectIndex).ConfigureAwait(false) is { } components)
+        if (await glamourerService.GetDesignComponentsAsync(objectIndex).ConfigureAwait(false) is { } components)
         {
             _glamourerData = components;
             return true;
@@ -37,7 +38,7 @@ public class GlamourerAttribute(CharacterTransformationService characterTransfor
     /// </summary>
     public async Task<bool> Apply(PermanentTransformationData data)
     {
-        var result = await characterTransformationService.ApplyGenericTransformation(_glamourerData, GlamourerApplyFlags.All);
+        var result = await characterTransformationManager.ApplyGenericTransformation(_glamourerData, GlamourerApplyFlags.All);
         if (result.Success is not ApplyGenericTransformationErrorCode.Success)
         {
             // TODO: Logging

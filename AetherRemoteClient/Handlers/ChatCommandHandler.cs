@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI;
 using AetherRemoteClient.Utils;
@@ -22,17 +21,19 @@ public class ChatCommandHandler : IDisposable
     
     // Injected
     private readonly ActionQueueService _actionQueueService;
-    private readonly IdentityService _identityService;
     private readonly SpiralService _spiralService;
-    private readonly PermanentTransformationManager _permanentTransformationManager;
+    private readonly PermanentTransformationHandler _permanentTransformationHandler;
     private readonly MainWindow _mainWindow;
     
-    public ChatCommandHandler(ActionQueueService actionQueueService, IdentityService identityService, SpiralService spiralService, PermanentTransformationManager permanentTransformationManager, MainWindow mainWindow)
+    public ChatCommandHandler(
+        ActionQueueService actionQueueService,
+        SpiralService spiralService,
+        PermanentTransformationHandler permanentTransformationHandler,
+        MainWindow mainWindow)
     {
         _actionQueueService = actionQueueService;
-        _identityService = identityService;
-        _permanentTransformationManager = permanentTransformationManager;
         _spiralService = spiralService;
+        _permanentTransformationHandler = permanentTransformationHandler;
         _mainWindow = mainWindow;
         
         Plugin.CommandManager.AddHandler(CommandNameShort, new CommandInfo(OnCommand)
@@ -77,8 +78,7 @@ public class ChatCommandHandler : IDisposable
             
             case SafeMode:
             case SafeWord:
-                // TODO: Make this either async or properly handled
-                _permanentTransformationManager.ForceClearPermanentTransformation();
+                _permanentTransformationHandler.ForceClearPermanentTransformation();
                 
                 // Stop any spirals
                 _spiralService.StopCurrentSpiral();

@@ -1,33 +1,33 @@
 using System;
 using System.Timers;
-using AetherRemoteClient.Dependencies;
 using AetherRemoteClient.Domain.Events;
 using AetherRemoteClient.Managers;
+using AetherRemoteClient.Services.Dependencies;
 
 namespace AetherRemoteClient.Handlers;
 
 public class GlamourerEventHandler : IDisposable
 {
-    private readonly CustomizePlusDependency _customizePlusDependency;
-    private readonly GlamourerDependency _glamourerDependency;
-    private readonly PenumbraDependency _penumbraDependency;
-    private readonly PermanentTransformationManager _permanentTransformationManager;
+    private readonly CustomizePlusService _customizePlusService;
+    private readonly GlamourerService _glamourerService;
+    private readonly PenumbraService _penumbraService;
+    private readonly PermanentTransformationHandler _permanentTransformationHandler;
 
     private readonly Timer _batchLocalPlayerChangedEventsTimer = new(1000);
     
     public GlamourerEventHandler(
-        CustomizePlusDependency customizePlusDependency, 
-        GlamourerDependency glamourerDependency, 
-        PenumbraDependency penumbraDependency,
-        PermanentTransformationManager permanentTransformationManager)
+        CustomizePlusService customizePlusService, 
+        GlamourerService glamourerService, 
+        PenumbraService penumbraService,
+        PermanentTransformationHandler permanentTransformationHandler)
     {
-        _customizePlusDependency = customizePlusDependency;
-        _glamourerDependency = glamourerDependency;
-        _penumbraDependency = penumbraDependency;
-        _permanentTransformationManager = permanentTransformationManager;
+        _customizePlusService = customizePlusService;
+        _glamourerService = glamourerService;
+        _penumbraService = penumbraService;
+        _permanentTransformationHandler = permanentTransformationHandler;
         
-        _glamourerDependency.LocalPlayerResetOrReapply += OnLocalPlayerResetOrReapply;
-        _glamourerDependency.LocalPlayerChanged += OnLocalPlayerChanged;
+        _glamourerService.LocalPlayerResetOrReapply += OnLocalPlayerResetOrReapply;
+        _glamourerService.LocalPlayerChanged += OnLocalPlayerChanged;
 
         _batchLocalPlayerChangedEventsTimer.AutoReset = false;
         _batchLocalPlayerChangedEventsTimer.Elapsed += OnBatchedLocalPlayerChanged;
@@ -40,12 +40,18 @@ public class GlamourerEventHandler : IDisposable
         // Glamourer event types too (with a change to the underlying event as well) to provide more robust knowledge
         _batchLocalPlayerChangedEventsTimer.Stop();
         _batchLocalPlayerChangedEventsTimer.Start();
-        // TODO: Test this
     }
     
-    private void OnBatchedLocalPlayerChanged(object? sender, ElapsedEventArgs e)
+    private async void OnBatchedLocalPlayerChanged(object? sender, ElapsedEventArgs e)
     {
-        _permanentTransformationManager.ResolveDifferencesAfterGlamourerUpdate();
+        try
+        {
+            await _permanentTransformationHandler.ResolveDifferencesAfterGlamourerUpdate();
+        }
+        catch (Exception exception)
+        {
+            Plugin.Log.Error($"[GlamourerEventHandler] Unknown exception on batched local player changed event, {exception}");
+        }
     }
 
     private async void OnLocalPlayerResetOrReapply(object? sender, GlamourerStateChangedEventArgs e)
@@ -53,11 +59,11 @@ public class GlamourerEventHandler : IDisposable
         try
         {
             // Clean up the created CustomizePlus resources
-            await _customizePlusDependency.DeleteCustomize();
+            await _customizePlusService.DeleteCustomize();
             
             // Clean up the temporary mods added to the collection
-            var currentCollection = await _penumbraDependency.GetCollection().ConfigureAwait(false);
-            await _penumbraDependency.CallRemoveTemporaryMod(currentCollection).ConfigureAwait(false);
+            var currentCollection = await _penumbraService.GetCollection().ConfigureAwait(false);
+            await _penumbraService.CallRemoveTemporaryMod(currentCollection).ConfigureAwait(false);
         }
         catch (Exception exception)
         {
@@ -67,7 +73,7 @@ public class GlamourerEventHandler : IDisposable
 
     public void Dispose()
     {
-        _glamourerDependency.LocalPlayerResetOrReapply -= OnLocalPlayerResetOrReapply;
+        _glamourerService.LocalPlayerResetOrReapply -= OnLocalPlayerResetOrReapply;
         GC.SuppressFinalize(this);
     }
 }

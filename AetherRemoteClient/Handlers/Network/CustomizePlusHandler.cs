@@ -1,8 +1,8 @@
 using System;
 using System.Threading.Tasks;
-using AetherRemoteClient.Dependencies;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Services.Dependencies;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
@@ -11,14 +11,16 @@ using AetherRemoteCommon.Domain.Network.Customize;
 
 namespace AetherRemoteClient.Handlers.Network;
 
-public class CustomizePlusHandler(
-    LogService logService,
-    CustomizePlusDependency customize,
-    PermissionManager permissionManager)
+// ReSharper disable once ConvertToPrimaryConstructor
+
+/// <summary>
+///     Handles a <see cref="CustomizeForwardedRequest"/>
+/// </summary>
+public class CustomizePlusHandler(CustomizePlusService customizePlusService, LogService logService, PermissionsCheckerManager permissionsCheckerManager)
 {
     // Const
     private const string Operation = "Customize+";
-    private const PrimaryPermissions2 Permissions = PrimaryPermissions2.CustomizePlus;
+    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.CustomizePlus, SpeakPermissions2.None, ElevatedPermissions.None);
     
     /// <summary>
     ///     <inheritdoc cref="MoodlesHandler"/>
@@ -27,7 +29,7 @@ public class CustomizePlusHandler(
     {
         Plugin.Log.Info($"{request}");
         
-        var placeholder = permissionManager.GetAndCheckSenderByPrimaryPermissions(Operation, request.SenderFriendCode, Permissions);
+        var placeholder = permissionsCheckerManager.GetSenderAndCheckPermissions(Operation, request.SenderFriendCode, Permissions);
         if (placeholder.Result is not ActionResultEc.Success)
             return ActionResultBuilder.Fail(placeholder.Result);
         
@@ -36,13 +38,13 @@ public class CustomizePlusHandler(
 
         try
         {
-            if (await customize.DeleteCustomize().ConfigureAwait(false) is false)
+            if (await customizePlusService.DeleteCustomize().ConfigureAwait(false) is false)
             {
                 Plugin.Log.Warning("[CustomizePlusHandler] Unable to delete existing customize");
                 return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
             }
             
-            if (await customize.ApplyCustomize(request.Data).ConfigureAwait(false) is false)
+            if (await customizePlusService.ApplyCustomize(request.Data).ConfigureAwait(false) is false)
             {
                 Plugin.Log.Warning("[CustomizePlusHandler] Unable to apply customize");
                 return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);

@@ -9,9 +9,9 @@ using Dalamud.Interface.Colors;
 
 namespace AetherRemoteClient.UI.Components.Friends;
 
-public class FriendsListComponentUi(FriendsListService friendsListService, NetworkManager networkManager)
+public class FriendsListComponentUi(FriendsListService friendsListService, NetworkService networkService)
 {
-    private readonly FriendsListComponentUiController _controller = new(friendsListService, networkManager);
+    private readonly FriendsListComponentUiController _controller = new(friendsListService, networkService);
 
     public void Draw(bool displayAddFriendsBox = false, bool displayOfflineFriends = false)
     {

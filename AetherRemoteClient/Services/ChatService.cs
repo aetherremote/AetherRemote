@@ -8,7 +8,7 @@ namespace AetherRemoteClient.Services;
 /// <summary>
 ///     Provides access to sending messages to the XIV chat
 /// </summary>
-public class ChatService
+public static class ChatService
 {
     // Const
     private const AllowedEntities Allowed = AllowedEntities.UppercaseLetters |

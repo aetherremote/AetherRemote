@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using AetherRemoteClient.Domain;
+using AetherRemoteClient.Handlers;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.Input;
@@ -17,11 +18,11 @@ namespace AetherRemoteClient.UI.Views.BodySwap;
 ///     Handles events from the <see cref="BodySwapViewUi"/>
 /// </summary>
 public class BodySwapViewUiController(
-    CharacterTransformationService characterTransformationService,
-    IdentityService identityService,
     FriendsListService friendsListService,
-    NetworkManager networkManager,
-    PermanentTransformationManager permanentTransformationManager)
+    IdentityService identityService,
+    NetworkService networkService,
+    CharacterTransformationManager characterTransformationManager,
+    PermanentTransformationHandler permanentTransformationHandler)
 {
     public bool IncludeSelfInSwap;
     public bool SwapMods;
@@ -76,7 +77,7 @@ public class BodySwapViewUiController(
 
             NotificationHelper.Info("Beginning body swap, this will take a moment", string.Empty);
 
-            var response = await networkManager.InvokeAsync<BodySwapResponse>(HubMethod.BodySwap, request);
+            var response = await networkService.InvokeAsync<BodySwapResponse>(HubMethod.BodySwap, request);
             if (response.Result is ActionResponseEc.Success)
             {
                 if (response.CharacterName is null)
@@ -93,12 +94,12 @@ public class BodySwapViewUiController(
                     // TODO: Error handling
                     if (request.LockCode is not null)
                     {
-                        await permanentTransformationManager.ApplyPermanentCharacterTransformation("You", 
+                        await permanentTransformationHandler.ApplyPermanentCharacterTransformation("You", 
                             request.LockCode, response.CharacterName, request.SwapAttributes);
                     }
                     else
                     {
-                        await characterTransformationService.ApplyCharacterTransformation(response.CharacterName, request.SwapAttributes);
+                        await characterTransformationManager.ApplyCharacterTransformation(response.CharacterName, request.SwapAttributes);
                     }
                         
                     // Set your new identity

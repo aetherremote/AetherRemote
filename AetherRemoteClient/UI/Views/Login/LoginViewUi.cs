@@ -4,14 +4,16 @@ using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
+using Dalamud.Interface.Colors;
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace AetherRemoteClient.UI.Views.Login;
 
-public class LoginViewUi(LoginViewUiController controller, NetworkManager networkManager) : IDrawable
+public class LoginViewUi(LoginViewUiController controller, NetworkService networkService) : IDrawable
 {
     private const ImGuiInputTextFlags SecretInputFlags =
-        ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.Password;
+        ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.Password | ImGuiInputTextFlags.AutoSelectAll;
     
     public void Draw()
     {
@@ -30,11 +32,11 @@ public class LoginViewUi(LoginViewUiController controller, NetworkManager networ
             var shouldConnect = false;
 
             SharedUserInterfaces.MediumText("Enter Secret");
-            if (ImGui.InputTextWithHint("##SecretInput", "Secret", ref controller.Secret, 100, SecretInputFlags))
+            if (ImGui.InputTextWithHint("##SecretInput", "Secret", ref controller.Secret, 120, SecretInputFlags))
                 shouldConnect = true;
 
             ImGui.SameLine();
-            var disable = networkManager.Connection.State is not HubConnectionState.Disconnected;
+            var disable = networkService.Connection.State is not HubConnectionState.Disconnected;
             if (disable)
             {
                 ImGui.BeginDisabled();
@@ -67,6 +69,31 @@ public class LoginViewUi(LoginViewUiController controller, NetworkManager networ
 
             ImGui.PopStyleVar();
         });
+
+        SharedUserInterfaces.ContentBox("CharacterConfiguration", AetherRemoteStyle.PanelBackground, true, () =>
+        {
+            SharedUserInterfaces.Icon(FontAwesomeIcon.ExclamationTriangle, ImGuiColors.DalamudYellow);
+            ImGui.SameLine();
+            ImGui.TextWrapped("Aether Remote now operates on a per-character configuration system.");
+        });
+
+        if (Plugin.LegacyConfiguration is not null)
+        {
+            SharedUserInterfaces.ContentBox("LegacyConfiguration", AetherRemoteStyle.PanelBackground, true, () =>
+            {
+                SharedUserInterfaces.MediumText("Legacy Configuration");
+                ImGui.TextUnformatted("Click");
+                ImGui.SameLine();
+                ImGui.PushStyleColor(ImGuiCol.Text, AetherRemoteStyle.DiscordBlue);
+                var size = ImGui.CalcTextSize("here");
+                if (ImGui.Selectable("here", false, ImGuiSelectableFlags.None, size))
+                    LoginViewUiController.CopyOriginalSecret();
+
+                ImGui.PopStyleColor();
+                ImGui.SameLine();
+                ImGui.TextUnformatted("to copy your original secret to the clipboard.");
+            });
+        }
 
         ImGui.EndChild();
     }

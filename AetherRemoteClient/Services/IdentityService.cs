@@ -13,11 +13,6 @@ public class IdentityService
     public string FriendCode = "Unknown Friend Code";
 
     /// <summary>
-    ///     The local character you logged in as
-    /// </summary>
-    public LocalCharacter Character = new("Unknown", "Unknown");
-
-    /// <summary>
     ///     The current alteration to the local character
     /// </summary>
     public IdentityAlteration? Alteration;

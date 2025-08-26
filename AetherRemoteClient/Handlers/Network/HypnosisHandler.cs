@@ -6,19 +6,18 @@ using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Hypnosis;
 
+// ReSharper disable once ConvertToPrimaryConstructor
+
 namespace AetherRemoteClient.Handlers.Network;
 
 /// <summary>
-///     TODO
+///     Handles a <see cref="HypnosisForwardedRequest"/>
 /// </summary>
-public class HypnosisHandler(
-    LogService logService,
-    SpiralService spiralService,
-    PermissionManager permissionManager)
+public class HypnosisHandler(LogService logService, SpiralService spiralService, PermissionsCheckerManager permissionsCheckerManager)
 {
     // Const
     private const string Operation = "Hypnosis";
-    private const PrimaryPermissions2 Permissions = PrimaryPermissions2.Hypnosis;
+    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.Hypnosis, SpeakPermissions2.None, ElevatedPermissions.None);
     
     /// <summary>
     ///     <inheritdoc cref="HypnosisHandler"/>
@@ -27,7 +26,7 @@ public class HypnosisHandler(
     {
         Plugin.Log.Info($"{request}");
 
-        var placeholder = permissionManager.GetAndCheckSenderByPrimaryPermissions(Operation, request.SenderFriendCode, Permissions);
+        var placeholder = permissionsCheckerManager.GetSenderAndCheckPermissions(Operation, request.SenderFriendCode, Permissions);
         if (placeholder.Result is not ActionResultEc.Success)
             return ActionResultBuilder.Fail(placeholder.Result);
         

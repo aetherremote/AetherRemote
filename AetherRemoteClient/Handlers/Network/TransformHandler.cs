@@ -11,15 +11,12 @@ using AetherRemoteCommon.Util;
 
 namespace AetherRemoteClient.Handlers.Network;
 
+// ReSharper disable once ConvertToPrimaryConstructor
+
 /// <summary>
 ///     Handles a <see cref="TransformForwardedRequest"/>
 /// </summary>
-public class TransformHandler(
-    CharacterTransformationService characterTransformationService,
-    IdentityService identityService,
-    LogService logService,
-    PermissionManager permissionManager,
-    PermanentTransformationManager permanentTransformationManager)
+public class TransformHandler(IdentityService identityService, LogService logService, CharacterTransformationManager characterTransformationManager, PermissionsCheckerManager permissionsCheckerManager)
 {
     // Const
     private const string Operation = "Transform";
@@ -31,8 +28,9 @@ public class TransformHandler(
     {
         Plugin.Log.Verbose($"{request}");
         
-        if (permanentTransformationManager.IsPermanentTransformed)
-            return ActionResultBuilder.Fail(ActionResultEc.ClientPermanentlyTransformed);
+        // TODO: Re-enable when a mare solution is found
+        // if (permanentTransformationHandler.IsPermanentTransformed)
+        //    return ActionResultBuilder.Fail(ActionResultEc.ClientPermanentlyTransformed);
         
         // Setup permissions
         var primary = request.GlamourerApplyType.ToPrimaryPermission();
@@ -44,23 +42,27 @@ public class TransformHandler(
         var permissions = new UserPermissions(primary, SpeakPermissions2.None, elevated);
         
         // Validate Permission
-        var friendActionResult = permissionManager.GetAndCheckSenderByUserPermissions(Operation, request.SenderFriendCode, permissions);
+        var friendActionResult = permissionsCheckerManager.GetSenderAndCheckPermissions(Operation, request.SenderFriendCode, permissions);
         if (friendActionResult.Result is not ActionResultEc.Success)
             return ActionResultBuilder.Fail(friendActionResult.Result);
         
         if (friendActionResult.Value is not { } friend)
             return ActionResultBuilder.Fail(ActionResultEc.ValueNotSet);
 
-        // TODO: Error handling
+        // TODO: Re-enable when a mare solution is found
+        /*
         if (request.LockCode is not null)
         {
-            await permanentTransformationManager.ApplyPermanentTransformation(friend.NoteOrFriendCode, request.LockCode,
+            await permanentTransformationHandler.ApplyPermanentTransformation(friend.NoteOrFriendCode, request.LockCode,
                 request.GlamourerData, request.GlamourerApplyType);
         }
         else
         {
-            await characterTransformationService.ApplyGenericTransformation(request.GlamourerData, request.GlamourerApplyType);
+            await characterTransformationManager.ApplyGenericTransformation(request.GlamourerData, request.GlamourerApplyType);
         }
+        */
+        
+        await characterTransformationManager.ApplyGenericTransformation(request.GlamourerData, request.GlamourerApplyType);
         
         // Set your new identity
         identityService.AddAlteration(IdentityAlterationType.Transformation, friend.NoteOrFriendCode);

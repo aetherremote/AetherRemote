@@ -1,9 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AetherRemoteClient.Dependencies;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Services.Dependencies;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
@@ -15,18 +15,16 @@ using Newtonsoft.Json;
 
 namespace AetherRemoteClient.Handlers.Network;
 
+// ReSharper disable once ConvertToPrimaryConstructor
+
 /// <summary>
 ///     Handles a <see cref="MoodlesForwardedRequest"/>
 /// </summary>
-public class MoodlesHandler(
-    LogService logService,
-    MoodlesDependency moodles,
-    PenumbraDependency penumbra,
-    PermissionManager permissionManager)
+public class MoodlesHandler(LogService logService, MoodlesService moodlesService, PenumbraService penumbraService, PermissionsCheckerManager permissionsCheckerManager)
 {
     // Const
     private const string Operation = "Moodles";
-    private const PrimaryPermissions2 Permissions = PrimaryPermissions2.Moodles;
+    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.Moodles, SpeakPermissions2.None, ElevatedPermissions.None);
     
     // Instantiated
     private readonly MemoryPackSerializerOptions _serializerOptions = new()
@@ -41,7 +39,7 @@ public class MoodlesHandler(
     {
         Plugin.Log.Info($"{request}");
 
-        var placeholder = permissionManager.GetAndCheckSenderByPrimaryPermissions(Operation, request.SenderFriendCode, Permissions);
+        var placeholder = permissionsCheckerManager.GetSenderAndCheckPermissions(Operation, request.SenderFriendCode, Permissions);
         if (placeholder.Result is not ActionResultEc.Success)
             return ActionResultBuilder.Fail(placeholder.Result);
         
@@ -74,7 +72,7 @@ public class MoodlesHandler(
                 : DateTimeOffset.Now.ToUnixTimeMilliseconds() * moodle.TotalDurationSeconds * 1000;
 
             // Get the existing moodles
-            var existingMoodlesBase64String = await moodles.GetMoodles(address.Value).ConfigureAwait(false);
+            var existingMoodlesBase64String = await moodlesService.GetMoodles(address.Value).ConfigureAwait(false);
             if (existingMoodlesBase64String is null)
             {
                 logService.Custom($"{friend.NoteOrFriendCode} tried to apply a moodle but couldn't retrieve moodles");
@@ -131,7 +129,7 @@ public class MoodlesHandler(
             var packagedMoodlesBase64String = Convert.ToBase64String(packagedMoodles);
 
             // Apply moodles
-            var set = await moodles.SetMoodles(address.Value, packagedMoodlesBase64String).ConfigureAwait(false);
+            var set = await moodlesService.SetMoodles(address.Value, packagedMoodlesBase64String).ConfigureAwait(false);
             if (set is false)
             {
                 logService.Custom($"{friend.NoteOrFriendCode} tried to apply a moodle to you but failed");
@@ -139,7 +137,7 @@ public class MoodlesHandler(
             }
 
             // Redraw client so mare picks up changes
-            if (await penumbra.CallRedraw() is false)
+            if (await penumbraService.CallRedraw() is false)
                 Plugin.Log.Warning("[MoodlesHandler] Unable to redraw");
 
             // Log success

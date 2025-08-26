@@ -156,6 +156,8 @@ public class FriendsViewUi(
             }
         });
 
+        // TODO: Re-Enable when a new Mare solution is made
+        /*
         SharedUserInterfaces.ContentBox("FriendsCharacterAttributesOptions", AetherRemoteStyle.PanelBackground, true, () =>
         {
             ImGui.TextUnformatted("Character Attributes");
@@ -198,6 +200,7 @@ public class FriendsViewUi(
                 ImGui.EndTable();
             }
         });
+        */
 
         // Pending Changes
         if (controller.PendingChanges())

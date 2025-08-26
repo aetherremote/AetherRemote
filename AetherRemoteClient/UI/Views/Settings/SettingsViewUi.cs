@@ -1,19 +1,12 @@
 using System.Numerics;
-using AetherRemoteClient.Dependencies;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 
 namespace AetherRemoteClient.UI.Views.Settings;
 
-public class SettingsViewUi(
-    SettingsViewUiController controller,
-    CustomizePlusDependency customize,
-    GlamourerDependency glamourer,
-    MoodlesDependency moodles,
-    PenumbraDependency penumbra) : IDrawable
+public class SettingsViewUi(SettingsViewUiController controller) : IDrawable
 {
     private static readonly Vector2 CheckboxPadding = new(8, 0);
 
@@ -27,7 +20,7 @@ public class SettingsViewUi(
             SharedUserInterfaces.MediumText("Emergency Actions");
             ImGui.AlignTextToFramePadding();
             if (ImGui.Checkbox("Safe mode is", ref Plugin.Configuration.SafeMode))
-                controller.UpdateSafeMode(Plugin.Configuration.SafeMode);
+                controller.EnterSafeMode(Plugin.Configuration.SafeMode);
 
             SharedUserInterfaces.Tooltip(
             [
@@ -45,29 +38,17 @@ public class SettingsViewUi(
         SharedUserInterfaces.ContentBox("SettingsGeneral", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.MediumText("General");
-            if (ImGui.Checkbox("Auto Connect", ref Plugin.Configuration.AutoLogin))
-                Plugin.Configuration.Save();
-        });
-        
-        SharedUserInterfaces.ContentBox("SettingsHypnosis", AetherRemoteStyle.PanelBackground, true, () =>
-        {
-            SharedUserInterfaces.MediumText("Hypnosis");
-            ImGui.SameLine();
-            SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
-            SharedUserInterfaces.Tooltip("Setting Min/Max speed limits the spirals sent by others to your preferences");
+
+            // Only draw the remaining UI elements if the character configuration value is set
+            if (Plugin.CharacterConfiguration is null)
+                return;
             
-            ImGui.TextUnformatted("Minimum Spiral Speed");
-            if (ImGui.SliderInt("##MinimumSpeed", ref controller.MinimumSpiralSpeed, 0, 100))
-                if (controller.MinimumSpiralSpeed > controller.MaximumSpiralSpeed)
-                    controller.MinimumSpiralSpeed = controller.MaximumSpiralSpeed;
-            
-            ImGui.TextUnformatted("Maximum Spiral Speed");
-            if(ImGui.SliderInt("##MaximumSpeed", ref controller.MaximumSpiralSpeed, 0, 100))
-                if (controller.MaximumSpiralSpeed < controller.MinimumSpiralSpeed)
-                    controller.MaximumSpiralSpeed = controller.MinimumSpiralSpeed;
-            
+            if (ImGui.Checkbox("Auto Connect", ref Plugin.CharacterConfiguration.AutoLogin))
+                Plugin.CharacterConfiguration.Save();
         });
 
+        // TODO: Re-Enable when a new Mare solution is made
+        /*
         SharedUserInterfaces.ContentBox("SettingsDependencies", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.MediumText("Dependencies");
@@ -92,11 +73,14 @@ public class SettingsViewUi(
             ImGui.SameLine();
             DrawCheckmarkOrCrossOut(customize.ApiAvailable);
         });
+        */
 
         ImGui.PopStyleVar();
         ImGui.EndChild();
     }
 
+    // TODO: Re-Enable when a new Mare solution is made
+    /*
     private static void DrawCheckmarkOrCrossOut(bool apiAvailable)
     {
         if (apiAvailable)
@@ -104,4 +88,5 @@ public class SettingsViewUi(
         else
             SharedUserInterfaces.Icon(FontAwesomeIcon.Times, ImGuiColors.DalamudRed);
     }
+    */
 }

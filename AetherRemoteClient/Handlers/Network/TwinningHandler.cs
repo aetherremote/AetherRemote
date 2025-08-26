@@ -14,12 +14,7 @@ namespace AetherRemoteClient.Handlers.Network;
 /// <summary>
 ///     handles a <see cref="TwinningForwardedRequest"/>
 /// </summary>
-public class TwinningHandler(
-    CharacterTransformationService characterTransformationService,
-    IdentityService identityService,
-    LogService logService,
-    PermissionManager permissionManager,
-    PermanentTransformationManager permanentTransformationManager)
+public class TwinningHandler(IdentityService identityService, LogService logService, CharacterTransformationManager characterTransformationManager, PermissionsCheckerManager permissionsCheckerManager)
 {
     // Const
     private const string Operation = "Twinning";
@@ -31,8 +26,9 @@ public class TwinningHandler(
     {
         Plugin.Log.Verbose($"{request}");
         
-        if (permanentTransformationManager.IsPermanentTransformed)
-            return ActionResultBuilder.Fail(ActionResultEc.ClientPermanentlyTransformed);
+        // TODO: Re-enable when a mare solution is found
+        // if (permanentTransformationHandler.IsPermanentTransformed)
+        //    return ActionResultBuilder.Fail(ActionResultEc.ClientPermanentlyTransformed);
         
         var primary = request.SwapAttributes.ToPrimaryPermission();
         primary |= PrimaryPermissions2.Twinning;
@@ -43,22 +39,27 @@ public class TwinningHandler(
         
         var permissions = new UserPermissions(primary, SpeakPermissions2.None, elevated);
         
-        var friendActionResult = permissionManager.GetAndCheckSenderByUserPermissions(Operation, request.SenderFriendCode, permissions);
+        var friendActionResult = permissionsCheckerManager.GetSenderAndCheckPermissions(Operation, request.SenderFriendCode, permissions);
         if (friendActionResult.Result is not ActionResultEc.Success)
             return ActionResultBuilder.Fail(friendActionResult.Result);
         
         if (friendActionResult.Value is not { } friend)
             return ActionResultBuilder.Fail(ActionResultEc.ValueNotSet);
 
+        // TODO: Re-enable when a mare solution is found
+        /*
         if (request.LockCode is not null)
         {
-            await permanentTransformationManager.ApplyPermanentCharacterTransformation(friend.NoteOrFriendCode,
+            await permanentTransformationHandler.ApplyPermanentCharacterTransformation(friend.NoteOrFriendCode,
                 request.LockCode, request.CharacterName, request.SwapAttributes);
         }
         else
         {
-            await characterTransformationService.ApplyCharacterTransformation(request.CharacterName, request.SwapAttributes);
+            await characterTransformationManager.ApplyCharacterTransformation(request.CharacterName, request.SwapAttributes);
         }
+        */
+        
+        await characterTransformationManager.ApplyCharacterTransformation(request.CharacterName, request.SwapAttributes);
         
         // Set your new identity
         identityService.AddAlteration(IdentityAlterationType.Twinning, friend.NoteOrFriendCode);

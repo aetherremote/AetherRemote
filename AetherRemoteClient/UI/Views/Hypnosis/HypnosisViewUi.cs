@@ -17,8 +17,19 @@ public class HypnosisViewUi(
     FriendsListService friendsListService) : IDrawable
 {
     private static readonly Vector2 IconSize = new(40);
-    
+
     public void Draw()
+    {
+        ImGui.BeginChild("HypnosisContent", Vector2.Zero);
+        
+        ImGui.SetCursorPosY(ImGui.GetWindowHeight() * 0.5f - SharedUserInterfaces.BigFontSize);
+        SharedUserInterfaces.BigTextCentered("Upgrades in Progress!");
+        SharedUserInterfaces.TextCentered("(Coming soon)", ImGuiColors.DalamudGrey);
+        
+        ImGui.EndChild();
+    }
+    
+    public void DrawOld()
     {
         ImGui.BeginChild("HypnosisContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
 

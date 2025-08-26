@@ -128,6 +128,8 @@ public class PauseViewUi(
                 ImGui.EndTable();
             });
 
+            // TODO: Re-Enable when a new Mare solution is made
+            /*
             SharedUserInterfaces.ContentBox("PauseAttributes", AetherRemoteStyle.PanelBackground, true, () =>
             {
                 ImGui.TextUnformatted("Character Attributes");
@@ -163,6 +165,7 @@ public class PauseViewUi(
                 
                 ImGui.EndTable();
             });
+            */
             
             ImGui.EndChild();
         }
@@ -252,6 +255,8 @@ public class PauseViewUi(
         ImGui.TextUnformatted(permissions.ToString());
     }
     
+    // TODO: Re-Enable when a new Mare solution is made
+    /*
     private void BuildPauseButtonForElevatedFeature(ElevatedPermissions permissions)
     {
         if (pauseService.IsFeaturePaused(permissions))
@@ -270,4 +275,5 @@ public class PauseViewUi(
         ImGui.SameLine();
         ImGui.TextUnformatted(permissions.ToString());
     }
+    */
 }

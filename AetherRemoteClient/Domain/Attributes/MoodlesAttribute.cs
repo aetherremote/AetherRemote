@@ -1,13 +1,13 @@
 using System.Threading.Tasks;
-using AetherRemoteClient.Dependencies;
 using AetherRemoteClient.Domain.Interfaces;
+using AetherRemoteClient.Services.Dependencies;
 
 namespace AetherRemoteClient.Domain.Attributes;
 
 /// <summary>
 ///     Handles storing and applying of moodles attributes
 /// </summary>
-public class MoodlesAttribute(MoodlesDependency moodlesDependency, nint objectAddress) : ICharacterAttribute
+public class MoodlesAttribute(MoodlesService moodlesService, nint objectAddress) : ICharacterAttribute
 {
     /// <summary>
     ///     Moodles saved while storing
@@ -19,7 +19,7 @@ public class MoodlesAttribute(MoodlesDependency moodlesDependency, nint objectAd
     /// </summary>
     public async Task<bool> Store()
     {
-        if (await moodlesDependency.GetMoodles(objectAddress).ConfigureAwait(false) is { } moodles)
+        if (await moodlesService.GetMoodles(objectAddress).ConfigureAwait(false) is { } moodles)
         {
             Moodles = moodles;
             return true;
@@ -40,7 +40,7 @@ public class MoodlesAttribute(MoodlesDependency moodlesDependency, nint objectAd
             return false;
         }
 
-        if (await moodlesDependency.SetMoodles(address, Moodles).ConfigureAwait(false) is false)
+        if (await moodlesService.SetMoodles(address, Moodles).ConfigureAwait(false) is false)
         {
             Plugin.Log.Warning("[MoodlesAttribute] Could not apply moodles");
             return false;

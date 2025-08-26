@@ -11,15 +11,12 @@ using AetherRemoteCommon.Util;
 
 namespace AetherRemoteClient.Handlers.Network;
 
+// ReSharper disable once ConvertToPrimaryConstructor
+
 /// <summary>
 ///     Handles a <see cref="BodySwapForwardedRequest"/>
 /// </summary>
-public class BodySwapHandler(
-    CharacterTransformationService characterTransformationService,
-    IdentityService identityService,
-    LogService logService,
-    PermissionManager permissionManager,
-    PermanentTransformationManager permanentTransformationManager)
+public class BodySwapHandler(IdentityService identityService, LogService logService, CharacterTransformationManager characterTransformationManager, PermissionsCheckerManager permissionsCheckerManager)
 {
     // Const
     private const string Operation = "Body Swap";
@@ -31,8 +28,9 @@ public class BodySwapHandler(
     {
         Plugin.Log.Verbose($"{request}");
         
-        if (permanentTransformationManager.IsPermanentTransformed)
-            return ActionResultBuilder.Fail(ActionResultEc.ClientPermanentlyTransformed);
+        // TODO: Re-enable when a mare solution is found
+        // if (_permanentTransformationHandler.IsPermanentTransformed)
+        //    return ActionResultBuilder.Fail(ActionResultEc.ClientPermanentlyTransformed);
         
         var primary = request.SwapAttributes.ToPrimaryPermission();
         primary |= PrimaryPermissions2.BodySwap;
@@ -43,23 +41,27 @@ public class BodySwapHandler(
 
         var permissions = new UserPermissions(primary, SpeakPermissions2.None, elevated);
 
-        var result = permissionManager.GetAndCheckSenderByUserPermissions(Operation, request.SenderFriendCode, permissions);
+        var result = permissionsCheckerManager.GetSenderAndCheckPermissions(Operation, request.SenderFriendCode, permissions);
         if (result.Result is not ActionResultEc.Success)
             return ActionResultBuilder.Fail(result.Result);
         
         if (result.Value is not { } friend)
             return ActionResultBuilder.Fail(ActionResultEc.ValueNotSet);
 
-        // TODO: Error handling
+        // TODO: Re-enable when a mare solution is found
+        /*
         if (request.LockCode is not null)
         {
-            await permanentTransformationManager.ApplyPermanentCharacterTransformation(friend.NoteOrFriendCode,
+            await _permanentTransformationHandler.ApplyPermanentCharacterTransformation(friend.NoteOrFriendCode,
                 request.LockCode, request.CharacterName, request.SwapAttributes);
         }
         else
         {
-            await characterTransformationService.ApplyCharacterTransformation(request.CharacterName, request.SwapAttributes);
+            await _characterTransformationManager.ApplyCharacterTransformation(request.CharacterName, request.SwapAttributes);
         }
+        */
+        
+        await characterTransformationManager.ApplyCharacterTransformation(request.CharacterName, request.SwapAttributes);
         
         // Set your new identity
         identityService.AddAlteration(IdentityAlterationType.BodySwap, friend.NoteOrFriendCode);

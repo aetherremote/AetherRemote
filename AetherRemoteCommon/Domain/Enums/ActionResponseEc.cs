@@ -52,6 +52,11 @@ public enum ActionResponseEc
     UnexpectedState,
     
     /// <summary>
+    ///     When the action is disabled
+    /// </summary>
+    Disabled,
+    
+    /// <summary>
     ///     An unknown error occurred
     /// </summary>
     Unknown,

@@ -1,6 +1,5 @@
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
-using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
@@ -12,13 +11,10 @@ namespace AetherRemoteClient.UI.Views.Emote;
 
 public class EmoteViewUi(
     FriendsListComponentUi friendsList,
+    EmoteViewUiController controller,
     CommandLockoutService commandLockoutService,
-    EmoteService emoteService,
-    FriendsListService friendsListService,
-    NetworkManager networkManager) : IDrawable
+    FriendsListService friendsListService) : IDrawable
 {
-    private readonly EmoteViewUiController _controller = new(emoteService, friendsListService, networkManager);
-
     public void Draw()
     {
         ImGui.BeginChild("EmoteContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
@@ -53,10 +49,10 @@ public class EmoteViewUi(
         SharedUserInterfaces.ContentBox("EmoteOptions", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.MediumText("Options");
-            ImGui.Checkbox("Display log message?", ref _controller.DisplayLogMessage);
+            ImGui.Checkbox("Display log message?", ref controller.DisplayLogMessage);
         });
 
-        var friendsLackingPermissions = _controller.GetFriendsLackingPermissions();
+        var friendsLackingPermissions = controller.GetFriendsLackingPermissions();
         if (friendsLackingPermissions.Count is not 0)
         {
             SharedUserInterfaces.ContentBox("EmoteLackingPermissions", AetherRemoteStyle.PanelBackground, true, () =>
@@ -75,8 +71,8 @@ public class EmoteViewUi(
             SharedUserInterfaces.MediumText("Emote");
 
             var width = ImGui.GetWindowWidth() - ImGui.GetStyle().WindowPadding.X * 2;
-            SharedUserInterfaces.ComboWithFilter("##EmoteSelector", "Search emotes", ref _controller.EmoteSelection,
-                width, _controller.EmotesListFilter);
+            SharedUserInterfaces.ComboWithFilter("##EmoteSelector", "Search emotes", ref controller.EmoteSelection,
+                width, controller.EmotesListFilter);
 
             ImGui.Spacing();
 
@@ -93,7 +89,7 @@ public class EmoteViewUi(
                     return;
 
                 commandLockoutService.Lock();
-                _controller.Send();
+                controller.Send();
             }
         });
 

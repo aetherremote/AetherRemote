@@ -1,9 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AetherRemoteClient.Dependencies;
-using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Services.Dependencies;
 using AetherRemoteClient.UI.Components.Input;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
@@ -17,10 +16,7 @@ namespace AetherRemoteClient.UI.Views.Transformation;
 /// <summary>
 ///     Handles events from the <see cref="TransformationViewUi"/>
 /// </summary>
-public class TransformationViewUiController(
-    FriendsListService friendsListService,
-    NetworkManager networkManager,
-    GlamourerDependency glamourer)
+public class TransformationViewUiController(FriendsListService friendsListService, NetworkService networkService, GlamourerService glamourer)
 {
     public string GlamourerCode = string.Empty;
     public bool ApplyCustomization = true;
@@ -132,7 +128,7 @@ public class TransformationViewUiController(
                 }
             }
             
-            var response = await networkManager.InvokeAsync<ActionResponse>(HubMethod.Transform, request);
+            var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.Transform, request);
             ActionResponseParser.Parse("Transformation", response);
         }
         catch (Exception e)

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
@@ -11,7 +10,7 @@ using AetherRemoteCommon.Domain.Network.Moodles;
 
 namespace AetherRemoteClient.UI.Views.Moodles;
 
-public class MoodlesViewUiController(FriendsListService friendsListService, NetworkManager networkManager)
+public class MoodlesViewUiController(FriendsListService friendsListService, NetworkService networkService)
 {
     public string Moodle = string.Empty;
     
@@ -28,7 +27,7 @@ public class MoodlesViewUiController(FriendsListService friendsListService, Netw
                 Moodle = Moodle
             };
 
-            var response = await networkManager.InvokeAsync<ActionResponse>(HubMethod.Moodles, input);
+            var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.Moodles, input);
             if (response.Result is ActionResponseEc.Success)
                 Moodle = string.Empty;
             
