@@ -50,7 +50,6 @@ public class ProfileManager(object pluginInstance)
             _addTemplate = type.GetMethod("AddTemplate", BindingFlags.Public | BindingFlags.Instance);
             _createProfile = type.GetMethod("Create", BindingFlags.Public | BindingFlags.Instance);
             _deleteProfile = type.GetMethod("Delete", BindingFlags.Public | BindingFlags.Instance);
-            _setPriority = type.GetMethod("SetPriority", BindingFlags.Public | BindingFlags.Instance);
             _getCurrentCharacterField = type.GetField("_actorManager", BindingFlags.NonPublic | BindingFlags.Instance);
             _profilesField = type.GetField("Profiles", BindingFlags.Public | BindingFlags.Instance);
             _instance = profileManagerInstance;
@@ -58,6 +57,9 @@ public class ProfileManager(object pluginInstance)
             var profileType = assembly.GetType("CustomizePlus.Profiles.Data.Profile")!;
             _setEnabled = type.GetMethod("SetEnabled", BindingFlags.Public | BindingFlags.Instance, null,
                 [profileType, typeof(bool), typeof(bool)], null);
+            
+            _setPriority = type.GetMethod("SetPriority", BindingFlags.Public | BindingFlags.Instance, null, 
+                [profileType, typeof(int)], null);
 
             _templateType = assembly.GetType("CustomizePlus.Templates.Data.Template");
 
