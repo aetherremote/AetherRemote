@@ -61,7 +61,7 @@ public class BodySwapHandler(IdentityService identityService, LogService logServ
         }
         */
         
-        await characterTransformationManager.ApplyCharacterTransformation(request.CharacterName, request.SwapAttributes);
+        await characterTransformationManager.ApplyCharacterTransformation(request.CharacterName, request.SwapAttributes).ConfigureAwait(false);
         
         // Set your new identity
         identityService.AddAlteration(IdentityAlterationType.BodySwap, friend.NoteOrFriendCode);

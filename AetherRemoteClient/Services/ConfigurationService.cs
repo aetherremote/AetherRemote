@@ -91,8 +91,6 @@ public static class ConfigurationService
     /// </summary>
     public static void SaveConfiguration(Configuration configuration)
     {
-        Plugin.Log.Info($"Saving configuration {configuration}");
-        
         // Serialize to json
         var json = JsonConvert.SerializeObject(configuration, Formatting.Indented);
         
@@ -185,8 +183,6 @@ public static class ConfigurationService
     /// </summary>
     public static void SaveCharacterConfiguration(CharacterConfiguration configuration)
     {
-        Plugin.Log.Info($"Saving character configuration {configuration}");
-        
         // Combine the name and world to get a unique identifier as filename
         var fullNameFileName = string.Concat(configuration.Name, " - ",  configuration.World, ".json");
         

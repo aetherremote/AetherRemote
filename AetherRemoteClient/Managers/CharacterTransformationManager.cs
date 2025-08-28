@@ -37,7 +37,7 @@ public class CharacterTransformationManager(
         if (GlamourerService.ConvertGlamourerBase64StringToJObject(glamourerCode) is not { } glamourerCodeAsComponents)
             return new ApplyGenericTransformationResult(ApplyGenericTransformationErrorCode.FailedBase64Conversion, null);
         
-        return await ApplyGenericTransformation(glamourerCodeAsComponents, flags);
+        return await ApplyGenericTransformation(glamourerCodeAsComponents, flags).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -117,20 +117,20 @@ public class CharacterTransformationManager(
         ImGui.SetClipboardText(convertedDesign.ToString());
         
         // Apply Glamourer
-        await glamourerService.ApplyDesignAsync(convertedDesign, permanentTransformationData.GlamourerApplyType);
+        await glamourerService.ApplyDesignAsync(convertedDesign, permanentTransformationData.GlamourerApplyType).ConfigureAwait(false);
 
         // Apply Mods
         if (permanentTransformationData.ModMetaData is not null && permanentTransformationData.ModPathData is not null)
-            await penumbraService.AddTemporaryMod(collection, permanentTransformationData.ModPathData, permanentTransformationData.ModMetaData);
+            await penumbraService.AddTemporaryMod(collection, permanentTransformationData.ModPathData, permanentTransformationData.ModMetaData).ConfigureAwait(false);
 
         // Apply Customize
         if (permanentTransformationData.CustomizePlusData is not null)
-            await customizePlusService.ApplyCustomize(permanentTransformationData.CustomizePlusData);
+            await customizePlusService.ApplyCustomize(permanentTransformationData.CustomizePlusData).ConfigureAwait(false);
 
         // Apply Moodles
         if (permanentTransformationData.MoodlesData is not null)
             if (await Plugin.RunOnFramework(() => Plugin.ObjectTable[0]?.Address).ConfigureAwait(false) is { } address)
-                await moodlesService.SetMoodles(address, permanentTransformationData.MoodlesData);
+                await moodlesService.SetMoodles(address, permanentTransformationData.MoodlesData).ConfigureAwait(false);
     }
 
     private async Task<Guid?> TryRemoveExistingMods()

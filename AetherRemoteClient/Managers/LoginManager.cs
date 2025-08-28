@@ -52,12 +52,12 @@ public class LoginManager : IDisposable
             // Set the character configuration
             Plugin.CharacterConfiguration = characterConfiguration;
 
-            // Initiate a connection to the server if auto login is set to true
-            if (Plugin.CharacterConfiguration.AutoLogin is true)
-                await _networkService.StartAsync();
-            
             // Emit an event
             LoginFinished?.Invoke();
+            
+            // Initiate a connection to the server if auto login is set to true
+            if (Plugin.CharacterConfiguration.AutoLogin is true)
+                await _networkService.StartAsync().ConfigureAwait(false);
         }
         catch (Exception e)
         {

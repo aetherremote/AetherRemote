@@ -53,8 +53,7 @@ public class CustomizePlusService : IExternalPlugin, IDisposable
     /// </summary>
     public void TestIpcAvailability()
     {
-        if (Plugin.PluginInterface.InstalledPlugins.FirstOrDefault(p =>
-                p.Name.Contains("Customize", StringComparison.OrdinalIgnoreCase)) is not { } plugin)
+        if (Plugin.PluginInterface.InstalledPlugins.FirstOrDefault(p => p.Name.Contains("Customize", StringComparison.OrdinalIgnoreCase)) is not { } plugin)
         {
             Plugin.Log.Verbose("CustomizePlus is not installed");
             ApiAvailable = false;
