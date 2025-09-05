@@ -65,7 +65,7 @@ public class FriendsViewUiController : IDisposable
             else
                 Plugin.Configuration.Notes[FriendCode] = Note;
 
-            Plugin.Configuration.Save();
+            await Plugin.Configuration.Save().ConfigureAwait(false);
 
             if (PendingChanges() is false)
                 return;

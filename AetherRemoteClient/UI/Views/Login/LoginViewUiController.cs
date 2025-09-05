@@ -42,7 +42,7 @@ public class LoginViewUiController : IDisposable
             Plugin.CharacterConfiguration.Secret = Secret;
             
             // Save the configuration
-            Plugin.CharacterConfiguration.Save();
+            await Plugin.CharacterConfiguration.Save().ConfigureAwait(false);
             
             // Try to connect to the server
             await _networkService.StartAsync();

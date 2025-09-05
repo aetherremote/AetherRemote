@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using AetherRemoteClient.Services;
 
 namespace AetherRemoteClient.Domain.Configurations;
@@ -37,5 +38,5 @@ public class CharacterConfiguration
     /// <summary>
     ///     Save the configuration
     /// </summary>
-    public void Save() => ConfigurationService.SaveCharacterConfiguration(this);
+    public async Task Save() => await ConfigurationService.SaveCharacterConfiguration(this).ConfigureAwait(false);
 }

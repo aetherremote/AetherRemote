@@ -131,7 +131,6 @@ public class PrimaryHub(
     public async Task<ActionResponse> Hypnosis(HypnosisRequest request)
     {
         logger.LogInformation("{Request}", request);
-        return new ActionResponse(ActionResponseEc.Disabled);
         return await hypnosisHandler.Handle(FriendCode, request, Clients);
     }
 

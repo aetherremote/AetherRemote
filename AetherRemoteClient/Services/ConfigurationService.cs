@@ -1,6 +1,8 @@
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using AetherRemoteClient.Domain.Configurations;
+using AetherRemoteClient.Domain.Hypnosis;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -16,10 +18,14 @@ public static class ConfigurationService
     private const string CharactersFolderName = "Characters";
     private static readonly string CharactersFolderPath = Path.Combine(Plugin.PluginInterface.GetPluginConfigDirectory(), CharactersFolderName);
     
+    // Hypnosis Profiles
+    private const string HypnosisFolderName = "Hypnosis";
+    public static readonly string HypnosisFolderPath = Path.Combine(Plugin.PluginInterface.GetPluginConfigDirectory(), HypnosisFolderName);
+    
     /// <summary>
     ///     Loads the plugin configuration file
     /// </summary>
-    public static Configuration? LoadConfiguration()
+    public static async Task<Configuration?> LoadConfiguration()
     {
         // Check if the configuration file doesn't exist
         if (File.Exists(ConfigurationFilePath) is false)
@@ -27,7 +33,7 @@ public static class ConfigurationService
             try
             {
                 // Create the directory
-                Directory.CreateDirectory(Plugin.PluginInterface.GetPluginConfigDirectory());
+                await Task.Run(() => Directory.CreateDirectory(Plugin.PluginInterface.GetPluginConfigDirectory())).ConfigureAwait(false);
 
                 // Create a new configuration
                 var configuration = new Configuration();
@@ -40,7 +46,7 @@ public static class ConfigurationService
                 }
                 
                 // Save the new configuration
-                SaveConfiguration(configuration);
+                await SaveConfiguration(configuration).ConfigureAwait(false);
                 
                 // Return it
                 return configuration;
@@ -56,17 +62,17 @@ public static class ConfigurationService
         try
         {
             // Read the config
-            var json = File.ReadAllText(ConfigurationFilePath);
+            var json = await File.ReadAllTextAsync(ConfigurationFilePath).ConfigureAwait(false);
 
             // Parse it into a JObject
-            var configuration = JObject.Parse(json);
+            var configuration = await Task.Run(() => JObject.Parse(json)).ConfigureAwait(false);
             
             // Check the version of the config for any possible upgrades
             switch (configuration["Version"]?.Value<int>())
             {
                 // Current
                 case 1:
-                    return configuration.ToObject<Configuration>();
+                    return await Task.Run(() => configuration.ToObject<Configuration>()).ConfigureAwait(false);
 
                 // Parse failure
                 case null:
@@ -89,15 +95,15 @@ public static class ConfigurationService
     /// <summary>
     ///     Save the plugin configuration file
     /// </summary>
-    public static void SaveConfiguration(Configuration configuration)
+    public static async Task SaveConfiguration(Configuration configuration)
     {
         // Serialize to json
-        var json = JsonConvert.SerializeObject(configuration, Formatting.Indented);
+        var json = await Task.Run(() => JsonConvert.SerializeObject(configuration, Formatting.Indented)).ConfigureAwait(false);
         
         try
         {
             // Write to disk
-            File.WriteAllText(ConfigurationFilePath, json);
+            await File.WriteAllTextAsync(ConfigurationFilePath, json).ConfigureAwait(false);
         }
         catch (Exception e)
         {
@@ -108,7 +114,7 @@ public static class ConfigurationService
     /// <summary>
     ///     Loads the character configuration for provided character
     /// </summary>
-    public static CharacterConfiguration? LoadCharacterConfiguration(string characterName, string characterWorld)
+    public static async Task<CharacterConfiguration?> LoadCharacterConfiguration(string characterName, string characterWorld)
     {
         // Combine the name and world to get a unique identifier as filename
         var fullNameFileName = string.Concat(characterName, " - ",  characterWorld, ".json");
@@ -122,7 +128,7 @@ public static class ConfigurationService
             try
             {
                 // Create the directory and write an empty file
-                Directory.CreateDirectory(CharactersFolderPath);
+                await Task.Run(() => Directory.CreateDirectory(CharactersFolderPath)).ConfigureAwait(false);
 
                 // Create a new empty configuration
                 var configuration = new CharacterConfiguration
@@ -132,7 +138,7 @@ public static class ConfigurationService
                 };
                 
                 // Save it to disk
-                SaveCharacterConfiguration(configuration);
+                await SaveCharacterConfiguration(configuration).ConfigureAwait(false);
                 
                 // Return it
                 return configuration;
@@ -148,17 +154,17 @@ public static class ConfigurationService
         try
         {
             // Read the config
-            var json = File.ReadAllText(fullNamePath);
+            var json = await File.ReadAllTextAsync(fullNamePath).ConfigureAwait(false);
 
             // Parse it into a JObject
-            var configuration = JObject.Parse(json);
+            var configuration = await Task.Run(() => JObject.Parse(json)).ConfigureAwait(false);
             
             // Check the version of the config for any possible upgrades
             switch (configuration["Version"]?.Value<int>())
             {
                 // Current
                 case 1:
-                    return configuration.ToObject<CharacterConfiguration>();
+                    return await Task.Run(() => configuration.ToObject<CharacterConfiguration>()).ConfigureAwait(false);
 
                 // Parse failure
                 case null:
@@ -181,7 +187,7 @@ public static class ConfigurationService
     /// <summary>
     ///     Saves the character configuration
     /// </summary>
-    public static void SaveCharacterConfiguration(CharacterConfiguration configuration)
+    public static async Task SaveCharacterConfiguration(CharacterConfiguration configuration)
     {
         // Combine the name and world to get a unique identifier as filename
         var fullNameFileName = string.Concat(configuration.Name, " - ",  configuration.World, ".json");
@@ -190,16 +196,117 @@ public static class ConfigurationService
         var fullNamePath = Path.Combine(CharactersFolderPath, fullNameFileName);
         
         // Serialize to json
-        var json = JsonConvert.SerializeObject(configuration, Formatting.Indented);
+        var json = await Task.Run(() => JsonConvert.SerializeObject(configuration, Formatting.Indented)).ConfigureAwait(false);
         
         try
         {
             // Write to disk
-            File.WriteAllText(fullNamePath, json);
+            await File.WriteAllTextAsync(fullNamePath, json).ConfigureAwait(false);
         }
         catch (Exception e)
         {
             Plugin.Log.Error($"[ConfigurationService] Unable to save character configuration, {e}");
+        }
+    }
+
+    /// <summary>
+    ///     Loads a hypnosis profile
+    /// </summary>
+    public static async Task<HypnosisProfile?> LoadHypnosisProfile(string hypnosisProfileName)
+    {
+        // Combine the name and world to get a unique identifier as filename
+        var fullHypnosisProfileName = string.Concat(hypnosisProfileName, ".json");
+        
+        // Combine the folder path and the character's full name
+        var fullHypnosisProfilePath = Path.Combine(HypnosisFolderPath, fullHypnosisProfileName);
+
+        // Check if the configuration file doesn't exist
+        if (File.Exists(fullHypnosisProfilePath) is false)
+            return null;
+
+        try
+        {
+            // Read the config
+            var json = await File.ReadAllTextAsync(fullHypnosisProfilePath).ConfigureAwait(false);
+            
+            // Parse it into a JObject
+            var hypnosisProfile = JObject.Parse(json);
+            
+            // Check the version of the config for any possible upgrades
+            switch (hypnosisProfile["Version"]?.Value<int>())
+            {
+                // Current
+                case 1:
+                    return await Task.Run(() => hypnosisProfile.ToObject<HypnosisProfile>()).ConfigureAwait(false);
+
+                // Parse failure
+                case null:
+                    Plugin.Log.Error("[ConfigurationService] Unable to find hypnosis profile version");
+                    return null;
+
+                // Unknown
+                default:
+                    Plugin.Log.Warning("[ConfigurationService] Unsupported hypnosis profile version");
+                    return null;
+            }
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error($"[ConfigurationService] Unable to load hypnosis profile, {e}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    ///     Saves a hypnosis profile
+    /// </summary>
+    public static async Task SaveHypnosisProfile(HypnosisProfile profile)
+    {
+        // Combine the name and world to get a unique identifier as filename
+        var fullHypnosisProfileName = string.Concat(profile.Name, ".json");
+        
+        // Combine the folder path and the character's full name
+        var fullHypnosisProfilePath = Path.Combine(HypnosisFolderPath, fullHypnosisProfileName);
+        
+        // Serialize to json
+        var json = await Task.Run(() => JsonConvert.SerializeObject(profile, Formatting.Indented)).ConfigureAwait(false);
+        
+        try
+        {
+            // Create the directory if it doesn't exist
+            await Task.Run(() => Directory.CreateDirectory(HypnosisFolderPath)).ConfigureAwait(false);
+            
+            // Write to disk
+            await File.WriteAllTextAsync(fullHypnosisProfilePath, json).ConfigureAwait(false);
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error($"[ConfigurationService] Unable to save hypnosis profile, {e}");
+        }
+    }
+
+    /// <summary>
+    ///     Deletes a hypnosis profile
+    /// </summary>
+    public static async Task DeleteHypnosisProfile(string hypnosisProfileName)
+    {
+        // Combine the name and world to get a unique identifier as filename
+        var fullHypnosisProfileName = string.Concat(hypnosisProfileName, ".json");
+        
+        // Combine the folder path and the character's full name
+        var fullHypnosisProfilePath = Path.Combine(HypnosisFolderPath, fullHypnosisProfileName);
+
+        // Check if the configuration file doesn't exist
+        if (File.Exists(fullHypnosisProfilePath) is false)
+            return;
+
+        try
+        {
+            await Task.Run(() => File.Delete(fullHypnosisProfilePath)).ConfigureAwait(false);
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error($"[ConfigurationService] Unable to delete hypnosis profile, {e}");
         }
     }
 }

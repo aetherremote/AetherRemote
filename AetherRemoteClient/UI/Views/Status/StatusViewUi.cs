@@ -1,6 +1,7 @@
 using System.Numerics;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.Input;
 using AetherRemoteClient.Utils;
@@ -15,7 +16,7 @@ public class StatusViewUi(
     PermanentTransformationLockService permanentTransformationLockService,
     IdentityService identityService,
     TipService tipService,
-    SpiralService spiralService) : IDrawable
+    HypnosisManager hypnosisManager) : IDrawable
 {
     public void Draw()
     {
@@ -61,18 +62,15 @@ public class StatusViewUi(
             SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
             SharedUserInterfaces.Tooltip("Only active statuses will be displayed");
             
-            // TODO: Re-enable when mare solution has been found
-            /*
             SharedUserInterfaces.Tooltip(
                 [
                     "Only active statuses will be displayed. Such statuses include:",
-                    "- Being permanently transformed",
-                    "- Being transformed",
-                    "- Being body swapped",
-                    "- Being twinned",
+                    //"- Being permanently transformed",
+                    //"- Being transformed",
+                    //"- Being body swapped",
+                    //"- Being twinned",
                     "- Being hypnotized"
                 ]);
-                */
         });
         
         if (permanentTransformationLockService.Locked)
@@ -81,7 +79,7 @@ public class StatusViewUi(
         if (identityService.IsAltered)
             RenderTransformationComponent(windowPadding, windowWidth);
 
-        if (spiralService.IsBeingHypnotized)
+        if (hypnosisManager.IsBeingHypnotized)
             RenderHypnosisComponent(windowPadding, windowWidth);
         
         ImGui.EndChild();
@@ -155,10 +153,10 @@ public class StatusViewUi(
         SharedUserInterfaces.ContentBox("StatusHypnosis", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.MediumText("Hypnosis");
-            ImGui.TextUnformatted($"{identityService.Alteration?.Sender ?? "Unknown"} is hypnotizing you");
+            ImGui.TextUnformatted($"{hypnosisManager.Hypnotist?.NoteOrFriendCode ?? "Unknown"} is hypnotizing you");
         });
         
         if (SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.Square, windowPadding, windowWidth))
-            spiralService.StopCurrentSpiral();
+            hypnosisManager.Wake();
     }
 }

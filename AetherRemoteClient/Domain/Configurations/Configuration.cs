@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 
@@ -29,5 +30,5 @@ public class Configuration
     /// <summary>
     ///     Save the configuration
     /// </summary>
-    public void Save() => ConfigurationService.SaveConfiguration(this);
+    public async Task Save() => await ConfigurationService.SaveConfiguration(this).ConfigureAwait(false);
 }

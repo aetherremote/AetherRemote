@@ -11,7 +11,6 @@ using Newtonsoft.Json.Linq;
 namespace AetherRemoteClient.UI.Views.Status;
 
 public class StatusViewUiController(
-    GlamourerService g,
     NetworkService networkService,
     IdentityService identityService,
     GlamourerService glamourer,

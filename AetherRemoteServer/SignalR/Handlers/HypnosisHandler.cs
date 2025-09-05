@@ -37,7 +37,7 @@ public class HypnosisHandler(
             return new ActionResponse(ActionResponseEc.TooManyRequests);
         }
 
-        var forwardedRequest = new HypnosisForwardedRequest(sender, request.Spiral);
+        var forwardedRequest = new HypnosisForwardedRequest(sender, request.Data, request.Stop);
         return await forwardedRequestManager.CheckPermissionsAndSend(sender, request.TargetFriendCodes, Method,
             Permissions, forwardedRequest, clients);
     }

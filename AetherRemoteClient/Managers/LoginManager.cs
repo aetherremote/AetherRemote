@@ -46,7 +46,7 @@ public class LoginManager : IDisposable
             var world = player.HomeWorld.Value.Name.ToString();
 
             // Load the character configuration
-            if (ConfigurationService.LoadCharacterConfiguration(name, world) is not { } characterConfiguration)
+            if (await ConfigurationService.LoadCharacterConfiguration(name, world).ConfigureAwait(false) is not { } characterConfiguration)
                 return;
 
             // Set the character configuration

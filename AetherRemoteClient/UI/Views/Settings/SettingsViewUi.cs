@@ -44,7 +44,7 @@ public class SettingsViewUi(SettingsViewUiController controller) : IDrawable
                 return;
             
             if (ImGui.Checkbox("Auto Connect", ref Plugin.CharacterConfiguration.AutoLogin))
-                Plugin.CharacterConfiguration.Save();
+                controller.SaveConfiguration();
         });
 
         // TODO: Re-Enable when a new Mare solution is made

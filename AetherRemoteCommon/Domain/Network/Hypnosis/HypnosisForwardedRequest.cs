@@ -5,15 +5,18 @@ namespace AetherRemoteCommon.Domain.Network.Hypnosis;
 [MessagePackObject(keyAsPropertyName: true)]
 public record HypnosisForwardedRequest : ForwardedActionRequest
 {
-    public SpiralInfo Spiral { get; set; } = new();
+    public HypnosisData Data { get; set; } = new();
+
+    public bool Stop { get; set; }
     
     public HypnosisForwardedRequest()
     {
     }
 
-    public HypnosisForwardedRequest(string senderFriendCode, SpiralInfo spiral)
+    public HypnosisForwardedRequest(string senderFriendCode, HypnosisData data, bool stop)
     {
         SenderFriendCode =  senderFriendCode;
-        Spiral = spiral;
+        Data = data;
+        Stop = stop;
     }
 }

@@ -65,10 +65,17 @@ public sealed class Plugin : IDalamudPlugin
     {
         // TODO: Remove after 10-25-2025
         // Load the legacy configuration
-        LegacyConfiguration = PluginInterface.GetPluginConfig() as LegacyConfiguration;
+        try
+        {
+            LegacyConfiguration = PluginInterface.GetPluginConfig() as LegacyConfiguration;
+        }
+        catch (Exception e)
+        {
+            Log.Error($"[Initialization] Failed to load legacy configuration, {e}");
+        }
         
         // Load the default configuration
-        Configuration = ConfigurationService.LoadConfiguration() ?? new Configuration();
+        Configuration = ConfigurationService.LoadConfiguration().GetAwaiter().GetResult() ?? new Configuration();
         
         // Create a collection of services
         var services = new ServiceCollection();
@@ -83,7 +90,6 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<NetworkService>();
         services.AddSingleton<PauseService>();
         services.AddSingleton<PermanentTransformationLockService>();
-        services.AddSingleton<SpiralService>();
         services.AddSingleton<TipService>();
         services.AddSingleton<ViewService>();
         services.AddSingleton<WorldService>();
@@ -97,6 +103,7 @@ public sealed class Plugin : IDalamudPlugin
         // Managers
         services.AddSingleton<CharacterTransformationManager>();
         services.AddSingleton<DependencyManager>();
+        services.AddSingleton<HypnosisManager>();
         services.AddSingleton<LoginManager>();
         services.AddSingleton<PermanentTransformationHandler>();
         services.AddSingleton<PermissionsCheckerManager>();
@@ -163,24 +170,24 @@ public sealed class Plugin : IDalamudPlugin
         // Build the dependency injection framework
         _services = services.BuildServiceProvider();
         
-        // Services
-        _services.GetRequiredService<ActionQueueService>();
-        _services.GetRequiredService<SpiralService>();
+        // Ui - Windows
+        _services.GetRequiredService<WindowManager>();
         
-        // Managers
-        _services.GetRequiredService<DependencyManager>();
-        _services.GetRequiredService<LoginManager>();
+        // Ui - Controllers
+        _services.GetRequiredService<LoginViewUiController>();
         
         // Handlers
         _services.GetRequiredService<ChatCommandHandler>();
         _services.GetRequiredService<GlamourerEventHandler>();
         _services.GetRequiredService<NetworkHandler>();
         
-        // Ui - Windows
-        _services.GetRequiredService<WindowManager>();
+        // Managers
+        _services.GetRequiredService<DependencyManager>();
+        _services.GetRequiredService<HypnosisManager>();
+        _services.GetRequiredService<LoginManager>();
         
-        // Ui - Controllers
-        _services.GetRequiredService<LoginViewUiController>();
+        // Services
+        _services.GetRequiredService<ActionQueueService>();
         
         Task.Run(SharedUserInterfaces.InitializeFonts);
     }

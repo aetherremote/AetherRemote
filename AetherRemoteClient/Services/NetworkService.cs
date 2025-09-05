@@ -166,7 +166,7 @@ public class NetworkService : IDisposable
     ///     Sends a POST to the login server to get a JWT Token
     /// </summary>
     /// <returns>JWT Token if successful, otherwise null</returns>
-    private async Task<string?> FetchToken()
+    private static async Task<string?> FetchToken()
     {
         try
         {
