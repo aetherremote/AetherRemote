@@ -19,7 +19,7 @@ public class HypnosisManager : IDisposable
     // Hypnosis data
     private HypnosisData? _hypnosisData;
     private Vector2 _screenSize;
-    private Vector2 _spiralScreenSize;
+    // private Vector2 _spiralScreenSize;
     
     /// <summary>
     ///     If the client is being hypnotized
@@ -50,15 +50,8 @@ public class HypnosisManager : IDisposable
         // Screen data
         _screenSize = ImGui.GetIO().DisplaySize;
         
-        // Screen data for spirals specifically
-        _spiralScreenSize = _screenSize;
-        if (_spiralScreenSize.X < _spiralScreenSize.Y)
-            _spiralScreenSize.X = _spiralScreenSize.Y;
-        else
-            _spiralScreenSize.Y = _spiralScreenSize.X;
-        
         // Set all relevant fields
-        await _hypnosisRenderer.SetRendererFromHypnosisData(hypnosisData, _spiralScreenSize).ConfigureAwait(false);
+        await _hypnosisRenderer.SetRendererFromHypnosisData(hypnosisData, _screenSize).ConfigureAwait(false);
         
         // Save
         _hypnosisData = hypnosisData;
