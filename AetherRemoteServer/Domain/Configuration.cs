@@ -1,64 +1,64 @@
-using System.Text.Json;
+using Newtonsoft.Json;
 
 namespace AetherRemoteServer.Domain;
 
-/// <summary>
-/// Provides configuration values for the server
-/// </summary>
-public class Configuration
+[Serializable]
+public class Configuration(
+    string certificatePasswordPath,
+    string certificatePath,
+    string betaDatabasePath,
+    string releaseDatabasePath,
+    string signingKey)
 {
-    private const string DefaultKey = "KEY";
-    private const string DefaultCertificatePath = "CERTIFICATE";
-    private const string DefaultCertificatePasswordPath = "PASSWORD";
-    private static readonly JsonSerializerOptions JsonOptions = new() { WriteIndented = true };
+    private static readonly string ConfigurationPath = Path.Combine(Directory.GetCurrentDirectory(), "Configuration", "Paths.json");
     
-    public readonly string SigningKey;
-    public readonly string CertificatePath;
-    public readonly string CertificatePasswordPath;
+    public readonly string CertificatePasswordPath = certificatePasswordPath;
+    public readonly string CertificatePath = certificatePath;
+    public readonly string BetaDatabasePath = betaDatabasePath;
+    public readonly string ReleaseDatabasePath = releaseDatabasePath;
+    public readonly string SigningKey = signingKey;
 
-    /// <summary>
-    /// <inheritdoc cref="Configuration"/>
-    /// </summary>
-    public Configuration()
+    public static Configuration? Load()
     {
-        var directoryPath = Path.Combine(Directory.GetCurrentDirectory(), "config");
-        var filePath = Path.Combine(directoryPath, "database.config");
-
-        if (Directory.Exists(directoryPath) is false)
-            Directory.CreateDirectory(directoryPath);
-
-        if (File.Exists(filePath) is false)
+        try
         {
-            var defaultConfig = new ConfigurationData
+            if (!File.Exists(ConfigurationPath))
             {
-                SigningKey = DefaultKey,
-                CertificatePath = DefaultCertificatePath,
-                CertificatePasswordPath = DefaultCertificatePasswordPath,
-            };
+                Directory.CreateDirectory(Path.Combine(Directory.GetCurrentDirectory(), "Configuration"));
+                File.WriteAllText(ConfigurationPath, JsonConvert.SerializeObject(Default, Formatting.Indented));
+                Console.WriteLine($"[Configuration] [Load] Configuration file created at {ConfigurationPath}, please edit the values and run the application again.");
+                return null;
+            }
+            
+            var json = File.ReadAllText(ConfigurationPath);
+            if (JsonConvert.DeserializeObject<Configuration>(json) is not { } configuration)
+            {
+                Console.WriteLine("[Configuration] [Load] Unable to deserialize configuration.");
+                return null;
+            }
 
-            var defaultContent = JsonSerializer.Serialize(defaultConfig, JsonOptions);
-            File.WriteAllText(filePath, defaultContent);
+            if (configuration.HasDefaultValues())
+            {
+                Console.WriteLine($"[Configuration] [Load] Paths not set in {ConfigurationPath}, please edit the values and run the application again.");
+                return null;
+            }
+            
+            Console.WriteLine("[Configuration] [Load] Configuration successfully loaded.");
+            return configuration;
         }
-
-        var json = File.ReadAllText(filePath);
-        var config = JsonSerializer.Deserialize<ConfigurationData>(json) ??
-                     throw new InvalidOperationException("Failed to deserialize server configuration data");
-
-        if (config.SigningKey is DefaultKey || config.CertificatePath is DefaultCertificatePath ||
-            config.CertificatePasswordPath is DefaultCertificatePasswordPath)
+        catch (Exception e)
         {
-            throw new InvalidOperationException("Configuration values must be set before running the server");
+            Console.WriteLine($"[Configuration] [Load] An unknown error occured, {e.Message}.");
+            return null;
         }
+    }
 
-        SigningKey = config.SigningKey;
-        CertificatePath = config.CertificatePath;
-        CertificatePasswordPath = config.CertificatePasswordPath;
-    }
-    
-    private class ConfigurationData
-    {
-        public string SigningKey { get; init; } = string.Empty;
-        public string CertificatePath { get; init; } = string.Empty;
-        public string CertificatePasswordPath { get; init; } = string.Empty;
-    }
+    private bool HasDefaultValues() => CertificatePath is Empty || 
+                                       CertificatePasswordPath is Empty ||
+                                       BetaDatabasePath is Empty || 
+                                       ReleaseDatabasePath is Empty ||
+                                       SigningKey is Empty;
+
+    private const string Empty = "Empty"; 
+    private static readonly Configuration Default = new(Empty, Empty, Empty, Empty, Empty);
 }

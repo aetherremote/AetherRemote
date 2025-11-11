@@ -18,8 +18,15 @@ public class Program
 {
     private static void Main(string[] args)
     {
+        // Attempt to load configuration values
+        if (Configuration.Load() is not { } configuration)
+        {
+            Environment.Exit(1);
+            return;
+        }
+        
+        // Create service builder
         var builder = WebApplication.CreateBuilder(args);
-        var configuration = new Configuration();
 
         // Configuration Authentication and Authorization
         ConfigureJwtAuthentication(builder.Services, configuration);

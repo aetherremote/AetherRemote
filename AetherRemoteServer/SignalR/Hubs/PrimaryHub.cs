@@ -50,7 +50,7 @@ public class PrimaryHub(
     [HubMethodName(HubMethod.AddFriend)]
     public async Task<AddFriendResponse> AddFriend(AddFriendRequest request)
     {
-        logger.LogInformation("{Request}", request);
+        // logger.LogInformation("{Request}", request);
         return await addFriendHandler.Handle(FriendCode, request, Clients);
     }
 
@@ -65,7 +65,7 @@ public class PrimaryHub(
     [HubMethodName(HubMethod.Emote)]
     public async Task<ActionResponse> Emote(EmoteRequest request)
     {
-        logger.LogInformation("{Request}", request);
+        // logger.LogInformation("{Request}", request);
         return await emoteHandler.Handle(FriendCode, request, Clients);
     }
 
@@ -85,7 +85,7 @@ public class PrimaryHub(
     [HubMethodName(HubMethod.RemoveFriend)]
     public async Task<RemoveFriendResponse> RemoveFriend(RemoveFriendRequest request)
     {
-        logger.LogInformation("{Request}", request);
+        // logger.LogInformation("{Request}", request);
         return await removeFriendHandler.Handle(FriendCode, request);
     }
 
@@ -115,7 +115,7 @@ public class PrimaryHub(
     [HubMethodName(HubMethod.UpdateFriend)]
     public async Task<UpdateFriendResponse> UpdateFriend(UpdateFriendRequest request)
     {
-        logger.LogInformation("{Request}", request);
+        // logger.LogInformation("{Request}", request);
         return await updateFriendHandler.Handle(FriendCode, request, Clients);
     }
 

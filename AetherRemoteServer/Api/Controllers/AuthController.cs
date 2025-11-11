@@ -12,18 +12,22 @@ namespace AetherRemoteServer.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController(Configuration config, IDatabaseService db) : ControllerBase
+public class AuthController(Configuration config, IDatabaseService database) : ControllerBase
 {
-    private readonly Version _expectedVersion = new(2, 7,0, 1);
+    // Const
+    private static readonly Version ExpectedVersion = new(2, 7,0, 1);
+    
+    // Instantiated
+    private readonly SymmetricSecurityKey _key = new(Encoding.UTF8.GetBytes(config.SigningKey));
 
     [AllowAnonymous]
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] GetTokenRequest request)
     {
-        if (request.Version != _expectedVersion)
+        if (request.Version != ExpectedVersion)
             return BadRequest("Version Mismatch");
 
-        var friendCode = await db.GetFriendCodeBySecret(request.Secret);
+        var friendCode = await database.GetFriendCodeBySecret(request.Secret);
         if (friendCode is null)
             return Unauthorized("You are not registered");
 
@@ -37,11 +41,10 @@ public class AuthController(Configuration config, IDatabaseService db) : Control
 
     private JwtSecurityToken GenerateJwtToken(List<Claim> claims)
     {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(config.SigningKey));
         var token = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
-            SigningCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256Signature),
+            SigningCredentials = new SigningCredentials(_key, SecurityAlgorithms.HmacSha256Signature),
             Expires = DateTime.UtcNow.AddHours(4)
         };
 

@@ -19,4 +19,9 @@ public record HypnosisData
     public string[] TextWords { get; set; } = [];
     public HypnosisTextMode TextMode { get; set; }
     public uint TextColor { get; set; }
+
+    public override string ToString()
+    {
+        return $"SpiralArms: {SpiralArms}, SpiralTurns: {SpiralTurns}, SpiralCurve: {SpiralCurve}, SpiralThickness: {SpiralThickness}, SpiralSpeed: {SpiralSpeed}, SpiralDirection: {SpiralDirection}, SpiralColor: {SpiralColor}, TextDuration: {TextDuration}, TextDelay: {TextDelay}, TextWords: [{string.Join(", ", TextWords)}], TextMode: {TextMode}, TextColor: {TextColor}";
+    }
 }
