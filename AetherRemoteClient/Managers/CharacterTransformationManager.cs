@@ -46,7 +46,7 @@ public class CharacterTransformationManager(
     public async Task<ApplyGenericTransformationResult> ApplyGenericTransformation(JObject glamourerJObject, GlamourerApplyFlags flags)
     {
         // Get local character data
-        if (await glamourerService.GetDesignComponentsAsync().ConfigureAwait(false) is not { } local)
+        if (await glamourerService.GetDesignComponentsAsync(0).ConfigureAwait(false) is not { } local)
             return new ApplyGenericTransformationResult(ApplyGenericTransformationErrorCode.FailedToGetDesign, null);
         
         // Append any details to the converted JObject to clean up the dyes
@@ -54,7 +54,7 @@ public class CharacterTransformationManager(
             return new ApplyGenericTransformationResult(ApplyGenericTransformationErrorCode.FailedToRemoveAdvancedDyes, null);
         
         // Apply the newly converted design
-        return await glamourerService.ApplyDesignAsync(glamourerCodeAsComponentsWithoutAdvancedDyes, flags).ConfigureAwait(false) 
+        return await glamourerService.ApplyDesignAsync(glamourerCodeAsComponentsWithoutAdvancedDyes, flags, 0).ConfigureAwait(false) 
             ? new ApplyGenericTransformationResult(ApplyGenericTransformationErrorCode.Success, glamourerJObject)
             : new ApplyGenericTransformationResult(ApplyGenericTransformationErrorCode.FailedToApplyDesign, null);
     }
@@ -100,7 +100,7 @@ public class CharacterTransformationManager(
             return;
         
         // Get local character data
-        if (await glamourerService.GetDesignComponentsAsync().ConfigureAwait(false) is not { } localDesignJObject)
+        if (await glamourerService.GetDesignComponentsAsync(0).ConfigureAwait(false) is not { } localDesignJObject)
             return;
 
         // Convert to a glamourer design
@@ -117,7 +117,7 @@ public class CharacterTransformationManager(
         ImGui.SetClipboardText(convertedDesign.ToString());
         
         // Apply Glamourer
-        await glamourerService.ApplyDesignAsync(convertedDesign, permanentTransformationData.GlamourerApplyType).ConfigureAwait(false);
+        await glamourerService.ApplyDesignAsync(convertedDesign, permanentTransformationData.GlamourerApplyType, 0).ConfigureAwait(false);
 
         // Apply Mods
         if (permanentTransformationData.ModMetaData is not null && permanentTransformationData.ModPathData is not null)

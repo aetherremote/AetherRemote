@@ -150,7 +150,7 @@ public class PermanentTransformationHandler(
             return;
         }
 
-        if (await glamourerService.GetDesignComponentsAsync() is not { } localCharacterDesign)
+        if (await glamourerService.GetDesignComponentsAsync(0) is not { } localCharacterDesign)
             return;
 
         if (GlamourerDesignHelper.FromJObject(localCharacterDesign) is not { } design)

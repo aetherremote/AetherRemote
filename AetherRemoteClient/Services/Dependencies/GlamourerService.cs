@@ -19,10 +19,14 @@ namespace AetherRemoteClient.Services.Dependencies;
 /// </summary>
 public class GlamourerService : IExternalPlugin, IDisposable
 {
-    // When Mare updates a local glamourer profile, it locks to prevent local tampering.
-    // Unfortunately, we need this key to unlock the profile to get the state.
-    // https://github.com/Penumbra-Sync/client/blob/main/MareSynchronos/Interop/Ipc/IpcCallerGlamourer.cs#L31
-    private const uint MareLockCode = 0x6D617265;
+    // Syncing solutions lock other player profiles to prevent tampering by the client. To view the glamourer data
+    // of these other players, we need a key to unlock them. Since there are multiple services, we must try multiple
+    // keys to account for all possibilities.
+    private const uint MareLockCode = 0x6D617265; // Used by PlayerSync, LaciSynchroni, and Lightless
+    private const uint BnuyLockCode = 0x626E7579; // Used by Snowcloak
+
+    // An array containing all the lock codes for various syncing solutions
+    private static readonly uint[] LockCodes = [MareLockCode, BnuyLockCode];
 
     // Glamourer Api
     private readonly ApiVersion _apiVersion;
@@ -79,7 +83,7 @@ public class GlamourerService : IExternalPlugin, IDisposable
     {
         try
         {
-            ApiAvailable = _apiVersion.Invoke() is { Major: 1, Minor: > 3 };
+            ApiAvailable = _apiVersion.Invoke() is { Major: 1, Minor: > 5 };
         }
         catch (Exception)
         {
@@ -91,58 +95,48 @@ public class GlamourerService : IExternalPlugin, IDisposable
     ///     Reverts to original automation
     /// </summary>
     /// <param name="index">Object table index to revert</param>
-    public async Task<bool> RevertToGame(ushort index = 0)
+    public async Task<bool> RevertToGame(ushort index)
     {
-        if (ApiAvailable)
-            return await Plugin.RunOnFramework(() =>
-            {
-                try
-                {
-                    var result = _revertState.Invoke(index, 0, ApplyFlag.Equipment | ApplyFlag.Customization | ApplyFlag.Once);
-                    if (result is GlamourerApiEc.Success)
-                        return true;
+        if (!ApiAvailable)
+        {
+            Plugin.Log.Warning($"[GlamourerService] [RevertToGame] Unable to revert index {index} because glamourer is not available");
+            return false;
+        }
 
-                    Plugin.Log.Warning($"[GlamourerIpc] Reverting object index {index} unsuccessful, {result}");
-                    return false;
-                }
-                catch (Exception e)
-                {
-                    Plugin.Log.Warning($"[GlamourerIpc] Reverting object index {index} failed, {e.Message}");
-                    return false;
-                }
-            }).ConfigureAwait(false);
-
-        Plugin.Log.Warning($"[GlamourerIpc] Unable to revert index {index} because glamourer is not available");
-        return false;
+        try
+        {
+            var result = await Plugin.RunOnFramework(() => _revertState.Invoke(index)).ConfigureAwait(false);
+            return LogAndProcessResult("[RevertToGame]", index, result);
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error($"[GlamourerService] [RevertToGame] Actor index {index} failed to revert unexpectedly, {e}");
+            return false;
+        }
     }
     
     /// <summary>
     ///     Reverts to original automation
     /// </summary>
     /// <param name="index">Object table index to revert</param>
-    public async Task<bool> RevertToAutomation(ushort index = 0)
+    public async Task<bool> RevertToAutomation(ushort index)
     {
-        if (ApiAvailable)
-            return await Plugin.RunOnFramework(() =>
-            {
-                try
-                {
-                    var result = _revertToAutomation.Invoke(index);
-                    if (result is GlamourerApiEc.Success)
-                        return true;
-
-                    Plugin.Log.Warning($"[GlamourerIpc] Reverting object index {index} unsuccessful, {result}");
-                    return false;
-                }
-                catch (Exception e)
-                {
-                    Plugin.Log.Warning($"[GlamourerIpc] Reverting object index {index} failed, {e.Message}");
-                    return false;
-                }
-            }).ConfigureAwait(false);
-
-        Plugin.Log.Warning($"[GlamourerIpc] Unable to revert index {index} because glamourer is not available");
-        return false;
+        if (!ApiAvailable)
+        {
+            Plugin.Log.Warning($"[GlamourerService] [RevertToAutomation] Unable to revert index {index} because glamourer is not available");
+            return false;
+        }
+        
+        try
+        {
+            var result = await Plugin.RunOnFramework(() => _revertToAutomation.Invoke(index)).ConfigureAwait(false);
+            return LogAndProcessResult("[RevertToAutomation]", index, result);
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error($"[GlamourerService] [RevertToAutomation] Actor index {index} failed to revert unexpectedly, {e}");
+            return false;
+        }
     }
     
     /// <summary>
@@ -151,9 +145,31 @@ public class GlamourerService : IExternalPlugin, IDisposable
     /// <param name="glamourerData">Glamourer data to apply</param>
     /// <param name="flags">How should this be applied?</param>
     /// <param name="index">Object table index to revert</param>
-    public async Task<bool> ApplyDesignAsync(string glamourerData, GlamourerApplyFlags flags, ushort index = 0)
+    public async Task<bool> ApplyDesignAsync(string glamourerData, GlamourerApplyFlags flags, ushort index)
     {
-        return await ApplyDesign(glamourerData, flags, index);
+        // Check if we can call this
+        if (!ApiAvailable)
+        {
+            Plugin.Log.Warning($"[GlamourerService] [ApplyDesignAsync] Unable to apply design to actor index {index} because glamourer is not available");
+            return false;
+        }
+
+        try
+        {
+            // Convert the flags to glamourer domain
+            var converted = ConvertGlamourerToApplyFlags(flags);
+        
+            // Invoke the function
+            var result = await Plugin.RunOnFramework(() => _applyState.Invoke(glamourerData, index, 0, converted)).ConfigureAwait(false);
+        
+            // Process results
+            return LogAndProcessResult("[ApplyDesignAsync]", index, result);
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error($"[GlamourerService] [ApplyDesignAsync] Actor index {index} failed to apply design unexpectedly, {e}");
+            return false;
+        }
     }
 
     /// <summary>
@@ -162,102 +178,142 @@ public class GlamourerService : IExternalPlugin, IDisposable
     /// <param name="glamourerData">Glamourer data to apply</param>
     /// <param name="flags">How should this be applied?</param>
     /// <param name="index">Object table index to revert</param>
-    public async Task<bool> ApplyDesignAsync(JObject glamourerData, GlamourerApplyFlags flags, ushort index = 0)
+    public async Task<bool> ApplyDesignAsync(JObject glamourerData, GlamourerApplyFlags flags, ushort index)
     {
-        return await ApplyDesign(glamourerData, flags, index);
-    }
+        // Check if we can call this
+        if (!ApiAvailable)
+        {
+            Plugin.Log.Warning($"[GlamourerService] [ApplyDesignAsync] Unable to apply design to actor index {index} because glamourer is not available");
+            return false;
+        }
 
-    /// <summary>
-    ///     Applies a given design to an object index by <see cref="string"/> or <see cref="JObject"/>
-    /// </summary>
-    private async Task<bool> ApplyDesign(object glamourerData, GlamourerApplyFlags flags, ushort index)
-    {
-        if (ApiAvailable)
-            return await Plugin.RunOnFramework(() =>
-            {
-                try
-                {
-                    GlamourerApiEc result;
-                    switch (glamourerData)
-                    {
-                        case JObject data:
-                            result = _applyState.Invoke(data, index, 0, ConvertGlamourerToApplyFlags(flags));
-                            break;
-                        case string data:
-                            result = _applyState.Invoke(data, index, 0, ConvertGlamourerToApplyFlags(flags));
-                            break;
-                        default:
-                            Plugin.Log.Warning($"[GlamourerIpc] Unsupported glamourer data type while applying design {glamourerData.GetType().Name}");
-                            return false;
-                    }
-
-                    if (result is GlamourerApiEc.Success)
-                        return true;
-
-                    Plugin.Log.Warning($"[GlamourerIpc] Unable to apply design to object {index}, {result}");
-                    return false;
-                }
-                catch (Exception e)
-                {
-                    Plugin.Log.Error($"[GlamourerIpc] Unexpected error while applying design to object {index}, {e}");
-                    return false;
-                }
-            });
+        try
+        {
+            // Convert the flags to glamourer domain
+            var converted = ConvertGlamourerToApplyFlags(flags);
         
-        Plugin.Log.Warning("[GlamourerIpc] Unable to revert to automation because glamourer is not available");
-        return false;
+            // Invoke the function
+            var result = await Plugin.RunOnFramework(() => _applyState.Invoke(glamourerData, index, 0, converted)).ConfigureAwait(false);
+        
+            // Process results
+            return LogAndProcessResult("[ApplyDesignAsync]", index, result);
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error($"[GlamourerService] [ApplyDesignAsync] Actor index {index} failed to apply design unexpectedly, {e}");
+            return false;
+        }
     }
 
     /// <summary>
     ///     Gets a design from a given index
     /// </summary>
     /// <param name="index">Object table index to get the design for</param>
-    /// <param name="key">Key to get this object</param>
-    public async Task<string?> GetDesignAsync(ushort index = 0, uint key = MareLockCode)
+    public async Task<string?> GetDesignAsync(ushort index)
     {
-        if (ApiAvailable)
-            return await Plugin.RunOnFramework(() =>
-            {
-                try
-                {
-                    var (_, data) = _getStateBase64.Invoke(index, key);
-                    return data;
-                }
-                catch (Exception e)
-                {
-                    Plugin.Log.Error(
-                        $"[GlamourerIpc] Failed unexpectedly to get design for object index {index}, {e.Message}");
-                    return null;
-                }
-            }).ConfigureAwait(false);
+        // Check if we can call this
+        if (!ApiAvailable)
+        {
+            Plugin.Log.Warning($"[GlamourerService] [GetDesignAsync] Unable to get design for actor index {index} because glamourer is not available");
+            return null;
+        }
 
-        Plugin.Log.Warning("[GlamourerIpc] Unable to get design because glamourer is not available");
-        return null;
+        try
+        {
+            // Iterate over all the codes
+            foreach (var key in LockCodes)
+            {
+                // Invoke the function
+                var (code, data) = await Plugin.RunOnFramework(() => _getStateBase64.Invoke(index, key)).ConfigureAwait(false);
+                
+                // Process result
+                switch (code)
+                {
+                    // If successful, just return the data
+                    case GlamourerApiEc.Success:
+                        return data;
+                        
+                    // If the key was invalid, just continue and try the next
+                    case GlamourerApiEc.InvalidKey:
+                        Plugin.Log.Verbose($"[GlamourerService] [GetDesignAsync] Key {code} was invalid");
+                        continue;
+                        
+                    // Otherwise, just return null
+                    case GlamourerApiEc.NothingDone:
+                    case GlamourerApiEc.ActorNotFound:
+                    case GlamourerApiEc.ActorNotHuman:
+                    case GlamourerApiEc.DesignNotFound:
+                    case GlamourerApiEc.ItemInvalid:
+                    case GlamourerApiEc.InvalidState:
+                    default:
+                        Plugin.Log.Warning($"[GlamourerService] [GetDesignAsync] Key {code} resulted in an invalid state of {code}");
+                        return null;
+                }
+            }
+            
+            Plugin.Log.Warning($"[GlamourerService] [GetDesignAsync] Could not find a valid key for actor {index}. This is likely due to using an unsupported syncing solution.");
+            return null;
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Warning($"[GlamourerService] [GetDesignAsync] Getting design failed unexpectedly, {e}");
+            return null;
+        }
     }
 
     /// <summary>
     ///     Gets a design from a given index as a JSON object that contains all changed parts of a glamourer character
     /// </summary>
-    public async Task<JObject?> GetDesignComponentsAsync(ushort index = 0, uint key = MareLockCode)
+    public async Task<JObject?> GetDesignComponentsAsync(ushort index)
     {
-        if (ApiAvailable)
-            return await Plugin.RunOnFramework(() =>
+        // Check if we can call this
+        if (!ApiAvailable)
+        {
+            Plugin.Log.Warning($"[GlamourerService] [GetDesignComponentsAsync] Unable to get design for actor index {index} because glamourer is not available");
+            return null;
+        }
+        
+        try
+        {
+            // Iterate over all the codes
+            foreach (var key in LockCodes)
             {
-                try
+                // Invoke the function
+                var (code, data) = await Plugin.RunOnFramework(() => _getState.Invoke(index, key)).ConfigureAwait(false);
+                
+                // Process result
+                switch (code)
                 {
-                    var (_, data) = _getState.Invoke(index, key);
-                    return data;
+                    // If successful, just return the data
+                    case GlamourerApiEc.Success:
+                        return data;
+                        
+                    // If the key was invalid, just continue and try the next
+                    case GlamourerApiEc.InvalidKey:
+                        Plugin.Log.Verbose($"[GlamourerService] [GetDesignComponentsAsync] Key {code} was invalid");
+                        continue;
+                        
+                    // Otherwise, just return null
+                    case GlamourerApiEc.NothingDone:
+                    case GlamourerApiEc.ActorNotFound:
+                    case GlamourerApiEc.ActorNotHuman:
+                    case GlamourerApiEc.DesignNotFound:
+                    case GlamourerApiEc.ItemInvalid:
+                    case GlamourerApiEc.InvalidState:
+                    default:
+                        Plugin.Log.Warning($"[GlamourerService] [GetDesignComponentsAsync] Key {code} resulted in an invalid state of {code}");
+                        return null;
                 }
-                catch (Exception e)
-                {
-                    Plugin.Log.Error(
-                        $"[GlamourerIpc] Failed unexpectedly to get design components for object index {index}, {e.Message}");
-                    return null;
-                }
-            }).ConfigureAwait(false);
-
-        Plugin.Log.Warning("[GlamourerIpc] Unable to get design because glamourer is not available");
-        return null;
+            }
+            
+            Plugin.Log.Warning($"[GlamourerService] [GetDesignComponentsAsync] Could not find a valid key for actor {index}. This is likely due to using an unsupported syncing solution.");
+            return null;
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Warning($"[GlamourerService] [GetDesignComponentsAsync] Getting design failed unexpectedly, {e}");
+            return null;
+        }
     }
     
     /// <summary>
@@ -265,11 +321,22 @@ public class GlamourerService : IExternalPlugin, IDisposable
     /// </summary>
     private static ApplyFlag ConvertGlamourerToApplyFlags(GlamourerApplyFlags flags)
     {
-        var applyFlags = ApplyFlag.Once;
-        if (flags.HasFlag(GlamourerApplyFlags.Customization)) applyFlags |= ApplyFlag.Customization;
-        if (flags.HasFlag(GlamourerApplyFlags.Equipment)) applyFlags |= ApplyFlag.Equipment;
-        if (applyFlags is ApplyFlag.Once) applyFlags |= ApplyFlag.Customization | ApplyFlag.Equipment;
-        return applyFlags;
+        // Always start with the 'once' flag
+        var apply = ApplyFlag.Once;
+        
+        // If the 'customization' flag is set, convert
+        if ((flags & GlamourerApplyFlags.Customization) is not 0)
+            apply |= ApplyFlag.Customization;
+        
+        // If the 'equipment' flag is set, convert
+        if ((flags & GlamourerApplyFlags.Equipment) is not 0)
+            apply |= ApplyFlag.Equipment;
+        
+        // If only the 'once' flag is set, add both 'customization' and 'equipment' flags
+        if ((flags & (GlamourerApplyFlags.Customization | GlamourerApplyFlags.Equipment)) is 0)
+            apply |= ApplyFlag.Customization | ApplyFlag.Equipment;
+        
+        return apply;
     }
     
     private unsafe void OnGlamourerStateChanged(IntPtr objectIndexPointer, StateChangeType stateChangeType)
@@ -413,6 +480,37 @@ public class GlamourerService : IExternalPlugin, IDisposable
         
         // Convert stream to byte array and return
         return results.ToArray();
+    }
+
+    /// <summary>
+    ///     A light wrapper to log the resulting operation and convert to a boolean
+    /// </summary>
+    /// <param name="operation">The name of the operation. An example would be "RevertToGame"</param>
+    /// <param name="actor">The target actor id</param>
+    /// <param name="error">The resulting error code from the operation</param>
+    private static bool LogAndProcessResult(string operation, ushort actor, GlamourerApiEc error)
+    {
+        switch (error)
+        {
+            case GlamourerApiEc.Success or GlamourerApiEc.NothingDone:
+                return true;
+            
+            case GlamourerApiEc.ActorNotFound:
+                Plugin.Log.Warning($"[GlamourerService] [{operation}] Actor {actor} not found");
+                return false;
+            
+            case GlamourerApiEc.ActorNotHuman:
+                Plugin.Log.Warning($"[GlamourerService] [{operation}] Actor {actor} is not a valid target");
+                return false;
+            
+            case GlamourerApiEc.InvalidKey:
+                Plugin.Log.Warning($"[GlamourerService] [{operation}] Invalid key. This likely means you are using an unsupported syncing solution");
+                return false;
+            
+            default:
+                Plugin.Log.Warning($"[GlamourerService] [{operation}] The operation did not success, {error}");
+                return false;
+        }
     }
 
     public void Dispose()

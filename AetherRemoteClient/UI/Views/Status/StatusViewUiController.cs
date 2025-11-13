@@ -1,12 +1,8 @@
 using System;
 using AetherRemoteClient.Handlers;
-using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Services.Dependencies;
 using AetherRemoteClient.UI.Components.Input;
-using AetherRemoteCommon.Domain.Enums;
-using Dalamud.Bindings.ImGui;
-using Newtonsoft.Json.Linq;
 
 namespace AetherRemoteClient.UI.Views.Status;
 
@@ -45,7 +41,7 @@ public class StatusViewUiController(
     {
         try
         {
-            if (await glamourer.RevertToAutomation().ConfigureAwait(false) is false)
+            if (await glamourer.RevertToAutomation(0).ConfigureAwait(false) is false)
                 return;
 
             identityService.ClearAlterations();

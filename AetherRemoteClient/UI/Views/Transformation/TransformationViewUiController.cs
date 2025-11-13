@@ -36,7 +36,7 @@ public class TransformationViewUiController(FriendsListService friendsListServic
     {
         try
         {
-            var result = await glamourer.GetDesignAsync();
+            var result = await glamourer.GetDesignAsync(0);
             if (result is null)
             {
                 NotificationHelper.Warning("Unable to get glamourer data",
