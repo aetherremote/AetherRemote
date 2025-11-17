@@ -128,41 +128,44 @@ public class PauseViewUi(
                 ImGui.EndTable();
             });
 
-            // TODO: Re-Enable when a new Mare solution is made
-            /*
-            SharedUserInterfaces.ContentBox("PauseAttributes", AetherRemoteStyle.PanelBackground, true, () =>
+            // TODO: Change includeEndPadding once elevated permissions are back
+            SharedUserInterfaces.ContentBox("PauseAttributes", AetherRemoteStyle.PanelBackground, false, () =>
             {
                 ImGui.TextUnformatted("Character Attributes");
-                if (ImGui.BeginTable("CharacterAttributes", 2) is false)
-                    return;
-                
-                ImGui.TableNextColumn();
-                BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.GlamourerCustomization);
-                ImGui.TableNextColumn();
-                BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.GlamourerEquipment);
-                ImGui.TableNextColumn();
-                BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.Mods);
-                ImGui.TableNextColumn();
-                BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.BodySwap);
-                ImGui.TableNextColumn();
-                BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.Twinning);
-                ImGui.TableNextColumn();
-                BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.CustomizePlus);
-                ImGui.TableNextColumn();
-                BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.Moodles);
+                if (ImGui.BeginTable("CharacterAttributes", 2))
+                {
+                    /*
+                    ImGui.TableNextColumn();
+                    BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.GlamourerCustomization);
+                    ImGui.TableNextColumn();
+                    BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.GlamourerEquipment);
+                    ImGui.TableNextColumn();
+                    BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.Mods);
+                    ImGui.TableNextColumn();
+                    BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.BodySwap);
+                    ImGui.TableNextColumn();
+                    BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.Twinning);
+                    ImGui.TableNextColumn();
+                    BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.CustomizePlus);
+                    */
                     
-                ImGui.EndTable();
+                    ImGui.TableNextColumn();
+                    BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.Moodles);
+                    
+                    ImGui.EndTable();
+                }
             });
             
+            /*
             SharedUserInterfaces.ContentBox("TransformationElevatedPermissions", AetherRemoteStyle.ElevatedBackground, false, () =>
             {
                 ImGui.TextUnformatted("Character Attributes");
                 if (ImGui.BeginTable("CharacterAttributes", 2) is false)
                     return;
-                
+
                 ImGui.TableNextColumn();
                 BuildPauseButtonForElevatedFeature(ElevatedPermissions.PermanentTransformation);
-                
+
                 ImGui.EndTable();
             });
             */

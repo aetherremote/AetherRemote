@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
+using AetherRemoteClient.Dependencies.Moodles.Services;
 using AetherRemoteClient.Domain.Configurations;
 using AetherRemoteClient.Handlers;
 using AetherRemoteClient.Handlers.Network;
@@ -19,7 +20,6 @@ using AetherRemoteClient.UI.Views.Hypnosis;
 using AetherRemoteClient.UI.Views.Login;
 using AetherRemoteClient.UI.Views.Moodles;
 using AetherRemoteClient.UI.Views.Pause;
-using AetherRemoteClient.UI.Views.Possession;
 using AetherRemoteClient.UI.Views.Settings;
 using AetherRemoteClient.UI.Views.Speak;
 using AetherRemoteClient.UI.Views.Status;
@@ -105,6 +105,7 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<DependencyManager>();
         services.AddSingleton<HypnosisManager>();
         services.AddSingleton<LoginManager>();
+        services.AddSingleton<NetworkManager>();
         services.AddSingleton<PermanentTransformationHandler>();
         services.AddSingleton<PermissionsCheckerManager>();
         
@@ -139,7 +140,6 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<LoginViewUiController>();
         services.AddSingleton<MoodlesViewUiController>();
         services.AddSingleton<PauseViewUiController>();
-        services.AddSingleton<PossessionViewUiController>();
         services.AddSingleton<SettingsViewUiController>();
         services.AddSingleton<SpeakViewUiController>();
         services.AddSingleton<StatusViewUiController>();
@@ -156,7 +156,6 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<LoginViewUi>();
         services.AddSingleton<MoodlesViewUi>();
         services.AddSingleton<PauseViewUi>();
-        services.AddSingleton<PossessionViewUi>();
         services.AddSingleton<SettingsViewUi>();
         services.AddSingleton<SpeakViewUi>();
         services.AddSingleton<StatusViewUi>();

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AetherRemoteClient.Dependencies.Moodles.Services;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Attributes;
 using AetherRemoteClient.Domain.Dependencies.Glamourer;
@@ -130,7 +131,10 @@ public class CharacterTransformationManager(
         // Apply Moodles
         if (permanentTransformationData.MoodlesData is not null)
             if (await Plugin.RunOnFramework(() => Plugin.ObjectTable[0]?.Address).ConfigureAwait(false) is { } address)
-                await moodlesService.SetMoodles(address, permanentTransformationData.MoodlesData).ConfigureAwait(false);
+            {
+                // TODO: Readd
+                //await moodlesService.SetMoodles(address, permanentTransformationData.MoodlesData).ConfigureAwait(false);
+            }
     }
 
     private async Task<Guid?> TryRemoveExistingMods()

@@ -78,7 +78,7 @@ public class PrimaryHub(
     [HubMethodName(HubMethod.Moodles)]
     public async Task<ActionResponse> GetMoodlesAction(MoodlesRequest request)
     {
-        return new ActionResponse(ActionResponseEc.Disabled);
+        // return new ActionResponse(ActionResponseEc.Disabled);
         return await moodlesHandler.Handle(FriendCode, request, Clients);
     }
 

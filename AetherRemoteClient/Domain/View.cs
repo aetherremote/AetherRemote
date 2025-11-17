@@ -14,7 +14,6 @@ public enum View
     Login,
     Moodles,
     Pause,
-    Possession,
     Settings,
     Speak,
     Status,

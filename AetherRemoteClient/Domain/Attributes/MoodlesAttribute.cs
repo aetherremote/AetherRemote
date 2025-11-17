@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
+using AetherRemoteClient.Dependencies.Moodles.Services;
 using AetherRemoteClient.Domain.Interfaces;
-using AetherRemoteClient.Services.Dependencies;
 
 namespace AetherRemoteClient.Domain.Attributes;
 
@@ -19,9 +19,9 @@ public class MoodlesAttribute(MoodlesService moodlesService, nint objectAddress)
     /// </summary>
     public async Task<bool> Store()
     {
-        if (await moodlesService.GetMoodles(objectAddress).ConfigureAwait(false) is { } moodles)
+        if (await moodlesService.GetStatusManager(objectAddress).ConfigureAwait(false) is { } statusManager)
         {
-            Moodles = moodles;
+            Moodles = statusManager;
             return true;
         }
         
@@ -40,7 +40,7 @@ public class MoodlesAttribute(MoodlesService moodlesService, nint objectAddress)
             return false;
         }
 
-        if (await moodlesService.SetMoodles(address, Moodles).ConfigureAwait(false) is false)
+        if (await moodlesService.SetStatusManager(address, Moodles).ConfigureAwait(false) is false)
         {
             Plugin.Log.Warning("[MoodlesAttribute] Could not apply moodles");
             return false;

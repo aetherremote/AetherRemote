@@ -70,7 +70,7 @@ public class NetworkHandler : IDisposable
         _handlers.Add(networkService.Connection.On<CustomizeForwardedRequest, ActionResult<Unit>>(HubMethod.CustomizePlus, customizePlusHandler.Handle));
         _handlers.Add(networkService.Connection.On<EmoteForwardedRequest, ActionResult<Unit>>(HubMethod.Emote, emoteHandler.Handle));
         _handlers.Add(networkService.Connection.On<HypnosisForwardedRequest, ActionResult<Unit>>(HubMethod.Hypnosis, hypnosisHandler.Handle));
-        _handlers.Add(networkService.Connection.On<MoodlesForwardedRequest, ActionResult<Unit>>(HubMethod.Moodles, moodlesHandler.Handle));
+        _handlers.Add(networkService.Connection.On<MoodlesForwardedRequest, ActionResult<Unit>>(HubMethod.Moodles, moodlesHandler.Handle)); // TODO: Readd
         _handlers.Add(networkService.Connection.On<SpeakForwardedRequest, ActionResult<Unit>>(HubMethod.Speak, speakHandler.Handle));
         _handlers.Add(networkService.Connection.On<TransformForwardedRequest, ActionResult<Unit>>(HubMethod.Transform, transformHandler.Handle));
         _handlers.Add(networkService.Connection.On<TwinningForwardedRequest, ActionResult<Unit>>(HubMethod.Twinning, twinningHandler.Handle));

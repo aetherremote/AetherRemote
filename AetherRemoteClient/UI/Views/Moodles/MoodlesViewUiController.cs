@@ -1,37 +1,106 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AetherRemoteClient.Dependencies.Moodles.Domain;
+using AetherRemoteClient.Dependencies.Moodles.Services;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
-using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
-using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Domain.Network.Moodles;
+using Dalamud.Interface.Textures;
+using Dalamud.Interface.Textures.TextureWraps;
 
 namespace AetherRemoteClient.UI.Views.Moodles;
 
-public class MoodlesViewUiController(FriendsListService friendsListService, NetworkService networkService)
+public class MoodlesViewUiController
 {
-    public string Moodle = string.Empty;
+    // Instantiate
+    private readonly CommandLockoutService _commandLockoutService;
+    private readonly FriendsListService _friendsListService;
+    private readonly NetworkManager _networkManager;
+    private readonly MoodlesService _moodlesService;
+
+    public MoodlesViewUiController(CommandLockoutService commandLockoutService, FriendsListService friendsListService, NetworkManager networkManager, MoodlesService moodlesService)
+    {
+        _commandLockoutService =  commandLockoutService;
+        _friendsListService = friendsListService;
+        _networkManager = networkManager;
+        _moodlesService = moodlesService;
+
+        RefreshMoodles();
+    }
+
+    /// <summary>
+    ///     Word to narrow down a search for a specific Moodle
+    /// </summary>
+    public string SearchTerm = string.Empty;
+
+    /// <summary>
+    ///     The list of moodles available
+    /// </summary>
+    private List<Moodle> _moodles = [];
+    
+    /// <summary>
+    ///     A filtered list of moodles based on search term
+    /// </summary>
+    public List<Moodle> FilteredMoodles => _moodles.Where(moodle => moodle.PrettyTitle.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)).ToList();
+
+    /// <summary>
+    ///     The current index of the selected Moodle, -1 if none selected
+    /// </summary>
+    public int SelectedMoodleIndex = -1;
+    
+    /// <summary>
+    ///     Attempts to get the image asset. Implements caching to ease burden of searching / loading images
+    /// </summary>
+    public static IDalamudTextureWrap? TryGetIcon(int iconId)
+    {
+        try
+        {
+            var texture = Plugin.TextureProvider.GetFromGameIcon(new GameIconLookup((uint)iconId));
+            return texture.TryGetWrap(out var wrap, out _) ? wrap : null;
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Warning($"[MoodlesViewUiController.TryGetIcon] Unexpectedly failed to get Moodle icon, {e}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    ///     Refreshes the available moodles
+    /// </summary>
+    public async void RefreshMoodles()
+    {
+        try
+        {
+            // Reset index
+            SelectedMoodleIndex = -1;
+            
+            // Request all the Moodles again
+            _moodles = await _moodlesService.GetMoodles().ConfigureAwait(false);
+        }
+        catch (Exception)
+        {
+            // ignored
+        }
+    }
     
     public async void SendMoodle()
     {
         try
         {
-            if (Moodle.Length is 0)
+            if (SelectedMoodleIndex < 0)
                 return;
-
-            var input = new MoodlesRequest
-            {
-                TargetFriendCodes = friendsListService.Selected.Select(friend => friend.FriendCode).ToList(),
-                Moodle = Moodle
-            };
-
-            var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.Moodles, input);
-            if (response.Result is ActionResponseEc.Success)
-                Moodle = string.Empty;
             
-            ActionResponseParser.Parse("Moodles", response);
+            _commandLockoutService.Lock();
+            
+            var moodle = FilteredMoodles[SelectedMoodleIndex];
+            var result = await _networkManager.SendMoodle(moodle).ConfigureAwait(false);
+
+            SelectedMoodleIndex = -1;
+            
+            ActionResponseParser.Parse("Moodles", result);
         }
         catch (Exception e)
         {
@@ -46,7 +115,7 @@ public class MoodlesViewUiController(FriendsListService friendsListService, Netw
     public List<string> GetFriendsLackingPermissions()
     {
         var thoseWhoYouLackPermissionsFor = new List<string>();
-        foreach (var selected in friendsListService.Selected)
+        foreach (var selected in _friendsListService.Selected)
         {
             if ((selected.PermissionsGrantedByFriend.Primary & PrimaryPermissions2.Moodles) != PrimaryPermissions2.Moodles)
                 thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);

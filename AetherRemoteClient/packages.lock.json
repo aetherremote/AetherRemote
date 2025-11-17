@@ -4,31 +4,15 @@
     "net9.0-windows7.0": {
       "DalamudPackager": {
         "type": "Direct",
-        "requested": "[13.0.0, )",
-        "resolved": "13.0.0",
-        "contentHash": "Mb3cUDSK/vDPQ8gQIeuCw03EMYrej1B4J44a1AvIJ9C759p9XeqdU9Hg4WgOmlnlPe0G7ILTD32PKSUpkQNa8w=="
-      },
-      "DotNet.ReproducibleBuilds": {
-        "type": "Direct",
-        "requested": "[1.2.25, )",
-        "resolved": "1.2.25",
-        "contentHash": "xCXiw7BCxHJ8pF6wPepRUddlh2dlQlbr81gXA72hdk4FLHkKXas7EH/n+fk5UCA/YfMqG1Z6XaPiUjDbUNBUzg=="
+        "requested": "[13.1.0, )",
+        "resolved": "13.1.0",
+        "contentHash": "XdoNhJGyFby5M/sdcRhnc5xTop9PHy+H50PTWpzLhJugjB19EDBiHD/AsiDF66RETM+0qKUdJBZrNuebn7qswQ=="
       },
       "Glamourer.Api": {
         "type": "Direct",
-        "requested": "[2.4.1, )",
-        "resolved": "2.4.1",
-        "contentHash": "Q9jrGWDlIAXoMXihu+HbSRu8FpgR9xNy2j5YpAoqDHzhl2MZLgqAJPlQ+N5ISp6cn7xqQVMmxB9PchW2uEYoEA=="
-      },
-      "MemoryPack": {
-        "type": "Direct",
-        "requested": "[1.10.0, )",
-        "resolved": "1.10.0",
-        "contentHash": "QgvbIRqAXUvp4/3WcFahjOM3Hy42Ma2OxFsXitstc5XGHDpEl6zdV8XedxbBpvl29sS++i3BzT71/8ET1SyBvg==",
-        "dependencies": {
-          "MemoryPack.Core": "1.10.0",
-          "MemoryPack.Generator": "1.10.0"
-        }
+        "requested": "[2.7.0, )",
+        "resolved": "2.7.0",
+        "contentHash": "H4yRNEhdSQ+YkZlnE7qRM67GaNieb9Xe9Vpj3rvHvcSB0eWgMF1nHqCvkBNb4L38AV4WyWTzwtXh6+Rv5GuVTw=="
       },
       "Microsoft.AspNetCore.SignalR.Client": {
         "type": "Direct",
@@ -40,11 +24,17 @@
           "Microsoft.AspNetCore.SignalR.Client.Core": "8.0.11"
         }
       },
+      "Microsoft.NET.ILLink.Tasks": {
+        "type": "Direct",
+        "requested": "[9.0.3, )",
+        "resolved": "9.0.3",
+        "contentHash": "1rqGTfubVg0qj2PsK6esyq3PIxtYJYrN3LsYUV9RrvH3anmt3fT3ozYdAZZH4U8JU/pt5pPIUk8NBSu26wtekA=="
+      },
       "Penumbra.Api": {
         "type": "Direct",
-        "requested": "[5.6.1, )",
-        "resolved": "5.6.1",
-        "contentHash": "pZesXuBB9cMXKN10EfLJclLay3vjRYQy376PXXcPdx33kNI0jHwgPXGcy6BtVmoaMvn4UvK+EqGVYlt2b/Ns9Q=="
+        "requested": "[5.12.0, )",
+        "resolved": "5.12.0",
+        "contentHash": "XGWviAZgokj2djpH50FWgM24jOTpKUuDHvd0HwrzBRY6BEMmpb3HfGIl8+BDE/DqbpH63u6aO2TvzUV6BmXT5w=="
       },
       "Svg.Skia": {
         "type": "Direct",
@@ -81,16 +71,6 @@
         "type": "Transitive",
         "resolved": "8.3.0.1",
         "contentHash": "ow0DtGEUjo65qhiI22of7qiVbN1xDFsZ5P5xJljRmGZ5WSxNy+1batLNJFGxahqhB1MTHYV8kAXf0GqC8WaevQ=="
-      },
-      "MemoryPack.Core": {
-        "type": "Transitive",
-        "resolved": "1.10.0",
-        "contentHash": "MxQ7jag9AOXyAbq7DGvaJBANINLxnkzibOMuwdYAjQDaeIWamIi8Z/QmkOJGBUPGANjIxv2J07rMsFFnHJW/iQ=="
-      },
-      "MemoryPack.Generator": {
-        "type": "Transitive",
-        "resolved": "1.10.0",
-        "contentHash": "U6J+mUb95KVO+ytZECLYJ4awuypfiGwNvWQDaEid3fKOz0X5GGQsLyKE4A9CyMqU5SZKri+Md9YcLGYMCqvkKA=="
       },
       "MessagePack": {
         "type": "Transitive",
@@ -306,6 +286,28 @@
         "dependencies": {
           "Microsoft.AspNetCore.SignalR.Protocols.MessagePack": "[8.0.11, )"
         }
+      }
+    },
+    "net9.0-windows7.0/linux-x64": {
+      "HarfBuzzSharp.NativeAssets.macOS": {
+        "type": "Transitive",
+        "resolved": "8.3.0.1",
+        "contentHash": "2o6U05LAmK+rwX7TvmJ2X0anXJG2hSE7kHVmCshhHy0tKfByJ5ykBacvhmmooHchlOwq15KBZeROGafCT8nN+g=="
+      },
+      "HarfBuzzSharp.NativeAssets.Win32": {
+        "type": "Transitive",
+        "resolved": "8.3.0.1",
+        "contentHash": "ow0DtGEUjo65qhiI22of7qiVbN1xDFsZ5P5xJljRmGZ5WSxNy+1batLNJFGxahqhB1MTHYV8kAXf0GqC8WaevQ=="
+      },
+      "SkiaSharp.NativeAssets.macOS": {
+        "type": "Transitive",
+        "resolved": "3.116.1",
+        "contentHash": "3KPvpKysDmEMt0NnAZPX5U6KFk0LmG/72/IjAIJemIksIZ0Tjs9pGpr3L+zboVCv1MLVoJLKl3nJDXUG6Jda6A=="
+      },
+      "SkiaSharp.NativeAssets.Win32": {
+        "type": "Transitive",
+        "resolved": "3.116.1",
+        "contentHash": "dRQ75MCI8oz6zAs2Y1w6pq6ARs4MhdNG+gf3doOxOxdnueDXffQLGQIxON54GDoxc0WjKOoHMKBR4DhaduwwQw=="
       }
     }
   }

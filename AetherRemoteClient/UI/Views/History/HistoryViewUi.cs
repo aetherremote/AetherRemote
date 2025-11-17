@@ -24,9 +24,7 @@ public class HistoryViewUi(HistoryViewUiController controller) : IDrawable
             for (var i = controller.Logs.List.Count - 1; i >= 0; i--)
             {
                 var log = controller.Logs.List[i];
-                ImGui.TextUnformatted(log.TimeStamp.ToLongTimeString());
-                ImGui.SameLine();
-                ImGui.TextUnformatted(log.Message);
+                ImGui.TextUnformatted($"[{log.TimeStamp.ToLongTimeString()}] {log.Message}");
             }
         });
         

@@ -36,8 +36,7 @@ public class LoginViewUi(LoginViewUiController controller, NetworkService networ
                 shouldConnect = true;
 
             ImGui.SameLine();
-            var disable = networkService.Connection.State is not HubConnectionState.Disconnected;
-            if (disable)
+            if (networkService.Connecting)
             {
                 ImGui.BeginDisabled();
                 ImGui.Button("Connect");

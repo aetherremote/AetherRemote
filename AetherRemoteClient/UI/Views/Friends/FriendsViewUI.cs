@@ -155,14 +155,14 @@ public class FriendsViewUi(
                 ImGui.EndTable();
             }
         });
-
-        // TODO: Re-Enable when a new Mare solution is made
-        /*
-        SharedUserInterfaces.ContentBox("FriendsCharacterAttributesOptions", AetherRemoteStyle.PanelBackground, true, () =>
+        
+        // TODO: Change includeEndPadding once elevated permissions are back
+        SharedUserInterfaces.ContentBox("FriendsCharacterAttributesOptions", AetherRemoteStyle.PanelBackground, false, () =>
         {
             ImGui.TextUnformatted("Character Attributes");
             if (ImGui.BeginTable("CharacterAttributesPermissionsTable", 2))
             {
+                /*
                 ImGui.TableNextColumn();
                 ImGui.Checkbox("Customization", ref controller.EditingUserPermissions.Customization);
                 ImGui.TableNextColumn();
@@ -175,12 +175,15 @@ public class FriendsViewUi(
                 ImGui.Checkbox("Twinning", ref controller.EditingUserPermissions.Twinning);
                 ImGui.TableNextColumn();
                 ImGui.Checkbox("Customize+", ref controller.EditingUserPermissions.CustomizePlus);
+                */
+                
                 ImGui.TableNextColumn();
                 ImGui.Checkbox("Moodles", ref controller.EditingUserPermissions.Moodles);
                 ImGui.EndTable();
             }
         });
         
+        /*
         SharedUserInterfaces.ContentBox("FriendsElevatedOptions", AetherRemoteStyle.ElevatedBackground, false, () =>
         {
             ImGui.TextUnformatted("Elevated Permissions");

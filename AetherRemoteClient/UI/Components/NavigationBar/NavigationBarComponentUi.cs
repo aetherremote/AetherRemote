@@ -41,10 +41,9 @@ public class NavigationBarComponentUi(FriendsListService friendsListService, Net
                 // NavBarButton(FontAwesomeIcon.WandMagicSparkles, "Transformation", View.Transformation, size, offset, spacing);
                 // NavBarButton(FontAwesomeIcon.PeopleArrows, "Body Swap", View.BodySwap, size, offset, spacing);
                 // NavBarButton(FontAwesomeIcon.PeopleGroup, "Twinning", View.Twinning, size, offset, spacing);
-                // NavBarButton(FontAwesomeIcon.Icons, "Moodles", View.Moodles, size, offset, spacing);
+                NavBarButton(FontAwesomeIcon.Icons, "Moodles", View.Moodles, size, offset, spacing);
                 // NavBarButton(FontAwesomeIcon.Plus, "Customize", View.CustomizePlus, size, offset, spacing);
                 NavBarButton(FontAwesomeIcon.Stopwatch, "Hypnosis", View.Hypnosis, size, offset, spacing);
-                NavBarButton(FontAwesomeIcon.Ghost, "Possession", View.Possession, size, offset, spacing);
 
                 ImGui.TextUnformatted("Configuration");
                 NavBarButton(FontAwesomeIcon.History, "History", View.History, size, offset, spacing);

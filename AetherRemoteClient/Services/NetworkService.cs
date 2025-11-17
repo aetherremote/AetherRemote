@@ -1,11 +1,12 @@
 using System;
-using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using AetherRemoteClient.Utils;
+using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network.GetToken;
+using AetherRemoteCommon.Domain.Network.LoginAuthentication;
 using MessagePack;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,6 +43,18 @@ public class NetworkService : IDisposable
     private const string PostUrl = "https://foxitsvc.com:5006/api/auth/login";
 #endif
 
+    private static readonly JsonSerializerOptions DeserializationOptions = new() { PropertyNameCaseInsensitive = true };
+    
+    /// <summary>
+    ///     Access token required to connect to the SignalR hub
+    /// </summary>
+    private string? _token = string.Empty;
+
+    /// <summary>
+    ///     If the plugin has begun the connection process
+    /// </summary>
+    public bool Connecting;
+
     /// <summary>
     ///     <inheritdoc cref="NetworkService"/>
     /// </summary>
@@ -49,7 +62,7 @@ public class NetworkService : IDisposable
     {
         Connection = new HubConnectionBuilder().WithUrl(HubUrl, options =>
             {
-                options.AccessTokenProvider = async () => await FetchToken();
+                options.AccessTokenProvider = () => Task.FromResult(_token);
             })
             .WithAutomaticReconnect()
             .AddMessagePackProtocol(options =>
@@ -74,18 +87,26 @@ public class NetworkService : IDisposable
             return;
         }
 
+        Connecting = true;
+        
         try
         {
-            await Connection.StartAsync().ConfigureAwait(false);
-
-            if (Connection.State is HubConnectionState.Connected)
+            // Try to get the Token
+            if (await TryAuthenticateSecret().ConfigureAwait(false) is { } token)
             {
-                Connected?.Invoke();
-                NotificationHelper.Success("[Aether Remote] Connected", string.Empty);
-            }
-            else
-            { 
-                NotificationHelper.Warning("[Aether Remote] Unable to connect", "See developer console for more information");
+                _token = token;
+            
+                await Connection.StartAsync().ConfigureAwait(false);
+
+                if (Connection.State is HubConnectionState.Connected)
+                {
+                    Connected?.Invoke();
+                    NotificationHelper.Success("[Aether Remote] Connected", string.Empty);
+                }
+                else
+                { 
+                    NotificationHelper.Warning("[Aether Remote] Unable to connect", "See developer console for more information");
+                }
             }
         }
         catch (Exception e)
@@ -93,6 +114,8 @@ public class NetworkService : IDisposable
             Plugin.Log.Warning($"[NetworkService] [StartAsync] {e.Message}]");
             NotificationHelper.Warning("[Aether Remote] Could not connect", "See developer console for more information");
         }
+        
+        Connecting = false;
     }
 
     /// <summary>
@@ -162,53 +185,56 @@ public class NetworkService : IDisposable
         return Task.CompletedTask;
     }
 
-    /// <summary>
-    ///     Sends a POST to the login server to get a JWT Token
-    /// </summary>
-    /// <returns>JWT Token if successful, otherwise null</returns>
-    private static async Task<string?> FetchToken()
+    private static async Task<string?> TryAuthenticateSecret()
     {
-        try
+        if (Plugin.CharacterConfiguration?.Secret is null)
         {
-            using var client = new HttpClient();
-            var request = new GetTokenRequest
-            {
-                Secret = Plugin.CharacterConfiguration?.Secret ?? string.Empty,
-                Version = Plugin.Version
-            };
-
-            var payload = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
-            var response = await client.PostAsync(PostUrl, payload).ConfigureAwait(false);
-            if (response.IsSuccessStatusCode)
-            {
-                Plugin.Log.Verbose("[NetworkHelper] Successfully authenticated");
-                return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            }
-
-            var error = response.StatusCode switch
-            {
-                HttpStatusCode.Unauthorized => "[NetworkHelper] Unable to authenticate, invalid secret",
-                HttpStatusCode.BadRequest => "[NetworkHelper] Unable to authenticate, outdated client",
-                _ => $"[NetworkHelper] Unable to authenticate, {response.StatusCode}"
-            };
-
-            Plugin.Log.Warning(error);
+            Plugin.Log.Warning("[NetworkService.TryAuthenticateSecret] You do not have a secret to provide for authentication");
             return null;
         }
-        catch (HttpRequestException e)
-        {
-            var error = e.StatusCode switch
-            {
-                null => "[NetworkHelper] Unable to connect to authentication server",
-                _ => e.Message
-            };
+        
+        using var client = new HttpClient();
+        var request = new GetTokenRequest(Plugin.CharacterConfiguration.Secret, Plugin.Version);
+        var payload = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
 
-            Plugin.Log.Warning(error);
+        try
+        {
+            var response = await client.PostAsync(PostUrl, payload).ConfigureAwait(false);
+            var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            if (JsonSerializer.Deserialize<LoginAuthenticationResult>(content, DeserializationOptions) is not { } result)
+            {
+                Plugin.Log.Warning("[NetworkService.TryAuthenticateSecret] A deserialization error occurred");
+                return null;
+            }
+
+            switch (result.ErrorCode)
+            {
+                case LoginAuthenticationErrorCode.Success:
+                    return result.Secret;
+
+                case LoginAuthenticationErrorCode.VersionMismatch:
+                    NotificationHelper.Error("Aether Remote - Client Outdated", "You will need to update the plugin before connecting to the servers.");
+                    return null;
+
+                case LoginAuthenticationErrorCode.UnknownSecret:
+                    NotificationHelper.Error("Aether Remote - Invalid Secret", "The secret you provided is either empty, or invalid. If you believe this is a mistake, please reach out to the developer.");
+                    return null;
+
+                case LoginAuthenticationErrorCode.Uninitialized:
+                case LoginAuthenticationErrorCode.Unknown:
+                default:
+                    NotificationHelper.Error("Aether Remote - Unable to Connect", $"Something went wrong while connecting to the server, {result.ErrorCode}");
+                    return null;
+            }
+        }
+        catch (HttpRequestException)
+        {
+            NotificationHelper.Warning("Authentication Server Down", "Please wait and try again later. You can monitor or report this problem in the discord if it persists", false);
             return null;
         }
         catch (Exception e)
         {
-            Plugin.Log.Warning($"[NetworkHelper] Unable to send POST to server, {e.Message}");
+            Plugin.Log.Error(e.ToString());
             return null;
         }
     }

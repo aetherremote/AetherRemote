@@ -1,3 +1,4 @@
+using AetherRemoteCommon.Dependencies.Moodles.Domain;
 using MessagePack;
 
 namespace AetherRemoteCommon.Domain.Network.Moodles;
@@ -5,15 +6,15 @@ namespace AetherRemoteCommon.Domain.Network.Moodles;
 [MessagePackObject(keyAsPropertyName: true)]
 public record MoodlesForwardedRequest : ForwardedActionRequest
 {
-    public string Moodle { get; set; } = string.Empty;
+    public MoodleInfo Info { get; set; } = new();
 
     public MoodlesForwardedRequest()
     {
     }
 
-    public MoodlesForwardedRequest(string sender, string moodle)
+    public MoodlesForwardedRequest(string sender, MoodleInfo info)
     {
         SenderFriendCode = sender;
-        Moodle = moodle;
+        Info = info;
     }
 }

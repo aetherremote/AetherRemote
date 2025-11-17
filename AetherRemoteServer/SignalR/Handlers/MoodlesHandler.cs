@@ -17,8 +17,7 @@ public class MoodlesHandler(
     ILogger<MoodlesHandler> logger)
 {
     private const string Method = HubMethod.Moodles;
-    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.Moodles, SpeakPermissions2.None,
-        ElevatedPermissions.None);
+    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.Moodles, SpeakPermissions2.None, ElevatedPermissions.None);
     
     /// <summary>
     ///     Handles the request
@@ -37,7 +36,7 @@ public class MoodlesHandler(
             return new ActionResponse(ActionResponseEc.TooManyRequests);
         }
 
-        var forwardedRequest = new MoodlesForwardedRequest(sender, request.Moodle);
+        var forwardedRequest = new MoodlesForwardedRequest(sender, request.Info);
         return await forwardedRequestManager.CheckPermissionsAndSend(sender, request.TargetFriendCodes, Method,
             Permissions, forwardedRequest, clients);
     }

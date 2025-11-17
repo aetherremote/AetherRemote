@@ -1,7 +1,9 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network.GetToken;
+using AetherRemoteCommon.Domain.Network.LoginAuthentication;
 using AetherRemoteServer.Domain;
 using AetherRemoteServer.Domain.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -15,7 +17,7 @@ namespace AetherRemoteServer.Api.Controllers;
 public class AuthController(Configuration config, IDatabaseService database) : ControllerBase
 {
     // Const
-    private static readonly Version ExpectedVersion = new(2, 7,0, 1);
+    private static readonly Version ExpectedVersion = new(2, 8,0, 0);
     
     // Instantiated
     private readonly SymmetricSecurityKey _key = new(Encoding.UTF8.GetBytes(config.SigningKey));
@@ -25,18 +27,14 @@ public class AuthController(Configuration config, IDatabaseService database) : C
     public async Task<IActionResult> Login([FromBody] GetTokenRequest request)
     {
         if (request.Version != ExpectedVersion)
-            return BadRequest("Version Mismatch");
+            return StatusCode(StatusCodes.Status409Conflict, new LoginAuthenticationResult(LoginAuthenticationErrorCode.VersionMismatch));
+        
+        if (await database.GetFriendCodeBySecret(request.Secret) is not { } friendCode)
+            return StatusCode(StatusCodes.Status401Unauthorized, new LoginAuthenticationResult(LoginAuthenticationErrorCode.UnknownSecret));
 
-        var friendCode = await database.GetFriendCodeBySecret(request.Secret);
-        if (friendCode is null)
-            return Unauthorized("You are not registered");
+        var token = GenerateJwtToken([new Claim(AuthClaimTypes.FriendCode, friendCode)]);
 
-        var token = GenerateJwtToken(
-        [
-            new Claim(AuthClaimTypes.FriendCode, friendCode)
-        ]);
-
-        return Ok(token.RawData);
+        return StatusCode(StatusCodes.Status200OK, new LoginAuthenticationResult(LoginAuthenticationErrorCode.Success, token.RawData));
     }
 
     private JwtSecurityToken GenerateJwtToken(List<Claim> claims)
