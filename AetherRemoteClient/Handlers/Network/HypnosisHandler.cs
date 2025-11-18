@@ -45,6 +45,7 @@ public class HypnosisHandler(LogService logService, HypnosisManager hypnosisMana
                 {
                     // Stop being hypnotized, silly
                     hypnosisManager.Wake();
+                    return ActionResultBuilder.Ok();
                 }
             }
             else

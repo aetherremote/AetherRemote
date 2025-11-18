@@ -97,7 +97,7 @@ public class SpeakViewUiController
             var extra = ChannelSelect switch
             {
                 ChatChannel.Tell => $"{CharacterName}@{WorldName}",
-                ChatChannel.Linkshell or ChatChannel.CrossWorldLinkshell => LinkshellSelection.ToString(),
+                ChatChannel.Linkshell or ChatChannel.CrossWorldLinkshell => (LinkshellSelection + 1).ToString(),
                 _ => null
             };
 
