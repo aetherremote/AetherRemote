@@ -34,10 +34,10 @@ public class NetworkService : IDisposable
     public event Func<Task>? Disconnected;
     
 #if DEBUG
-    private const string HubUrl = "https://localhost:5006/primaryHub";
-    private const string PostUrl = "https://localhost:5006/api/auth/login";
-    // private const string HubUrl = "https://foxitsvc.com:5007/primaryHub";
-    // private const string PostUrl = "https://foxitsvc.com:5007/api/auth/login";
+    // private const string HubUrl = "https://localhost:5006/primaryHub";
+    // private const string PostUrl = "https://localhost:5006/api/auth/login";
+    private const string HubUrl = "https://foxitsvc.com:5006/primaryHub";
+    private const string PostUrl = "https://foxitsvc.com:5006/api/auth/login";
 #else
     private const string HubUrl = "https://foxitsvc.com:5006/primaryHub";
     private const string PostUrl = "https://foxitsvc.com:5006/api/auth/login";
@@ -62,7 +62,8 @@ public class NetworkService : IDisposable
     {
         Connection = new HubConnectionBuilder().WithUrl(HubUrl, options =>
             {
-                options.AccessTokenProvider = () => Task.FromResult(_token);
+                // ReSharper disable once RedundantTypeArgumentsOfMethod
+                options.AccessTokenProvider = () => Task.FromResult<string?>(_token);
             })
             .WithAutomaticReconnect()
             .AddMessagePackProtocol(options =>

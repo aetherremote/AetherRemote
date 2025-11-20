@@ -7,6 +7,7 @@ using System.Timers;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Hypnosis;
 using AetherRemoteClient.Domain.Hypnosis.Components;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain;
@@ -26,8 +27,8 @@ public class HypnosisViewUiController : IDisposable
     private const int TextRefreshCooldownInMilliseconds = 300;
 
     // Injected
-    private readonly FriendsListService _friendsListService;
     private readonly NetworkService _networkService;
+    private readonly SelectionManager _selectionManager;
 
     // Configuration values
     public int SpiralArms = HypnosisSpiralRenderer.DefaultSpiralArms;
@@ -63,10 +64,10 @@ public class HypnosisViewUiController : IDisposable
     /// <summary>
     ///     <inheritdoc cref="HypnosisViewUiController"/>
     /// </summary>
-    public HypnosisViewUiController(FriendsListService friendsListService, NetworkService networkService)
+    public HypnosisViewUiController(NetworkService networkService, SelectionManager selectionManager)
     {
-        _friendsListService = friendsListService;
         _networkService = networkService;
+        _selectionManager = selectionManager;
 
         _spiralRefreshCooldown.AutoReset = false;
         _spiralRefreshCooldown.Enabled = false;
@@ -307,7 +308,7 @@ public class HypnosisViewUiController : IDisposable
         try
         {
             var data = GetHypnosisDataFromUi();
-            var request = new HypnosisRequest(_friendsListService.SelectedFriendCodes, data, false);
+            var request = new HypnosisRequest(_selectionManager.GetSelectedFriendCodes(), data, false);
             var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.Hypnosis, request).ConfigureAwait(false);
         
             ActionResponseParser.Parse("Hypnosis", response);
@@ -325,7 +326,7 @@ public class HypnosisViewUiController : IDisposable
     {
         try
         {
-            var request = new HypnosisRequest(_friendsListService.SelectedFriendCodes, new HypnosisData(), true);
+            var request = new HypnosisRequest(_selectionManager.GetSelectedFriendCodes(), new HypnosisData(), true);
             var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.Hypnosis, request).ConfigureAwait(false);
             
             ActionResponseParser.Parse("Hypnosis Stop", response);

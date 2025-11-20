@@ -4,7 +4,7 @@
     <PropertyGroup>
         <Authors>Mora</Authors>
         <Company>Mora-XIV</Company>
-        <Version>2.8.0.1</Version>
+        <Version>2.8.1.0</Version>
         <Description>XIV Plugin</Description>
         <Copyright>(C)Mora 2024 - 25</Copyright>
         <PackageProjectUrl>https://github.com/aetherremote/AetherRemote</PackageProjectUrl>
@@ -43,6 +43,5 @@
       <Folder Include="Dependencies\CustomizePlus\" />
       <Folder Include="Dependencies\Glamourer\" />
       <Folder Include="Dependencies\Penumbra\" />
-      <Folder Include="Domain\Dependencies\Moodles\" />
     </ItemGroup>
 </Project>

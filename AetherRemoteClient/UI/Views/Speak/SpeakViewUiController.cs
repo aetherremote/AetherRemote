@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using AetherRemoteClient.Domain;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
@@ -18,9 +19,9 @@ namespace AetherRemoteClient.UI.Views.Speak;
 /// </summary>
 public class SpeakViewUiController
 {
-    private readonly FriendsListService _friendsListService;
     private readonly NetworkService _networkService;
     private readonly WorldService _worldService;
+    private readonly SelectionManager _selectionManager;
 
     public readonly string[] LinkshellNumbers = ["1", "2", "3", "4", "5", "6", "7", "8"];
     public readonly ListFilter<string> WorldsListFilter;
@@ -37,11 +38,11 @@ public class SpeakViewUiController
     /// <summary>
     ///     <inheritdoc cref="SpeakViewUiController"/>
     /// </summary>
-    public SpeakViewUiController(FriendsListService friendsListService, NetworkService networkService, WorldService worldService)
+    public SpeakViewUiController(NetworkService networkService, WorldService worldService, SelectionManager selectionManager)
     {
-        _friendsListService = friendsListService;
         _networkService = networkService;
         _worldService = worldService;
+        _selectionManager = selectionManager;
         
         WorldsListFilter = new ListFilter<string>(worldService.WorldNames, FilterWorld);
         ChatModeOptions = (from ChatChannel mode in Enum.GetValues<ChatChannel>() select mode.Beautify()).ToArray();
@@ -100,21 +101,16 @@ public class SpeakViewUiController
                 ChatChannel.Linkshell or ChatChannel.CrossWorldLinkshell => (LinkshellSelection + 1).ToString(),
                 _ => null
             };
-
-            var input = new SpeakRequest
-            {
-                ChatChannel = ChannelSelect, Extra = extra, Message = Message,
-                TargetFriendCodes = _friendsListService.Selected.Select(friend => friend.FriendCode).ToList()
-            };
-
-            var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.Speak, input);
+            
+            var request = new SpeakRequest(_selectionManager.GetSelectedFriendCodes(), Message, ChannelSelect, extra);
+            var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.Speak, request);
             if (response.Result is ActionResponseEc.Success)
             {
                 Message = string.Empty;
                 
-                if (input.ChatChannel is ChatChannel.Echo)
-                    foreach (var friend in _friendsListService.Selected)
-                        Plugin.ChatGui.Print($">>{friend.NoteOrFriendCode}: {input.Message}");
+                if (request.ChatChannel is ChatChannel.Echo)
+                    foreach (var friend in _selectionManager.Selected)
+                        Plugin.ChatGui.Print($">>{friend.NoteOrFriendCode}: {request.Message}");
             }
             
             ActionResponseParser.Parse("Speak", response);
@@ -129,7 +125,7 @@ public class SpeakViewUiController
     {
         var permissions = ChannelSelect.ToSpeakPermissions();
         var thoseWhoYouLackPermissionsFor = new List<string>();
-        foreach (var selected in _friendsListService.Selected)
+        foreach (var selected in _selectionManager.Selected)
         {
             if ((selected.PermissionsGrantedByFriend.Speak & permissions) != permissions)
                 thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);

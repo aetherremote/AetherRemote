@@ -1,6 +1,5 @@
 using System.Numerics;
 using AetherRemoteClient.Domain;
-using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
@@ -9,7 +8,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 
 namespace AetherRemoteClient.UI.Components.NavigationBar;
 
-public class NavigationBarComponentUi(FriendsListService friendsListService, NetworkService networkService, ViewService viewService)
+public class NavigationBarComponentUi(NetworkService networkService, ViewService viewService)
 {
     // Const
     private static readonly Vector2 AlignButtonTextLeft = new(0, 0.5f);
@@ -79,7 +78,8 @@ public class NavigationBarComponentUi(FriendsListService friendsListService, Net
             if (ImGui.Button($"##{text}", size))
             {
                 viewService.CurrentView = view;
-                friendsListService.PurgeOfflineFriendsFromSelect();
+                
+                // TODO: It's possible we may need to purge friends here that are offline from the selection
             }
         }
 

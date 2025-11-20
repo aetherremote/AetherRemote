@@ -1,5 +1,6 @@
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
@@ -14,13 +15,13 @@ public class TwinningViewUi(
     FriendsListComponentUi friendsList,
     TwinningViewUiController controller,
     CommandLockoutService commandLockoutService,
-    FriendsListService friendsListService): IDrawable
+    SelectionManager selectionManager): IDrawable
 {
     public void Draw()
     {
         ImGui.BeginChild("TwinningContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
         
-        if (friendsListService.Selected.Count is 0)
+        if (selectionManager.Selected.Count is 0)
         {
             SharedUserInterfaces.ContentBox("TwinningSelectMoreFriends", AetherRemoteStyle.PanelBackground, true, () =>
             {

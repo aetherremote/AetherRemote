@@ -7,6 +7,8 @@ using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums.Permissions;
+using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.Domain.Network.Moodles;
 using Dalamud.Interface.Textures;
 using Dalamud.Interface.Textures.TextureWraps;
 
@@ -16,16 +18,16 @@ public class MoodlesViewUiController
 {
     // Instantiate
     private readonly CommandLockoutService _commandLockoutService;
-    private readonly FriendsListService _friendsListService;
-    private readonly NetworkManager _networkManager;
     private readonly MoodlesService _moodlesService;
+    private readonly NetworkService _networkService;
+    private readonly SelectionManager _selectionManager;
 
-    public MoodlesViewUiController(CommandLockoutService commandLockoutService, FriendsListService friendsListService, NetworkManager networkManager, MoodlesService moodlesService)
+    public MoodlesViewUiController(CommandLockoutService commandLockoutService, NetworkService networkService, MoodlesService moodlesService, SelectionManager selectionManager)
     {
         _commandLockoutService =  commandLockoutService;
-        _friendsListService = friendsListService;
-        _networkManager = networkManager;
+        _networkService = networkService;
         _moodlesService = moodlesService;
+        _selectionManager = selectionManager;
 
         RefreshMoodles();
     }
@@ -96,11 +98,10 @@ public class MoodlesViewUiController
             _commandLockoutService.Lock();
             
             var moodle = FilteredMoodles[SelectedMoodleIndex];
-            var result = await _networkManager.SendMoodle(moodle).ConfigureAwait(false);
-
-            SelectedMoodleIndex = -1;
+            var request = new MoodlesRequest(_selectionManager.GetSelectedFriendCodes(), moodle.Info);
+            var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.Moodles, request).ConfigureAwait(false);
             
-            ActionResponseParser.Parse("Moodles", result);
+            ActionResponseParser.Parse("Moodles", response);
         }
         catch (Exception e)
         {
@@ -115,7 +116,7 @@ public class MoodlesViewUiController
     public List<string> GetFriendsLackingPermissions()
     {
         var thoseWhoYouLackPermissionsFor = new List<string>();
-        foreach (var selected in _friendsListService.Selected)
+        foreach (var selected in _selectionManager.Selected)
         {
             if ((selected.PermissionsGrantedByFriend.Primary & PrimaryPermissions2.Moodles) != PrimaryPermissions2.Moodles)
                 thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);

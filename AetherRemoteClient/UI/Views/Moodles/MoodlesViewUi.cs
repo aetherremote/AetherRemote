@@ -4,6 +4,7 @@ using System.Numerics;
 using System.Text;
 using AetherRemoteClient.Dependencies.Moodles.Domain;
 using AetherRemoteClient.Domain.Interfaces;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
@@ -17,7 +18,7 @@ public class MoodlesViewUi(
     FriendsListComponentUi friendsList,
     MoodlesViewUiController controller,
     CommandLockoutService commandLockoutService,
-    FriendsListService friendsListService) : IDrawable
+    SelectionManager selectionManager) : IDrawable
 {
     // Const
     private const int DefaultLinesPerMoodleTitle = 3;
@@ -30,8 +31,6 @@ public class MoodlesViewUi(
     public void Draw()
     {
         ImGui.BeginChild("MoodlesContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
-
-        var topLeftCorner = ImGui.GetCursorScreenPos();
 
         var width = ImGui.GetWindowWidth();
         var padding = new Vector2(ImGui.GetStyle().WindowPadding.X, 0);
@@ -84,7 +83,7 @@ public class MoodlesViewUi(
         
         SharedUserInterfaces.ContentBox("MoodlesSend", AetherRemoteStyle.PanelBackground, false, () =>
         {
-            if (friendsListService.Selected.Count is 0)
+            if (selectionManager.Selected.Count is 0)
             {
                 ImGui.BeginDisabled();
                 ImGui.Button("You must select at least one friend", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendMoodleButtonHeight));

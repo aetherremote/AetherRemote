@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.Input;
 using AetherRemoteClient.Utils;
@@ -11,7 +12,7 @@ using AetherRemoteCommon.Domain.Network.Twinning;
 
 namespace AetherRemoteClient.UI.Views.Twinning;
 
-public class TwinningViewUiController(FriendsListService friendsListService, NetworkService networkService)
+public class TwinningViewUiController(NetworkService networkService, SelectionManager selectionManager)
 {
     public bool SwapMods;
     public bool SwapMoodles;
@@ -41,7 +42,7 @@ public class TwinningViewUiController(FriendsListService friendsListService, Net
             
             var request = new TwinningRequest
             {
-                TargetFriendCodes = friendsListService.Selected.Select(friend => friend.FriendCode).ToList(),
+                TargetFriendCodes = selectionManager.GetSelectedFriendCodes(),
                 SwapAttributes = attributes,
                 CharacterName = player.Name.ToString()
             };
@@ -71,7 +72,7 @@ public class TwinningViewUiController(FriendsListService friendsListService, Net
     
     public bool AllSelectedTargetsHaveElevatedPermissions()
     {
-        return friendsListService.Selected.All(friend =>
+        return selectionManager.Selected.All(friend =>
             (friend.PermissionsGrantedByFriend.Elevated & ElevatedPermissions.PermanentTransformation) ==
             ElevatedPermissions.PermanentTransformation);
     }
@@ -82,7 +83,7 @@ public class TwinningViewUiController(FriendsListService friendsListService, Net
     public List<string> GetFriendsLackingPermissions()
     {
         var thoseWhoYouLackPermissionsFor = new List<string>();
-        foreach (var selected in friendsListService.Selected)
+        foreach (var selected in selectionManager.Selected)
         {
             if ((selected.PermissionsGrantedByFriend.Primary & SelectedAttributesPermissions) != SelectedAttributesPermissions)
                 thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);

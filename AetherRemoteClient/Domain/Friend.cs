@@ -7,8 +7,8 @@ namespace AetherRemoteClient.Domain;
 /// </summary>
 public class Friend(
     string friendCode,
+    bool online,
     string? note = null,
-    bool online = false,
     UserPermissions? permissionsGrantedToFriend = null,
     UserPermissions? permissionsGrantedByFriend = null)
 {
@@ -36,6 +36,11 @@ public class Friend(
     ///     The permissions a friend has granted you
     /// </summary>
     public UserPermissions PermissionsGrantedByFriend = permissionsGrantedByFriend ?? new UserPermissions();
+
+    /// <summary>
+    ///     The last time a command was sent to this user
+    /// </summary>
+    public long LastInteractedWith = 0;
     
     /// <summary>
     ///     Gets the note if available, otherwise the friend code

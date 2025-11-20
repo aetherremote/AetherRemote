@@ -1,5 +1,6 @@
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
@@ -14,7 +15,7 @@ public class SpeakViewUi(
     FriendsListComponentUi friendsList,
     SpeakViewUiController controller,
     CommandLockoutService commandLockoutService,
-    FriendsListService friendsListService) : IDrawable
+    SelectionManager selectionManager) : IDrawable
 {
     private static readonly Vector2 IconSize = new(24);
 
@@ -22,7 +23,7 @@ public class SpeakViewUi(
     {
         ImGui.BeginChild("SpeakContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
 
-        switch (friendsListService.Selected.Count)
+        switch (selectionManager.Selected.Count)
         {
             case 0:
                 SharedUserInterfaces.ContentBox("SpeakSelectMoreFriends", AetherRemoteStyle.PanelBackground, true, () =>

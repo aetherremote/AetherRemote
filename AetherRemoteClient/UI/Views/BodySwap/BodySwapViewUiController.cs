@@ -18,10 +18,10 @@ namespace AetherRemoteClient.UI.Views.BodySwap;
 ///     Handles events from the <see cref="BodySwapViewUi"/>
 /// </summary>
 public class BodySwapViewUiController(
-    FriendsListService friendsListService,
     IdentityService identityService,
     NetworkService networkService,
     CharacterTransformationManager characterTransformationManager,
+    SelectionManager selectionManager,
     PermanentTransformationHandler permanentTransformationHandler)
 {
     public bool IncludeSelfInSwap;
@@ -56,7 +56,7 @@ public class BodySwapViewUiController(
             
             var request = new BodySwapRequest
             {
-                TargetFriendCodes = friendsListService.Selected.Select(friend => friend.FriendCode).ToList(),
+                TargetFriendCodes = selectionManager.GetSelectedFriendCodes(),
                 SwapAttributes = attributes,
                 SenderCharacterName = IncludeSelfInSwap ? player.Name.ToString() : null
             };
@@ -117,7 +117,7 @@ public class BodySwapViewUiController(
     
     public bool AllSelectedTargetsHaveElevatedPermissions()
     {
-        return friendsListService.Selected.All(friend =>
+        return selectionManager.Selected.All(friend =>
             (friend.PermissionsGrantedByFriend.Elevated & ElevatedPermissions.PermanentTransformation) ==
             ElevatedPermissions.PermanentTransformation);
     }
@@ -128,7 +128,7 @@ public class BodySwapViewUiController(
     public List<string> GetFriendsLackingPermissions()
     {
         var thoseWhoYouLackPermissionsFor = new List<string>();
-        foreach (var selected in friendsListService.Selected)
+        foreach (var selected in selectionManager.Selected)
         {
             if ((selected.PermissionsGrantedByFriend.Primary & SelectedAttributesPermissions) != SelectedAttributesPermissions)
                 thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using AetherRemoteClient.Domain;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
@@ -13,7 +14,7 @@ namespace AetherRemoteClient.UI.Views.Emote;
 /// <summary>
 ///     Handles events from the <see cref="EmoteViewUi"/>
 /// </summary>
-public class EmoteViewUiController(EmoteService emoteService, FriendsListService friendsListService, NetworkService networkService)
+public class EmoteViewUiController(EmoteService emoteService, NetworkService networkService, SelectionManager selectionManager)
 {
     public readonly ListFilter<string> EmotesListFilter = new(emoteService.Emotes, FilterEmote);
     public string EmoteSelection = string.Empty;
@@ -31,7 +32,7 @@ public class EmoteViewUiController(EmoteService emoteService, FriendsListService
             if (emoteService.Emotes.Contains(EmoteSelection) is false)
                 return;
 
-            var request = new EmoteRequest(friendsListService.SelectedFriendCodes, EmoteSelection, DisplayLogMessage);
+            var request = new EmoteRequest(selectionManager.GetSelectedFriendCodes(), EmoteSelection, DisplayLogMessage);
             var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.Emote, request).ConfigureAwait(false);
             if (response.Result is ActionResponseEc.Success)
                 EmoteSelection = string.Empty;
@@ -51,7 +52,7 @@ public class EmoteViewUiController(EmoteService emoteService, FriendsListService
     public List<string> GetFriendsLackingPermissions()
     {
         var thoseWhoYouLackPermissionsFor = new List<string>();
-        foreach (var selected in friendsListService.Selected)
+        foreach (var selected in selectionManager.Selected)
         {
             if ((selected.PermissionsGrantedByFriend.Primary & PrimaryPermissions2.Emote) != PrimaryPermissions2.Emote)
                 thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);

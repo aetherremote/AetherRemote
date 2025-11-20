@@ -105,9 +105,9 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<DependencyManager>();
         services.AddSingleton<HypnosisManager>();
         services.AddSingleton<LoginManager>();
-        services.AddSingleton<NetworkManager>();
         services.AddSingleton<PermanentTransformationHandler>();
         services.AddSingleton<PermissionsCheckerManager>();
+        services.AddSingleton<SelectionManager>();
         
         // Handlers
         services.AddSingleton<ChatCommandHandler>();
@@ -125,6 +125,9 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<TwinningHandler>();
         services.AddSingleton<CustomizePlusHandler>();
         services.AddSingleton<NetworkHandler>(); // Aggregate handler
+        
+        // Ui - Component Controllers
+        services.AddSingleton<FriendsListComponentUiController>();
         
         // Ui - Components
         services.AddSingleton<FriendsListComponentUi>();

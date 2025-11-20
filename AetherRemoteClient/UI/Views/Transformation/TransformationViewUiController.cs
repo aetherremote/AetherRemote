@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Services.Dependencies;
 using AetherRemoteClient.UI.Components.Input;
@@ -16,7 +17,7 @@ namespace AetherRemoteClient.UI.Views.Transformation;
 /// <summary>
 ///     Handles events from the <see cref="TransformationViewUi"/>
 /// </summary>
-public class TransformationViewUiController(FriendsListService friendsListService, NetworkService networkService, GlamourerService glamourer)
+public class TransformationViewUiController(NetworkService networkService, GlamourerService glamourer, SelectionManager selectionManager)
 {
     public string GlamourerCode = string.Empty;
     public bool ApplyCustomization = true;
@@ -85,7 +86,7 @@ public class TransformationViewUiController(FriendsListService friendsListServic
 
     public bool AllSelectedTargetsHaveElevatedPermissions()
     {
-        return friendsListService.Selected.All(friend =>
+        return selectionManager.Selected.All(friend =>
             (friend.PermissionsGrantedByFriend.Elevated & ElevatedPermissions.PermanentTransformation) ==
             ElevatedPermissions.PermanentTransformation);
     }
@@ -109,7 +110,7 @@ public class TransformationViewUiController(FriendsListService friendsListServic
 
             var request = new TransformRequest
             {
-                TargetFriendCodes = friendsListService.Selected.Select(friend => friend.FriendCode).ToList(),
+                TargetFriendCodes = selectionManager.GetSelectedFriendCodes(),
                 GlamourerData = GlamourerCode,
                 GlamourerApplyType = applyType
             };
@@ -152,7 +153,7 @@ public class TransformationViewUiController(FriendsListService friendsListServic
     public List<string> GetFriendsLackingPermissions()
     {
         var thoseWhoYouLackPermissionsFor = new List<string>();
-        foreach (var selected in friendsListService.Selected)
+        foreach (var selected in selectionManager.Selected)
         {
             if ((selected.PermissionsGrantedByFriend.Primary & SelectedApplyTypePermissions) != SelectedApplyTypePermissions)
                 thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);

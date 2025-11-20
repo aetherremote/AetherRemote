@@ -1,6 +1,6 @@
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
-using AetherRemoteClient.Services;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
@@ -15,7 +15,7 @@ namespace AetherRemoteClient.UI.Views.Friends;
 public class FriendsViewUi(
     FriendsListComponentUi friendsList, 
     FriendsViewUiController controller,
-    FriendsListService friendsListService) : IDrawable
+    SelectionManager selectionManager) : IDrawable
 {
     private const string UnsavedChangesText = "You have unsaved changes";
     private static readonly Vector2 Half = new(0.5f);
@@ -29,11 +29,11 @@ public class FriendsViewUi(
         var windowWidth = ImGui.GetWindowWidth();
         var windowPadding = ImGui.GetStyle().WindowPadding;
 
-        if (friendsListService.Selected.Count is not 1)
+        if (selectionManager.Selected.Count is not 1)
         {
             SharedUserInterfaces.ContentBox("A2", AetherRemoteStyle.PanelBackground, true, () =>
             {
-                SharedUserInterfaces.TextCentered(friendsListService.Selected.Count is 0
+                SharedUserInterfaces.TextCentered(selectionManager.Selected.Count is 0
                     ? "Select a friend to edit"
                     : "You must only edit a single person's permissions");
             });

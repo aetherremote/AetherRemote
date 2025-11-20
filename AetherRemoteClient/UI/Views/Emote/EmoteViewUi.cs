@@ -1,5 +1,6 @@
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
@@ -13,13 +14,13 @@ public class EmoteViewUi(
     FriendsListComponentUi friendsList,
     EmoteViewUiController controller,
     CommandLockoutService commandLockoutService,
-    FriendsListService friendsListService) : IDrawable
+    SelectionManager selectionManager) : IDrawable
 {
     public void Draw()
     {
         ImGui.BeginChild("EmoteContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
 
-        switch (friendsListService.Selected.Count)
+        switch (selectionManager.Selected.Count)
         {
             case 0:
                 SharedUserInterfaces.ContentBox("EmoteSelectMoreFriends", AetherRemoteStyle.PanelBackground, true,

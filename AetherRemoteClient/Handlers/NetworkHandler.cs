@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Handlers.Network;
-using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Network;
@@ -119,7 +118,7 @@ public class NetworkHandler : IDisposable
             Plugin.Configuration.Notes.TryGetValue(friendCode, out var note);
 
             // Create a new friends object with everything we've gathered
-            var friend = new Friend(friendCode, note, online, permissionsGrantedToFriend, permissionsGrantedByOther);
+            var friend = new Friend(friendCode, online, note, permissionsGrantedToFriend, permissionsGrantedByOther);
             
             // Add to our friend list
             _friendsListService.Add(friend);

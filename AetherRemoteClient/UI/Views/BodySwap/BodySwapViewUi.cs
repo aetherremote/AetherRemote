@@ -1,5 +1,6 @@
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
@@ -14,7 +15,7 @@ public class BodySwapViewUi(
     FriendsListComponentUi friendsList,
     BodySwapViewUiController controller,
     CommandLockoutService commandLockoutService,
-    FriendsListService friendsListService) : IDrawable
+    SelectionManager selectionManager) : IDrawable
 {
     // Const
     private static readonly Vector2 IconSize = new(32);
@@ -23,7 +24,7 @@ public class BodySwapViewUi(
     {
         ImGui.BeginChild("BodySwapContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
 
-        if (friendsListService.Selected.Count is 0)
+        if (selectionManager.Selected.Count is 0)
         {
             SharedUserInterfaces.ContentBox("BodySwapSelectMoreFriends", AetherRemoteStyle.PanelBackground, true, () =>
             {

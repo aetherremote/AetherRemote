@@ -1,100 +1,86 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using AetherRemoteClient.Domain;
-using AetherRemoteClient.Domain.Events;
-using Dalamud.Bindings.ImGui;
 
 namespace AetherRemoteClient.Services;
 
 /// <summary>
-///     Class responsible for processing any changes to the friend's list
+///     Provides access and operations to the friends list
 /// </summary>
 public class FriendsListService
 {
     /// <summary>
-    ///     List of all friends. Never directly modify this list, use the service methods.
+    ///     Exposed list of friends
     /// </summary>
-    public readonly List<Friend> Friends = [];
-
-    /// <summary>
-    ///     Set of all selected friends
-    /// </summary>
-    public readonly HashSet<Friend> Selected = [];
-
-    /// <summary>
-    ///     Event fired when the selected targets have changed
-    /// </summary>
-    public event EventHandler<SelectedChangedEventArgs>? SelectedChangedEvent;
-
-    /// <summary>
-    ///     Attempts to get a friend by friend code
-    /// </summary>
-    public Friend? Get(string friendCode) => Friends.FirstOrDefault(friend => friend.FriendCode == friendCode);
-
-    /// <summary>
-    ///     Returns the currently selected targets as a list of friend codes
-    /// </summary>
-    public List<string> SelectedFriendCodes => Selected.Select(friend => friend.FriendCode).ToList();
-
-    /// <summary>
-    ///     Adds a friend locally
-    /// </summary>
-    public void Add(string friendCode, string? note, bool online) => Friends.Add(new Friend(friendCode, note, online));
+    public IReadOnlyList<Friend> Friends => _friends;
+    private readonly List<Friend> _friends = [];
     
     /// <summary>
-    ///     Adds a friend locally
+    ///     Event fired when a new friend is added
     /// </summary>
-    public void Add(Friend friend) => Friends.Add(friend);
+    public event EventHandler<Friend>? FriendAdded;
     
     /// <summary>
-    ///     Deletes a friend locally
+    ///     Event fired when a friend is deleted
+    /// </summary>
+    public event EventHandler<Friend>? FriendDeleted;
+    
+    /// <summary>
+    ///     Event fired when the friends list is cleared
+    /// </summary>
+    public event EventHandler? FriendsListCleared;
+
+    /// <summary>
+    ///     Attempts to get a friend from the friends list, null if not found
+    /// </summary>
+    public Friend? Get(string friendCode)
+    {
+        foreach (var friend in _friends)
+            if (friend.FriendCode == friendCode)
+                return friend;
+
+        return null;
+    }
+
+    /// <summary>
+    ///     Checks to see if a friend is in the friends list
+    /// </summary>
+    public bool Contains(string friendCode)
+    {
+        foreach (var friend in _friends)
+            if (friend.FriendCode == friendCode)
+                return true;
+
+        return false;
+    }
+
+    /// <summary>
+    ///     Adds a new friend to the list
+    /// <remarks>Triggers <see cref="FriendAdded"/></remarks>
+    /// </summary>
+    public void Add(Friend friend)
+    {
+        _friends.Add(friend);
+        FriendAdded?.Invoke(this, friend);
+    }
+
+    /// <summary>
+    ///     Deletes a friend from the list
+    /// <remarks>Triggers <see cref="FriendDeleted"/></remarks>
     /// </summary>
     public void Delete(Friend friend)
     {
-        Friends.Remove(friend);
-
-        if (Selected.Remove(friend))
-            SelectedChangedEvent?.Invoke(this, new SelectedChangedEventArgs(Selected));
+        _friends.Remove(friend);
+        FriendDeleted?.Invoke(this, friend);
     }
 
     /// <summary>
-    ///     Clears the friend's list of all friends
+    ///     Clears the friends list
+    /// <remarks>Triggers <see cref="FriendsListCleared"/></remarks>
     /// </summary>
     public void Clear()
     {
-        Friends.Clear();
-    }
-
-    /// <summary>
-    ///     Selects a friend, and if control is held, selects multiple
-    /// </summary>
-    public void Select(Friend friend)
-    {
-        if (ImGui.GetIO().KeyCtrl)
-        {
-            if (Selected.Add(friend) is false)
-                Selected.Remove(friend);
-        }
-        else
-        {
-            if (Selected.Count is 1 && Selected.Contains(friend))
-                return;
-
-            Selected.Clear();
-            Selected.Add(friend);
-        }
-
-        SelectedChangedEvent?.Invoke(this, new SelectedChangedEventArgs(Selected));
-    }
-
-    /// <summary>
-    ///     Removes any currently offline friends from your currently selected list
-    /// </summary>
-    public void PurgeOfflineFriendsFromSelect()
-    {
-        foreach (var friend in Selected)
-            if (friend.Online is false)
-                Selected.Remove(friend);
+        _friends.Clear();
+        FriendsListCleared?.Invoke(this, EventArgs.Empty);
     }
 }

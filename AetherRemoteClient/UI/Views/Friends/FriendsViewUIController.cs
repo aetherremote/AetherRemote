@@ -1,7 +1,7 @@
 using System;
 using System.Linq;
 using AetherRemoteClient.Domain;
-using AetherRemoteClient.Domain.Events;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
@@ -19,6 +19,7 @@ public class FriendsViewUiController : IDisposable
     // Injected
     private readonly FriendsListService _friendsListService;
     private readonly NetworkService _networkService;
+    private readonly SelectionManager _selectionManager;
 
     // Instantiated
     private Friend? _friendBeingEdited;
@@ -42,12 +43,13 @@ public class FriendsViewUiController : IDisposable
     /// <summary>
     ///     <inheritdoc cref="FriendsViewUiController" />
     /// </summary>
-    public FriendsViewUiController(FriendsListService friendsListService, NetworkService networkService)
+    public FriendsViewUiController(FriendsListService friendsListService, NetworkService networkService, SelectionManager selectionManager)
     {
-        _networkService = networkService;
         _friendsListService = friendsListService;
+        _networkService = networkService;
+        _selectionManager = selectionManager;
         
-        _friendsListService.SelectedChangedEvent += OnSelectedChangedEvent;
+        _selectionManager.FriendSelected += OnSelectedChangedEvent;
     }
 
     /// <summary>
@@ -179,12 +181,12 @@ public class FriendsViewUiController : IDisposable
     /// <summary>
     ///     Handles event fired from <see cref="FriendsListComponentUiController" />
     /// </summary>
-    private void OnSelectedChangedEvent(object? sender, SelectedChangedEventArgs e)
+    private void OnSelectedChangedEvent(object? sender, Friend _)
     {
-        if (e.Selected.Count is not 1)
+        if (_selectionManager.Selected.FirstOrDefault() is not { } friend)
             return;
 
-        _friendBeingEdited = e.Selected.First();
+        _friendBeingEdited = friend;
         _friendBeingEditedUserPermissionsOriginal = BooleanUserPermissions.From(_friendBeingEdited.PermissionsGrantedToFriend);
 
         FriendCode = _friendBeingEdited.FriendCode;
@@ -194,7 +196,7 @@ public class FriendsViewUiController : IDisposable
 
     public void Dispose()
     {
-        _friendsListService.SelectedChangedEvent -= OnSelectedChangedEvent;
+        _selectionManager.FriendSelected -= OnSelectedChangedEvent;
         GC.SuppressFinalize(this);
     }
 }

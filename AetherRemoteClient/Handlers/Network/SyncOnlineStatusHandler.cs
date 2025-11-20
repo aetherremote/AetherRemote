@@ -1,3 +1,4 @@
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain.Network.SyncOnlineStatus;
 
@@ -6,7 +7,7 @@ namespace AetherRemoteClient.Handlers.Network;
 /// <summary>
 ///     Handles a <see cref="SyncOnlineStatusForwardedRequest"/>
 /// </summary>
-public class SyncOnlineStatusHandler(FriendsListService friendsListService)
+public class SyncOnlineStatusHandler(FriendsListService friendsListService, SelectionManager selectionManager)
 {
     /// <summary>
     ///     <inheritdoc cref="SyncOnlineStatusHandler"/>
@@ -15,18 +16,18 @@ public class SyncOnlineStatusHandler(FriendsListService friendsListService)
     {
         if (friendsListService.Get(action.SenderFriendCode) is not { } friend)
             return;
-
+        
         friend.Online = action.Online;
 
-        if (action.Online is false)
+        if (!friend.Online)
         {
-            friendsListService.Selected.Remove(friend);
+            selectionManager.Deselect(friend);
             return;
         }
 
         if (action.Permissions is null)
         {
-            Plugin.Log.Warning("Excepted permissions to not be null when updating an online friend's permissions");
+            Plugin.Log.Warning("[SyncOnlineStatusHandler.Handle] Permissions are not set");
             return;
         }
         
