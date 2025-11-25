@@ -16,7 +16,7 @@ namespace AetherRemoteClient.UI.Views.Moodles;
 
 public class MoodlesViewUiController
 {
-    // Instantiate
+    // Injected
     private readonly CommandLockoutService _commandLockoutService;
     private readonly MoodlesService _moodlesService;
     private readonly NetworkService _networkService;

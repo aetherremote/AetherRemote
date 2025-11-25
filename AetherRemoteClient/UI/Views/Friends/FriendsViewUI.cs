@@ -162,11 +162,12 @@ public class FriendsViewUi(
             ImGui.TextUnformatted("Character Attributes");
             if (ImGui.BeginTable("CharacterAttributesPermissionsTable", 2))
             {
-                /*
                 ImGui.TableNextColumn();
                 ImGui.Checkbox("Customization", ref controller.EditingUserPermissions.Customization);
                 ImGui.TableNextColumn();
                 ImGui.Checkbox("Equipment", ref controller.EditingUserPermissions.Equipment);
+                
+                /*
                 ImGui.TableNextColumn();
                 ImGui.Checkbox("Mods", ref controller.EditingUserPermissions.Mods);
                 ImGui.TableNextColumn();

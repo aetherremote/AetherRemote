@@ -134,11 +134,12 @@ public class PauseViewUi(
                 ImGui.TextUnformatted("Character Attributes");
                 if (ImGui.BeginTable("CharacterAttributes", 2))
                 {
-                    /*
                     ImGui.TableNextColumn();
                     BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.GlamourerCustomization);
                     ImGui.TableNextColumn();
                     BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.GlamourerEquipment);
+                    
+                    /*
                     ImGui.TableNextColumn();
                     BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.Mods);
                     ImGui.TableNextColumn();

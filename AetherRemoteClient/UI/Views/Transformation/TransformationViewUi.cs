@@ -1,13 +1,12 @@
+using System;
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
-using AetherRemoteCommon.Domain.Enums.Permissions;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Colors;
 
 namespace AetherRemoteClient.UI.Views.Transformation;
 
@@ -18,128 +17,146 @@ public class TransformationViewUi(
     SelectionManager selectionManager) : IDrawable
 {
     // Const
-    private static readonly Vector2 IconSize = new(32);
+    private const int SendDesignButtonHeight = 40;
     
     public void Draw()
     {
         ImGui.BeginChild("TransformationContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
+        
+        var width = ImGui.GetWindowWidth();
+        var padding = new Vector2(ImGui.GetStyle().WindowPadding.X, 0);
 
-        if (selectionManager.Selected.Count is 0)
+        var begin = ImGui.GetCursorPosY();
+        SharedUserInterfaces.ContentBox("TransformDesignSearch", AetherRemoteStyle.PanelBackground, true, () =>
         {
-            SharedUserInterfaces.ContentBox("", AetherRemoteStyle.PanelBackground, true, () =>
-            {
-                SharedUserInterfaces.TextCentered("You must select at least one friend");
-            });
+            SharedUserInterfaces.MediumText("Select Design");
 
+            ImGui.SetNextItemWidth(width - padding.X * 4 - ImGui.GetFontSize());
+            ImGui.InputTextWithHint("##DesignSearchBar", "Search", ref controller.SearchTerm, 32);
+
+            ImGui.SameLine();
+
+            if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Sync, null, "Refresh Designs"))
+                controller.RefreshDesigns();
+        });
+        
+        var headerHeight = ImGui.GetCursorPosY() - begin;
+        var designContextBoxSize = new Vector2(0, ImGui.GetWindowHeight() - headerHeight - padding.X * 6 - SendDesignButtonHeight * 2);
+        
+        if (ImGui.BeginChild("##DesignsDisplayBox", designContextBoxSize, true, ImGuiWindowFlags.NoScrollbar))
+        {
+            var half = ImGui.GetWindowWidth() * 0.5f;
+            foreach (var folder in controller.FilteredDesigns)
+            {
+                if (folder.Designs.Count is 0)
+                    continue;
+                
+                if (ImGui.CollapsingHeader(folder.Path, ImGuiTreeNodeFlags.DefaultOpen))
+                {
+                    ImGui.PushStyleColor(ImGuiCol.Header, AetherRemoteStyle.PrimaryColor);
+                    for (var i = 0; i < folder.Designs.Count; i++)
+                    {
+                        var design = folder.Designs[i];
+                        var size = i % 2 is 0
+                            ? new Vector2(half - padding.X * 2, 0)
+                            : new Vector2(half - padding.X, 0);
+                        
+                        if (design.Color is uint.MaxValue)
+                        {
+                            if (ImGui.Selectable(design.Name, controller.SelectedDesignId == design.Id, ImGuiSelectableFlags.None, size))
+                                controller.SelectedDesignId = design.Id;
+                        }
+                        else
+                        {
+                            ImGui.PushStyleColor(ImGuiCol.Text, design.Color);
+                            if (ImGui.Selectable(design.Name, controller.SelectedDesignId == design.Id, ImGuiSelectableFlags.None, size))
+                                controller.SelectedDesignId = design.Id;
+                            ImGui.PopStyleColor();
+                        }
+                        
+                        if (i % 2 is 0 && i < folder.Designs.Count - 1)
+                            ImGui.SameLine(half);
+                    }
+                    
+                    ImGui.PopStyleColor();
+                }
+            }
+            
             ImGui.EndChild();
-            ImGui.SameLine();
-            friendsList.Draw();
-            return;
         }
         
-        SharedUserInterfaces.ContentBox("TransformationQuickActions", AetherRemoteStyle.PanelBackground, true, () =>
-        {
-            SharedUserInterfaces.MediumText("Quick Actions");
+        ImGui.Spacing();
 
-            if (SharedUserInterfaces.IconButton(FontAwesomeIcon.User, IconSize))
-                controller.CopyOwnGlamourer();
-            SharedUserInterfaces.Tooltip("Copies your glamourer data into the box below");
+        SharedUserInterfaces.ContentBox("DesignOptions", AetherRemoteStyle.PanelBackground, true, () =>
+        {
+            if (controller.ShouldApplyCustomization)
+            {
+                ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteStyle.PrimaryColor);
+                if (SharedUserInterfaces.IconButton(FontAwesomeIcon.User, new Vector2(SendDesignButtonHeight)))
+                    controller.ShouldApplyCustomization = !controller.ShouldApplyCustomization;
+                ImGui.PopStyleColor();
+            }
+            else
+            {
+                if (SharedUserInterfaces.IconButton(FontAwesomeIcon.User, new Vector2(SendDesignButtonHeight)))
+                    controller.ShouldApplyCustomization = !controller.ShouldApplyCustomization;
+            }
+            
+            if (ImGui.IsItemHovered())
+                ImGui.SetTooltip(controller.ShouldApplyCustomization ? "Currently applying customizations, click to disable" : "Not applying customizations, click to enable");
             
             ImGui.SameLine();
+
+            if (controller.ShouldApplyEquipment)
+            {
+                ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteStyle.PrimaryColor);
+                if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Tshirt, new Vector2(SendDesignButtonHeight)))
+                    controller.ShouldApplyEquipment = !controller.ShouldApplyEquipment;
+                ImGui.PopStyleColor();
+            }
+            else
+            {
+                if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Tshirt, new Vector2(SendDesignButtonHeight)))
+                    controller.ShouldApplyEquipment = !controller.ShouldApplyEquipment;
+            }
             
-            if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Crosshairs, IconSize))
-                controller.CopyTargetGlamourer();
-            SharedUserInterfaces.Tooltip("Copies your target's glamourer data into the box below");
-            
-            ImGui.SameLine();
-            
-            if(SharedUserInterfaces.IconButton(FontAwesomeIcon.Paste, IconSize))
-                controller.CopyFromClipboard();
-            SharedUserInterfaces.Tooltip("Paste glamourer data from your clipboard");
+            if (ImGui.IsItemHovered())
+                ImGui.SetTooltip(controller.ShouldApplyEquipment ? "Currently applying equipment, click to disable" : "Not applying equipment, click to enable");
         });
         
-        var windowWidth = ImGui.GetWindowWidth() * 0.5f; // 0.5 is a minor mathematical optimization
-        SharedUserInterfaces.ContentBox("TransformationOptions", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("DesignSend", AetherRemoteStyle.PanelBackground, false, () =>
         {
-            SharedUserInterfaces.MediumText("Options");
-
-            if (ImGui.Checkbox("Customization", ref controller.ApplyCustomization))
-                controller.SelectedApplyTypePermissions ^= PrimaryPermissions2.GlamourerCustomization;
-            
-            ImGui.SameLine(windowWidth);
-            if (ImGui.Checkbox("Equipment", ref controller.ApplyEquipment))
-                controller.SelectedApplyTypePermissions ^= PrimaryPermissions2.GlamourerEquipment;
-        });
-        
-        if (controller.AllSelectedTargetsHaveElevatedPermissions())
-            SharedUserInterfaces.ContentBox("TransformationElevatedPermissions", AetherRemoteStyle.ElevatedBackground, true, () =>
-            {
-                SharedUserInterfaces.MediumText("Permanent Transformation");
-                ImGui.Checkbox("Enable", ref controller.PermanentTransformation);
-                if (controller.PermanentTransformation is false)
-                    return;
-                
-                ImGui.SameLine(windowWidth);
-                ImGui.SetNextItemWidth(ImGui.GetFontSize() * 4);
-                
-                controller.PinInput.Draw();
-                ImGui.SameLine();
-                SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
-
-                SharedUserInterfaces.Tooltip(
-                    [
-                        "Your targets can use this PIN to unlock their appearance later if you provide it to them",
-                        "They can unlock it from the Status tab or by using the safeword command or safe mode"
-                    ]);
-            });
-        
-        var friendsLackingPermissions = controller.GetFriendsLackingPermissions();
-        if (friendsLackingPermissions.Count is not 0)
-        {
-            SharedUserInterfaces.ContentBox("TransformationLackingPermissions", AetherRemoteStyle.PanelBackground, true, () =>
-            {
-                SharedUserInterfaces.MediumText("Lacking Permissions", ImGuiColors.DalamudYellow);
-                ImGui.SameLine();
-                ImGui.AlignTextToFramePadding();
-                SharedUserInterfaces.Icon(FontAwesomeIcon.ExclamationTriangle, ImGuiColors.DalamudYellow);
-                SharedUserInterfaces.Tooltip("Commands send to these people will not be processed");
-                ImGui.TextWrapped(string.Join(", ", friendsLackingPermissions));
-            });
-        }
-
-        if (controller.ApplyCustomization is false && controller.ApplyEquipment is false)
-        {
-            SharedUserInterfaces.ContentBox("TransformationSelectOptions", AetherRemoteStyle.PanelBackground, true, () =>
-            {
-                ImGui.TextColored(ImGuiColors.DalamudYellow, "You must select at least one transformation option");
-            });
-        }
-
-        SharedUserInterfaces.ContentBox("TransformationSend", AetherRemoteStyle.PanelBackground, false, () =>
-        {
-            SharedUserInterfaces.MediumText("Glamourer Data");
-            var width = (windowWidth - ImGui.GetStyle().WindowPadding.X) * 2;
-            ImGui.SetNextItemWidth(width);
-            var shouldSendTransform = ImGui.InputTextWithHint("##GlamourerData", "Glamourer data", ref controller.GlamourerCode, 5000, ImGuiInputTextFlags.EnterReturnsTrue);
-            
-            ImGui.Spacing();
-
-            if (commandLockoutService.IsLocked)
+            if (selectionManager.Selected.Count is 0)
             {
                 ImGui.BeginDisabled();
-                ImGui.Button("Transform", new Vector2(width, 0));
+                ImGui.Button("You must select at least one friend", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendDesignButtonHeight));
+                ImGui.EndDisabled();
+            }
+            else if (controller.SelectedDesignId == Guid.Empty)
+            {
+                ImGui.BeginDisabled();
+                ImGui.Button("You must select a design", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendDesignButtonHeight));
+                ImGui.EndDisabled();
+            }
+            else if (controller.GetFriendsLackingPermissions().Count is not 0)
+            {
+                ImGui.BeginDisabled();
+                ImGui.Button("You lack permissions for one or more of your targets", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendDesignButtonHeight));
                 ImGui.EndDisabled();
             }
             else
             {
-                if (ImGui.Button("Transform", new Vector2(width, 0)))
-                    shouldSendTransform = true;
-
-                if (shouldSendTransform is false)
-                    return;
-                
-                commandLockoutService.Lock();
-                controller.Transform();
+                if (commandLockoutService.IsLocked)
+                {
+                    ImGui.BeginDisabled();
+                    ImGui.Button("Transform", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendDesignButtonHeight));
+                    ImGui.EndDisabled();
+                }
+                else
+                {
+                    if (ImGui.Button("Transform", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendDesignButtonHeight)))
+                        controller.SendDesign();
+                }
             }
         });
 

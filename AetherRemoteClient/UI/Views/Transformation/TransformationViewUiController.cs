@@ -1,164 +1,96 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AetherRemoteClient.Dependencies.Glamourer.Domain;
+using AetherRemoteClient.Dependencies.Glamourer.Services;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
-using AetherRemoteClient.Services.Dependencies;
-using AetherRemoteClient.UI.Components.Input;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
-using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Transform;
-using Dalamud.Bindings.ImGui;
 
 namespace AetherRemoteClient.UI.Views.Transformation;
 
 /// <summary>
 ///     Handles events from the <see cref="TransformationViewUi"/>
 /// </summary>
-public class TransformationViewUiController(NetworkService networkService, GlamourerService glamourer, SelectionManager selectionManager)
+public class TransformationViewUiController
 {
-    public string GlamourerCode = string.Empty;
-    public bool ApplyCustomization = true;
-    public bool ApplyEquipment = false;
-    public bool PermanentTransformation = false;
-    public readonly FourDigitInput PinInput = new("TransformationInput");
-
-    /// <summary>
-    ///     Used to determine if all selected friends have permissions
-    /// </summary>
-    public PrimaryPermissions2 SelectedApplyTypePermissions = PrimaryPermissions2.GlamourerCustomization;
+    // Injected
+    private readonly CommandLockoutService _commandLockoutService;
+    private readonly GlamourerService _glamourerService;
+    private readonly NetworkService _networkService;
+    private readonly SelectionManager _selectionManager;
     
-    /// <summary>
-    ///     Sets <see cref="GlamourerCode"/> to your own glamourer code
-    /// </summary>
-    public async void CopyOwnGlamourer()
-    {
-        try
-        {
-            var result = await glamourer.GetDesignAsync(0);
-            if (result is null)
-            {
-                NotificationHelper.Warning("Unable to get glamourer data",
-                    "Unable to get your glamourer data at the moment.");
-                return;
-            }
-
-            GlamourerCode = result;
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Warning($"Unable to copy own glamourer, {e.Message}");
-        }
-    }
+    // TODO: More commenting
     
-    /// <summary>
-    ///     Sets <see cref="GlamourerCode"/> to your target's glamourer code
-    /// </summary>
-    public async void CopyTargetGlamourer()
+    public string SearchTerm = string.Empty;
+    
+    private List<DesignFolder> _designs = [];
+    public List<DesignFolder> FilteredDesigns => SearchTerm == string.Empty 
+        ? _designs.ToList()
+        : _designs.Select(folder => new DesignFolder(folder.Path, folder.Designs.Where(design => design.Name.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)).ToList())).ToList();
+    
+    public Guid SelectedDesignId = Guid.Empty;
+    public bool ShouldApplyCustomization = true;
+    public bool ShouldApplyEquipment = true;
+
+    public TransformationViewUiController(CommandLockoutService commandLockoutService, GlamourerService glamourer, NetworkService networkService, SelectionManager selectionManager)
     {
-        try
-        {
-            var index = await Plugin.RunOnFramework(() => Plugin.TargetManager.Target?.ObjectIndex);
-            if (index is null)
-            {
-                NotificationHelper.Warning("No target",
-                    "Unable to get target glamourer data because you don't have a target.");
-                return;
-            }
+        _commandLockoutService = commandLockoutService;
+        _glamourerService = glamourer;
+        _networkService = networkService;
+        _selectionManager = selectionManager;
         
-            var data = await glamourer.GetDesignAsync(index.Value);
-            if (data is null)
-            {
-                NotificationHelper.Warning("Unable to get glamourer data",
-                    "Unable to get target glamourer data at the moment.");
-                return;
-            }
-        
-            GlamourerCode = data;
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Warning($"Unable to copy target glamourer, {e.Message}");
-        }
+        RefreshDesigns();
     }
-
-    public bool AllSelectedTargetsHaveElevatedPermissions()
-    {
-        return selectionManager.Selected.All(friend =>
-            (friend.PermissionsGrantedByFriend.Elevated & ElevatedPermissions.PermanentTransformation) ==
-            ElevatedPermissions.PermanentTransformation);
-    }
-
-    /// <summary>
-    ///     Handles the transform from the Ui
-    /// </summary>
-    public async void Transform()
+    
+    public async void RefreshDesigns()
     {
         try
         {
-            if (GlamourerCode.Length is 0)
-                return;
+            SelectedDesignId = Guid.Empty;
 
-            var applyType = GlamourerApplyFlags.Once
-                            | (ApplyCustomization ? GlamourerApplyFlags.Customization : 0)
-                            | (ApplyEquipment ? GlamourerApplyFlags.Equipment : 0);
-            
-            if (applyType is GlamourerApplyFlags.Once)
-                applyType = GlamourerApplyFlags.All;
-
-            var request = new TransformRequest
-            {
-                TargetFriendCodes = selectionManager.GetSelectedFriendCodes(),
-                GlamourerData = GlamourerCode,
-                GlamourerApplyType = applyType
-            };
-            
-            if (PermanentTransformation)
-            {
-                var pin = PinInput.Value;
-                if (pin.Length is 4)
-                {
-                    request.LockCode = pin;
-                }
-                else
-                {
-                    Plugin.Log.Warning("[TransformationViewUiController] Pin is not 4 characters");
-                    return;
-                }
-            }
-            
-            var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.Transform, request);
-            ActionResponseParser.Parse("Transformation", response);
+            _designs = await _glamourerService.GetDesignList().ConfigureAwait(false);
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            Plugin.Log.Warning($"Unable to transform, {e.Message}");
+            // Ignored
         }
-    }
-
-    /// <summary>
-    ///     Sets <see cref="GlamourerCode"/> to whatever is in your clipboard
-    /// </summary>
-    public void CopyFromClipboard()
-    {
-        GlamourerCode = ImGui.GetClipboardText();
     }
     
-    /// <summary>
-    ///     Gets a list of friend codes or notes of the people who you lack permissions to send to
-    /// </summary>
-    /// <returns></returns>
     public List<string> GetFriendsLackingPermissions()
     {
-        var thoseWhoYouLackPermissionsFor = new List<string>();
-        foreach (var selected in selectionManager.Selected)
+        return [];
+    }
+
+    public async void SendDesign()
+    {
+        try
         {
-            if ((selected.PermissionsGrantedByFriend.Primary & SelectedApplyTypePermissions) != SelectedApplyTypePermissions)
-                thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
+            if (SelectedDesignId == Guid.Empty)
+                return;
+            
+            if (await _glamourerService.GetDesignAsync(SelectedDesignId).ConfigureAwait(false) is not { } design)
+                return;
+            
+            _commandLockoutService.Lock();
+
+            var flags = GlamourerApplyFlags.Once;
+            if (ShouldApplyCustomization)
+                flags |= GlamourerApplyFlags.Customization;
+            if (ShouldApplyEquipment)
+                flags |= GlamourerApplyFlags.Equipment;
+            
+            var request = new TransformRequest(_selectionManager.GetSelectedFriendCodes(), design, flags, null);
+            var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.Transform, request).ConfigureAwait(false);
+            
+            ActionResponseParser.Parse("Transformation", response);
         }
-        
-        return thoseWhoYouLackPermissionsFor;
+        catch (Exception)
+        {
+            // Ignored
+        }
     }
 }

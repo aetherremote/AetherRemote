@@ -1,7 +1,7 @@
 using System;
+using AetherRemoteClient.Dependencies.Glamourer.Services;
 using AetherRemoteClient.Handlers;
 using AetherRemoteClient.Services;
-using AetherRemoteClient.Services.Dependencies;
 using AetherRemoteClient.UI.Components.Input;
 
 namespace AetherRemoteClient.UI.Views.Status;

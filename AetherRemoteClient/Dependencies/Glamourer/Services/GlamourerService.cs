@@ -1,8 +1,11 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AetherRemoteClient.Dependencies.Glamourer.Domain;
 using AetherRemoteClient.Domain.Events;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteCommon.Domain.Enums;
@@ -12,13 +15,16 @@ using Glamourer.Api.Helpers;
 using Glamourer.Api.IpcSubscribers;
 using Newtonsoft.Json.Linq;
 
-namespace AetherRemoteClient.Services.Dependencies;
+namespace AetherRemoteClient.Dependencies.Glamourer.Services;
 
 /// <summary>
 ///     Provides access to Glamourer
 /// </summary>
 public class GlamourerService : IExternalPlugin, IDisposable
 {
+    // Default folder for designs without homes
+    private const string Uncategorized = "Uncategorized";
+    
     // Syncing solutions lock other player profiles to prevent tampering by the client. To view the glamourer data
     // of these other players, we need a key to unlock them. Since there are multiple services, we must try multiple
     // keys to account for all possibilities.
@@ -27,9 +33,16 @@ public class GlamourerService : IExternalPlugin, IDisposable
 
     // An array containing all the lock codes for various syncing solutions
     private static readonly uint[] LockCodes = [MareLockCode, BnuyLockCode];
-
+    
     // Glamourer Api
     private readonly ApiVersion _apiVersion;
+    
+    // Glamourer Api Design
+    private readonly GetDesignBase64 _getDesignBase64;
+    private readonly GetDesignList _getDesignList;
+    private readonly GetDesignListExtended _getDesignListExtended;
+    
+    // Glamourer Api State
     private readonly ApplyState _applyState;
     private readonly GetState _getState;
     private readonly GetStateBase64 _getStateBase64;
@@ -61,6 +74,11 @@ public class GlamourerService : IExternalPlugin, IDisposable
     public GlamourerService()
     {
         _apiVersion = new ApiVersion(Plugin.PluginInterface);
+
+        _getDesignBase64 = new GetDesignBase64(Plugin.PluginInterface);
+        _getDesignList = new GetDesignList(Plugin.PluginInterface);
+        _getDesignListExtended = new GetDesignListExtended(Plugin.PluginInterface);
+        
         _applyState = new ApplyState(Plugin.PluginInterface);
         _getState = new GetState(Plugin.PluginInterface);
         _getStateBase64 = new GetStateBase64(Plugin.PluginInterface);
@@ -88,6 +106,78 @@ public class GlamourerService : IExternalPlugin, IDisposable
         catch (Exception)
         {
             ApiAvailable = false;
+        }
+    }
+
+    // TODO
+    public async Task<string?> GetDesignAsync(Guid designId)
+    {
+        if (!ApiAvailable)
+        {
+            return null;
+        }
+
+        try
+        {
+            return await Plugin.RunOnFramework(() => _getDesignBase64.Invoke(designId)).ConfigureAwait(false);
+        }
+        catch (Exception e)
+        {
+            return null;
+        }
+    }
+
+    public async Task<List<DesignFolder>> GetDesignList()
+    {
+        return await Task.Run(GetDesignListExtended).ConfigureAwait(false);
+    }
+    
+    private async Task<List<DesignFolder>> GetDesignListExtended()
+    {
+        if (!ApiAvailable)
+        {
+            return [];
+        }
+
+        try
+        {
+            var result = await Plugin.RunOnFramework(() => _getDesignListExtended.Invoke()).ConfigureAwait(false);
+            
+            var folders = new Dictionary<string, List<Design>>();
+            foreach (var kvp in result)
+            {
+                var design = new Design(kvp.Key, kvp.Value.DisplayName, kvp.Value.DisplayColor);
+                var span = kvp.Value.FullPath.AsSpan();
+                var index = span.LastIndexOf('/');
+
+                var folderPathSpan = index is -1
+                    ? Uncategorized.AsSpan()
+                    : span[..index];
+                
+                var folderPath = folderPathSpan.ToString();
+
+                if (folders.TryGetValue(folderPath, out var list))
+                {
+                    list.Add(design);
+                }
+                else
+                {
+                    folders[folderPath] = [design];
+                }
+            }
+
+            foreach (var list in folders.Values)
+                list.Sort((x, y) => string.Compare(x.Name, y.Name, StringComparison.OrdinalIgnoreCase));
+
+            return folders
+                .Select(x => new DesignFolder(x.Key, x.Value)) // Collapse
+                .OrderBy(x => x.Path.Equals(Uncategorized, StringComparison.OrdinalIgnoreCase) ? 1 : 0) // Ensure Uncategorized is last
+                .ThenBy(x => x.Path, StringComparer.OrdinalIgnoreCase) // Alphabetical
+                .ToList();
+        }
+        catch (Exception e)
+        {
+            return [];
         }
     }
 

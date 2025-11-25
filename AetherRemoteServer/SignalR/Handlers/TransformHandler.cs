@@ -47,7 +47,6 @@ public class TransformHandler(
         var permissions = new UserPermissions(primary, SpeakPermissions2.None, elevated);
         
         var forwardedRequest = new TransformForwardedRequest(sender, request.GlamourerData, request.GlamourerApplyType, request.LockCode);
-        return await forwardedRequestManager.CheckPermissionsAndSend(sender, request.TargetFriendCodes, Method,
-            permissions, forwardedRequest, clients);
+        return await forwardedRequestManager.CheckPermissionsAndSend(sender, request.TargetFriendCodes, Method, permissions, forwardedRequest, clients);
     }
 }

@@ -37,7 +37,7 @@ public class NavigationBarComponentUi(NetworkService networkService, ViewService
                 ImGui.TextUnformatted("Control");
                 NavBarButton(FontAwesomeIcon.Comments, "Speak", View.Speak, size, offset, spacing);
                 NavBarButton(FontAwesomeIcon.Smile, "Emote", View.Emote, size, offset, spacing);
-                // NavBarButton(FontAwesomeIcon.WandMagicSparkles, "Transformation", View.Transformation, size, offset, spacing);
+                NavBarButton(FontAwesomeIcon.WandMagicSparkles, "Transformation", View.Transformation, size, offset, spacing);
                 // NavBarButton(FontAwesomeIcon.PeopleArrows, "Body Swap", View.BodySwap, size, offset, spacing);
                 // NavBarButton(FontAwesomeIcon.PeopleGroup, "Twinning", View.Twinning, size, offset, spacing);
                 NavBarButton(FontAwesomeIcon.Icons, "Moodles", View.Moodles, size, offset, spacing);

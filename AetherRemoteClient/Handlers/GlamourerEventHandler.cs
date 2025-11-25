@@ -1,5 +1,6 @@
 using System;
 using System.Timers;
+using AetherRemoteClient.Dependencies.Glamourer.Services;
 using AetherRemoteClient.Domain.Events;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services.Dependencies;

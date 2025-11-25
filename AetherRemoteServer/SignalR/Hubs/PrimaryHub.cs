@@ -99,8 +99,12 @@ public class PrimaryHub(
     [HubMethodName(HubMethod.Transform)]
     public async Task<ActionResponse> Transform(TransformRequest request)
     {
+        // TODO: Remove after 12/25/2025 - Happy holidays person who is reading this!
         logger.LogInformation("{Request}", request);
-        return new ActionResponse(ActionResponseEc.Disabled);
+        
+        if (request.LockCode is not null)
+            return new ActionResponse(ActionResponseEc.Disabled);
+        
         return await transformHandler.Handle(FriendCode, request, Clients);
     }
 

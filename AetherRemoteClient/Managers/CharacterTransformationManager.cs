@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AetherRemoteClient.Dependencies.Glamourer.Services;
 using AetherRemoteClient.Dependencies.Moodles.Services;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Attributes;
