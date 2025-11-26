@@ -38,7 +38,7 @@ public class LoginManager : IDisposable
         try
         {
             // Make sure the local player is present
-            if (await Plugin.RunOnFramework(() => Plugin.ClientState.LocalPlayer).ConfigureAwait(false) is not { } player)
+            if (await Plugin.RunOnFramework(() => Plugin.ObjectTable.LocalPlayer).ConfigureAwait(false) is not { } player)
                 return;
 
             // Store the name and world for readability

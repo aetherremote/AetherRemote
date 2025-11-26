@@ -29,7 +29,7 @@ public class TwinningViewUiController(NetworkService networkService, SelectionMa
     {
         try
         {
-            if (Plugin.ClientState.LocalPlayer is not { } player)
+            if (Plugin.ObjectTable.LocalPlayer is not { } player)
                 return;
 
             var attributes = CharacterAttributes.None;

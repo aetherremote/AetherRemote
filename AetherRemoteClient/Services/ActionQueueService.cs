@@ -84,7 +84,7 @@ public class ActionQueueService: IDisposable
     
     private void Update()
     {
-        if (_actions.IsEmpty || Plugin.ClientState.LocalPlayer is null)
+        if (_actions.IsEmpty || Plugin.ObjectTable.LocalPlayer is null)
             return;
 
         var now = DateTime.Now;

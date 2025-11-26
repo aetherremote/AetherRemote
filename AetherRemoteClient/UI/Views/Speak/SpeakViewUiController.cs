@@ -53,7 +53,7 @@ public class SpeakViewUiController
     /// </summary>
     public void FillWithPlayerData()
     {
-        if (Plugin.ClientState.LocalPlayer is not {} target)
+        if (Plugin.ObjectTable.LocalPlayer is not {} target)
             return;
         
         SetTellTarget(target);

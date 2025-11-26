@@ -82,7 +82,7 @@ public class NetworkHandler : IDisposable
     private async Task OnConnected()
     {
         // Get the local player
-        if (await Plugin.RunOnFramework(() => Plugin.ClientState.LocalPlayer) is not { } player)
+        if (await Plugin.RunOnFramework(() => Plugin.ObjectTable.LocalPlayer) is not { } player)
             return;
         
         // TODO: Expand to include world in the future to help with same-name issues

@@ -43,7 +43,7 @@ public class BodySwapViewUiController(
     {
         try
         {
-            if (Plugin.ClientState.LocalPlayer is not { } player)
+            if (Plugin.ObjectTable.LocalPlayer is not { } player)
                 return;
 
             var attributes = CharacterAttributes.None;

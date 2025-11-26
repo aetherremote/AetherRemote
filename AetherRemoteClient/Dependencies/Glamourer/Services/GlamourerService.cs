@@ -39,7 +39,6 @@ public class GlamourerService : IExternalPlugin, IDisposable
     
     // Glamourer Api Design
     private readonly GetDesignBase64 _getDesignBase64;
-    private readonly GetDesignList _getDesignList;
     private readonly GetDesignListExtended _getDesignListExtended;
     
     // Glamourer Api State
@@ -76,7 +75,6 @@ public class GlamourerService : IExternalPlugin, IDisposable
         _apiVersion = new ApiVersion(Plugin.PluginInterface);
 
         _getDesignBase64 = new GetDesignBase64(Plugin.PluginInterface);
-        _getDesignList = new GetDesignList(Plugin.PluginInterface);
         _getDesignListExtended = new GetDesignListExtended(Plugin.PluginInterface);
         
         _applyState = new ApplyState(Plugin.PluginInterface);
@@ -109,24 +107,9 @@ public class GlamourerService : IExternalPlugin, IDisposable
         }
     }
 
-    // TODO
-    public async Task<string?> GetDesignAsync(Guid designId)
-    {
-        if (!ApiAvailable)
-        {
-            return null;
-        }
-
-        try
-        {
-            return await Plugin.RunOnFramework(() => _getDesignBase64.Invoke(designId)).ConfigureAwait(false);
-        }
-        catch (Exception e)
-        {
-            return null;
-        }
-    }
-
+    /// <summary>
+    ///     Gets all the local player's glamourer designs as a folder structure. See <see cref="GetDesignListExtended"/> for more details
+    /// </summary>
     public async Task<List<DesignFolder>> GetDesignList()
     {
         return await Task.Run(GetDesignListExtended).ConfigureAwait(false);
@@ -171,12 +154,13 @@ public class GlamourerService : IExternalPlugin, IDisposable
 
             return folders
                 .Select(x => new DesignFolder(x.Key, x.Value)) // Collapse
-                .OrderBy(x => x.Path.Equals(Uncategorized, StringComparison.OrdinalIgnoreCase) ? 1 : 0) // Ensure Uncategorized is last
-                .ThenBy(x => x.Path, StringComparer.OrdinalIgnoreCase) // Alphabetical
+                .OrderBy(x => x.Path, StringComparer.OrdinalIgnoreCase) // Alphabetical
+                .ThenBy(x => x.Path.Equals(Uncategorized, StringComparison.OrdinalIgnoreCase) ? 1 : 0) // Ensure Uncategorized is last
                 .ToList();
         }
         catch (Exception e)
         {
+            Plugin.Log.Error($"[GlamourerService.GetDesignListExtended] An unexpected error occurred, {e}");
             return [];
         }
     }
@@ -292,6 +276,29 @@ public class GlamourerService : IExternalPlugin, IDisposable
         {
             Plugin.Log.Error($"[GlamourerService] [ApplyDesignAsync] Actor index {index} failed to apply design unexpectedly, {e}");
             return false;
+        }
+    }
+    
+    /// <summary>
+    ///     Get a design from glamourer by providing Guid
+    /// </summary>
+    public async Task<string?> GetDesignAsync(Guid designId)
+    {
+        // Check if we can call this
+        if (!ApiAvailable)
+        {
+            Plugin.Log.Warning("[GlamourerService.GetDesignAsync] Api not available");
+            return null;
+        }
+
+        try
+        {
+            return await Plugin.RunOnFramework(() => _getDesignBase64.Invoke(designId)).ConfigureAwait(false);
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error($"[GlamourerService.GetDesignAsync] An expected error occurred, {e}");
+            return null;
         }
     }
 

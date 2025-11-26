@@ -51,7 +51,7 @@ public class TransformationViewUi(
                 if (folder.Designs.Count is 0)
                     continue;
                 
-                if (ImGui.CollapsingHeader(folder.Path, ImGuiTreeNodeFlags.DefaultOpen))
+                if (ImGui.CollapsingHeader(folder.Path))
                 {
                     ImGui.PushStyleColor(ImGuiCol.Header, AetherRemoteStyle.PrimaryColor);
                     for (var i = 0; i < folder.Designs.Count; i++)
