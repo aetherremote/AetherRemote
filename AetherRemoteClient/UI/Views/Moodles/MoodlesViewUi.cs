@@ -38,7 +38,7 @@ public class MoodlesViewUi(
         var begin = ImGui.GetCursorPosY();
         SharedUserInterfaces.ContentBox("MoodlesFromMoodles", AetherRemoteStyle.PanelBackground, true, () =>
         {
-            SharedUserInterfaces.MediumText("Select Moodles");
+            SharedUserInterfaces.MediumText("Select Moodle");
 
             ImGui.SetNextItemWidth(width - padding.X * 4 - ImGui.GetFontSize());
             ImGui.InputTextWithHint("##MoodlesSearchBar", "Search", ref controller.SearchTerm, 32);

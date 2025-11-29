@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using AetherRemoteClient.Dependencies.CustomizePlus.Services;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
@@ -10,31 +11,21 @@ using AetherRemoteCommon.Domain.Network.Customize;
 
 namespace AetherRemoteClient.UI.Views.CustomizePlus;
 
-public class CustomizePlusViewUiController(NetworkService networkService, SelectionManager selectionManager)
+public class CustomizePlusViewUiController(CustomizePlusService customizePlusService, NetworkService networkService, SelectionManager selectionManager)
 {
     /// <summary>
     ///     Customize+ data to send
     /// </summary>
-    public string CustomizeData = string.Empty;
+    public string SearchTerm = string.Empty;
     
-    public async void SendCustomize()
+    public async void SendCustomizeProfile()
     {
-        try
-        {
-            if (CustomizeData.Length is 0)
-                return;
-            
-            var request = new CustomizeRequest(selectionManager.GetSelectedFriendCodes(), CustomizeData);
-            var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.CustomizePlus, request).ConfigureAwait(false);
-            if (response.Result is ActionResponseEc.Success)
-                CustomizeData = string.Empty;
-            
-            ActionResponseParser.Parse("Customize", response);
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Warning($"Failed to apply customize plus template, {e.Message}");
-        }
+        
+    }
+
+    public void RefreshCustomizeProfiles()
+    {
+        
     }
     
     /// <summary>

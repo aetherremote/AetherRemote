@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Threading.Tasks;
+using AetherRemoteClient.Dependencies.CustomizePlus.Services;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Services.Dependencies;
 
@@ -19,11 +20,15 @@ public class CustomizePlusAttribute(CustomizePlusService customizePlusService, s
     /// </summary>
     public async Task<bool> Store()
     {
+        // TODO: Update once body swapping is enabled
+        
+        /*
         if (await Task.Run(() => customizePlusService.GetActiveTemplates(character)).ConfigureAwait(false) is { } templates)
         {
             _customizePlusTemplates = templates;
             return true;
         }
+        */
 
         Plugin.Log.Warning("[CustomizePlusAttribute] Could not customize templates");
         return false;
@@ -34,6 +39,9 @@ public class CustomizePlusAttribute(CustomizePlusService customizePlusService, s
     /// </summary>
     public async Task<bool> Apply(PermanentTransformationData data)
     {
+        // TODO: Update once body swapping is enabled
+        
+        /*
         if (await customizePlusService.DeleteCustomize().ConfigureAwait(false) is false)
         {
             Plugin.Log.Warning("[CustomizePlusAttribute] Could not deleting existing profile before applying new one");
@@ -65,5 +73,8 @@ public class CustomizePlusAttribute(CustomizePlusService customizePlusService, s
             Plugin.Log.Info($"[CustomizePlusAttribute] Could not serialize customize plus templates, {e.Message}");
             return false;
         }
+        */
+
+        return true;
     }
 }

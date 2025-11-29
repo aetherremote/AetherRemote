@@ -6,7 +6,6 @@ using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Colors;
 
 namespace AetherRemoteClient.UI.Views.CustomizePlus;
 
@@ -17,84 +16,68 @@ public class CustomizePlusViewUi(
     SelectionManager selectionManager) : IDrawable
 {
     // Const
-    private static readonly Vector2 IconSize = new(32);
+    private const int SendProfileButtonHeight = 40;
     
     public void Draw()
     {
-        ImGui.BeginChild("BodySwapContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
+        ImGui.BeginChild("CustomizePlusContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
         
-        if (selectionManager.Selected.Count is 0)
-        {
-            SharedUserInterfaces.ContentBox("CustomizeSelectMoreFriends", AetherRemoteStyle.PanelBackground, true, () =>
-            {
-                SharedUserInterfaces.TextCentered("You must select at least one friend");
-            });
+        var width = ImGui.GetWindowWidth();
+        var padding = new Vector2(ImGui.GetStyle().WindowPadding.X, 0);
 
-            ImGui.EndChild();
+        var begin = ImGui.GetCursorPosY();
+        SharedUserInterfaces.ContentBox("ProfileSearch", AetherRemoteStyle.PanelBackground, true, () =>
+        {
+            SharedUserInterfaces.MediumText("Select Profile");
+
+            ImGui.SetNextItemWidth(width - padding.X * 4 - ImGui.GetFontSize());
+            ImGui.InputTextWithHint("##ProfileSearchBar", "Search", ref controller.SearchTerm, 32);
+
             ImGui.SameLine();
-            friendsList.Draw();
-            return;
-        }
-        
-        var windowWidthHalf = ImGui.GetWindowWidth() * 0.5f;
-        SharedUserInterfaces.ContentBox("CustomizeSavedTemplates", AetherRemoteStyle.PanelBackground, true, () =>
-        {
-            SharedUserInterfaces.MediumText("Saved Templates");
-            ImGui.TextColored(ImGuiColors.DalamudGrey, "Coming in a future update");
+
+            if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Sync, null, "Refresh Profiles"))
+                controller.RefreshCustomizeProfiles();
         });
 
-        SharedUserInterfaces.ContentBox("CustomizeQuickActions", AetherRemoteStyle.PanelBackground, true, () =>
+        var headerHeight = ImGui.GetCursorPosY() - begin;
+        var moodlesContextBoxSize = new Vector2(0, ImGui.GetWindowHeight() - headerHeight - padding.X * 3 - SendProfileButtonHeight);
+        if (ImGui.BeginChild("##MoodlesContextBoxDisplay", moodlesContextBoxSize, true, ImGuiWindowFlags.NoScrollbar))
         {
-            SharedUserInterfaces.MediumText("Quick Actions");
-            if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Paste, IconSize))
-                controller.CustomizeData = ImGui.GetClipboardText();
-            SharedUserInterfaces.Tooltip("Paste Customize+ data from clipboard");
-        });
-        
-        var friendsLackingPermissions = controller.GetFriendsLackingPermissions();
-        if (friendsLackingPermissions.Count is not 0)
-        {
-            SharedUserInterfaces.ContentBox("CustomizeLackingPermissions", AetherRemoteStyle.PanelBackground, true, () =>
-            {
-                SharedUserInterfaces.MediumText("Lacking Permissions", ImGuiColors.DalamudYellow);
-                ImGui.SameLine();
-                ImGui.AlignTextToFramePadding();
-                SharedUserInterfaces.Icon(FontAwesomeIcon.ExclamationTriangle, ImGuiColors.DalamudYellow);
-                SharedUserInterfaces.Tooltip("Commands send to these people will not be processed");
-                ImGui.TextWrapped(string.Join(", ", friendsLackingPermissions));
-            });
+            ImGui.EndChild();
         }
         
-        SharedUserInterfaces.ContentBox("CustomizeSend", AetherRemoteStyle.PanelBackground, false, () =>
+        ImGui.Spacing();
+        
+        SharedUserInterfaces.ContentBox("MoodlesSend", AetherRemoteStyle.PanelBackground, false, () =>
         {
-            SharedUserInterfaces.MediumText("Customize Data");
-
-            var width = (windowWidthHalf - ImGui.GetStyle().WindowPadding.X) * 2;
-            ImGui.SetNextItemWidth(width);
-            var shouldSendCustomize = ImGui.InputTextWithHint("##CustomizeData", "Customize data", ref controller.CustomizeData, 5000,
-                ImGuiInputTextFlags.EnterReturnsTrue);
-
-            ImGui.Spacing();
-
-            if (commandLockoutService.IsLocked)
+            if (selectionManager.Selected.Count is 0)
             {
                 ImGui.BeginDisabled();
-                ImGui.Button("Apply Customize", new Vector2(width, 0));
+                ImGui.Button("You must select at least one friend", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendProfileButtonHeight));
+                ImGui.EndDisabled();
+            }
+            else if (controller.GetFriendsLackingPermissions().Count is not 0)
+            {
+                ImGui.BeginDisabled();
+                ImGui.Button("You lack permissions for one or more of your targets", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendProfileButtonHeight));
                 ImGui.EndDisabled();
             }
             else
             {
-                if (ImGui.Button("Apply Customize", new Vector2(width, 0)))
-                    shouldSendCustomize = true;
-
-                if (shouldSendCustomize is false)
-                    return;
-
-                commandLockoutService.Lock();
-                controller.SendCustomize();
+                if (commandLockoutService.IsLocked)
+                {
+                    ImGui.BeginDisabled();
+                    ImGui.Button("Send Customize Profile", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendProfileButtonHeight));
+                    ImGui.EndDisabled();
+                }
+                else
+                {
+                    if (ImGui.Button("Send Customize Profile", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendProfileButtonHeight)))
+                        controller.SendCustomizeProfile();
+                }
             }
         });
-        
+
         ImGui.EndChild();
         ImGui.SameLine();
         friendsList.Draw();

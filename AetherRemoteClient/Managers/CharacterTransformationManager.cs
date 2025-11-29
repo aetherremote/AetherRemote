@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AetherRemoteClient.Dependencies.CustomizePlus.Services;
 using AetherRemoteClient.Dependencies.Glamourer.Services;
 using AetherRemoteClient.Dependencies.Moodles.Services;
 using AetherRemoteClient.Domain;
@@ -127,7 +128,7 @@ public class CharacterTransformationManager(
 
         // Apply Customize
         if (permanentTransformationData.CustomizePlusData is not null)
-            await customizePlusService.ApplyCustomize(permanentTransformationData.CustomizePlusData).ConfigureAwait(false);
+            await customizePlusService.ApplyCustomizeAsync(permanentTransformationData.CustomizePlusData).ConfigureAwait(false);
 
         // Apply Moodles
         if (permanentTransformationData.MoodlesData is not null)

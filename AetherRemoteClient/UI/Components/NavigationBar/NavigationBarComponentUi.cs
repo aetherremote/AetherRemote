@@ -41,7 +41,7 @@ public class NavigationBarComponentUi(NetworkService networkService, ViewService
                 // NavBarButton(FontAwesomeIcon.PeopleArrows, "Body Swap", View.BodySwap, size, offset, spacing);
                 // NavBarButton(FontAwesomeIcon.PeopleGroup, "Twinning", View.Twinning, size, offset, spacing);
                 NavBarButton(FontAwesomeIcon.Icons, "Moodles", View.Moodles, size, offset, spacing);
-                // NavBarButton(FontAwesomeIcon.Plus, "Customize", View.CustomizePlus, size, offset, spacing);
+                NavBarButton(FontAwesomeIcon.Plus, "Customize+", View.CustomizePlus, size, offset, spacing);
                 NavBarButton(FontAwesomeIcon.Stopwatch, "Hypnosis", View.Hypnosis, size, offset, spacing);
 
                 ImGui.TextUnformatted("Configuration");

@@ -1,8 +1,8 @@
 using System;
 using System.Timers;
+using AetherRemoteClient.Dependencies.CustomizePlus.Services;
 using AetherRemoteClient.Dependencies.Glamourer.Services;
 using AetherRemoteClient.Domain.Events;
-using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services.Dependencies;
 
 namespace AetherRemoteClient.Handlers;
@@ -28,12 +28,14 @@ public class GlamourerEventHandler : IDisposable
         _permanentTransformationHandler = permanentTransformationHandler;
         
         _glamourerService.LocalPlayerResetOrReapply += OnLocalPlayerResetOrReapply;
-        _glamourerService.LocalPlayerChanged += OnLocalPlayerChanged;
+        // _glamourerService.LocalPlayerChanged += OnLocalPlayerChanged; // TODO: Re-enable when permanent transformations are a thing
 
         _batchLocalPlayerChangedEventsTimer.AutoReset = false;
         _batchLocalPlayerChangedEventsTimer.Elapsed += OnBatchedLocalPlayerChanged;
     }
     
+    // ReSharper disable once UnusedMember.Local
+    // ReSharper disable UnusedParameter.Local
     private void OnLocalPlayerChanged(object? sender, EventArgs e)
     {
         // Use a timer to batch all the changes. Helpful when a bunch of events are applied all at the same time as
@@ -60,7 +62,7 @@ public class GlamourerEventHandler : IDisposable
         try
         {
             // Clean up the created CustomizePlus resources
-            await _customizePlusService.DeleteCustomize();
+            await _customizePlusService.DeleteTemporaryCustomizeAsync();
             
             // Clean up the temporary mods added to the collection
             var currentCollection = await _penumbraService.GetCollection().ConfigureAwait(false);

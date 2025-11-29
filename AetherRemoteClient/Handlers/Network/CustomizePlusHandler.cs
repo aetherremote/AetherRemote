@@ -1,8 +1,8 @@
 using System;
 using System.Threading.Tasks;
+using AetherRemoteClient.Dependencies.CustomizePlus.Services;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
-using AetherRemoteClient.Services.Dependencies;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
@@ -38,13 +38,13 @@ public class CustomizePlusHandler(CustomizePlusService customizePlusService, Log
 
         try
         {
-            if (await customizePlusService.DeleteCustomize().ConfigureAwait(false) is false)
+            if (await customizePlusService.DeleteTemporaryCustomizeAsync().ConfigureAwait(false) is false)
             {
                 Plugin.Log.Warning("[CustomizePlusHandler] Unable to delete existing customize");
                 return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
             }
             
-            if (await customizePlusService.ApplyCustomize(request.Data).ConfigureAwait(false) is false)
+            if (await customizePlusService.ApplyCustomizeAsync(request.Data).ConfigureAwait(false) is false)
             {
                 Plugin.Log.Warning("[CustomizePlusHandler] Unable to apply customize");
                 return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
