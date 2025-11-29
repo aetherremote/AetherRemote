@@ -23,9 +23,9 @@ public class CustomizePlusViewUiController(CustomizePlusService customizePlusSer
         
     }
 
-    public void RefreshCustomizeProfiles()
+    public async void RefreshCustomizeProfiles()
     {
-        
+        var list = customizePlusService.GetProfiles();
     }
     
     /// <summary>

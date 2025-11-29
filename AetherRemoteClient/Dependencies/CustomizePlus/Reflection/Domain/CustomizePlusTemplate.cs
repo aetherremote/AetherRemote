@@ -3,7 +3,7 @@ namespace AetherRemoteClient.Dependencies.CustomizePlus.Reflection.Domain;
 /// <summary>
 ///     Domain encapsulation of a reflected Customize Plus Template
 /// </summary>
-public class Template(object template)
+public class CustomizePlusTemplate(object template)
 {
     /// <summary>
     ///     Customize Plus Template

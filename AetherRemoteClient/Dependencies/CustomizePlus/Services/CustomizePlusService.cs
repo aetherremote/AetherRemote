@@ -100,15 +100,15 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
     /// <summary>
     ///     Gets a list of all the customize plus profile identifiers
     /// </summary>
-    public List<ProfileIdentifier> GetProfiles()
+    public async Task<List<Profile>> GetProfiles()
     {
         try
         {
-            if (!ApiAvailable)
+            if (ApiAvailable is false)
                 return [];
             
-            var tuple = _getProfileList.InvokeFunc();
-            return tuple.Select(profile => new ProfileIdentifier(profile.Id, profile.Name, profile.Path)).ToList();
+            var tuple = await Plugin.RunOnFramework(() => _getProfileList.InvokeFunc()).ConfigureAwait(false);
+            return tuple.Select(profile => new Profile(profile.Id, profile.Name, profile.Path)).ToList();
         }
         catch (Exception e)
         {
@@ -120,14 +120,14 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
     /// <summary>
     ///     Gets a customize plus profile by guid
     /// </summary>
-    public string? GetProfile(Guid guid)
+    public async Task<string?> GetProfile(Guid guid)
     {
         try
         {
-            if (!ApiAvailable)
+            if (ApiAvailable is false)
                 return null;
             
-            var tuple = _getProfileById.InvokeFunc(guid);
+            var tuple = await Plugin.RunOnFramework(() => _getProfileById.InvokeFunc(guid)).ConfigureAwait(false);
             return tuple.Item1 is 0 ? tuple.Item2 : null;
         }
         catch (Exception e)
@@ -143,13 +143,21 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
     /// <param name="json">Profile data, most commonly retrieved from <see cref="GetProfile"/> or via the "Copy Template" button in CustomizePlus UI</param>
     public async Task<bool> ApplyCustomizeAsync(string json)
     {
-        return await Task.Run(() =>
+        if (ApiAvailable is false)
+            return false;
+        
+        return await Task.Run(() => ApplyCustomizeOnFrameworkAsync(json)).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     <inheritdoc cref="ApplyCustomizeAsync"/>
+    /// </summary>
+    private async Task<bool> ApplyCustomizeOnFrameworkAsync(string json)
+    {
+        return await Plugin.RunOnFramework(() =>
         {
             try
             {
-                if (!ApiAvailable)
-                    return false;
-
                 if (_customizePlusPlugin?.TemplateManager.DeserializeTemplate(json) is not { } template)
                     return false;
             
@@ -186,7 +194,18 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
     /// </summary>
     public async Task<bool> DeleteTemporaryCustomizeAsync()
     {
-        return await Task.Run(() => _customizePlusPlugin?.ProfileManager.DeleteTemporaryProfile() ?? false).ConfigureAwait(false);
+        if (ApiAvailable is false)
+            return false;
+        
+        return await Task.Run(DeleteTemporaryCustomizeOnFrameworkAsync).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     <inheritdoc cref="DeleteTemporaryCustomizeAsync"/>
+    /// </summary>
+    private async Task<bool> DeleteTemporaryCustomizeOnFrameworkAsync()
+    {
+        return await Plugin.RunOnFramework(() => _customizePlusPlugin?.ProfileManager.DeleteTemporaryProfile() ?? false).ConfigureAwait(false);
     }
 
     private void OnActivePluginsChanged(IActivePluginsChangedEventArgs args)

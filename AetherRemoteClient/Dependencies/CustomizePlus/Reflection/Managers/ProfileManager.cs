@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Reflection;
-using AetherRemoteClient.Dependencies.CustomizePlus.Domain;
 using AetherRemoteClient.Dependencies.CustomizePlus.Reflection.Domain;
 
 namespace AetherRemoteClient.Dependencies.CustomizePlus.Reflection.Managers;
@@ -62,12 +61,15 @@ public class ProfileManager
         _profileName = profileName;
     }
 
-    public Profile? CreateProfile()
+    /// <summary>
+    ///     Creates a new CustomizePlus profile
+    /// </summary>
+    public CustomizePlusProfile? CreateProfile()
     {
         try
         {
             return _createProfile.Invoke(_profileManager, ["AetherRemoteTemp", true]) is { } profile
-                ? new Profile(profile)
+                ? new CustomizePlusProfile(profile)
                 : null;
         }
         catch (Exception e)
@@ -80,15 +82,15 @@ public class ProfileManager
     /// <summary>
     ///     Adds the local character to the provided profile
     /// </summary>
-    /// <param name="profile">Reflected profile retrieved from <see cref="CreateProfile"/></param>
-    public bool AddCharacter(Profile profile)
+    /// <param name="customizePlusProfile">Reflected profile retrieved from <see cref="CreateProfile"/></param>
+    public bool AddCharacter(CustomizePlusProfile customizePlusProfile)
     {
         try
         {
             if (_actorManager.GetCurrentPlayer() is not { } localCurrentPlayer)
                 return false;
 
-            _addCharacter.Invoke(_profileManager, [localCurrentPlayer, profile.Value]);
+            _addCharacter.Invoke(_profileManager, [localCurrentPlayer, customizePlusProfile.Value]);
             return true;
         }
         catch (Exception e)
@@ -101,13 +103,13 @@ public class ProfileManager
     /// <summary>
     ///     Adds the local character to the provided profile
     /// </summary>
-    /// <param name="profile">Reflected profile retrieved from <see cref="CreateProfile"/></param>
-    /// <param name="template">Reflected template retrieved from <see cref="TemplateManager.DeserializeTemplate"/></param>
-    public bool AddTemplate(Profile profile, Template template)
+    /// <param name="customizePlusProfile">Reflected profile retrieved from <see cref="CreateProfile"/></param>
+    /// <param name="customizePlusTemplate">Reflected template retrieved from <see cref="TemplateManager.DeserializeTemplate"/></param>
+    public bool AddTemplate(CustomizePlusProfile customizePlusProfile, CustomizePlusTemplate customizePlusTemplate)
     {
         try
         {
-            _addTemplate.Invoke(_profileManager, [profile.Value, template.Value]);
+            _addTemplate.Invoke(_profileManager, [customizePlusProfile.Value, customizePlusTemplate.Value]);
             return true;
         }
         catch (Exception e)
@@ -120,12 +122,12 @@ public class ProfileManager
     /// <summary>
     ///     Sets the priority of the provided profile to <see cref="Priority"/>, which is 2,147,483,615
     /// </summary>
-    /// <param name="profile">Reflected profile retrieved from <see cref="CreateProfile"/></param>
-    public bool SetPriority(Profile profile)
+    /// <param name="customizePlusProfile">Reflected profile retrieved from <see cref="CreateProfile"/></param>
+    public bool SetPriority(CustomizePlusProfile customizePlusProfile)
     {
         try
         {
-            _setPriority.Invoke(_profileManager, [profile.Value, Priority]);
+            _setPriority.Invoke(_profileManager, [customizePlusProfile.Value, Priority]);
             return true;
         }
         catch (Exception e)
@@ -138,12 +140,12 @@ public class ProfileManager
     /// <summary>
     ///     Sets the provided profile to enabled
     /// </summary>
-    /// <param name="profile">Reflected profile retrieved from <see cref="CreateProfile"/></param>
-    public bool SetEnabled(Profile profile)
+    /// <param name="customizePlusProfile">Reflected profile retrieved from <see cref="CreateProfile"/></param>
+    public bool SetEnabled(CustomizePlusProfile customizePlusProfile)
     {
         try
         {
-            _setEnabled.Invoke(_profileManager, [profile.Value, true, false]);
+            _setEnabled.Invoke(_profileManager, [customizePlusProfile.Value, true, false]);
             return true;
         }
         catch (Exception e)
@@ -173,7 +175,10 @@ public class ProfileManager
         }
     }
     
-    private Profile? TryGetTemporaryProfile()
+    /// <summary>
+    ///     Attempts to get the temporary profile created by aether remote, if one exists
+    /// </summary>
+    private CustomizePlusProfile? TryGetTemporaryProfile()
     {
         if (_profiles.GetValue(_profileManager) is not IEnumerable profiles)
             return null;
@@ -184,7 +189,7 @@ public class ProfileManager
                 continue;
             
             if (name == TemporaryProfileName)
-                return new Profile(profile);
+                return new CustomizePlusProfile(profile);
         }
 
         return null;

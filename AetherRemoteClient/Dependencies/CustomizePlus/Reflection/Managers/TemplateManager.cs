@@ -1,5 +1,4 @@
 using System;
-using AetherRemoteClient.Dependencies.CustomizePlus.Domain;
 using AetherRemoteClient.Dependencies.CustomizePlus.Reflection.Domain;
 using Newtonsoft.Json;
 
@@ -23,12 +22,12 @@ public class TemplateManager
     /// <summary>
     ///     Deserializes JSON into a CustomizePlus Template
     /// </summary>
-    public Template? DeserializeTemplate(string json)
+    public CustomizePlusTemplate? DeserializeTemplate(string json)
     {
         try
         {
             return JsonConvert.DeserializeObject(json, _templateType) is { } template
-                ? new Template(template)
+                ? new CustomizePlusTemplate(template)
                 : null;
         }
         catch (Exception e)
