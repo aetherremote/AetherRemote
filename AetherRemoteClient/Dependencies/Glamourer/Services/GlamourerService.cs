@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AetherRemoteClient.Dependencies.Glamourer.Domain;
+using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Events;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteCommon.Domain.Enums;
@@ -24,6 +25,10 @@ public class GlamourerService : IExternalPlugin, IDisposable
 {
     // Default folder for designs without homes
     private const string Uncategorized = "Uncategorized";
+    
+    // Const
+    private const int ExpectedMajor = 6;
+    private const int ExpectedMinor = 4;
     
     // Syncing solutions lock other player profiles to prevent tampering by the client. To view the glamourer data
     // of these other players, we need a key to unlock them. Since there are multiple services, we must try multiple
@@ -88,34 +93,37 @@ public class GlamourerService : IExternalPlugin, IDisposable
         
         _stateFinalizedWithType = StateFinalized.Subscriber(Plugin.PluginInterface);
         _stateFinalizedWithType.Event += OnGlamourerStateFinalized;
-
-        TestIpcAvailability();
     }
 
     /// <summary>
     ///     Tests for availability to Glamourer
     /// </summary>
-    public void TestIpcAvailability()
+    public async Task<bool> TestIpcAvailability()
     {
-        try
-        {
-            ApiAvailable = _apiVersion.Invoke() is { Major: 1, Minor: > 5 };
-        }
-        catch (Exception)
-        {
-            ApiAvailable = false;
-        }
+        // Set everything to disabled state
+        ApiAvailable = false;
+        
+        // Invoke Api
+        var version = await Plugin.RunOnFrameworkSafely(() => _apiVersion.Invoke()).ConfigureAwait(false);
+
+        // Test for proper versioning
+        if (version.Major is not ExpectedMajor || version.Minor < ExpectedMinor)
+            return false;
+
+        // Mark as ready
+        ApiAvailable = true;
+        return true;
     }
 
     /// <summary>
     ///     Gets all the local player's glamourer designs as a folder structure. See <see cref="GetDesignListExtended"/> for more details
     /// </summary>
-    public async Task<List<DesignFolder>> GetDesignList()
+    public async Task<List<Folder<Design>>> GetDesignList()
     {
         return await Task.Run(GetDesignListExtended).ConfigureAwait(false);
     }
     
-    private async Task<List<DesignFolder>> GetDesignListExtended()
+    private async Task<List<Folder<Design>>> GetDesignListExtended()
     {
         if (!ApiAvailable)
         {
@@ -153,7 +161,7 @@ public class GlamourerService : IExternalPlugin, IDisposable
                 list.Sort((x, y) => string.Compare(x.Name, y.Name, StringComparison.OrdinalIgnoreCase));
 
             return folders
-                .Select(x => new DesignFolder(x.Key, x.Value)) // Collapse
+                .Select(x => new Folder<Design>(x.Key, x.Value)) // Collapse
                 .OrderBy(x => x.Path, StringComparer.OrdinalIgnoreCase) // Alphabetical
                 .ThenBy(x => x.Path.Equals(Uncategorized, StringComparison.OrdinalIgnoreCase) ? 1 : 0) // Ensure Uncategorized is last
                 .ToList();

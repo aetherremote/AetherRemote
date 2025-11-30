@@ -48,15 +48,15 @@ public class TransformationViewUi(
             var half = ImGui.GetWindowWidth() * 0.5f;
             foreach (var folder in controller.FilteredDesigns)
             {
-                if (folder.Designs.Count is 0)
+                if (folder.Content.Count is 0)
                     continue;
                 
                 if (ImGui.CollapsingHeader(folder.Path))
                 {
                     ImGui.PushStyleColor(ImGuiCol.Header, AetherRemoteStyle.PrimaryColor);
-                    for (var i = 0; i < folder.Designs.Count; i++)
+                    for (var i = 0; i < folder.Content.Count; i++)
                     {
-                        var design = folder.Designs[i];
+                        var design = folder.Content[i];
                         var size = i % 2 is 0
                             ? new Vector2(half - padding.X * 2, 0)
                             : new Vector2(half - padding.X, 0);
@@ -74,7 +74,7 @@ public class TransformationViewUi(
                             ImGui.PopStyleColor();
                         }
                         
-                        if (i % 2 is 0 && i < folder.Designs.Count - 1)
+                        if (i % 2 is 0 && i < folder.Content.Count - 1)
                             ImGui.SameLine(half);
                     }
                     

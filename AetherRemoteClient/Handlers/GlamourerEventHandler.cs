@@ -2,8 +2,8 @@ using System;
 using System.Timers;
 using AetherRemoteClient.Dependencies.CustomizePlus.Services;
 using AetherRemoteClient.Dependencies.Glamourer.Services;
+using AetherRemoteClient.Dependencies.Penumbra.Services;
 using AetherRemoteClient.Domain.Events;
-using AetherRemoteClient.Services.Dependencies;
 
 namespace AetherRemoteClient.Handlers;
 

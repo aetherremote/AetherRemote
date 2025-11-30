@@ -40,15 +40,42 @@ public class CustomizePlusViewUi(
         });
 
         var headerHeight = ImGui.GetCursorPosY() - begin;
-        var moodlesContextBoxSize = new Vector2(0, ImGui.GetWindowHeight() - headerHeight - padding.X * 3 - SendProfileButtonHeight);
-        if (ImGui.BeginChild("##MoodlesContextBoxDisplay", moodlesContextBoxSize, true, ImGuiWindowFlags.NoScrollbar))
+        var profilesContextBoxSize = new Vector2(0, ImGui.GetWindowHeight() - headerHeight - padding.X * 3 - SendProfileButtonHeight);
+        if (ImGui.BeginChild("##ProfilesContextBoxDisplay", profilesContextBoxSize, true, ImGuiWindowFlags.NoScrollbar))
         {
+            var half = ImGui.GetWindowWidth() * 0.5f;
+            foreach (var folder in controller.FilteredProfiles)
+            {
+                if (folder.Content.Count is 0)
+                    continue;
+                
+                if (ImGui.CollapsingHeader(folder.Path))
+                {
+                    ImGui.PushStyleColor(ImGuiCol.Header, AetherRemoteStyle.PrimaryColor);
+                    for (var i = 0; i < folder.Content.Count; i++)
+                    {
+                        var profile = folder.Content[i];
+                        var size = i % 2 is 0
+                            ? new Vector2(half - padding.X * 2, 0)
+                            : new Vector2(half - padding.X, 0);
+                        
+                        if (ImGui.Selectable( profile.Name, profile.Guid == controller.SelectedProfileId, ImGuiSelectableFlags.None, size))
+                            controller.SelectedProfileId =  profile.Guid;
+                        
+                        if (i % 2 is 0 && i < folder.Content.Count - 1)
+                            ImGui.SameLine(half);
+                    }
+                    
+                    ImGui.PopStyleColor();
+                }
+            }
+            
             ImGui.EndChild();
         }
         
         ImGui.Spacing();
         
-        SharedUserInterfaces.ContentBox("MoodlesSend", AetherRemoteStyle.PanelBackground, false, () =>
+        SharedUserInterfaces.ContentBox("CustomizePlusSend", AetherRemoteStyle.PanelBackground, false, () =>
         {
             if (selectionManager.Selected.Count is 0)
             {

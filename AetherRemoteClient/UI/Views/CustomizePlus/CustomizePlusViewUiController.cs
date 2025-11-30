@@ -1,31 +1,47 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using AetherRemoteClient.Dependencies.CustomizePlus.Domain;
 using AetherRemoteClient.Dependencies.CustomizePlus.Services;
+using AetherRemoteClient.Domain;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
-using AetherRemoteCommon.Domain.Enums;
-using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Customize;
 
 namespace AetherRemoteClient.UI.Views.CustomizePlus;
 
-public class CustomizePlusViewUiController(CustomizePlusService customizePlusService, NetworkService networkService, SelectionManager selectionManager)
+public class CustomizePlusViewUiController(CommandLockoutService commandLockoutService, CustomizePlusService customizePlusService, NetworkService networkService, SelectionManager selectionManager)
 {
     /// <summary>
     ///     Customize+ data to send
     /// </summary>
     public string SearchTerm = string.Empty;
     
-    public async void SendCustomizeProfile()
-    {
-        
-    }
+    /// <summary>
+    ///     The currently selected Guid of the Profile to send
+    /// </summary>
+    public Guid SelectedProfileId = Guid.Empty;
+
+    private List<Folder<Profile>> _profiles = [];
+    public List<Folder<Profile>> FilteredProfiles => SearchTerm == string.Empty
+        ? _profiles.ToList()
+        : _profiles.Select(folder => new Folder<Profile>(folder.Path, folder.Content.Where(design => design.Name.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)).ToList())).ToList();
 
     public async void RefreshCustomizeProfiles()
     {
-        var list = customizePlusService.GetProfiles();
+        try
+        {
+            SelectedProfileId = Guid.Empty;
+            
+            _profiles = await customizePlusService.GetProfiles().ConfigureAwait(false);
+        }
+        catch (Exception)
+        {
+            // Ignored
+        }
     }
     
     /// <summary>
@@ -34,12 +50,32 @@ public class CustomizePlusViewUiController(CustomizePlusService customizePlusSer
     /// <returns></returns>
     public List<string> GetFriendsLackingPermissions()
     {
-        var thoseWhoYouLackPermissionsFor = new List<string>();
-        foreach (var selected in selectionManager.Selected)
+        return [];
+    }
+    
+    public async void SendCustomizeProfile()
+    {
+        try
         {
-            if ((selected.PermissionsGrantedByFriend.Primary & PrimaryPermissions2.CustomizePlus) != PrimaryPermissions2.CustomizePlus)
-                thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
+            if (SelectedProfileId == Guid.Empty)
+                return;
+
+            commandLockoutService.Lock();
+        
+            if (await customizePlusService.GetProfile(SelectedProfileId).ConfigureAwait(false) is not { } profile)
+                return;
+
+            var bytes = Encoding.UTF8.GetBytes(profile);
+            var string64 = Convert.ToBase64String(bytes);
+
+            var request = new CustomizeRequest(selectionManager.GetSelectedFriendCodes(), string64);
+            var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.CustomizePlus, request).ConfigureAwait(false);
+
+            ActionResponseParser.Parse("Customize+", response);
         }
-        return thoseWhoYouLackPermissionsFor;
+        catch (Exception)
+        {
+            // Ignored
+        }
     }
 }

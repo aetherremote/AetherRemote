@@ -4,10 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using AetherRemoteClient.Dependencies.CustomizePlus.Domain;
 using AetherRemoteClient.Dependencies.CustomizePlus.Reflection;
+using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
-using Dalamud.Plugin;
 using Dalamud.Plugin.Ipc;
-using Dalamud.Plugin.Ipc.Exceptions;
 using ProfileData = (
     System.Guid Id,
     string Name,
@@ -23,8 +22,11 @@ namespace AetherRemoteClient.Dependencies.CustomizePlus.Services;
 /// <summary>
 ///     Provides access to CustomizePlus
 /// </summary>
-public class CustomizePlusService : IDisposable, IExternalPlugin
+public class CustomizePlusService : IExternalPlugin
 {
+    // Default folder for designs without homes
+    private const string Uncategorized = "Uncategorized";
+    
     // Const
     private const int ExpectedMajor = 6;
     private const int ExpectedMinor = 4;
@@ -49,66 +51,83 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
     /// </summary>
     public CustomizePlusService()
     {
-        Plugin.PluginInterface.ActivePluginsChanged += OnActivePluginsChanged;
-        
         _getVersion = Plugin.PluginInterface.GetIpcSubscriber<(int, int)>("CustomizePlus.General.GetApiVersion");
         _getProfileList = Plugin.PluginInterface.GetIpcSubscriber<IList<ProfileData>>("CustomizePlus.Profile.GetList");
         _getProfileById = Plugin.PluginInterface.GetIpcSubscriber<Guid, (int, string?)>("CustomizePlus.Profile.GetByUniqueId");
-        
-        TestIpcAvailability();
     }
     
     /// <summary>
     ///     Tests for availability to CustomizePlus
     /// </summary>
-    public void TestIpcAvailability()
+    public async Task<bool> TestIpcAvailability()
     {
-        try
-        {
-            var version = _getVersion.InvokeFunc();
-            if (version.Item1 is ExpectedMajor && version.Item2 >= ExpectedMinor)
-            {
-                // Try to create a reflected version of the plugin
-                if (CustomizePlusPlugin.Create() is { } customizePlusPlugin)
-                {
-                    ApiAvailable = true;
-                    _customizePlusPlugin = customizePlusPlugin;
-                }
-                else
-                {
-                    ApiAvailable = false;
-                    _customizePlusPlugin = null;
-                }
-            }
-            else
-            {
-                Plugin.Log.Warning("[CustomizePlusService.TestIpcAvailability] Outdated CustomizePlus version");
-                ApiAvailable = false;
-            }
-        }
-        catch (IpcNotReadyError)
-        {
-            ApiAvailable = false;
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Warning($"[CustomizePlusService.TestIpcAvailability] An error occurred, {e}");
-            ApiAvailable = false;
-        }
+        // Set everything to disabled state
+        _customizePlusPlugin = null;
+        ApiAvailable = false;
+        
+        // Invoke Api
+        var version = await Plugin.RunOnFrameworkSafely(() => _getVersion.InvokeFunc()).ConfigureAwait(false);
+        
+        // Test for proper versioning
+        if (version.Item1 is not ExpectedMajor || version.Item2 < ExpectedMinor)
+            return false;
+
+        // Check to make sure the reflection process was successful
+        if (await Plugin.RunOnFrameworkSafely(CustomizePlusPlugin.Create).ConfigureAwait(false) is not { } plugin)
+            return false;
+        
+        // Call the delete method for safety
+        await DeleteTemporaryCustomizeAsync().ConfigureAwait(false);
+        
+        // Mark as ready
+        _customizePlusPlugin = plugin;
+        ApiAvailable = true;
+        return true;
     }
 
     /// <summary>
     ///     Gets a list of all the customize plus profile identifiers
     /// </summary>
-    public async Task<List<Profile>> GetProfiles()
+    public async Task<List<Folder<Profile>>> GetProfiles()
     {
         try
         {
             if (ApiAvailable is false)
                 return [];
             
-            var tuple = await Plugin.RunOnFramework(() => _getProfileList.InvokeFunc()).ConfigureAwait(false);
-            return tuple.Select(profile => new Profile(profile.Id, profile.Name, profile.Path)).ToList();
+            var result = await Plugin.RunOnFramework(() => _getProfileList.InvokeFunc()).ConfigureAwait(false);
+
+            var folders = new Dictionary<string, List<Profile>>();
+            foreach (var data in result)
+            {
+                var profile = new Profile(data.Id, data.Name, data.Path);
+                var span = data.Path.AsSpan();
+                var index = span.LastIndexOf('/');
+
+                var folderPathSpan = index is -1
+                    ? Uncategorized.AsSpan()
+                    : span[..index];
+
+                var folderPath = folderPathSpan.ToString();
+
+                if (folders.TryGetValue(folderPath, out var list))
+                {
+                    list.Add(profile);
+                }
+                else
+                {
+                    folders[folderPath] = [profile];
+                }
+            }
+
+            foreach (var list in folders.Values)
+                list.Sort((x, y) => string.Compare(x.Name, y.Name, StringComparison.OrdinalIgnoreCase));
+
+            return folders
+                .Select(x => new Folder<Profile>(x.Key, x.Value))
+                .OrderBy(x => x.Path, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(x => x.Path.Equals(Uncategorized, StringComparison.OrdinalIgnoreCase))
+                .ToList();
         }
         catch (Exception e)
         {
@@ -206,17 +225,5 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
     private async Task<bool> DeleteTemporaryCustomizeOnFrameworkAsync()
     {
         return await Plugin.RunOnFramework(() => _customizePlusPlugin?.ProfileManager.DeleteTemporaryProfile() ?? false).ConfigureAwait(false);
-    }
-
-    private void OnActivePluginsChanged(IActivePluginsChangedEventArgs args)
-    {
-        if (args.AffectedInternalNames.Contains("CustomizePlus"))
-            TestIpcAvailability();
-    }
-
-    public void Dispose()
-    {
-        Plugin.PluginInterface.ActivePluginsChanged -= OnActivePluginsChanged;
-        GC.SuppressFinalize(this);
     }
 }

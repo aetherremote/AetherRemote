@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AetherRemoteClient.Dependencies.Glamourer.Domain;
 using AetherRemoteClient.Dependencies.Glamourer.Services;
+using AetherRemoteClient.Domain;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
@@ -27,10 +28,10 @@ public class TransformationViewUiController
     
     public string SearchTerm = string.Empty;
     
-    private List<DesignFolder> _designs = [];
-    public List<DesignFolder> FilteredDesigns => SearchTerm == string.Empty 
+    private List<Folder<Design>> _designs = [];
+    public List<Folder<Design>> FilteredDesigns => SearchTerm == string.Empty 
         ? _designs.ToList()
-        : _designs.Select(folder => new DesignFolder(folder.Path, folder.Designs.Where(design => design.Name.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)).ToList())).ToList();
+        : _designs.Select(folder => new Folder<Design>(folder.Path, folder.Content.Where(design => design.Name.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)).ToList())).ToList();
     
     public Guid SelectedDesignId = Guid.Empty;
     public bool ShouldApplyCustomization = true;

@@ -5,7 +5,6 @@ using AetherRemoteClient.Domain.Dependencies.Glamourer;
 using AetherRemoteClient.Domain.Enums;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
-using AetherRemoteClient.Services.Dependencies;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
 

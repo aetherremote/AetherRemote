@@ -4,12 +4,12 @@ using System.Threading.Tasks;
 using AetherRemoteClient.Dependencies.CustomizePlus.Services;
 using AetherRemoteClient.Dependencies.Glamourer.Services;
 using AetherRemoteClient.Dependencies.Moodles.Services;
+using AetherRemoteClient.Dependencies.Penumbra.Services;
 using AetherRemoteClient.Domain.Configurations;
 using AetherRemoteClient.Handlers;
 using AetherRemoteClient.Handlers.Network;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
-using AetherRemoteClient.Services.Dependencies;
 using AetherRemoteClient.UI;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.UI.Components.NavigationBar;
@@ -211,6 +211,26 @@ public sealed class Plugin : IDalamudPlugin
             return func.Invoke();
 
         return await Framework.RunOnFrameworkThread(func).ConfigureAwait(false);
+    }
+    
+    /// <summary>
+    ///     Runs provided function on the XIV Framework. Await should never be used inside the <see cref="Func{T}"/>
+    ///     passed to this function.
+    /// </summary>
+    public static async Task<T> RunOnFrameworkSafely<T>(Func<T> func)
+    {
+        try
+        {
+            if (Framework.IsInFrameworkUpdateThread)
+                return func.Invoke();
+
+            return await Framework.RunOnFrameworkThread(func).ConfigureAwait(false);
+        }
+        catch (Exception e)
+        {
+            Log.Warning($"[DependencyManager.RunOnFrameworkSafely] An error occurred, {e}");
+            return Activator.CreateInstance<T>();
+        }
     }
 
     /*

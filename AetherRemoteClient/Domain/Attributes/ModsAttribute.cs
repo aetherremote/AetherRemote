@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AetherRemoteClient.Dependencies.Penumbra.Services;
 using AetherRemoteClient.Domain.Interfaces;
-using AetherRemoteClient.Services.Dependencies;
 
 namespace AetherRemoteClient.Domain.Attributes;
 

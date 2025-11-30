@@ -41,6 +41,5 @@
 
     <ItemGroup>
       <Folder Include="Dependencies\CustomizePlus\" />
-      <Folder Include="Dependencies\Penumbra\" />
     </ItemGroup>
 </Project>

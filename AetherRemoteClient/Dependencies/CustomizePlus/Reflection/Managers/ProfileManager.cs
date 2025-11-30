@@ -90,7 +90,7 @@ public class ProfileManager
             if (_actorManager.GetCurrentPlayer() is not { } localCurrentPlayer)
                 return false;
 
-            _addCharacter.Invoke(_profileManager, [localCurrentPlayer, customizePlusProfile.Value]);
+            _addCharacter.Invoke(_profileManager, [customizePlusProfile.Value, localCurrentPlayer]);
             return true;
         }
         catch (Exception e)

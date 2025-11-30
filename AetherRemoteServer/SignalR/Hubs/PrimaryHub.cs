@@ -44,8 +44,7 @@ public class PrimaryHub(
     /// <summary>
     ///     Friend Code obtained from authenticated token claims
     /// </summary>
-    private string FriendCode => Context.User?.FindFirst(AuthClaimTypes.FriendCode)?.Value ??
-                                 throw new Exception("FriendCode not present in claims");
+    private string FriendCode => Context.User?.FindFirst(AuthClaimTypes.FriendCode)?.Value ?? throw new Exception("FriendCode not present in claims");
 
     [HubMethodName(HubMethod.AddFriend)]
     public async Task<AddFriendResponse> AddFriend(AddFriendRequest request)
@@ -126,8 +125,8 @@ public class PrimaryHub(
     [HubMethodName(HubMethod.CustomizePlus)]
     public async Task<ActionResponse> CustomizePlus(CustomizeRequest request)
     {
+        // TODO: Remove after 12/29/2025
         logger.LogInformation("{Request}", request);
-        return new ActionResponse(ActionResponseEc.Disabled);
         return await customizePlusHandler.Handle(FriendCode, request, Clients);
     }
 

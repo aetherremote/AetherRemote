@@ -31,7 +31,7 @@ public class ActorManager
         {
             return _getCurrentPlayer.Invoke(_actionManager, null);
         }
-        catch (Exception e)
+        catch (Exception)
         {
             return null;
         }

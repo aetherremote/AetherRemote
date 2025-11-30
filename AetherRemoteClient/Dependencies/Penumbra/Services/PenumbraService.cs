@@ -5,7 +5,7 @@ using AetherRemoteClient.Domain.Interfaces;
 using Penumbra.Api.Enums;
 using Penumbra.Api.IpcSubscribers;
 
-namespace AetherRemoteClient.Services.Dependencies;
+namespace AetherRemoteClient.Dependencies.Penumbra.Services;
 
 /// <summary>
 ///     Provides access to Penumbra
@@ -14,7 +14,10 @@ public class PenumbraService : IExternalPlugin
 {
     // Const
     private const string TemporaryModName = "AetherRemoteMods";
-    private const int Priority = 999;
+    private const int Priority = int.MaxValue - 32; // Give other mods the opportunity to override if needed;
+    
+    // Const
+    private const int ExpectedMajor = 4;
     
     // Penumbra API
     private readonly AddTemporaryMod _addTemporaryMod;
@@ -42,23 +45,26 @@ public class PenumbraService : IExternalPlugin
         _getCollectionForObject = new GetCollectionForObject(Plugin.PluginInterface);
         _redrawObject = new RedrawObject(Plugin.PluginInterface);
         _version = new ApiVersion(Plugin.PluginInterface);
-        
-        TestIpcAvailability();
     }
     
     /// <summary>
     ///     Tests for availability to Penumbra
     /// </summary>
-    public void TestIpcAvailability()
+    public async Task<bool> TestIpcAvailability()
     {
-        try
-        {
-            ApiAvailable = _version.Invoke().Breaking > 4;
-        }
-        catch (Exception)
-        {
-            ApiAvailable = false;
-        }
+        // Set everything to disabled state
+        ApiAvailable = false;
+        
+        // Invoke Api
+        var version = await Plugin.RunOnFrameworkSafely(() => _version.Invoke()).ConfigureAwait(false);
+
+        // Test for proper versioning
+        if (version.Breaking < ExpectedMajor)
+            return false;
+        
+        // Mark as ready
+        ApiAvailable = true;
+        return true;
     }
     
     /// <summary>

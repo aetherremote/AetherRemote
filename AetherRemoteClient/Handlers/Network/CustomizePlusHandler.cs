@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 using System.Threading.Tasks;
 using AetherRemoteClient.Dependencies.CustomizePlus.Services;
 using AetherRemoteClient.Managers;
@@ -38,13 +39,16 @@ public class CustomizePlusHandler(CustomizePlusService customizePlusService, Log
 
         try
         {
+            var bytes = Convert.FromBase64String(request.Data);
+            var json = Encoding.UTF8.GetString(bytes);
+            
             if (await customizePlusService.DeleteTemporaryCustomizeAsync().ConfigureAwait(false) is false)
             {
                 Plugin.Log.Warning("[CustomizePlusHandler] Unable to delete existing customize");
                 return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
             }
             
-            if (await customizePlusService.ApplyCustomizeAsync(request.Data).ConfigureAwait(false) is false)
+            if (await customizePlusService.ApplyCustomizeAsync(json).ConfigureAwait(false) is false)
             {
                 Plugin.Log.Warning("[CustomizePlusHandler] Unable to apply customize");
                 return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);

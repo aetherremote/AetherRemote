@@ -36,7 +36,7 @@ namespace AetherRemoteClient.Dependencies.Moodles.Services;
 public class MoodlesService : IExternalPlugin
 {
     // Const
-    private const int ExpectedVersion = 3;
+    private const int ExpectedMajor = 3;
     
     // Moodles Version
     private readonly ICallGateSubscriber<int> _version;
@@ -66,33 +66,26 @@ public class MoodlesService : IExternalPlugin
         
         _listMoodles = Plugin.PluginInterface.GetIpcSubscriber<List<MoodlesStatusInfo>>("Moodles.GetStatusInfoListV2");
         _applyMoodle = Plugin.PluginInterface.GetIpcProvider<MoodlesStatusInfo, object?>("GagSpeak.ApplyStatusInfo");
-        
-        TestIpcAvailability();
     }
     
     /// <summary>
     ///     Tests for availability for Moodles
     /// </summary>
-    public void TestIpcAvailability()
+    public async Task<bool> TestIpcAvailability()
     {
-        try
-        {
-            var version = _version.InvokeFunc();
-            if (version is ExpectedVersion)
-            {
-                ApiAvailable = true;
-            }
-            else
-            {
-                Plugin.Log.Warning($"[MoodlesService] [TestIpcAvailability] Current version {version} does not match expected version {ExpectedVersion}");
-                ApiAvailable = false;
-            }
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Warning($"[MoodlesService] [TestIpcAvailability] Failed unexpectedly, {e}");
-            ApiAvailable = false;
-        }
+        // Set everything to disabled state
+        ApiAvailable = false;
+        
+        // Invoke Api
+        var version = await Plugin.RunOnFrameworkSafely(() => _version.InvokeFunc()).ConfigureAwait(false);
+
+        // Test for proper versioning
+        if (version < ExpectedMajor)
+            return false;
+
+        // Mark as ready
+        ApiAvailable = true;
+        return true;
     }
 
     /// <summary>
