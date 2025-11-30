@@ -22,7 +22,7 @@ namespace AetherRemoteClient.Dependencies.CustomizePlus.Services;
 /// <summary>
 ///     Provides access to CustomizePlus
 /// </summary>
-public class CustomizePlusService : IExternalPlugin
+public class CustomizePlusService : IDisposable, IExternalPlugin
 {
     // Default folder for designs without homes
     private const string Uncategorized = "Uncategorized";
@@ -87,6 +87,10 @@ public class CustomizePlusService : IExternalPlugin
         // Mark as ready
         _customizePlusPlugin = plugin;
         ApiAvailable = true;
+        
+        // As a safety precaution, attempt to delete any lingering Aether Remote profiles that may exist
+        await DeleteTemporaryCustomizeAsync().ConfigureAwait(false);
+        
         IpcReady?.Invoke(this, EventArgs.Empty);
         return true;
     }
@@ -231,5 +235,18 @@ public class CustomizePlusService : IExternalPlugin
     private async Task<bool> DeleteTemporaryCustomizeOnFrameworkAsync()
     {
         return await Plugin.RunOnFramework(() => _customizePlusPlugin?.ProfileManager.DeleteTemporaryProfile() ?? false).ConfigureAwait(false);
+    }
+
+    public async void Dispose()
+    {
+        try
+        {
+            await DeleteTemporaryCustomizeAsync().ConfigureAwait(false);
+            GC.SuppressFinalize(this);
+        }
+        catch (Exception)
+        {
+            GC.SuppressFinalize(this);
+        }
     }
 }
