@@ -14,7 +14,7 @@ using Dalamud.Interface.Textures.TextureWraps;
 
 namespace AetherRemoteClient.UI.Views.Moodles;
 
-public class MoodlesViewUiController
+public class MoodlesViewUiController : IDisposable
 {
     // Injected
     private readonly CommandLockoutService _commandLockoutService;
@@ -29,7 +29,9 @@ public class MoodlesViewUiController
         _moodlesService = moodlesService;
         _selectionManager = selectionManager;
 
-        RefreshMoodles();
+        _moodlesService.IpcReady += OnIpcReady;
+        if (_moodlesService.ApiAvailable)
+            RefreshMoodles();
     }
 
     /// <summary>
@@ -113,14 +115,23 @@ public class MoodlesViewUiController
     ///     Calculates the friends who you lack correct permissions to send to
     /// </summary>
     /// <returns></returns>
-    public List<string> GetFriendsLackingPermissions()
+    public bool MissingPermissionsForATarget()
     {
-        var thoseWhoYouLackPermissionsFor = new List<string>();
-        foreach (var selected in _selectionManager.Selected)
-        {
-            if ((selected.PermissionsGrantedByFriend.Primary & PrimaryPermissions2.Moodles) != PrimaryPermissions2.Moodles)
-                thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
-        }
-        return thoseWhoYouLackPermissionsFor;
+        foreach (var friend in _selectionManager.Selected)
+            if ((friend.PermissionsGrantedByFriend.Primary & PrimaryPermissions2.Moodles) is not PrimaryPermissions2.Moodles)
+                return true;
+
+        return false;
+    }
+    
+    private void OnIpcReady(object? sender, EventArgs e)
+    {
+        RefreshMoodles();
+    }
+
+    public void Dispose()
+    {
+        _moodlesService.IpcReady -= OnIpcReady;
+        GC.SuppressFinalize(this);
     }
 }

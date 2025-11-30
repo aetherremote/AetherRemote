@@ -138,7 +138,13 @@ public class TransformationViewUi(
                 ImGui.Button("You must select a design", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendDesignButtonHeight));
                 ImGui.EndDisabled();
             }
-            else if (controller.GetFriendsLackingPermissions().Count is not 0)
+            else if (controller.ShouldApplyCustomization is false && controller.ShouldApplyEquipment is false)
+            {
+                ImGui.BeginDisabled();
+                ImGui.Button("You must select at least customize or equipment", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendDesignButtonHeight));
+                ImGui.EndDisabled();
+            }
+            else if (controller.MissingPermissionsForATarget())
             {
                 ImGui.BeginDisabled();
                 ImGui.Button("You lack permissions for one or more of your targets", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendDesignButtonHeight));

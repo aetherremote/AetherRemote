@@ -179,6 +179,9 @@ public sealed class Plugin : IDalamudPlugin
         
         // Ui - Controllers
         _services.GetRequiredService<LoginViewUiController>();
+        _services.GetRequiredService<MoodlesViewUiController>();            // Required to display UI elements when IPCs are loaded
+        _services.GetRequiredService<TransformationViewUiController>();     // Required to display UI elements when IPCs are loaded
+        _services.GetRequiredService<CustomizePlusViewUiController>();      // Required to display UI elements when IPCs are loaded
         
         // Handlers
         _services.GetRequiredService<ChatCommandHandler>();

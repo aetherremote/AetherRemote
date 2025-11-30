@@ -19,7 +19,8 @@ namespace AetherRemoteClient.Managers;
 public class DependencyManager : IDisposable
 {
     // Const
-    private const int PluginTestInternalMilliseconds = 60 * 1000;
+    private const int PluginTestInternalMilliseconds = 10 * 1000;
+    private const int MaxRetries = 4;
     
     /// <summary>
     ///     A map of the plugin's internal name to their corresponding service
@@ -29,10 +30,13 @@ public class DependencyManager : IDisposable
     /// <summary>
     ///     A list of each dependent's corresponding service to validate the readiness of that service
     /// </summary>
-    private readonly List<IExternalPlugin> _pluginsToValidateReadiness;
+    private readonly HashSet<IExternalPlugin> _pluginsToValidateReadiness;
     
     // Instantiated
     private readonly Timer _validatePluginTimer = new(PluginTestInternalMilliseconds);
+    
+    // How many times the ValidateDependentPlugins can retry
+    private int _retryCounter = MaxRetries;
 
     /// <summary>
     ///     <inheritdoc cref="DependencyManager"/>
@@ -64,6 +68,11 @@ public class DependencyManager : IDisposable
             foreach (var plugin in _pluginsToValidateReadiness.ToList())
                 if (await plugin.TestIpcAvailability().ConfigureAwait(false))
                     _pluginsToValidateReadiness.Remove(plugin);
+            
+            if (_retryCounter is 0)
+                _pluginsToValidateReadiness.Clear();
+
+            _retryCounter--;
         }
         catch (Exception)
         {
@@ -83,11 +92,12 @@ public class DependencyManager : IDisposable
                 case PluginListInvalidationKind.Loaded:
                 case PluginListInvalidationKind.Update:
                 case PluginListInvalidationKind.AutoUpdate:
-                    if (_pluginsToValidateReadiness.Contains(plugin) is false)
-                        _pluginsToValidateReadiness.Add(plugin);
+                    _retryCounter = MaxRetries;
+                    _pluginsToValidateReadiness.Add(plugin);
                     break;
             
                 case PluginListInvalidationKind.Unloaded:
+                    _retryCounter = MaxRetries;
                     _pluginsToValidateReadiness.Remove(plugin);
                     break;
             

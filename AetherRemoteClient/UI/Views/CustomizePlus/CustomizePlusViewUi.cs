@@ -83,7 +83,7 @@ public class CustomizePlusViewUi(
                 ImGui.Button("You must select at least one friend", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendProfileButtonHeight));
                 ImGui.EndDisabled();
             }
-            else if (controller.GetFriendsLackingPermissions().Count is not 0)
+            else if (controller.MissingPermissionsForATarget())
             {
                 ImGui.BeginDisabled();
                 ImGui.Button("You lack permissions for one or more of your targets", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendProfileButtonHeight));

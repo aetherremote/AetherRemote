@@ -8,13 +8,23 @@ using AetherRemoteClient.Domain;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
+using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Customize;
 
 namespace AetherRemoteClient.UI.Views.CustomizePlus;
 
-public class CustomizePlusViewUiController(CommandLockoutService commandLockoutService, CustomizePlusService customizePlusService, NetworkService networkService, SelectionManager selectionManager)
+/// <summary>
+///     Ui Controller
+/// </summary>
+public class CustomizePlusViewUiController : IDisposable
 {
+    // Injected
+    private readonly CommandLockoutService _commandLockoutService;
+    private readonly CustomizePlusService _customizePlusService;
+    private readonly NetworkService _networkService;
+    private readonly SelectionManager _selectionManager;
+    
     /// <summary>
     ///     Customize+ data to send
     /// </summary>
@@ -29,6 +39,21 @@ public class CustomizePlusViewUiController(CommandLockoutService commandLockoutS
     public List<Folder<Profile>> FilteredProfiles => SearchTerm == string.Empty
         ? _profiles.ToList()
         : _profiles.Select(folder => new Folder<Profile>(folder.Path, folder.Content.Where(design => design.Name.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)).ToList())).ToList();
+    
+    /// <summary>
+    ///     <inheritdoc cref="CustomizePlusViewUiController"/>
+    /// </summary>
+    public CustomizePlusViewUiController(CommandLockoutService commandLockoutService, CustomizePlusService customizePlusService, NetworkService networkService, SelectionManager selectionManager)
+    {
+        _commandLockoutService = commandLockoutService;
+        _customizePlusService = customizePlusService;
+        _networkService = networkService;
+        _selectionManager = selectionManager;
+
+        _customizePlusService.IpcReady += OnIpcReady;
+        if (_customizePlusService.ApiAvailable)
+            RefreshCustomizeProfiles();
+    }
 
     public async void RefreshCustomizeProfiles()
     {
@@ -36,7 +61,7 @@ public class CustomizePlusViewUiController(CommandLockoutService commandLockoutS
         {
             SelectedProfileId = Guid.Empty;
             
-            _profiles = await customizePlusService.GetProfiles().ConfigureAwait(false);
+            _profiles = await _customizePlusService.GetProfiles().ConfigureAwait(false);
         }
         catch (Exception)
         {
@@ -48,9 +73,13 @@ public class CustomizePlusViewUiController(CommandLockoutService commandLockoutS
     ///     Calculates the friends who you lack correct permissions to send to
     /// </summary>
     /// <returns></returns>
-    public List<string> GetFriendsLackingPermissions()
+    public bool MissingPermissionsForATarget()
     {
-        return [];
+        foreach (var friend in _selectionManager.Selected)
+            if ((friend.PermissionsGrantedByFriend.Primary & PrimaryPermissions2.CustomizePlus) is not PrimaryPermissions2.CustomizePlus)
+                return true;
+
+        return false;
     }
     
     public async void SendCustomizeProfile()
@@ -60,16 +89,16 @@ public class CustomizePlusViewUiController(CommandLockoutService commandLockoutS
             if (SelectedProfileId == Guid.Empty)
                 return;
 
-            commandLockoutService.Lock();
+            _commandLockoutService.Lock();
         
-            if (await customizePlusService.GetProfile(SelectedProfileId).ConfigureAwait(false) is not { } profile)
+            if (await _customizePlusService.GetProfile(SelectedProfileId).ConfigureAwait(false) is not { } profile)
                 return;
 
             var bytes = Encoding.UTF8.GetBytes(profile);
             var string64 = Convert.ToBase64String(bytes);
 
-            var request = new CustomizeRequest(selectionManager.GetSelectedFriendCodes(), string64);
-            var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.CustomizePlus, request).ConfigureAwait(false);
+            var request = new CustomizeRequest(_selectionManager.GetSelectedFriendCodes(), string64);
+            var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.CustomizePlus, request).ConfigureAwait(false);
 
             ActionResponseParser.Parse("Customize+", response);
         }
@@ -77,5 +106,16 @@ public class CustomizePlusViewUiController(CommandLockoutService commandLockoutS
         {
             // Ignored
         }
+    }
+    
+    private void OnIpcReady(object? sender, EventArgs e)
+    {
+        RefreshCustomizeProfiles();
+    }
+
+    public void Dispose()
+    {
+        _customizePlusService.IpcReady -= OnIpcReady;
+        GC.SuppressFinalize(this);
     }
 }

@@ -32,6 +32,11 @@ public class PenumbraService : IExternalPlugin
     ///     Is Penumbra available for use?
     /// </summary>
     public bool ApiAvailable;
+        
+    /// <summary>
+    ///     <inheritdoc cref="IExternalPlugin.IpcReady"/>
+    /// </summary>
+    public event EventHandler? IpcReady;
 
     /// <summary>
     ///     <see cref="PenumbraService"/>
@@ -64,6 +69,7 @@ public class PenumbraService : IExternalPlugin
         
         // Mark as ready
         ApiAvailable = true;
+        IpcReady?.Invoke(this, EventArgs.Empty);
         return true;
     }
     

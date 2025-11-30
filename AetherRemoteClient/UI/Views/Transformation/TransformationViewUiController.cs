@@ -8,6 +8,7 @@ using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Transform;
 
@@ -16,7 +17,7 @@ namespace AetherRemoteClient.UI.Views.Transformation;
 /// <summary>
 ///     Handles events from the <see cref="TransformationViewUi"/>
 /// </summary>
-public class TransformationViewUiController
+public class TransformationViewUiController : IDisposable
 {
     // Injected
     private readonly CommandLockoutService _commandLockoutService;
@@ -43,8 +44,10 @@ public class TransformationViewUiController
         _glamourerService = glamourer;
         _networkService = networkService;
         _selectionManager = selectionManager;
-        
-        RefreshDesigns();
+
+        _glamourerService.IpcReady += OnIpcReady;
+        if (_glamourerService.ApiAvailable)
+            RefreshDesigns();
     }
     
     public async void RefreshDesigns()
@@ -61,9 +64,20 @@ public class TransformationViewUiController
         }
     }
     
-    public List<string> GetFriendsLackingPermissions()
+    public bool MissingPermissionsForATarget()
     {
-        return [];
+        foreach (var friend in _selectionManager.Selected)
+        {
+            if (ShouldApplyCustomization)
+                if ((friend.PermissionsGrantedByFriend.Primary & PrimaryPermissions2.GlamourerCustomization) is not PrimaryPermissions2.GlamourerCustomization)
+                    return true;
+            
+            if (ShouldApplyEquipment)
+                if ((friend.PermissionsGrantedByFriend.Primary & PrimaryPermissions2.GlamourerEquipment) is not PrimaryPermissions2.GlamourerEquipment)
+                    return true;
+        }
+        
+        return false;
     }
 
     public async void SendDesign()
@@ -83,6 +97,10 @@ public class TransformationViewUiController
                 flags |= GlamourerApplyFlags.Customization;
             if (ShouldApplyEquipment)
                 flags |= GlamourerApplyFlags.Equipment;
+
+            // Don't send one with nothing
+            if (flags is GlamourerApplyFlags.Once)
+                return;
             
             var request = new TransformRequest(_selectionManager.GetSelectedFriendCodes(), design, flags, null);
             var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.Transform, request).ConfigureAwait(false);
@@ -93,5 +111,16 @@ public class TransformationViewUiController
         {
             // Ignored
         }
+    }
+    
+    private void OnIpcReady(object? sender, EventArgs e)
+    {
+        RefreshDesigns();
+    }
+
+    public void Dispose()
+    {
+        _glamourerService.IpcReady -= OnIpcReady;
+        GC.SuppressFinalize(this);
     }
 }

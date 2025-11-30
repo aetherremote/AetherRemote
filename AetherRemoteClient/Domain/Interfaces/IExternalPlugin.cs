@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 
 namespace AetherRemoteClient.Domain.Interfaces;
@@ -11,4 +12,9 @@ public interface IExternalPlugin
     ///     Function that should be called periodically to test plugin availability
     /// </summary>
     public Task<bool> TestIpcAvailability();
+
+    /// <summary>
+    ///     Event fired when an exposed plugin is ready for use
+    /// </summary>
+    public event EventHandler IpcReady;
 }

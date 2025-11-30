@@ -47,6 +47,11 @@ public class CustomizePlusService : IExternalPlugin
     public bool ApiAvailable;
     
     /// <summary>
+    ///     <inheritdoc cref="IExternalPlugin.IpcReady"/>
+    /// </summary>
+    public event EventHandler? IpcReady;
+    
+    /// <summary>
     ///     <inheritdoc cref="CustomizePlusService"/>
     /// </summary>
     public CustomizePlusService()
@@ -82,6 +87,7 @@ public class CustomizePlusService : IExternalPlugin
         // Mark as ready
         _customizePlusPlugin = plugin;
         ApiAvailable = true;
+        IpcReady?.Invoke(this, EventArgs.Empty);
         return true;
     }
 

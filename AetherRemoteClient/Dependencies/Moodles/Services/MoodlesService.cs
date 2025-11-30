@@ -53,6 +53,11 @@ public class MoodlesService : IExternalPlugin
     ///     Is Moodles available for use?
     /// </summary>
     public bool ApiAvailable;
+        
+    /// <summary>
+    ///     <inheritdoc cref="IExternalPlugin.IpcReady"/>
+    /// </summary>
+    public event EventHandler? IpcReady;
 
     /// <summary>
     ///     <inheritdoc cref="MoodlesService"/>
@@ -79,12 +84,15 @@ public class MoodlesService : IExternalPlugin
         // Invoke Api
         var version = await Plugin.RunOnFrameworkSafely(() => _version.InvokeFunc()).ConfigureAwait(false);
 
+        Plugin.Log.Warning($"Expected {ExpectedMajor} but was {version}");
+        
         // Test for proper versioning
         if (version < ExpectedMajor)
             return false;
 
         // Mark as ready
         ApiAvailable = true;
+        IpcReady?.Invoke(this, EventArgs.Empty);
         return true;
     }
 

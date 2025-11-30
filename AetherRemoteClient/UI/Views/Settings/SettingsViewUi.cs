@@ -1,12 +1,17 @@
 using System.Numerics;
+using AetherRemoteClient.Dependencies.CustomizePlus.Services;
+using AetherRemoteClient.Dependencies.Glamourer.Services;
+using AetherRemoteClient.Dependencies.Moodles.Services;
+using AetherRemoteClient.Dependencies.Penumbra.Services;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 
 namespace AetherRemoteClient.UI.Views.Settings;
 
-public class SettingsViewUi(SettingsViewUiController controller) : IDrawable
+public class SettingsViewUi(SettingsViewUiController controller, PenumbraService penumbraService, GlamourerService glamourerService, MoodlesService moodlesService, CustomizePlusService customizePlusService) : IDrawable
 {
     private static readonly Vector2 CheckboxPadding = new(8, 0);
 
@@ -46,9 +51,7 @@ public class SettingsViewUi(SettingsViewUiController controller) : IDrawable
             if (ImGui.Checkbox("Auto Connect", ref Plugin.CharacterConfiguration.AutoLogin))
                 controller.SaveConfiguration();
         });
-
-        // TODO: Re-Enable when a new Mare solution is made
-        /*
+        
         SharedUserInterfaces.ContentBox("SettingsDependencies", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.MediumText("Dependencies");
@@ -59,28 +62,25 @@ public class SettingsViewUi(SettingsViewUiController controller) : IDrawable
 
             ImGui.TextUnformatted("Penumbra");
             ImGui.SameLine();
-            DrawCheckmarkOrCrossOut(penumbra.ApiAvailable);
+            DrawCheckmarkOrCrossOut(penumbraService.ApiAvailable);
 
             ImGui.TextUnformatted("Glamourer");
             ImGui.SameLine();
-            DrawCheckmarkOrCrossOut(glamourer.ApiAvailable);
+            DrawCheckmarkOrCrossOut(glamourerService.ApiAvailable);
 
             ImGui.TextUnformatted("Moodles");
             ImGui.SameLine();
-            DrawCheckmarkOrCrossOut(moodles.ApiAvailable);
+            DrawCheckmarkOrCrossOut(moodlesService.ApiAvailable);
             
             ImGui.TextUnformatted("Customize+");
             ImGui.SameLine();
-            DrawCheckmarkOrCrossOut(customize.ApiAvailable);
+            DrawCheckmarkOrCrossOut(customizePlusService.ApiAvailable);
         });
-        */
 
         ImGui.PopStyleVar();
         ImGui.EndChild();
     }
-
-    // TODO: Re-Enable when a new Mare solution is made
-    /*
+    
     private static void DrawCheckmarkOrCrossOut(bool apiAvailable)
     {
         if (apiAvailable)
@@ -88,5 +88,5 @@ public class SettingsViewUi(SettingsViewUiController controller) : IDrawable
         else
             SharedUserInterfaces.Icon(FontAwesomeIcon.Times, ImGuiColors.DalamudRed);
     }
-    */
+    
 }

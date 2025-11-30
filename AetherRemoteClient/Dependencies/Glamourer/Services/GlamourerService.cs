@@ -27,8 +27,8 @@ public class GlamourerService : IExternalPlugin, IDisposable
     private const string Uncategorized = "Uncategorized";
     
     // Const
-    private const int ExpectedMajor = 6;
-    private const int ExpectedMinor = 4;
+    private const int ExpectedMajor = 1;
+    private const int ExpectedMinor = 7;
     
     // Syncing solutions lock other player profiles to prevent tampering by the client. To view the glamourer data
     // of these other players, we need a key to unlock them. Since there are multiple services, we must try multiple
@@ -71,6 +71,11 @@ public class GlamourerService : IExternalPlugin, IDisposable
     ///     Is Glamourer available for use?
     /// </summary>
     public bool ApiAvailable;
+    
+    /// <summary>
+    ///     <inheritdoc cref="IExternalPlugin.IpcReady"/>
+    /// </summary>
+    public event EventHandler? IpcReady;
 
     /// <summary>
     ///     <inheritdoc cref="GlamourerService"/>
@@ -112,6 +117,7 @@ public class GlamourerService : IExternalPlugin, IDisposable
 
         // Mark as ready
         ApiAvailable = true;
+        IpcReady?.Invoke(this, EventArgs.Empty);
         return true;
     }
 
