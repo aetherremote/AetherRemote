@@ -31,10 +31,20 @@ public class DatabaseService : IDatabaseService
 #else
         var path = configuration.ReleaseDatabasePath;
 #endif
-        
+
+        var connection = new SqliteConnectionStringBuilder
+        {
+            Cache = SqliteCacheMode.Shared,
+            DataSource = path,
+            Mode = SqliteOpenMode.ReadWriteCreate
+        }.ToString();
+
         // Open Db
-        _database = new SqliteConnection($"Data Source={path}");
+        _database = new SqliteConnection(connection);
         _database.Open();
+        
+        // Configure Db
+        ConfigureDatabaseConnection();
     }
 
     /// <summary>
@@ -181,6 +191,27 @@ public class DatabaseService : IDatabaseService
         {
             _logger.LogWarning("Unable to delete {FriendCode}'s permissions for {TargetFriendCode}, {Exception}", senderFriendCode, targetFriendCode, e);
             return DatabaseResultEc.Unknown;
+        }
+    }
+
+    private void ConfigureDatabaseConnection()
+    {
+        try
+        {
+            using var command = _database.CreateCommand();
+
+            command.CommandText = "PRAGMA journal_mode=WAL;";
+            command.ExecuteNonQuery();
+        
+            command.CommandText = "PRAGMA foreign_keys=ON;";
+            command.ExecuteNonQuery();
+        
+            command.CommandText = "PRAGMA busy_timeout=5000;";
+            command.ExecuteNonQuery();
+        }
+        catch (Exception e)
+        {
+            _logger.LogError("Unexpected exception while configuring database, {Error}", e);
         }
     }
 }
