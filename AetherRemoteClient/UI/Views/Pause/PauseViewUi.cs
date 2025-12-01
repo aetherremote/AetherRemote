@@ -146,12 +146,13 @@ public class PauseViewUi(
                     BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.BodySwap);
                     ImGui.TableNextColumn();
                     BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.Twinning);
-                    ImGui.TableNextColumn();
-                    BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.CustomizePlus);
                     */
                     
                     ImGui.TableNextColumn();
                     BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.Moodles);
+                    
+                    ImGui.TableNextColumn();
+                    BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.CustomizePlus);
                     
                     ImGui.EndTable();
                 }
