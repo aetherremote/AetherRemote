@@ -68,7 +68,7 @@ public class ProfileManager
     {
         try
         {
-            return _createProfile.Invoke(_profileManager, ["AetherRemoteTemp", true]) is { } profile
+            return _createProfile.Invoke(_profileManager, [TemporaryProfileName, true]) is { } profile
                 ? new CustomizePlusProfile(profile)
                 : null;
         }
