@@ -1,9 +1,11 @@
+using AetherRemoteCommon;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Hypnosis;
 using AetherRemoteServer.Domain.Interfaces;
+using AetherRemoteServer.Utilities;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AetherRemoteServer.SignalR.Handlers;
@@ -36,9 +38,41 @@ public class HypnosisHandler(
             logger.LogWarning("{Sender} exceeded request limit", sender);
             return new ActionResponse(ActionResponseEc.TooManyRequests);
         }
+        
+        if (VerificationUtilities.IsValidListOfFriendCodes(request.TargetFriendCodes) is false)
+        {
+            logger.LogWarning("{Sender} sent invalid friend codes", sender);
+            return new ActionResponse(ActionResponseEc.BadDataInRequest);
+        }
 
-        var forwardedRequest = new HypnosisForwardedRequest(sender, request.Data, request.Stop);
+        if (IsValidHypnosisRequest(request) is false)
+        {
+            logger.LogWarning("{Sender} sent invalid hypnosis data", sender);
+            return new ActionResponse(ActionResponseEc.BadDataInRequest);
+        }
+
+        var forwardedRequest = new HypnosisForwardedRequest(sender, request.Data);
         return await forwardedRequestManager.CheckPermissionsAndSend(sender, request.TargetFriendCodes, Method,
             Permissions, forwardedRequest, clients);
+    }
+
+    private static bool IsValidHypnosisRequest(HypnosisRequest request)
+    {
+        if (request.Data.SpiralArms is < Constraints.Hypnosis.ArmsMin or > Constraints.Hypnosis.ArmsMax) return false;
+        if (request.Data.SpiralTurns is < Constraints.Hypnosis.TurnsMin or > Constraints.Hypnosis.TurnsMax) return false;
+        if (request.Data.SpiralCurve is < Constraints.Hypnosis.CurvesMin or > Constraints.Hypnosis.CurvesMax) return false;
+        if (request.Data.SpiralThickness is < Constraints.Hypnosis.ThicknessMin or > Constraints.Hypnosis.ThicknessMax) return false;
+        if (request.Data.SpiralSpeed is < Constraints.Hypnosis.SpeedMin or > Constraints.Hypnosis.SpeedMax) return false;
+        if (request.Data.TextDelay is < Constraints.Hypnosis.TextDelayMin or > Constraints.Hypnosis.TextDelayMax) return false;
+        if (request.Data.TextDuration is < Constraints.Hypnosis.TextDurationMin or > Constraints.Hypnosis.TextDurationMax) return false;
+
+        var length = 0;
+        foreach (var word in request.Data.TextWords)
+            length += word.Length;
+        
+        if (length is < Constraints.Hypnosis.TextWordsMin or > Constraints.Hypnosis.TextWordsMax)
+            return false;
+
+        return true;
     }
 }

@@ -39,9 +39,7 @@ public class CustomizePlusHandler(CustomizePlusService customizePlusService, Log
 
         try
         {
-            var bytes = Convert.FromBase64String(request.Data);
-            var json = Encoding.UTF8.GetString(bytes);
-            
+            var json = Encoding.UTF8.GetString(request.JsonBoneDataBytes);
             if (await customizePlusService.DeleteTemporaryCustomizeAsync().ConfigureAwait(false) is false)
             {
                 Plugin.Log.Warning("[CustomizePlusHandler] Unable to delete existing customize");

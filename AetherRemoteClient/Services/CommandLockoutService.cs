@@ -29,7 +29,7 @@ public class CommandLockoutService : IDisposable
     /// <summary>
     ///     Initiates a command lockout
     /// </summary>
-    public void Lock(uint cooldownInSeconds = Constraints.GameCommandCooldownInSeconds)
+    public void Lock(uint cooldownInSeconds = Constraints.GlobalCommandCooldownInSeconds)
     {
         IsLocked = true;
         _commandLockoutTimer.Stop();

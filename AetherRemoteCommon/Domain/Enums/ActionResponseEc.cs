@@ -17,7 +17,7 @@ public enum ActionResponseEc
     
     /// <summary>
     ///     There are too many targets for this operation. The max operation count can be found in the 
-    ///     <see cref="Constraints"/> class.
+    ///     <see cref="AetherRemoteCommon.Constraints"/> class.
     /// </summary>
     TooManyTargets,
     

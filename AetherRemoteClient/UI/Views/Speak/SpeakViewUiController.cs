@@ -5,6 +5,7 @@ using AetherRemoteClient.Domain;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
+using AetherRemoteCommon;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Speak;
@@ -92,7 +93,7 @@ public class SpeakViewUiController
     {
         try
         {
-            if (Message.Length is 0)
+            if (Message.Length < Constraints.Speak.MessageMin)
                 return;
 
             var extra = ChannelSelect switch

@@ -11,6 +11,7 @@ using AetherRemoteCommon.Domain.Network.Customize;
 using AetherRemoteCommon.Domain.Network.Emote;
 using AetherRemoteCommon.Domain.Network.GetAccountData;
 using AetherRemoteCommon.Domain.Network.Hypnosis;
+using AetherRemoteCommon.Domain.Network.HypnosisStop;
 using AetherRemoteCommon.Domain.Network.Moodles;
 using AetherRemoteCommon.Domain.Network.Speak;
 using AetherRemoteCommon.Domain.Network.SyncOnlineStatus;
@@ -48,6 +49,7 @@ public class NetworkHandler : IDisposable
         BodySwapHandler bodySwapHandler,
         EmoteHandler emoteHandler,
         HypnosisHandler hypnosisHandler,
+        HypnosisStopHandler hypnosisStopHandler,
         MoodlesHandler moodlesHandler,
         SpeakHandler speakHandler,
         SyncOnlineStatusHandler syncOnlineStatusHandler,
@@ -69,6 +71,7 @@ public class NetworkHandler : IDisposable
         _handlers.Add(networkService.Connection.On<CustomizeForwardedRequest, ActionResult<Unit>>(HubMethod.CustomizePlus, customizePlusHandler.Handle));
         _handlers.Add(networkService.Connection.On<EmoteForwardedRequest, ActionResult<Unit>>(HubMethod.Emote, emoteHandler.Handle));
         _handlers.Add(networkService.Connection.On<HypnosisForwardedRequest, ActionResult<Unit>>(HubMethod.Hypnosis, hypnosisHandler.Handle));
+        _handlers.Add(networkService.Connection.On<HypnosisStopForwardedRequest, ActionResult<Unit>>(HubMethod.HypnosisStop, hypnosisStopHandler.Handle));
         _handlers.Add(networkService.Connection.On<MoodlesForwardedRequest, ActionResult<Unit>>(HubMethod.Moodles, moodlesHandler.Handle)); // TODO: Readd
         _handlers.Add(networkService.Connection.On<SpeakForwardedRequest, ActionResult<Unit>>(HubMethod.Speak, speakHandler.Handle));
         _handlers.Add(networkService.Connection.On<TransformForwardedRequest, ActionResult<Unit>>(HubMethod.Transform, transformHandler.Handle));

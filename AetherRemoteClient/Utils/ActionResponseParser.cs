@@ -61,7 +61,8 @@ public static class ActionResponseParser
             ActionResponseEc.TargetOffline => "One of your targets is offline",
             ActionResponseEc.TargetBodySwapLacksPermissions => "You lack permissions for one of your targets",
             ActionResponseEc.TargetBodySwapIsNotFriends => "You are not friends with one of your targets",
-
+            ActionResponseEc.BadDataInRequest => "Your request contained bad data",
+            
             // Disabled
             ActionResponseEc.Disabled => "This feature is temporarily disabled - How did you call this?!",
             

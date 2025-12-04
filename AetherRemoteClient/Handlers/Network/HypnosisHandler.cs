@@ -40,13 +40,7 @@ public class HypnosisHandler(LogService logService, HypnosisManager hypnosisMana
             // If the sender is the one who initiated it
             if (hypnosisManager.Hypnotist?.FriendCode == request.SenderFriendCode)
             {
-                // If they turned the stop command on, stop
-                if (request.Stop)
-                {
-                    // Stop being hypnotized, silly
-                    hypnosisManager.Wake();
-                    return ActionResultBuilder.Ok();
-                }
+                // Do nothing
             }
             else
             {

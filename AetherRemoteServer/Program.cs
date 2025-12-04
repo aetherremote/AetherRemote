@@ -56,6 +56,7 @@ public class Program
         builder.Services.AddSingleton<EmoteHandler>();
         builder.Services.AddSingleton<GetAccountDataHandler>();
         builder.Services.AddSingleton<HypnosisHandler>();
+        builder.Services.AddSingleton<HypnosisStopHandler>();
         builder.Services.AddSingleton<MoodlesHandler>();
         builder.Services.AddSingleton<RemoveFriendHandler>();
         builder.Services.AddSingleton<SpeakHandler>();

@@ -23,4 +23,5 @@ public static class HubMethod
     public const string Moodles = "Moodles";
     public const string CustomizePlus = "CustomizePlus";
     public const string Hypnosis = "Hypnosis";
+    public const string HypnosisStop = "HypnosisStop";
 }

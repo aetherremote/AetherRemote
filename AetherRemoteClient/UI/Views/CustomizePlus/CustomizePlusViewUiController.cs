@@ -95,9 +95,7 @@ public class CustomizePlusViewUiController : IDisposable
                 return;
 
             var bytes = Encoding.UTF8.GetBytes(profile);
-            var string64 = Convert.ToBase64String(bytes);
-
-            var request = new CustomizeRequest(_selectionManager.GetSelectedFriendCodes(), string64);
+            var request = new CustomizeRequest(_selectionManager.GetSelectedFriendCodes(), bytes);
             var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.CustomizePlus, request).ConfigureAwait(false);
 
             ActionResponseParser.Parse("Customize+", response);

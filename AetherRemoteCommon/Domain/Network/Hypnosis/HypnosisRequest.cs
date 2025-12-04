@@ -6,17 +6,14 @@ namespace AetherRemoteCommon.Domain.Network.Hypnosis;
 public record HypnosisRequest : ActionRequest
 {
     public HypnosisData Data { get; set; } = new();
-    
-    public bool Stop { get; set; }
 
     public HypnosisRequest()
     {
     }
 
-    public HypnosisRequest(List<string> targets, HypnosisData data, bool stop)
+    public HypnosisRequest(List<string> targets, HypnosisData data)
     {
         TargetFriendCodes =  targets;
         Data = data;
-        Stop = stop;
     }
 }

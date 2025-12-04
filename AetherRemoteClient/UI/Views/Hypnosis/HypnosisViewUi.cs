@@ -5,6 +5,7 @@ using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
+using AetherRemoteCommon;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 
@@ -81,13 +82,13 @@ public class HypnosisViewUi(
             ImGui.TextUnformatted("Turns");
             
             ImGui.SetNextItemWidth(itemWidth);
-            if (ImGui.SliderInt("##SpiralArms", ref controller.SpiralArms, 1, 5))
+            if (ImGui.SliderInt("##SpiralArms", ref controller.SpiralArms, Constraints.Hypnosis.ArmsMin, Constraints.Hypnosis.ArmsMax))
                 controller.BeginSpiralRefreshTimer();
             
             ImGui.SameLine();
             
             ImGui.SetNextItemWidth(itemWidth);
-            if (ImGui.SliderInt("##SpiralTurns", ref controller.SpiralTurns, 1, 10))
+            if (ImGui.SliderInt("##SpiralTurns", ref controller.SpiralTurns, Constraints.Hypnosis.TurnsMin, Constraints.Hypnosis.TurnsMax))
                 controller.BeginSpiralRefreshTimer();
             
             ImGui.TextUnformatted("Curvature");
@@ -95,13 +96,13 @@ public class HypnosisViewUi(
             ImGui.TextUnformatted("Thickness");
             
             ImGui.SetNextItemWidth(itemWidth);
-            if (ImGui.SliderInt("##SpiralCurve", ref controller.SpiralCurve, 1, 10))
+            if (ImGui.SliderInt("##SpiralCurve", ref controller.SpiralCurve, Constraints.Hypnosis.CurvesMin, Constraints.Hypnosis.CurvesMax))
                 controller.BeginSpiralRefreshTimer();
             
             ImGui.SameLine();
             
             ImGui.SetNextItemWidth(itemWidth);
-            if (ImGui.SliderInt("##SpiralThickness", ref controller.SpiralThickness, 1, 10))
+            if (ImGui.SliderInt("##SpiralThickness", ref controller.SpiralThickness, Constraints.Hypnosis.ThicknessMin, Constraints.Hypnosis.ThicknessMax))
                 controller.BeginSpiralRefreshTimer();
 
             ImGui.TextUnformatted("Speed");
@@ -109,7 +110,7 @@ public class HypnosisViewUi(
             ImGui.TextUnformatted("Color");
             
             ImGui.SetNextItemWidth(itemWidth);
-            if (ImGui.SliderInt("##SpiralSpeed", ref controller.SpiralSpeed, 0, 10))
+            if (ImGui.SliderInt("##SpiralSpeed", ref controller.SpiralSpeed, Constraints.Hypnosis.SpeedMin, Constraints.Hypnosis.SpeedMax))
                 controller.SetSpeed();
             
             ImGui.SameLine();
@@ -136,13 +137,13 @@ public class HypnosisViewUi(
             ImGui.TextUnformatted("Duration");
             
             ImGui.SetNextItemWidth(itemWidth);
-            if (ImGui.SliderInt("##TextDelay", ref controller.TextDelay, 0, 10))
+            if (ImGui.SliderInt("##TextDelay", ref controller.TextDelay, Constraints.Hypnosis.TextDelayMin, Constraints.Hypnosis.TextDelayMax))
                 controller.SetDelay();
             
             ImGui.SameLine();
             
             ImGui.SetNextItemWidth(itemWidth);
-            if (ImGui.SliderInt("##TextDuration", ref controller.TextDuration, 0, 10))
+            if (ImGui.SliderInt("##TextDuration", ref controller.TextDuration, Constraints.Hypnosis.TextDurationMin, Constraints.Hypnosis.TextDurationMax))
                 controller.SetDuration();
                 
             ImGui.TextUnformatted("Order");
@@ -163,7 +164,7 @@ public class HypnosisViewUi(
                 controller.SetColorText();
             
             ImGui.TextUnformatted("Words");
-            if (ImGui.InputTextMultiline("##WordBank", ref controller.TextWords, 2024, new Vector2(width - padding * 2 ,0)))
+            if (ImGui.InputTextMultiline("##WordBank", ref controller.TextWords, Constraints.Hypnosis.TextWordsMax, new Vector2(width - padding * 2 ,0)))
                 controller.BeginTextRefreshTimer();
         });
         

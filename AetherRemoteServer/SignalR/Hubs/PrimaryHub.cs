@@ -6,6 +6,7 @@ using AetherRemoteCommon.Domain.Network.Customize;
 using AetherRemoteCommon.Domain.Network.Emote;
 using AetherRemoteCommon.Domain.Network.GetAccountData;
 using AetherRemoteCommon.Domain.Network.Hypnosis;
+using AetherRemoteCommon.Domain.Network.HypnosisStop;
 using AetherRemoteCommon.Domain.Network.Moodles;
 using AetherRemoteCommon.Domain.Network.RemoveFriend;
 using AetherRemoteCommon.Domain.Network.Speak;
@@ -31,6 +32,7 @@ public class PrimaryHub(
     EmoteHandler emoteHandler,
     GetAccountDataHandler getAccountDataHandler,
     HypnosisHandler hypnosisHandler,
+    HypnosisStopHandler hypnosisStopHandler,
     MoodlesHandler moodlesHandler,
     RemoveFriendHandler removeFriendHandler,
     SpeakHandler speakHandler,
@@ -135,6 +137,13 @@ public class PrimaryHub(
     {
         logger.LogInformation("{Request}", request);
         return await hypnosisHandler.Handle(FriendCode, request, Clients);
+    }
+    
+    [HubMethodName(HubMethod.HypnosisStop)]
+    public async Task<ActionResponse> HypnosisStop(HypnosisStopRequest request)
+    {
+        logger.LogInformation("{Request}", request);
+        return await hypnosisStopHandler.Handle(FriendCode, request, Clients);
     }
 
     /// <summary>

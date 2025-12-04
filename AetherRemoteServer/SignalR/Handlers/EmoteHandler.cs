@@ -5,7 +5,9 @@ using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Emote;
 using AetherRemoteServer.Domain.Interfaces;
+using AetherRemoteServer.Utilities;
 using Microsoft.AspNetCore.SignalR;
+using Constraints = AetherRemoteCommon.Constraints;
 
 namespace AetherRemoteServer.SignalR.Handlers;
 
@@ -36,6 +38,12 @@ public class EmoteHandler(
         {
             logger.LogWarning("{Sender} exceeded request limit", sender);
             return new ActionResponse(ActionResponseEc.TooManyRequests);
+        }
+        
+        if (VerificationUtilities.IsValidListOfFriendCodes(request.TargetFriendCodes) is false)
+        {
+            logger.LogWarning("{Sender} sent invalid friend codes", sender);
+            return new ActionResponse(ActionResponseEc.BadDataInRequest);
         }
 
         if (request.TargetFriendCodes.Count > Constraints.MaximumTargetsForInGameOperations)

@@ -24,11 +24,11 @@ public class ConnectionsService : IConnectionsService
         if (_connectedClients.TryGetValue(issuerFriendCode, out var issuer) is false)
             return true;
         
-        return (DateTime.UtcNow - issuer.LastAction).TotalSeconds < Constraints.ExternalCommandCooldownInSeconds;
+        return (DateTime.UtcNow - issuer.LastAction).TotalSeconds < Constraints.GlobalCommandCooldownInSeconds;
     }
     
     public bool IsUserExceedingRequestLimit(ClientInfo clientInfo)
     {
-        return (DateTime.UtcNow - clientInfo.LastAction).TotalSeconds < Constraints.ExternalCommandCooldownInSeconds;
+        return (DateTime.UtcNow - clientInfo.LastAction).TotalSeconds < Constraints.GlobalCommandCooldownInSeconds;
     }
 }

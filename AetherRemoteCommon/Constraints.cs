@@ -13,10 +13,51 @@ public static class Constraints
     /// <summary>
     ///     How many seconds in between each command must a user wait to use in-game commands (Speak, Emote, etc.)
     /// </summary>
-    public const uint GameCommandCooldownInSeconds = 3;
+    public const uint GlobalCommandCooldownInSeconds = 4;
+    
+    // Friend Code
+    public const int FriendCodeMinimumLength = 2;
+    public const int FriendCodeMaximumLength = 16;
 
     /// <summary>
-    ///     How many seconds in between each command must a user wait to use external commands (Glamourer, etc.)
+    ///     Constraints relating to the speak command
     /// </summary>
-    public const uint ExternalCommandCooldownInSeconds = 3;
+    public static class Speak
+    {
+        public const int MessageMin = 1;
+        public const int MessageMax = 440;
+
+        public const int MessageExtraMin = 1;
+        public const int MessageExtraMax = 40;
+    }
+
+    /// <summary>
+    ///     Constraints relating to the hypnosis command
+    /// </summary>
+    public static class Hypnosis
+    {
+        public const int ArmsMin = 1;
+        public const int ArmsMax = 5;
+    
+        public const int TurnsMin = 1;
+        public const int TurnsMax = 10;
+    
+        public const int CurvesMin = 1;
+        public const int CurvesMax = 10;
+    
+        public const int ThicknessMin = 1;
+        public const int ThicknessMax = 10;
+    
+        public const int SpeedMin = 0;
+        public const int SpeedMax = 10;
+    
+        public const int TextDelayMin = 0;
+        public const int TextDelayMax = 10;
+    
+        public const int TextDurationMin = 0;
+        public const int TextDurationMax = 10;
+    
+        public const int TextWordsMin = 0;
+        public const int TextWordsMax = 2024;
+    }
 }

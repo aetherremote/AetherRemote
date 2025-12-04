@@ -14,6 +14,7 @@ using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Hypnosis;
+using AetherRemoteCommon.Domain.Network.HypnosisStop;
 using Dalamud.Bindings.ImGui;
 using Newtonsoft.Json;
 
@@ -308,7 +309,7 @@ public class HypnosisViewUiController : IDisposable
         try
         {
             var data = GetHypnosisDataFromUi();
-            var request = new HypnosisRequest(_selectionManager.GetSelectedFriendCodes(), data, false);
+            var request = new HypnosisRequest(_selectionManager.GetSelectedFriendCodes(), data);
             var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.Hypnosis, request).ConfigureAwait(false);
         
             ActionResponseParser.Parse("Hypnosis", response);
@@ -326,9 +327,8 @@ public class HypnosisViewUiController : IDisposable
     {
         try
         {
-            var request = new HypnosisRequest(_selectionManager.GetSelectedFriendCodes(), new HypnosisData(), true);
-            var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.Hypnosis, request).ConfigureAwait(false);
-            
+            var request = new HypnosisStopRequest(_selectionManager.GetSelectedFriendCodes());
+            var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.HypnosisStop, request).ConfigureAwait(false);
             ActionResponseParser.Parse("Hypnosis Stop", response);
         }
         catch (Exception e)

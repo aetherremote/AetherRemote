@@ -4,6 +4,7 @@ using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
+using AetherRemoteCommon;
 using AetherRemoteCommon.Domain.Enums;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
@@ -122,7 +123,7 @@ public class SpeakViewUi(
             ImGui.SetNextItemWidth(width);
 
             var shouldSendMessage = ImGui.InputTextWithHint("##MessageContent", "Message to send",
-                ref controller.Message, 440, ImGuiInputTextFlags.EnterReturnsTrue);
+                ref controller.Message, Constraints.Speak.MessageMax, ImGuiInputTextFlags.EnterReturnsTrue);
 
             ImGui.Spacing();
             

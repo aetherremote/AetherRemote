@@ -119,6 +119,7 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<BodySwapHandler>();
         services.AddSingleton<EmoteHandler>();
         services.AddSingleton<HypnosisHandler>();
+        services.AddSingleton<HypnosisStopHandler>();
         services.AddSingleton<MoodlesHandler>();
         services.AddSingleton<SpeakHandler>();
         services.AddSingleton<SyncOnlineStatusHandler>();

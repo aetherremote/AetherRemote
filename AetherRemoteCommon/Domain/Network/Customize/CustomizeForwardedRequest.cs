@@ -9,9 +9,9 @@ namespace AetherRemoteCommon.Domain.Network.Customize;
 public record CustomizeForwardedRequest : ForwardedActionRequest
 {
     /// <summary>
-    ///     The String64 representation of the JSON bone data for a CustomizePlus Profile
+    ///     JSON representation of the bones in a Customize profile
     /// </summary>
-    public string Data { get; set; } = string.Empty;
+    public byte[] JsonBoneDataBytes { get; set; } = [];
 
     /// <summary>
     ///     <inheritdoc cref="CustomizeRequest"/>
@@ -24,10 +24,10 @@ public record CustomizeForwardedRequest : ForwardedActionRequest
     ///     <inheritdoc cref="CustomizeRequest"/>
     /// </summary>
     /// <param name="sender">The sender of the request's friend code</param>
-    /// <param name="data">The String64 representation of the JSON bone data for a CustomizePlus Profile</param>
-    public CustomizeForwardedRequest(string sender, string data)
+    /// <param name="jsonBoneDataBytes">JSON representation of the bones in a Customize profile</param>
+    public CustomizeForwardedRequest(string sender, byte[] jsonBoneDataBytes)
     {
         SenderFriendCode = sender;
-        Data = data;
+        JsonBoneDataBytes = jsonBoneDataBytes;
     }
 }
