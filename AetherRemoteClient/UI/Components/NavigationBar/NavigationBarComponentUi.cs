@@ -1,5 +1,6 @@
 using System.Numerics;
 using AetherRemoteClient.Domain;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
@@ -8,7 +9,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 
 namespace AetherRemoteClient.UI.Components.NavigationBar;
 
-public class NavigationBarComponentUi(NetworkService networkService, ViewService viewService)
+public class NavigationBarComponentUi(NetworkService networkService, ViewService viewService, SelectionManager selection)
 {
     // Const
     private static readonly Vector2 AlignButtonTextLeft = new(0, 0.5f);
@@ -78,8 +79,9 @@ public class NavigationBarComponentUi(NetworkService networkService, ViewService
             if (ImGui.Button($"##{text}", size))
             {
                 viewService.CurrentView = view;
-                
-                // TODO: It's possible we may need to purge friends here that are offline from the selection
+            
+                // Required to in cases where you move from things like Friends -> Speak, and the friend you were editing was offline
+                selection.ClearOfflineFriends();
             }
         }
 

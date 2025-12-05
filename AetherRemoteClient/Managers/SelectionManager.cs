@@ -106,6 +106,14 @@ public class SelectionManager : IDisposable
     }
 
     /// <summary>
+    ///     Removes all friends from the selection that are currently offline
+    /// </summary>
+    public void ClearOfflineFriends()
+    {
+        _selected.RemoveWhere(friend => friend.Online is false);
+    }
+
+    /// <summary>
     ///     Gets a list of all the friend codes selected, commonly used to get a list of all the targets to send a command to
     /// <remarks>Triggers <see cref="FriendsInteractedWith"/></remarks>
     /// </summary>
