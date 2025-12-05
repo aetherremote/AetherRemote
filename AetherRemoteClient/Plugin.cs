@@ -104,6 +104,7 @@ public sealed class Plugin : IDalamudPlugin
         
         // Managers
         services.AddSingleton<CharacterTransformationManager>();
+        services.AddSingleton<ConnectionManager>();
         services.AddSingleton<DependencyManager>();
         services.AddSingleton<HypnosisManager>();
         services.AddSingleton<LoginManager>();
@@ -184,6 +185,7 @@ public sealed class Plugin : IDalamudPlugin
         
         // Handlers
         _services.GetRequiredService<ChatCommandHandler>();
+        _services.GetRequiredService<ConnectionManager>();
         _services.GetRequiredService<GlamourerEventHandler>();
         
         // Handlers Network
