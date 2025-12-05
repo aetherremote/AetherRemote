@@ -60,9 +60,10 @@ public class HypnosisManager : IDisposable
     /// <summary>
     ///     Stops hypnotizing the client
     /// </summary>
-    public void Wake()
+    public bool Wake()
     {
         _hypnosisData = null;
+        return true;
     }
     
     private void OnDraw()

@@ -4,24 +4,11 @@ using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
 
-namespace AetherRemoteClient.Managers;
+namespace AetherRemoteClient.Handlers.Network.Base;
 
-/// <summary>
-///     Manager to provide an all-in-one-place permission checking suite of functions
-/// </summary>
-/// <param name="friendsListService"></param>
-/// <param name="logService"></param>
-/// <param name="pauseService"></param>
-public class PermissionsCheckerManager(FriendsListService friendsListService, LogService logService, PauseService pauseService)
+public abstract class AbstractNetworkHandler(FriendsListService friendsListService, LogService logService, PauseService pauseService)
 {
-    /// <summary>
-    ///     Retrieves a friend and checks to see if you contain the provided permissions with them
-    /// </summary>
-    /// <param name="operation">The name of the operation we're checking</param>
-    /// <param name="friendCode">The friend code to retrieve</param>
-    /// <param name="permissions">The permissions to test</param>
-    /// <returns>The <see cref="Friend"/> corresponding to the friend code provided</returns>
-    public ActionResult<Friend> GetSenderAndCheckPermissions(string operation, string friendCode, UserPermissions permissions)
+    protected ActionResult<Friend> TryGetFriendWithCorrectPermissions(string operation, string friendCode, UserPermissions permissions)
     {
         // Not friends
         if (friendsListService.Get(friendCode) is not { } friend)

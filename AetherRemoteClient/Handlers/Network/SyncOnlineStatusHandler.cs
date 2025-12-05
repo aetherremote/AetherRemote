@@ -1,27 +1,48 @@
+using System;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.SyncOnlineStatus;
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace AetherRemoteClient.Handlers.Network;
 
 /// <summary>
 ///     Handles a <see cref="SyncOnlineStatusForwardedRequest"/>
 /// </summary>
-public class SyncOnlineStatusHandler(FriendsListService friendsListService, SelectionManager selectionManager)
+public class SyncOnlineStatusHandler : IDisposable
 {
+    // Injected
+    private readonly FriendsListService _friends;
+    private readonly SelectionManager _selection;
+    
+    // Instantiated
+    private readonly IDisposable _handler;
+    
     /// <summary>
     ///     <inheritdoc cref="SyncOnlineStatusHandler"/>
     /// </summary>
-    public void Handle(SyncOnlineStatusForwardedRequest action)
+    public SyncOnlineStatusHandler(FriendsListService friends, NetworkService network, SelectionManager selection)
     {
-        if (friendsListService.Get(action.SenderFriendCode) is not { } friend)
+        _friends = friends;
+        _selection = selection;
+        
+        _handler = network.Connection.On<SyncOnlineStatusForwardedRequest>(HubMethod.SyncOnlineStatus, Handle);
+    }
+    
+    /// <summary>
+    ///     <inheritdoc cref="SyncOnlineStatusHandler"/>
+    /// </summary>
+    private void Handle(SyncOnlineStatusForwardedRequest action)
+    {
+        if (_friends.Get(action.SenderFriendCode) is not { } friend)
             return;
         
         friend.Online = action.Online;
 
         if (!friend.Online)
         {
-            selectionManager.Deselect(friend);
+            _selection.Deselect(friend);
             return;
         }
 
@@ -32,5 +53,11 @@ public class SyncOnlineStatusHandler(FriendsListService friendsListService, Sele
         }
         
         friend.PermissionsGrantedByFriend = action.Permissions;
+    }
+
+    public void Dispose()
+    {
+        _handler.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

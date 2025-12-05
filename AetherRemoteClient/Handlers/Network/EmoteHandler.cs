@@ -1,43 +1,61 @@
+using System;
 using System.Text;
-using AetherRemoteClient.Managers;
+using AetherRemoteClient.Handlers.Network.Base;
 using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Emote;
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace AetherRemoteClient.Handlers.Network;
-
-// ReSharper disable once ConvertToPrimaryConstructor
 
 /// <summary>
 ///     Handles a <see cref="EmoteForwardedRequest"/>
 /// </summary>
-public class EmoteHandler(EmoteService emoteService, LogService logService, PermissionsCheckerManager permissionsCheckerManager)
+public class EmoteHandler : AbstractNetworkHandler, IDisposable
 {
     // Const
     private const string Operation = "Emote";
     private static readonly UserPermissions Permissions = new(PrimaryPermissions2.Emote, SpeakPermissions2.None, ElevatedPermissions.None);
     
+    // Injected
+    private readonly EmoteService _emote;
+    private readonly LogService _log;
+    
+    // Instantiated
+    private readonly IDisposable _handler;
+
     /// <summary>
     ///     <inheritdoc cref="EmoteHandler"/>
     /// </summary>
-    public ActionResult<Unit> Handle(EmoteForwardedRequest request)
+    public EmoteHandler(EmoteService emote, FriendsListService friends, LogService log, NetworkService network, PauseService pause) : base(friends, log, pause)
     {
-        Plugin.Log.Info($"{request}");
+        _emote = emote;
+        _log = log;
         
-        var placeholder = permissionsCheckerManager.GetSenderAndCheckPermissions(Operation, request.SenderFriendCode, Permissions);
-        if (placeholder.Result is not ActionResultEc.Success)
-            return ActionResultBuilder.Fail(placeholder.Result);
+        _handler = network.Connection.On<EmoteForwardedRequest, ActionResult<Unit>>(HubMethod.Emote, Handle);
+    }
+    
+    /// <summary>
+    ///     <inheritdoc cref="EmoteHandler"/>
+    /// </summary>
+    private ActionResult<Unit> Handle(EmoteForwardedRequest request)
+    {
+        Plugin.Log.Verbose($"{request}");
         
-        if (placeholder.Value is not { } friend)
+        var sender = TryGetFriendWithCorrectPermissions(Operation, request.SenderFriendCode, Permissions);
+        if (sender.Result is not ActionResultEc.Success)
+            return ActionResultBuilder.Fail(sender.Result);
+        
+        if (sender.Value is not { } friend)
             return ActionResultBuilder.Fail(ActionResultEc.ValueNotSet);
 
         // Check if real emote
-        if (emoteService.Emotes.Contains(request.Emote) is false)
+        if (_emote.Emotes.Contains(request.Emote) is false)
         {
-            logService.InvalidData(Operation, friend.NoteOrFriendCode);
+            _log.InvalidData(Operation, friend.NoteOrFriendCode);
             return ActionResultBuilder.Fail(ActionResultEc.ClientBadData);
         }
 
@@ -52,9 +70,15 @@ public class EmoteHandler(EmoteService emoteService, LogService logService, Perm
         ChatService.SendMessage(command.ToString());
         
         // Log success
-        logService.Custom($"{friend.NoteOrFriendCode} made you do the {request.Emote} emote");
+        _log.Custom($"{friend.NoteOrFriendCode} made you do the {request.Emote} emote");
         
         // Success
         return ActionResultBuilder.Ok();
+    }
+
+    public void Dispose()
+    {
+        _handler.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

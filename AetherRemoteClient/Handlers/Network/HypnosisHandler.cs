@@ -1,4 +1,6 @@
+using System;
 using System.Threading.Tasks;
+using AetherRemoteClient.Handlers.Network.Base;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain;
@@ -6,55 +8,78 @@ using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Hypnosis;
+using Microsoft.AspNetCore.SignalR.Client;
 
 namespace AetherRemoteClient.Handlers.Network;
 
 /// <summary>
 ///     Handles a <see cref="HypnosisForwardedRequest"/>
 /// </summary>
-public class HypnosisHandler(LogService logService, HypnosisManager hypnosisManager, PermissionsCheckerManager permissionsCheckerManager)
+public class HypnosisHandler : AbstractNetworkHandler, IDisposable
 {
     // Const
     private const string Operation = "Hypnosis";
     private static readonly UserPermissions Permissions = new(PrimaryPermissions2.Hypnosis, SpeakPermissions2.None, ElevatedPermissions.None);
     
+    // Injected
+    private readonly LogService _log;
+    private readonly HypnosisManager _hypnosis;
+    
+    // Instantiated
+    private readonly IDisposable _handler;
+
     /// <summary>
     ///     <inheritdoc cref="HypnosisHandler"/>
     /// </summary>
-    public async Task<ActionResult<Unit>> Handle(HypnosisForwardedRequest request)
+    public HypnosisHandler(FriendsListService friends, LogService log, NetworkService network, PauseService pause, HypnosisManager hypnosis) : base(friends, log, pause)
     {
-        Plugin.Log.Info($"{request}");
+        _log = log;
+        _hypnosis = hypnosis;
+        
+        _handler = network.Connection.On<HypnosisForwardedRequest, ActionResult<Unit>>(HubMethod.Hypnosis, Handle);
+    }
+    
+    /// <summary>
+    ///     <inheritdoc cref="HypnosisHandler"/>
+    /// </summary>
+    private async Task<ActionResult<Unit>> Handle(HypnosisForwardedRequest request)
+    {
+        Plugin.Log.Verbose($"{request}");
 
-        // Verify the sender has valid permissions
-        var sender = permissionsCheckerManager.GetSenderAndCheckPermissions(Operation, request.SenderFriendCode, Permissions);
+        var sender = TryGetFriendWithCorrectPermissions(Operation, request.SenderFriendCode, Permissions);
         if (sender.Result is not ActionResultEc.Success)
             return ActionResultBuilder.Fail(sender.Result);
         
-        // Verify the sender actually sent real data
         if (sender.Value is not { } friend)
             return ActionResultBuilder.Fail(ActionResultEc.ValueNotSet);
         
         // If you're already being hypnotized
-        if (hypnosisManager.IsBeingHypnotized)
+        if (_hypnosis.IsBeingHypnotized)
         {
             // If the sender is the one who initiated it
-            if (hypnosisManager.Hypnotist?.FriendCode == request.SenderFriendCode)
+            if (_hypnosis.Hypnotist?.FriendCode == request.SenderFriendCode)
             {
                 // Do nothing
             }
             else
             {
                 // Bounce their request
-                logService.Custom($"Rejected hypnosis spiral from {friend.NoteOrFriendCode} because you're already being hypnotized");
+                _log.Custom($"Rejected hypnosis spiral from {friend.NoteOrFriendCode} because you're already being hypnotized");
                 return ActionResultBuilder.Fail(ActionResultEc.ClientBeingHypnotized);
             }
         }
         
         // Begin the hypnosis
-        await hypnosisManager.Hypnotize(friend, request.Data);
+        await _hypnosis.Hypnotize(friend, request.Data);
         
         // Log
-        logService.Custom($"{friend.NoteOrFriendCode} began to hypnotize you");
+        _log.Custom($"{friend.NoteOrFriendCode} began to hypnotize you");
         return ActionResultBuilder.Ok();
+    }
+
+    public void Dispose()
+    {
+        _handler.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

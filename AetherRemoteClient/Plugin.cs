@@ -108,7 +108,6 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<HypnosisManager>();
         services.AddSingleton<LoginManager>();
         services.AddSingleton<PermanentTransformationHandler>();
-        services.AddSingleton<PermissionsCheckerManager>();
         services.AddSingleton<SelectionManager>();
         
         // Handlers
@@ -127,7 +126,6 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<TransformHandler>();
         services.AddSingleton<TwinningHandler>();
         services.AddSingleton<CustomizePlusHandler>();
-        services.AddSingleton<NetworkHandler>(); // Aggregate handler
         
         // Ui - Component Controllers
         services.AddSingleton<FriendsListComponentUiController>();
@@ -179,7 +177,7 @@ public sealed class Plugin : IDalamudPlugin
         _services.GetRequiredService<WindowManager>();
         
         // Ui - Controllers
-        _services.GetRequiredService<LoginViewUiController>();
+        _services.GetRequiredService<LoginViewUiController>();              // Required to display secret once character configuration loads
         _services.GetRequiredService<MoodlesViewUiController>();            // Required to display UI elements when IPCs are loaded
         _services.GetRequiredService<TransformationViewUiController>();     // Required to display UI elements when IPCs are loaded
         _services.GetRequiredService<CustomizePlusViewUiController>();      // Required to display UI elements when IPCs are loaded
@@ -187,7 +185,19 @@ public sealed class Plugin : IDalamudPlugin
         // Handlers
         _services.GetRequiredService<ChatCommandHandler>();
         _services.GetRequiredService<GlamourerEventHandler>();
-        _services.GetRequiredService<NetworkHandler>();
+        
+        // Handlers Network
+        _services.GetRequiredService<BodySwapHandler>();
+        _services.GetRequiredService<EmoteHandler>();
+        _services.GetRequiredService<HypnosisHandler>();
+        _services.GetRequiredService<HypnosisStopHandler>();
+        _services.GetRequiredService<MoodlesHandler>();
+        _services.GetRequiredService<SpeakHandler>();
+        _services.GetRequiredService<SyncOnlineStatusHandler>();
+        _services.GetRequiredService<SyncPermissionsHandler>();
+        _services.GetRequiredService<TransformHandler>();
+        _services.GetRequiredService<TwinningHandler>();
+        _services.GetRequiredService<CustomizePlusHandler>();
         
         // Managers
         _services.GetRequiredService<DependencyManager>();
