@@ -5,6 +5,7 @@ using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.NavigationBar;
 using AetherRemoteClient.UI.Views.BodySwap;
 using AetherRemoteClient.UI.Views.CustomizePlus;
+using AetherRemoteClient.UI.Views.Debug;
 using AetherRemoteClient.UI.Views.Emote;
 using AetherRemoteClient.UI.Views.Friends;
 using AetherRemoteClient.UI.Views.History;
@@ -36,6 +37,7 @@ public class MainWindow : Window
     // Views
     private readonly BodySwapViewUi _bodySwapView;
     private readonly CustomizePlusViewUi _customizePlusView;
+    private readonly DebugViewUi _debugView;
     private readonly EmoteViewUi _emoteView;
     private readonly FriendsViewUi _friendsView;
     private readonly HistoryViewUi _historyView;
@@ -54,6 +56,7 @@ public class MainWindow : Window
         NavigationBarComponentUi navigationBarComponentUi,
         BodySwapViewUi bodySwapView,
         CustomizePlusViewUi customizePlusView,
+        DebugViewUi debugView,
         EmoteViewUi emoteView,
         FriendsViewUi friendsView,
         HistoryViewUi historyView,
@@ -79,6 +82,7 @@ public class MainWindow : Window
 
         _bodySwapView = bodySwapView;
         _customizePlusView = customizePlusView;
+        _debugView = debugView;
         _emoteView = emoteView;
         _friendsView = friendsView;
         _historyView = historyView;
@@ -103,6 +107,7 @@ public class MainWindow : Window
         {
             View.BodySwap => _bodySwapView,
             View.CustomizePlus => _customizePlusView,
+            View.Debug => _debugView,
             View.Emote => _emoteView,
             View.Friends => _friendsView,
             View.History => _historyView,

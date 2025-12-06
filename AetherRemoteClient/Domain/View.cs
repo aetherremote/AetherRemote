@@ -7,6 +7,7 @@ public enum View
 {
     BodySwap,
     CustomizePlus,
+    Debug,
     Emote,
     Friends,
     History,

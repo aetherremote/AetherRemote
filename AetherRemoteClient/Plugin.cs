@@ -15,6 +15,7 @@ using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.UI.Components.NavigationBar;
 using AetherRemoteClient.UI.Views.BodySwap;
 using AetherRemoteClient.UI.Views.CustomizePlus;
+using AetherRemoteClient.UI.Views.Debug;
 using AetherRemoteClient.UI.Views.Emote;
 using AetherRemoteClient.UI.Views.Friends;
 using AetherRemoteClient.UI.Views.History;
@@ -138,6 +139,7 @@ public sealed class Plugin : IDalamudPlugin
         // Ui - View Controllers
         services.AddSingleton<BodySwapViewUiController>();
         services.AddSingleton<CustomizePlusViewUiController>();
+        services.AddSingleton<DebugViewUiController>();
         services.AddSingleton<EmoteViewUiController>();
         services.AddSingleton<FriendsViewUiController>();
         services.AddSingleton<HistoryViewUiController>();
@@ -154,6 +156,7 @@ public sealed class Plugin : IDalamudPlugin
         // Ui - Views
         services.AddSingleton<BodySwapViewUi>();
         services.AddSingleton<CustomizePlusViewUi>();
+        services.AddSingleton<DebugViewUi>();
         services.AddSingleton<EmoteViewUi>();
         services.AddSingleton<FriendsViewUi>();
         services.AddSingleton<HistoryViewUi>();

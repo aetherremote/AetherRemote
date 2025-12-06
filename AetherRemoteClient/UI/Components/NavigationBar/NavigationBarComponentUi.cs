@@ -57,6 +57,11 @@ public class NavigationBarComponentUi(NetworkService networkService, ViewService
             }
 
             NavBarButton(FontAwesomeIcon.Wrench, "Settings", View.Settings, size, offset, spacing);
+            
+#if DEBUG
+            ImGui.TextUnformatted("Testing");
+            NavBarButton(FontAwesomeIcon.Bug, "Debug", View.Debug, size, offset, spacing);
+#endif
 
             ImGui.PopStyleVar();
             ImGui.EndChild();

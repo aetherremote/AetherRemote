@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Reflection;
 using AetherRemoteClient.Dependencies.CustomizePlus.Reflection.Domain;
+using AetherRemoteClient.Dependencies.CustomizePlus.Reflection.Domain.Containers;
+using Newtonsoft.Json;
 
 namespace AetherRemoteClient.Dependencies.CustomizePlus.Reflection.Managers;
 
@@ -12,53 +14,35 @@ public class ProfileManager
 {
     // Const
     private const string TemporaryProfileName = "AetherRemoteTemporaryProfile";
-    private const int Priority = int.MaxValue - 32; // Give other plugins the opportunity to override if needed
+    private const int TemporaryProfilePriority = int.MaxValue - 32; // Give other plugins the opportunity to override if needed
     private const BindingFlags PublicInstance = BindingFlags.Public | BindingFlags.Instance;
+    private const BindingFlags PublicStatic = BindingFlags.Public | BindingFlags.Static;
+    private static readonly JsonSerializerSettings SerializerSettings = new() { DefaultValueHandling = DefaultValueHandling.Ignore };
     
     // Profile Manager
     private readonly object _profileManager;
     private readonly ActorManager _actorManager;
-    private readonly MethodInfo _addCharacter;
-    private readonly MethodInfo _addTemplate;
-    private readonly MethodInfo _createProfile;
-    private readonly MethodInfo _deleteProfile;
-    private readonly MethodInfo _setEnabled;
-    private readonly MethodInfo _setPriority;
     private readonly FieldInfo _profiles;
-    private readonly PropertyInfo _profileName;
+    private readonly IpcCharacterProfileContainer _ipcCharacterProfileContainer;
+    private readonly ProfileContainer _profileContainer;
+    private readonly ProfileManagerContainer _profileManagerContainer;
     
     /// <summary>
     ///     <inheritdoc cref="ProfileManager"/>
     /// </summary>
-    private ProfileManager(
-        object profileManager,
-        ActorManager actorManager,
-        MethodInfo addCharacter,
-        MethodInfo addTemplate,
-        MethodInfo createProfile,
-        MethodInfo deleteProfile,
-        MethodInfo setEnabled,
-        MethodInfo setPriority,
-        FieldInfo profiles,
-        PropertyInfo profileName)
+    private ProfileManager(object profileManager, ActorManager actorManager, FieldInfo profiles, IpcCharacterProfileContainer ipcCharacterProfileContainer, ProfileContainer profileContainer, ProfileManagerContainer profileManagerContainer)
     {
         // Objects
         _profileManager = profileManager;
         _actorManager = actorManager;
         
-        // Methods
-        _addCharacter = addCharacter;
-        _addTemplate = addTemplate;
-        _createProfile = createProfile;
-        _deleteProfile = deleteProfile;
-        _setEnabled = setEnabled;
-        _setPriority = setPriority;
-        
         // Fields
         _profiles = profiles;
         
-        // Properties
-        _profileName = profileName;
+        // Containers
+        _ipcCharacterProfileContainer = ipcCharacterProfileContainer;
+        _profileContainer = profileContainer;
+        _profileManagerContainer = profileManagerContainer;
     }
 
     /// <summary>
@@ -68,7 +52,7 @@ public class ProfileManager
     {
         try
         {
-            return _createProfile.Invoke(_profileManager, [TemporaryProfileName, true]) is { } profile
+            return _profileManagerContainer.Create.Invoke(_profileManager, [TemporaryProfileName, true]) is { } profile
                 ? new CustomizePlusProfile(profile)
                 : null;
         }
@@ -90,7 +74,7 @@ public class ProfileManager
             if (_actorManager.GetCurrentPlayer() is not { } localCurrentPlayer)
                 return false;
 
-            _addCharacter.Invoke(_profileManager, [customizePlusProfile.Value, localCurrentPlayer]);
+            _profileManagerContainer.AddCharacter.Invoke(_profileManager, [customizePlusProfile.Value, localCurrentPlayer]);
             return true;
         }
         catch (Exception e)
@@ -109,7 +93,7 @@ public class ProfileManager
     {
         try
         {
-            _addTemplate.Invoke(_profileManager, [customizePlusProfile.Value, customizePlusTemplate.Value]);
+            _profileManagerContainer.AddTemplate.Invoke(_profileManager, [customizePlusProfile.Value, customizePlusTemplate.Value]);
             return true;
         }
         catch (Exception e)
@@ -120,14 +104,14 @@ public class ProfileManager
     }
 
     /// <summary>
-    ///     Sets the priority of the provided profile to <see cref="Priority"/>, which is 2,147,483,615
+    ///     Sets the priority of the provided profile to <see cref="TemporaryProfilePriority"/>, which is 2,147,483,615
     /// </summary>
     /// <param name="customizePlusProfile">Reflected profile retrieved from <see cref="CreateProfile"/></param>
     public bool SetPriority(CustomizePlusProfile customizePlusProfile)
     {
         try
         {
-            _setPriority.Invoke(_profileManager, [customizePlusProfile.Value, Priority]);
+            _profileManagerContainer.SetPriority.Invoke(_profileManager, [customizePlusProfile.Value, TemporaryProfilePriority]);
             return true;
         }
         catch (Exception e)
@@ -145,7 +129,7 @@ public class ProfileManager
     {
         try
         {
-            _setEnabled.Invoke(_profileManager, [customizePlusProfile.Value, true, false]);
+            _profileManagerContainer.SetEnabled.Invoke(_profileManager, [customizePlusProfile.Value, true, false]);
             return true;
         }
         catch (Exception e)
@@ -165,7 +149,7 @@ public class ProfileManager
             if (TryGetTemporaryProfile() is not { } profile)
                 return true; // Exit gracefully
         
-            _deleteProfile.Invoke(_profileManager, [profile.Value]);
+            _profileManagerContainer.Delete.Invoke(_profileManager, [profile.Value]);
             return true;
         }
         catch (Exception e)
@@ -185,7 +169,7 @@ public class ProfileManager
 
         foreach (var profile in profiles)
         {
-            if (_profileName.GetValue(profile)?.ToString() is not { } name)
+            if (_profileContainer.Name.GetValue(profile)?.ToString() is not { } name)
                 continue;
             
             if (name == TemporaryProfileName)
@@ -193,6 +177,74 @@ public class ProfileManager
         }
 
         return null;
+    }
+    
+    /// <summary>
+    ///     Attempts to get the active profile on a provided character
+    /// </summary>
+    /// <param name="characterNameToSearchFor"></param>
+    /// <returns>The JSON template data, same as if called via GetProfileIpc</returns>
+    public string? TryGetActiveProfileOnCharacter(string characterNameToSearchFor)
+    {
+        if (_profiles.GetValue(_profileManager) is not IEnumerable profiles)
+            return null;
+
+        var highestPriority = -1;
+        object? highestPriorityProfile = null;
+        foreach (var profile in profiles)
+        {
+            // Check Enabled
+            if (_profileContainer.Enabled.GetValue(profile) is false or null)
+                continue;
+            
+            // Check Character
+            if (_profileContainer.Characters.GetValue(profile) is not IEnumerable characters)
+                continue;
+
+            // Check to see if the character is one we care about
+            var containsCharacter = false;
+            foreach (var character in characters)
+            {
+                // Returns a string that looks like "First Last (World)"
+                if (character?.ToString()?.Contains(characterNameToSearchFor) is null or false)
+                    continue;
+
+                containsCharacter = true;
+                break;
+            }
+
+            if (containsCharacter is false)
+                continue;
+
+            // Check Priority
+            if (_profileContainer.Priority.GetValue(profile) is not int priority)
+                continue;
+
+            if (priority <= highestPriority)
+                continue;
+            
+            // Set the current highest profile
+            highestPriority = priority;
+            highestPriorityProfile = profile;
+        }
+
+        // If we didn't find anything, just send an empty string to signify that it didn't fail, but the other person doesn't have a customize profile for this character
+        if (highestPriorityProfile is null)
+            return string.Empty;
+
+        // Try to convert the profile into an ipc character profile
+        if (_ipcCharacterProfileContainer.FromFullProfile.Invoke(null, [highestPriorityProfile]) is not { } ipcCharacterProfile)
+            return null;
+
+        try
+        {
+            return JsonConvert.SerializeObject(ipcCharacterProfile, SerializerSettings);
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Warning($"[ProfileManager.TryGetActiveProfileOnCharacter] An error occurred, {e}");
+            return null;
+        }
     }
 
     /// <summary>
@@ -227,15 +279,22 @@ public class ProfileManager
             
             // Get Manager Types
             var managerType = profileManager.GetType();
-            if (pluginType.Assembly.GetType("CustomizePlus.Profiles.Data.Profile") is not { } profileType)
-                return null;
             
             // Get Manager Fields
-            if (managerType.GetField("Profiles", PublicInstance) is not { } profilesField)
-                return null;
-
-            if (profileType.GetProperty("Name", PublicInstance) is not { } profileNameProperty)
-                return null;
+            if (managerType.GetField("Profiles", PublicInstance) is not { } profilesField) return null;
+            
+            // Get Profile Types
+            if (pluginType.Assembly.GetType("CustomizePlus.Profiles.Data.Profile") is not { } profileType) return null;
+            if (profileType.GetProperty("Name", PublicInstance) is not { } name) return null;
+            if (profileType.GetProperty("Enabled", PublicInstance) is not { } enabled) return null;
+            if (profileType.GetProperty("Priority", PublicInstance) is not { } priority) return null;
+            if (profileType.GetProperty("Characters", PublicInstance) is not { } characters) return null;
+            var profileContainer = new ProfileContainer(name, enabled, priority, characters);
+            
+            // Get IPCCharacterProfile Types
+            if (pluginType.Assembly.GetType("CustomizePlus.Api.Data.IPCCharacterProfile") is not { } ipcCharacterProfileType) return null;
+            if (ipcCharacterProfileType.GetMethod("FromFullProfile", PublicStatic) is not { } fromFullProfile) return null;
+            var ipcCharacterProfileContainer = new IpcCharacterProfileContainer(fromFullProfile);
             
             // Get Manager Methods
             if (managerType.GetMethod("AddCharacter", PublicInstance) is not { } addCharacter) return null;
@@ -244,8 +303,9 @@ public class ProfileManager
             if (managerType.GetMethod("Delete", PublicInstance) is not { } delete) return null;
             if (managerType.GetMethod("SetEnabled", PublicInstance, null, [profileType, typeof(bool), typeof(bool)], null) is not { } setEnabled) return null;
             if (managerType.GetMethod("SetPriority", PublicInstance, null, [profileType, typeof(int)], null) is not { } setPriority) return null;
-
-            return new ProfileManager(profileManager, actorManager, addCharacter, addTemplate, create, delete, setEnabled, setPriority, profilesField, profileNameProperty);
+            var managerContainer = new ProfileManagerContainer(addCharacter, addTemplate, create, delete, setEnabled, setPriority);
+            
+            return new ProfileManager(profileManager, actorManager, profilesField, ipcCharacterProfileContainer, profileContainer, managerContainer);
         }
         catch (Exception e)
         {

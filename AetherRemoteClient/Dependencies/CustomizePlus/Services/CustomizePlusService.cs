@@ -165,49 +165,46 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
             return null;
         }
     }
+    
+    /// <summary>
+    ///     Tries to get the template data for the active profile on a provided character
+    /// </summary>
+    /// <returns>The JSON template data, same as if called via GetProfileIpc</returns>
+    public async Task<string?> TryGetActiveProfileOnCharacter(string characterNameToSearchFor)
+    {
+        return await Plugin.RunOnFrameworkSafely(() => _customizePlusPlugin?.ProfileManager.TryGetActiveProfileOnCharacter(characterNameToSearchFor)).ConfigureAwait(false);
+    } 
 
     /// <summary>
     ///     Apply a CustomizePlus profile to the local player
     /// </summary>
-    /// <param name="json">Profile data, most commonly retrieved from <see cref="GetProfile"/> or via the "Copy Template" button in CustomizePlus UI</param>
-    public async Task<bool> ApplyCustomizeAsync(string json)
+    /// <param name="templateJson">Profile data, most commonly retrieved from <see cref="GetProfile"/> or via the "Copy Template" button in CustomizePlus UI</param>
+    public async Task<bool> ApplyCustomizeAsync(string? templateJson = null)
     {
         if (ApiAvailable is false)
             return false;
-        
-        return await Task.Run(() => ApplyCustomizeOnFrameworkAsync(json)).ConfigureAwait(false);
-    }
 
-    /// <summary>
-    ///     <inheritdoc cref="ApplyCustomizeAsync"/>
-    /// </summary>
-    private async Task<bool> ApplyCustomizeOnFrameworkAsync(string json)
-    {
+        if (_customizePlusPlugin is null)
+            return false;
+
         return await Plugin.RunOnFramework(() =>
         {
             try
             {
-                if (_customizePlusPlugin?.TemplateManager.DeserializeTemplate(json) is not { } template)
-                    return false;
-            
-                if (_customizePlusPlugin.ProfileManager.DeleteTemporaryProfile() is false)
-                    return false;
+                // Delete previous profile, then create and enable a blank one
+                if (_customizePlusPlugin.ProfileManager.DeleteTemporaryProfile() is false) return false;
+                if (_customizePlusPlugin.ProfileManager.CreateProfile() is not { } profile) return false;
+                if (_customizePlusPlugin.ProfileManager.AddCharacter(profile) is false) return false;
+                if (_customizePlusPlugin.ProfileManager.SetPriority(profile) is false) return false;
+                if (_customizePlusPlugin.ProfileManager.SetEnabled(profile) is false) return false;
 
-                if (_customizePlusPlugin.ProfileManager.CreateProfile() is not { } profile)
-                    return false;
-            
-                if (_customizePlusPlugin.ProfileManager.AddCharacter(profile) is false)
-                    return false;
+                // If template data was not provided, end early
+                if (templateJson is null)
+                    return true;
 
-                if (_customizePlusPlugin.ProfileManager.AddTemplate(profile, template) is false)
-                    return false;
-
-                if (_customizePlusPlugin.ProfileManager.SetPriority(profile) is false)
-                    return false;
-
-                if (_customizePlusPlugin.ProfileManager.SetEnabled(profile) is false)
-                    return false;
-                
+                // Add the template data
+                if (_customizePlusPlugin.TemplateManager.DeserializeTemplate(templateJson) is not { } template) return false;
+                if (_customizePlusPlugin.ProfileManager.AddTemplate(profile, template) is false) return false;
                 return true;
             }
             catch (Exception e)
@@ -225,16 +222,8 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
     {
         if (ApiAvailable is false)
             return false;
-        
-        return await Task.Run(DeleteTemporaryCustomizeOnFrameworkAsync).ConfigureAwait(false);
-    }
 
-    /// <summary>
-    ///     <inheritdoc cref="DeleteTemporaryCustomizeAsync"/>
-    /// </summary>
-    private async Task<bool> DeleteTemporaryCustomizeOnFrameworkAsync()
-    {
-        return await Plugin.RunOnFramework(() => _customizePlusPlugin?.ProfileManager.DeleteTemporaryProfile() ?? false).ConfigureAwait(false);
+        return await Plugin.RunOnFrameworkSafely(() => _customizePlusPlugin?.ProfileManager.DeleteTemporaryProfile() ?? false).ConfigureAwait(false);
     }
 
     public async void Dispose()

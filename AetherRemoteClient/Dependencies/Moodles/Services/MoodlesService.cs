@@ -83,8 +83,6 @@ public class MoodlesService : IExternalPlugin
         
         // Invoke Api
         var version = await Plugin.RunOnFrameworkSafely(() => _version.InvokeFunc()).ConfigureAwait(false);
-
-        Plugin.Log.Warning($"Expected {ExpectedMajor} but was {version}");
         
         // Test for proper versioning
         if (version < ExpectedMajor)
