@@ -55,6 +55,9 @@ public class FriendsListComponentUiController : IDisposable
         if (FriendCodeToAdd == string.Empty)
             return;
 
+        // Remove spaces in the beginning or end
+        FriendCodeToAdd = FriendCodeToAdd.Trim();
+
         if (_friendsListService.Contains(FriendCodeToAdd))
         {
             NotificationHelper.Warning("Friend Already Exists", "Unable to add friend because friend already exists");

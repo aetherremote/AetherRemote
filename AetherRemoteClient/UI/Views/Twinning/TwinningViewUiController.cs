@@ -36,6 +36,9 @@ public class TwinningViewUiController(NetworkService network, SelectionManager s
             // Get the local player name
             if (Plugin.ObjectTable.LocalPlayer?.Name.TextValue is not { } playerName)
                 return;
+            
+            // Feedback Notification
+            NotificationHelper.Info("Initiating twinning, this will take a moment", string.Empty);
 
             // Create the request
             var request = new TwinningRequest(selection.GetSelectedFriendCodes(), playerName, attributes, null);

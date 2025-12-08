@@ -62,6 +62,9 @@ public class BodySwapViewUiController(
     {
         try
         {
+            // Feedback Notification
+            NotificationHelper.Info("Initiating body swap, this will take a moment", string.Empty);
+            
             // Invoke on the server
             var response = await networkService.InvokeAsync<BodySwapResponse>(HubMethod.BodySwap, request);
             if (response.Result is not ActionResponseEc.Success)
