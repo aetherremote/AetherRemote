@@ -1,6 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.Input;
@@ -12,83 +10,62 @@ using AetherRemoteCommon.Domain.Network.Twinning;
 
 namespace AetherRemoteClient.UI.Views.Twinning;
 
-public class TwinningViewUiController(NetworkService networkService, SelectionManager selectionManager)
+public class TwinningViewUiController(NetworkService network, SelectionManager selection)
 {
+    // Swap Parameters
     public bool SwapMods;
     public bool SwapMoodles;
     public bool SwapCustomizePlus;
+    
+    // Permanent Swappies
     public bool PermanentTransformation = false;
     public readonly FourDigitInput PinInput = new("TransformationInput");
 
     /// <summary>
-    ///     Used to determine if all selected friends have permissions
+    ///     Initiate a twinning request
     /// </summary>
-    public PrimaryPermissions2 SelectedAttributesPermissions = PrimaryPermissions2.Twinning;
-
     public async void Twin()
     {
         try
         {
-            if (Plugin.ObjectTable.LocalPlayer is not { } player)
+            var attributes = CharacterAttributes.None;
+            if (SwapMods) attributes |= CharacterAttributes.Mods;
+            if (SwapMoodles) attributes |= CharacterAttributes.Moodles;
+            if (SwapCustomizePlus) attributes |= CharacterAttributes.CustomizePlus;
+            
+            // Get the local player name
+            if (Plugin.ObjectTable.LocalPlayer?.Name.TextValue is not { } playerName)
                 return;
 
-            var attributes = CharacterAttributes.None;
-            if (SwapMods)
-                attributes |= CharacterAttributes.Mods;
-            if (SwapMoodles)
-                attributes |= CharacterAttributes.Moodles;
-            if (SwapCustomizePlus)
-                attributes |= CharacterAttributes.CustomizePlus;
+            // Create the request
+            var request = new TwinningRequest(selection.GetSelectedFriendCodes(), playerName, attributes, null);
             
-            var request = new TwinningRequest
-            {
-                TargetFriendCodes = selectionManager.GetSelectedFriendCodes(),
-                SwapAttributes = attributes,
-                CharacterName = player.Name.ToString()
-            };
+            // Invoke on the server
+            var response = await network.InvokeAsync<ActionResponse>(HubMethod.Twinning, request);
             
-            if (PermanentTransformation)
-            {
-                var pin = PinInput.Value;
-                if (pin.Length is 4)
-                {
-                    request.LockCode = pin;
-                }
-                else
-                {
-                    Plugin.Log.Warning("[TwinningViewUiController] Pin is not 4 characters");
-                    return;
-                }
-            }
-
-            var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.Twinning, request);
+            // Process the results
             ActionResponseParser.Parse("Twinning", response);
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            Plugin.Log.Warning($"Unable to twin, {e.Message}");
+            // Ignored
         }
-    }
-    
-    public bool AllSelectedTargetsHaveElevatedPermissions()
-    {
-        return selectionManager.Selected.All(friend =>
-            (friend.PermissionsGrantedByFriend.Elevated & ElevatedPermissions.PermanentTransformation) ==
-            ElevatedPermissions.PermanentTransformation);
     }
     
     /// <summary>
     ///     Used by the UI to determine the friends who are currently selected that you do not have permissions for
     /// </summary>
-    public List<string> GetFriendsLackingPermissions()
+    public bool MissingPermissionsForATarget()
     {
-        var thoseWhoYouLackPermissionsFor = new List<string>();
-        foreach (var selected in selectionManager.Selected)
-        {
-            if ((selected.PermissionsGrantedByFriend.Primary & SelectedAttributesPermissions) != SelectedAttributesPermissions)
-                thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
-        }
+        var attributes = PrimaryPermissions2.Twinning;
+        if (SwapMods) attributes |= PrimaryPermissions2.Mods;
+        if (SwapMoodles) attributes |= PrimaryPermissions2.Moodles;
+        if (SwapCustomizePlus) attributes |= PrimaryPermissions2.CustomizePlus;
         
-        return thoseWhoYouLackPermissionsFor;
+        foreach (var friend in selection.Selected)
+            if ((friend.PermissionsGrantedByFriend.Primary & attributes) != attributes)
+                return true;
+
+        return false;
     }
 }

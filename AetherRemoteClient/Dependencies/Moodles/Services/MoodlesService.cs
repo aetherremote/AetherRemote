@@ -66,9 +66,8 @@ public class MoodlesService : IExternalPlugin
     {
         _version = Plugin.PluginInterface.GetIpcSubscriber<int>("Moodles.Version");
         
-        _getStatusManager = Plugin.PluginInterface.GetIpcSubscriber<nint, string>("Moodles.GetStatusManagerByPtr");
-        _setStatusManager = Plugin.PluginInterface.GetIpcSubscriber<nint, string, object>("Moodles.SetStatusManagerByPtr");
-        
+        _getStatusManager = Plugin.PluginInterface.GetIpcSubscriber<nint, string>("Moodles.GetStatusManagerByPtrV2");
+        _setStatusManager = Plugin.PluginInterface.GetIpcSubscriber<nint, string, object>("Moodles.SetStatusManagerByPtrV2");
         _listMoodles = Plugin.PluginInterface.GetIpcSubscriber<List<MoodlesStatusInfo>>("Moodles.GetStatusInfoListV2");
         _applyMoodle = Plugin.PluginInterface.GetIpcProvider<MoodlesStatusInfo, object?>("GagSpeak.ApplyStatusInfo");
     }

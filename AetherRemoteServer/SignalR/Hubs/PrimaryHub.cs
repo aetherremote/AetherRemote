@@ -59,7 +59,6 @@ public class PrimaryHub(
     public async Task<ActionResponse> BodySwap(BodySwapRequest request)
     {
         logger.LogInformation("{Request}", request);
-        return new BodySwapResponse(ActionResponseEc.Disabled);
         return await bodySwapHandler.Handle(FriendCode, request, Clients);
     }
 
@@ -113,7 +112,6 @@ public class PrimaryHub(
     public async Task<ActionResponse> Twinning(TwinningRequest request)
     {
         logger.LogInformation("{Request}", request);
-        return new ActionResponse(ActionResponseEc.Disabled);
         return await twinningHandler.Handle(FriendCode, request, Clients);
     }
 

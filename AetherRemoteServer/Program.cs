@@ -70,7 +70,7 @@ public class Program
         builder.WebHost.ConfigureKestrel(options =>
         {
             var ip = IPAddress.Parse("192.168.1.14");
-            options.Listen(ip, 5007, listenOptions =>
+            options.Listen(ip, 5017, listenOptions =>
             {
                 listenOptions.UseHttps($"{configuration.CertificatePath}", $"{configuration.CertificatePasswordPath}");
             });

@@ -166,19 +166,14 @@ public class FriendsViewUi(
                 ImGui.Checkbox("Customization", ref controller.EditingUserPermissions.Customization);
                 ImGui.TableNextColumn();
                 ImGui.Checkbox("Equipment", ref controller.EditingUserPermissions.Equipment);
-                
-                /*
                 ImGui.TableNextColumn();
                 ImGui.Checkbox("Mods", ref controller.EditingUserPermissions.Mods);
                 ImGui.TableNextColumn();
                 ImGui.Checkbox("Body Swap", ref controller.EditingUserPermissions.BodySwap);
                 ImGui.TableNextColumn();
                 ImGui.Checkbox("Twinning", ref controller.EditingUserPermissions.Twinning);
-                */
-                
                 ImGui.TableNextColumn();
                 ImGui.Checkbox("Moodles", ref controller.EditingUserPermissions.Moodles);
-                
                 ImGui.TableNextColumn();
                 ImGui.Checkbox("Customize+", ref controller.EditingUserPermissions.CustomizePlus);
                 

@@ -24,7 +24,7 @@ public class NavigationBarComponentUi(NetworkService networkService, ViewService
         ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, AetherRemoteStyle.Rounding);
         ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, AetherRemoteStyle.Rounding);
 
-        if (ImGui.BeginChild("###MainWindowNavBar", AetherRemoteStyle.NavBarDimensions, true))
+        if (ImGui.BeginChild("###MainWindowNavBar", AetherRemoteStyle.NavBarDimensions, true, ImGuiWindowFlags.NoScrollbar))
         {
             ImGui.PushStyleVar(ImGuiStyleVar.ButtonTextAlign, AlignButtonTextLeft);
 
@@ -35,16 +35,16 @@ public class NavigationBarComponentUi(NetworkService networkService, ViewService
                 NavBarButton(FontAwesomeIcon.UserFriends, "Friends", View.Friends, size, offset, spacing);
                 NavBarButton(FontAwesomeIcon.Pause, "Pause", View.Pause, size, offset, spacing);
 
-                ImGui.TextUnformatted("Control");
-                NavBarButton(FontAwesomeIcon.Comments, "Speak", View.Speak, size, offset, spacing);
-                NavBarButton(FontAwesomeIcon.Smile, "Emote", View.Emote, size, offset, spacing);
-                NavBarButton(FontAwesomeIcon.WandMagicSparkles, "Transformation", View.Transformation, size, offset, spacing);
-                // NavBarButton(FontAwesomeIcon.PeopleArrows, "Body Swap", View.BodySwap, size, offset, spacing);
-                // NavBarButton(FontAwesomeIcon.PeopleGroup, "Twinning", View.Twinning, size, offset, spacing);
-                NavBarButton(FontAwesomeIcon.Icons, "Moodles", View.Moodles, size, offset, spacing);
+                ImGui.TextUnformatted("Actions");
+                NavBarButton(FontAwesomeIcon.PeopleArrows, "Body Swap", View.BodySwap, size, offset, spacing);
                 NavBarButton(FontAwesomeIcon.Plus, "Customize+", View.CustomizePlus, size, offset, spacing);
+                NavBarButton(FontAwesomeIcon.Smile, "Emote", View.Emote, size, offset, spacing);
                 NavBarButton(FontAwesomeIcon.Stopwatch, "Hypnosis", View.Hypnosis, size, offset, spacing);
-
+                NavBarButton(FontAwesomeIcon.Icons, "Moodles", View.Moodles, size, offset, spacing);
+                NavBarButton(FontAwesomeIcon.Comments, "Speak", View.Speak, size, offset, spacing);
+                NavBarButton(FontAwesomeIcon.WandMagicSparkles, "Transformation", View.Transformation, size, offset, spacing);
+                NavBarButton(FontAwesomeIcon.PeopleGroup, "Twinning", View.Twinning, size, offset, spacing);
+                
                 ImGui.TextUnformatted("Configuration");
                 NavBarButton(FontAwesomeIcon.History, "History", View.History, size, offset, spacing);
             }
@@ -59,8 +59,8 @@ public class NavigationBarComponentUi(NetworkService networkService, ViewService
             NavBarButton(FontAwesomeIcon.Wrench, "Settings", View.Settings, size, offset, spacing);
             
 #if DEBUG
-            ImGui.TextUnformatted("Testing");
-            NavBarButton(FontAwesomeIcon.Bug, "Debug", View.Debug, size, offset, spacing);
+            // ImGui.TextUnformatted("Testing");
+            // NavBarButton(FontAwesomeIcon.Bug, "Debug", View.Debug, size, offset, spacing);
 #endif
 
             ImGui.PopStyleVar();

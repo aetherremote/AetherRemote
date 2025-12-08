@@ -4,7 +4,7 @@
     <PropertyGroup>
         <Authors>Mora</Authors>
         <Company>Mora-XIV</Company>
-        <Version>2.8.3.6</Version>
+        <Version>2.8.4.0</Version>
         <Description>XIV Plugin</Description>
         <Copyright>(C)Mora 2024 - 25</Copyright>
         <PackageProjectUrl>https://github.com/aetherremote/AetherRemote</PackageProjectUrl>

@@ -13,10 +13,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 /// <summary>
 ///     Handles the logic for fulfilling a <see cref="BodySwapRequest"/>
 /// </summary>
-public class BodySwapHandler(
-    IConnectionsService connections,
-    IDatabaseService database,
-    ILogger<BodySwapHandler> logger)
+public class BodySwapHandler(IConnectionsService connections, IDatabaseService database, ILogger<BodySwapHandler> logger)
 {
     /// <summary>
     ///     Handles the request
@@ -34,21 +31,31 @@ public class BodySwapHandler(
             logger.LogWarning("{Sender} exceeded request limit", sender);
             return new BodySwapResponse(ActionResponseEc.TooManyRequests);
         }
-
+        
         var targets = request.TargetFriendCodes;
-        switch (targets.Count)
+        
+        // This function does not function if the sender includes themselves in the target
+        foreach (var target in targets)
         {
-            case 0 when request.SenderCharacterName is null:
-                logger.LogWarning("{Friend} tried to swap with no targets", sender);
-                return new BodySwapResponse(ActionResponseEc.TooFewTargets);
-
-            case 0:
-                logger.LogWarning("{Friend} tried to swap bodies with themself", sender);
-                return new BodySwapResponse(ActionResponseEc.TooFewTargets);
-
-            case 1 when request.SenderCharacterName is null:
-                logger.LogWarning("{Friend} tried to swap bodies with only one target", sender);
-                return new BodySwapResponse(ActionResponseEc.TooFewTargets);
+            if (target == sender)
+            {
+                logger.LogWarning("{Sender} tried to include themselves in the body swap targets", sender);
+                return new BodySwapResponse(ActionResponseEc.UnexpectedState);
+            }
+        }
+        
+        // Cannot be zero targets no matter what
+        if (targets.Count is 0)
+        {
+            logger.LogWarning("{Sender} tried to swap bodies with only one target", sender);
+            return new BodySwapResponse(ActionResponseEc.TooFewTargets);
+        }
+        
+        // Needs at least one person
+        if (targets.Count is 1 && request.SenderCharacterName is null)
+        {
+            logger.LogWarning("{Sender} tried to swap bodies with only one target", sender);
+            return new BodySwapResponse(ActionResponseEc.TooFewTargets);
         }
         
         // Convert the swap attributes to primary permissions
@@ -108,8 +115,7 @@ public class BodySwapHandler(
             }
             catch (Exception e)
             {
-                logger.LogWarning("{Issuer} send action to {Target} failed, {Error}", sender, targetFriendCode,
-                    e.Message);
+                logger.LogWarning("{Issuer} send action to {Target} failed, {Error}", sender, targetFriendCode, e.Message);
                 pending[i] = Task.FromResult(ActionResultBuilder.Fail(ActionResultEc.Unknown));
             }
         }

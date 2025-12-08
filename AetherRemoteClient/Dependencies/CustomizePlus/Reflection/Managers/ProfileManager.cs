@@ -183,7 +183,7 @@ public class ProfileManager
     ///     Attempts to get the active profile on a provided character
     /// </summary>
     /// <param name="characterNameToSearchFor"></param>
-    /// <returns>The JSON template data, same as if called via GetProfileIpc</returns>
+    /// <returns>The JSON template data if a profile was found, empty string is no profiles set, or null for any failures</returns>
     public string? TryGetActiveProfileOnCharacter(string characterNameToSearchFor)
     {
         if (_profiles.GetValue(_profileManager) is not IEnumerable profiles)

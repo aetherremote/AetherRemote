@@ -4,121 +4,146 @@ using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
-using AetherRemoteCommon.Domain.Enums.Permissions;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Colors;
 
 namespace AetherRemoteClient.UI.Views.Twinning;
 
-public class TwinningViewUi(
-    FriendsListComponentUi friendsList,
-    TwinningViewUiController controller,
-    CommandLockoutService commandLockoutService,
-    SelectionManager selectionManager): IDrawable
+public class TwinningViewUi(FriendsListComponentUi friendsList, TwinningViewUiController controller, CommandLockoutService commandLockout, SelectionManager selection): IDrawable
 {
+    // Const
+    private const int InitiateTwinningButtonHeight = 40;
+    private const string TutorialText = "This feature requires you to be using a syncing service with your targets, as well as be within rendering distance. You can undo the effects of this request by going to the status tab, or reverting yourself to game or automation in glamourer.";
+
+    // Tooltip Text
+    private const string RequiresGlamourer = "Requires Glamourer plugin for you and your targets";
+    private const string RequiresPenumbra = "Requires Penumbra plugin for you and your targets";
+    private const string RequiresMoodles = "Requires Moodles plugin for you and your targets";
+    private const string RequiresCustomize = "Requires Customize plugin for you and your targets";
+    
     public void Draw()
     {
         ImGui.BeginChild("TwinningContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
-        
-        if (selectionManager.Selected.Count is 0)
-        {
-            SharedUserInterfaces.ContentBox("TwinningSelectMoreFriends", AetherRemoteStyle.PanelBackground, true, () =>
-            {
-                SharedUserInterfaces.TextCentered("You must select at least one friend");
-            });
 
-            ImGui.EndChild();
-            ImGui.SameLine();
-            friendsList.Draw();
-            return;
-        }
+        var width = ImGui.GetWindowWidth();
+        var height = ImGui.GetWindowHeight();
+        var padding = ImGui.GetStyle().WindowPadding.X;
         
-        SharedUserInterfaces.ContentBox("TwinningInfo", AetherRemoteStyle.PanelBackground, true, () =>
-        {
-            SharedUserInterfaces.MediumText("Information");
-            ImGui.TextWrapped(
-                "Twinning must be done in rendering distance of your target(s). You can undo a twinning on yourself by going into the 'Status' tab, or reverting your character in glamourer. ");
-        });
+        var size = ImGui.CalcTextSize(TutorialText, false, width - padding * 2f);
         
-        var half = ImGui.GetWindowWidth() * 0.5f;
-        SharedUserInterfaces.ContentBox("TwinningOptions", AetherRemoteStyle.PanelBackground, true, () =>
+        var headerHeight = size.Y + ImGui.GetFontSize() + padding * 3f;
+        var footerHeight = InitiateTwinningButtonHeight + padding * 2f;
+        var contentHeight = height - headerHeight - footerHeight - padding * 2f;
+        
+        if (ImGui.BeginChild("TwinningTutorial", new Vector2(0, headerHeight), true))
         {
-            SharedUserInterfaces.MediumText("Options");
-            if (ImGui.Checkbox("Swap Mods", ref controller.SwapMods))
-                controller.SelectedAttributesPermissions ^= PrimaryPermissions2.Mods;
-            
-            ImGui.SameLine();
-            ImGui.SetCursorPosX(half);
-            if (ImGui.Checkbox("Swap Moodles", ref controller.SwapMoodles))
-                controller.SelectedAttributesPermissions ^= PrimaryPermissions2.Moodles;
-            
+            SharedUserInterfaces.TextCentered("Tutorial");
             ImGui.Spacing();
+            ImGui.TextWrapped(TutorialText);
             
-            if(ImGui.Checkbox("Swap Customize+", ref controller.SwapCustomizePlus))
-                controller.SelectedAttributesPermissions ^= PrimaryPermissions2.CustomizePlus;
-        });
-        
-        var windowWidth = ImGui.GetWindowWidth() * 0.5f; // 0.5 is a minor mathematical optimization
-        if (controller.AllSelectedTargetsHaveElevatedPermissions())
-            SharedUserInterfaces.ContentBox("TransformationElevatedPermissions", AetherRemoteStyle.ElevatedBackground, true, () =>
-            {
-                SharedUserInterfaces.MediumText("Permanent Transformation");
-                ImGui.Checkbox("Enable", ref controller.PermanentTransformation);
-                if (controller.PermanentTransformation is false)
-                    return;
-                
-                ImGui.SameLine(windowWidth);
-                ImGui.SetNextItemWidth(ImGui.GetFontSize() * 4);
-               
-                controller.PinInput.Draw();
-                ImGui.SameLine();
-                SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
-                
-                SharedUserInterfaces.Tooltip(
-                [
-                    "Your targets can use this PIN to unlock their appearance later if you provide it to them",
-                    "They can unlock it from the Status tab or by using the safeword command or safe mode"
-                ]);
-            });
-        
-        var friendsLackingPermissions = controller.GetFriendsLackingPermissions();
-        if (friendsLackingPermissions.Count is not 0)
-        {
-            SharedUserInterfaces.ContentBox("TwinningLackingPermissions", AetherRemoteStyle.PanelBackground, true, () =>
-            {
-                SharedUserInterfaces.MediumText("Lacking Permissions", ImGuiColors.DalamudYellow);
-                ImGui.SameLine();
-                ImGui.AlignTextToFramePadding();
-                SharedUserInterfaces.Icon(FontAwesomeIcon.ExclamationTriangle, ImGuiColors.DalamudYellow);
-                SharedUserInterfaces.Tooltip("Commands send to these people will not be processed");
-                ImGui.TextWrapped(string.Join(", ", friendsLackingPermissions));
-            });
+            ImGui.EndChild();
         }
         
-        SharedUserInterfaces.ContentBox("TwinningSend", AetherRemoteStyle.PanelBackground, false, () =>
+        ImGui.Spacing();
+        
+        if (ImGui.BeginChild("TwinningOptions", new Vector2(0, contentHeight), true))
         {
-            SharedUserInterfaces.MediumText("Twinning");
+            var rowOneButtonWidth = (width - padding * 3) * 0.5f;
+            var rowTwoButtonWidth = (width - padding * 4) * 0.33333f;
+            
+            SharedUserInterfaces.MediumText("Always applied");
+            DrawAttributeButton(FontAwesomeIcon.User, rowOneButtonWidth, "Customization", true, RequiresGlamourer);
+            ImGui.SameLine();
+            DrawAttributeButton(FontAwesomeIcon.Tshirt,rowOneButtonWidth, "Equipment", true, RequiresGlamourer);
 
-            var width = new Vector2(ImGui.GetWindowWidth() - ImGui.GetStyle().WindowPadding.X * 2, 0);
-            if (commandLockoutService.IsLocked)
+            SharedUserInterfaces.MediumText("Extra attributes");
+            if (DrawAttributeButton(FontAwesomeIcon.Wrench, rowTwoButtonWidth, "Mods", controller.SwapMods, RequiresPenumbra))
+                controller.SwapMods = !controller.SwapMods;
+            ImGui.SameLine();
+            if (DrawAttributeButton(FontAwesomeIcon.Icons, rowTwoButtonWidth,"Moodles", controller.SwapMoodles, RequiresMoodles))
+                controller.SwapMoodles = !controller.SwapMoodles;
+            ImGui.SameLine();
+            if (DrawAttributeButton(FontAwesomeIcon.Plus, rowTwoButtonWidth,"Customize+", controller.SwapCustomizePlus, RequiresCustomize))
+                controller.SwapCustomizePlus = !controller.SwapCustomizePlus;
+            
+            ImGui.EndChild();
+        }
+        
+        ImGui.Spacing();
+        
+        if (ImGui.BeginChild("TwinningSend", new Vector2(0, footerHeight), true))
+        {
+            if (selection.Selected.Count is 0)
             {
                 ImGui.BeginDisabled();
-                ImGui.Button("Twin", width);
+                ImGui.Button("You must select at least one friend", new Vector2(ImGui.GetWindowWidth() - padding * 2, InitiateTwinningButtonHeight));
+                ImGui.EndDisabled();
+            }
+            else if (controller.MissingPermissionsForATarget())
+            {
+                ImGui.BeginDisabled();
+                ImGui.Button("You lack permissions for one or more of your targets", new Vector2(ImGui.GetWindowWidth() - padding * 2, InitiateTwinningButtonHeight));
                 ImGui.EndDisabled();
             }
             else
             {
-                if (ImGui.Button("Twin", width) is false)
-                    return;
-                
-                commandLockoutService.Lock();
-                controller.Twin();
+                if (commandLockout.IsLocked)
+                {
+                    ImGui.BeginDisabled();
+                    ImGui.Button("Please wait", new Vector2(ImGui.GetWindowWidth() - padding * 2f, InitiateTwinningButtonHeight));
+                    ImGui.EndDisabled();
+                }
+                else
+                {
+                    if (ImGui.Button("Initiate Twinning", new Vector2(ImGui.GetWindowWidth() - padding * 2f, InitiateTwinningButtonHeight)))
+                        controller.Twin();
+                }
             }
-        });
+            
+            ImGui.EndChild();
+        }
         
         ImGui.EndChild();
         ImGui.SameLine();
         friendsList.Draw();
+    }
+    
+    private static bool DrawAttributeButton(FontAwesomeIcon icon, float width, string text, bool selected, string? tooltip)
+    {
+        var font = ImGui.GetFontSize();
+        var padding = ImGui.GetStyle().WindowPadding.X;
+
+        var size = new Vector2(width, (font + padding) * 2f);
+        var label = "\n" + text;
+        
+        ImGui.BeginGroup();
+        
+        bool pressed;
+        if (selected)
+        {
+            ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteStyle.PrimaryColor);
+            pressed = ImGui.Button(label, size);
+            ImGui.PopStyleColor();
+        }
+        else
+        {
+            pressed = ImGui.Button(label, size);
+        }
+
+        var iconRect = ImGui.GetItemRectMin();
+        iconRect.X += (width - font) * 0.5f;
+        iconRect.Y += padding;
+        
+        ImGui.PushFont(UiBuilder.IconFont);
+        ImGui.SetCursorScreenPos(iconRect);
+        ImGui.TextUnformatted(icon.ToIconString());
+        ImGui.PopFont();
+        
+        ImGui.EndGroup();
+        
+        if (tooltip is not null && ImGui.IsItemHovered())
+            ImGui.SetTooltip(tooltip);
+
+        return pressed;
     }
 }

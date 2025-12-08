@@ -30,7 +30,7 @@ public static class SharedUserInterfaces
     public const int BigFontSize = 38;
     private static IFontHandle? _bigFont;
 
-    private const int MediumFontSize = 24;
+    public const int MediumFontSize = 24;
     private static IFontHandle? _mediumFont;
     
     /// <summary>

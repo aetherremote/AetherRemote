@@ -55,7 +55,7 @@ public static class NotificationHelper
     /// <summary>
     ///     Shorthand to create a warning notification minimized
     /// </summary>
-    public static void Warning(string title, string content, bool minimized = true)
+    public static void Warning(string title, string content, bool minimized = false)
     {
         var notification = new Notification
         {
@@ -80,7 +80,7 @@ public static class NotificationHelper
         {
             Type = NotificationType.Error,
             Icon = INotificationIcon.From(FontAwesomeIcon.ExclamationCircle),
-            Minimized = true,
+            Minimized = false,
             InitialDuration = WarningDuration,
             MinimizedText = title,
             Title = title,

@@ -138,19 +138,14 @@ public class PauseViewUi(
                     BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.GlamourerCustomization);
                     ImGui.TableNextColumn();
                     BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.GlamourerEquipment);
-                    
-                    /*
                     ImGui.TableNextColumn();
                     BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.Mods);
                     ImGui.TableNextColumn();
                     BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.BodySwap);
                     ImGui.TableNextColumn();
                     BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.Twinning);
-                    */
-                    
                     ImGui.TableNextColumn();
                     BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.Moodles);
-                    
                     ImGui.TableNextColumn();
                     BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.CustomizePlus);
                     

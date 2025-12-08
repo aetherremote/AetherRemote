@@ -1,8 +1,5 @@
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using AetherRemoteClient.Domain;
-using AetherRemoteClient.Handlers;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.Input;
@@ -21,119 +18,100 @@ public class BodySwapViewUiController(
     IdentityService identityService,
     NetworkService networkService,
     CharacterTransformationManager characterTransformationManager,
-    SelectionManager selectionManager,
-    PermanentTransformationHandler permanentTransformationHandler)
+    SelectionManager selectionManager)
 {
-    public bool IncludeSelfInSwap;
+    // Swap Parameters
     public bool SwapMods;
     public bool SwapMoodles;
     public bool SwapCustomizePlus;
+    
+    // Permanent Swappies
     public bool PermanentTransformation = false;
     public readonly FourDigitInput PinInput = new("TransformationInput");
-    
-    /// <summary>
-    ///     Used to determine if all selected friends have permissions
-    /// </summary>
-    public PrimaryPermissions2 SelectedAttributesPermissions = PrimaryPermissions2.BodySwap;
 
     /// <summary>
-    ///     Handles the swap button from the Ui
+    ///     Initiates a body swap command
     /// </summary>
-    public async void Swap()
+    public void SwapBodies()
+    {
+        var attributes = CharacterAttributes.None;
+        if (SwapMods) attributes |= CharacterAttributes.Mods;
+        if (SwapMoodles) attributes |= CharacterAttributes.Moodles;
+        if (SwapCustomizePlus) attributes |= CharacterAttributes.CustomizePlus;
+        
+        BodySwap(new BodySwapRequest(selectionManager.GetSelectedFriendCodes(), attributes, null, null));
+    }
+
+    /// <summary>
+    ///     Initiates a body swap command but also with the sender as one of the participants in the body swap
+    /// </summary>
+    public void SwapBodiesIncludingSelf()
+    {
+        var attributes = CharacterAttributes.None;
+        if (SwapMods) attributes |= CharacterAttributes.Mods;
+        if (SwapMoodles) attributes |= CharacterAttributes.Moodles;
+        if (SwapCustomizePlus) attributes |= CharacterAttributes.CustomizePlus;
+
+        if (Plugin.ObjectTable.LocalPlayer?.Name.TextValue is not { } playerName)
+            return;
+        
+        BodySwap(new BodySwapRequest(selectionManager.GetSelectedFriendCodes(), attributes, playerName, null));
+    }
+
+    private async void BodySwap(BodySwapRequest request)
     {
         try
         {
-            if (Plugin.ObjectTable.LocalPlayer is not { } player)
+            // Invoke on the server
+            var response = await networkService.InvokeAsync<BodySwapResponse>(HubMethod.BodySwap, request);
+            if (response.Result is not ActionResponseEc.Success)
+            {
+                ActionResponseParser.Parse("Body Swap", response);
                 return;
-
-            var attributes = CharacterAttributes.None;
-            if (SwapMods)
-                attributes |= CharacterAttributes.Mods;
-            if (SwapMoodles)
-                attributes |= CharacterAttributes.Moodles;
-            if (SwapCustomizePlus)
-                attributes |= CharacterAttributes.CustomizePlus;
+            }
             
-            var request = new BodySwapRequest
+            // If the character we'd be body swapping into was null...
+            if (response.CharacterName is null)
             {
-                TargetFriendCodes = selectionManager.GetSelectedFriendCodes(),
-                SwapAttributes = attributes,
-                SenderCharacterName = IncludeSelfInSwap ? player.Name.ToString() : null
-            };
-            
-            if (PermanentTransformation)
-            {
-                var pin = PinInput.Value;
-                if (pin.Length is 4)
+                // ...but we expected to get back a result by submitting our name in the body swap request...
+                if (request.SenderCharacterName is not null)
                 {
-                    request.LockCode = pin;
-                }
-                else
-                {
-                    Plugin.Log.Warning("[BodySwapViewUiController] Pin is not 4 characters");
+                    // ...exit and log the error
                     return;
                 }
             }
-
-            NotificationHelper.Info("Beginning body swap, this will take a moment", string.Empty);
-
-            var response = await networkService.InvokeAsync<BodySwapResponse>(HubMethod.BodySwap, request);
-            if (response.Result is ActionResponseEc.Success)
+            else
             {
-                if (response.CharacterName is null)
-                {
-                    // We requested to be in the swap
-                    if (request.SenderCharacterName is not null)
-                    {
-                        // Issue
-                        Plugin.Log.Warning("[Body Swap] Expected a body in the response but none was present");
-                    }
-                }
-                else
-                {
-                    // TODO: Error handling
-                    if (request.LockCode is not null)
-                    {
-                        await permanentTransformationHandler.ApplyPermanentCharacterTransformation("You", 
-                            request.LockCode, response.CharacterName, request.SwapAttributes);
-                    }
-                    else
-                    {
-                        await characterTransformationManager.ApplyCharacterTransformation(response.CharacterName, request.SwapAttributes);
-                    }
-                        
-                    // Set your new identity
-                    identityService.AddAlteration(IdentityAlterationType.BodySwap, "You");
-                }
+                // Otherwise just body swap into them
+                await characterTransformationManager.ApplyCharacterTransformation(response.CharacterName, request.SwapAttributes);
+                
+                // Mark us as altered
+                identityService.AddAlteration(IdentityAlterationType.BodySwap, "You");
             }
             
+            // Process the results
             ActionResponseParser.Parse("Body Swap", response);
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            Plugin.Log.Warning($"Unable to swap bodies, {e.Message}");
+            // Ignored
         }
-    }
-    
-    public bool AllSelectedTargetsHaveElevatedPermissions()
-    {
-        return selectionManager.Selected.All(friend =>
-            (friend.PermissionsGrantedByFriend.Elevated & ElevatedPermissions.PermanentTransformation) ==
-            ElevatedPermissions.PermanentTransformation);
     }
     
     /// <summary>
     ///     Used by the UI to determine the friends who are currently selected that you do not have permissions for
     /// </summary>
-    public List<string> GetFriendsLackingPermissions()
+    public bool MissingPermissionsForATarget()
     {
-        var thoseWhoYouLackPermissionsFor = new List<string>();
-        foreach (var selected in selectionManager.Selected)
-        {
-            if ((selected.PermissionsGrantedByFriend.Primary & SelectedAttributesPermissions) != SelectedAttributesPermissions)
-                thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
-        }
+        var attributes = PrimaryPermissions2.BodySwap;
+        if (SwapMods) attributes |= PrimaryPermissions2.Mods;
+        if (SwapMoodles) attributes |= PrimaryPermissions2.Moodles;
+        if (SwapCustomizePlus) attributes |= PrimaryPermissions2.CustomizePlus;
         
-        return thoseWhoYouLackPermissionsFor;
+        foreach (var friend in selectionManager.Selected)
+            if ((friend.PermissionsGrantedByFriend.Primary & attributes) != attributes)
+                return true;
+
+        return false;
     }
 }
