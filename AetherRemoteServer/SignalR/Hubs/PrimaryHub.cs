@@ -48,26 +48,7 @@ public class PrimaryHub(
     /// </summary>
     private string FriendCode => Context.User?.FindFirst(AuthClaimTypes.FriendCode)?.Value ?? throw new Exception("FriendCode not present in claims");
 
-    [HubMethodName(HubMethod.AddFriend)]
-    public async Task<AddFriendResponse> AddFriend(AddFriendRequest request)
-    {
-        // logger.LogInformation("{Request}", request);
-        return await addFriendHandler.Handle(FriendCode, request, Clients);
-    }
-
-    [HubMethodName(HubMethod.BodySwap)]
-    public async Task<ActionResponse> BodySwap(BodySwapRequest request)
-    {
-        logger.LogInformation("{Request}", request);
-        return await bodySwapHandler.Handle(FriendCode, request, Clients);
-    }
-
-    [HubMethodName(HubMethod.Emote)]
-    public async Task<ActionResponse> Emote(EmoteRequest request)
-    {
-        // logger.LogInformation("{Request}", request);
-        return await emoteHandler.Handle(FriendCode, request, Clients);
-    }
+    #region Account Management
 
     [HubMethodName(HubMethod.GetAccountData)]
     public async Task<GetAccountDataResponse> GetAccountData(GetAccountDataRequest request)
@@ -75,33 +56,91 @@ public class PrimaryHub(
         return await getAccountDataHandler.Handle(FriendCode, request);
     }
 
-    [HubMethodName(HubMethod.Moodles)]
-    public async Task<ActionResponse> GetMoodlesAction(MoodlesRequest request)
-    {
-        // return new ActionResponse(ActionResponseEc.Disabled);
-        return await moodlesHandler.Handle(FriendCode, request, Clients);
-    }
+    #endregion
+    
+    #region Friend Management
 
+    [HubMethodName(HubMethod.AddFriend)]
+    public async Task<AddFriendResponse> AddFriend(AddFriendRequest request)
+    {
+        // logger.LogInformation("{Request}", request);
+        return await addFriendHandler.Handle(FriendCode, request, Clients);
+    }
+    
     [HubMethodName(HubMethod.RemoveFriend)]
     public async Task<RemoveFriendResponse> RemoveFriend(RemoveFriendRequest request)
     {
         // logger.LogInformation("{Request}", request);
         return await removeFriendHandler.Handle(FriendCode, request);
     }
+    
+    [HubMethodName(HubMethod.UpdateFriend)]
+    public async Task<UpdateFriendResponse> UpdateFriend(UpdateFriendRequest request)
+    {
+        // logger.LogInformation("{Request}", request);
+        return await updateFriendHandler.Handle(FriendCode, request, Clients);
+    }
 
+    #endregion
+    
+    #region Moderated Actions
+    
     [HubMethodName(HubMethod.Speak)]
     public async Task<ActionResponse> Speak(SpeakRequest request)
     {
-        logger.LogInformation("{Request}", request);
-        return await speakHandler.Handle(FriendCode, request, Clients);
+        var friendCode = FriendCode;
+        logger.LogInformation("[SpeakRequest] Sender = {Sender}, Targets = {Targets}, Message = {Message}", friendCode, string.Join(", ", request.TargetFriendCodes), request.Message);
+        return await speakHandler.Handle(friendCode, request, Clients);
+    }
+    
+    [HubMethodName(HubMethod.Hypnosis)]
+    public async Task<ActionResponse> Hypnosis(HypnosisRequest request)
+    {
+        var friendCode = FriendCode;
+        logger.LogInformation("[HypnosisRequest] Sender = {Sender}, Targets = {Targets}, Words = {Words}", friendCode, string.Join(", ", request.TargetFriendCodes), string.Join(", ", request.Data.TextWords));
+        return await hypnosisHandler.Handle(FriendCode, request, Clients);
+    }
+    
+    #endregion
+
+    #region Actions
+
+    [HubMethodName(HubMethod.BodySwap)]
+    public async Task<ActionResponse> BodySwap(BodySwapRequest request)
+    {
+        if (request.LockCode is not null)
+            return new ActionResponse(ActionResponseEc.Disabled);
+        
+        return await bodySwapHandler.Handle(FriendCode, request, Clients);
+    }
+    
+    [HubMethodName(HubMethod.CustomizePlus)]
+    public async Task<ActionResponse> CustomizePlus(CustomizeRequest request)
+    {
+        return await customizePlusHandler.Handle(FriendCode, request, Clients);
     }
 
+    [HubMethodName(HubMethod.Emote)]
+    public async Task<ActionResponse> Emote(EmoteRequest request)
+    {
+        return await emoteHandler.Handle(FriendCode, request, Clients);
+    }
+    
+    [HubMethodName(HubMethod.HypnosisStop)]
+    public async Task<ActionResponse> HypnosisStop(HypnosisStopRequest request)
+    {
+        return await hypnosisStopHandler.Handle(FriendCode, request, Clients);
+    }
+    
+    [HubMethodName(HubMethod.Moodles)]
+    public async Task<ActionResponse> GetMoodlesAction(MoodlesRequest request)
+    {
+        return await moodlesHandler.Handle(FriendCode, request, Clients);
+    }
+    
     [HubMethodName(HubMethod.Transform)]
     public async Task<ActionResponse> Transform(TransformRequest request)
     {
-        // TODO: Remove after 12/25/2025 - Happy holidays person who is reading this!
-        logger.LogInformation("{Request}", request);
-        
         if (request.LockCode is not null)
             return new ActionResponse(ActionResponseEc.Disabled);
         
@@ -111,38 +150,13 @@ public class PrimaryHub(
     [HubMethodName(HubMethod.Twinning)]
     public async Task<ActionResponse> Twinning(TwinningRequest request)
     {
-        logger.LogInformation("{Request}", request);
+        if (request.LockCode is not null)
+            return new ActionResponse(ActionResponseEc.Disabled);
+        
         return await twinningHandler.Handle(FriendCode, request, Clients);
     }
-
-    [HubMethodName(HubMethod.UpdateFriend)]
-    public async Task<UpdateFriendResponse> UpdateFriend(UpdateFriendRequest request)
-    {
-        // logger.LogInformation("{Request}", request);
-        return await updateFriendHandler.Handle(FriendCode, request, Clients);
-    }
-
-    [HubMethodName(HubMethod.CustomizePlus)]
-    public async Task<ActionResponse> CustomizePlus(CustomizeRequest request)
-    {
-        // TODO: Remove after 12/29/2025
-        logger.LogInformation("{Request}", request);
-        return await customizePlusHandler.Handle(FriendCode, request, Clients);
-    }
-
-    [HubMethodName(HubMethod.Hypnosis)]
-    public async Task<ActionResponse> Hypnosis(HypnosisRequest request)
-    {
-        logger.LogInformation("{Request}", request);
-        return await hypnosisHandler.Handle(FriendCode, request, Clients);
-    }
     
-    [HubMethodName(HubMethod.HypnosisStop)]
-    public async Task<ActionResponse> HypnosisStop(HypnosisStopRequest request)
-    {
-        logger.LogInformation("{Request}", request);
-        return await hypnosisStopHandler.Handle(FriendCode, request, Clients);
-    }
+    #endregion
 
     /// <summary>
     ///     Handles when a client connects to the hub
