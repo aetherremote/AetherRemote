@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 using AetherRemoteClient.Domain.Dependencies.Glamourer;
 using Newtonsoft.Json.Linq;
@@ -6,6 +7,7 @@ namespace AetherRemoteClient.Utils;
 
 public static class GlamourerDesignHelper
 {
+    // TODO: Handle exceptions when permanent TFs come back
     public static GlamourerEquipmentSlot ToEquipmentSlot(string key)
     {
         var parsed = uint.Parse(key, NumberStyles.HexNumber);
@@ -13,6 +15,7 @@ public static class GlamourerDesignHelper
         return (GlamourerEquipmentSlot)(1 << index);
     }
     
+    // TODO: Handle exceptions when permanent TFs come back
     public static JObject ToJObject(GlamourerDesign design)
     {
         // Convert to a JToken
@@ -34,18 +37,26 @@ public static class GlamourerDesignHelper
     
     public static GlamourerDesign? FromJObject(JObject? design)
     {
-        // Reject null objects
-        if (design is null)
+        try
+        {
+            // Reject null objects
+            if (design is null)
+                return null;
+        
+            // Copy
+            var copy = design.DeepClone();
+        
+            // Remove Mods & Links
+            copy["Mods"]?.Parent?.Remove();
+            copy["Links"]?.Parent?.Remove();
+        
+            // Create a new domain object
+            return copy.ToObject<GlamourerDesign>();
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Warning($"[GlamourerDesignHelper.FromJObject] Unexpected error, {e}");
             return null;
-        
-        // Copy
-        var copy = design.DeepClone();
-        
-        // Remove Mods & Links
-        copy["Mods"]?.Parent?.Remove();
-        copy["Links"]?.Parent?.Remove();
-        
-        // Create a new domain object
-        return copy.ToObject<GlamourerDesign>();
+        }
     }
 }

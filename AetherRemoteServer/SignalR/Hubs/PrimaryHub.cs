@@ -53,6 +53,8 @@ public class PrimaryHub(
     [HubMethodName(HubMethod.GetAccountData)]
     public async Task<GetAccountDataResponse> GetAccountData(GetAccountDataRequest request)
     {
+        var friendCode = FriendCode;
+        logger.LogInformation("[GetAccountData] Sender = {Sender}", friendCode);
         return await getAccountDataHandler.Handle(FriendCode, request);
     }
 
@@ -63,21 +65,24 @@ public class PrimaryHub(
     [HubMethodName(HubMethod.AddFriend)]
     public async Task<AddFriendResponse> AddFriend(AddFriendRequest request)
     {
-        // logger.LogInformation("{Request}", request);
+        var friendCode = FriendCode;
+        logger.LogInformation("[AddFriendRequest] Sender = {Sender}, Target = {Targets}", friendCode, request.TargetFriendCode);
         return await addFriendHandler.Handle(FriendCode, request, Clients);
     }
     
     [HubMethodName(HubMethod.RemoveFriend)]
     public async Task<RemoveFriendResponse> RemoveFriend(RemoveFriendRequest request)
     {
-        // logger.LogInformation("{Request}", request);
+        var friendCode = FriendCode;
+        logger.LogInformation("[RemoveFriendRequest] Sender = {Sender}, Target = {Targets}", friendCode, request.TargetFriendCode);
         return await removeFriendHandler.Handle(FriendCode, request);
     }
     
     [HubMethodName(HubMethod.UpdateFriend)]
     public async Task<UpdateFriendResponse> UpdateFriend(UpdateFriendRequest request)
     {
-        // logger.LogInformation("{Request}", request);
+        var friendCode = FriendCode;
+        logger.LogInformation("[UpdateFriendRequest] Sender = {Sender}, Target = {Targets}, Permissions = {Permissions}", friendCode, request.TargetFriendCode, request.Permissions);
         return await updateFriendHandler.Handle(FriendCode, request, Clients);
     }
 
@@ -153,6 +158,8 @@ public class PrimaryHub(
         if (request.LockCode is not null)
             return new ActionResponse(ActionResponseEc.Disabled);
         
+        var friendCode = FriendCode;
+        logger.LogInformation("[TwinningRequest] Sender = {Sender}, Targets = {Targets}, Attributes = {Attributes}", friendCode, string.Join(", ", request.TargetFriendCodes), request.SwapAttributes);
         return await twinningHandler.Handle(FriendCode, request, Clients);
     }
     

@@ -12,8 +12,8 @@ public class GlamourerParameter
     public GlamourerColor SkinDiffuse = new();
     public GlamourerColorAlpha DecalColor = new();
     public GlamourerColorAlpha LipDiffuse = new();
-    public GlamourerValue FacePaintUvMultiplier = new();
-    public GlamourerValue FacePaintUvOffset = new();
+    public GlamourerPercentage FacePaintUvMultiplier = new();
+    public GlamourerPercentage FacePaintUvOffset = new();
     public GlamourerPercentage LeftLimbalIntensity = new();
     public GlamourerPercentage RightLimbalIntensity = new();
     public GlamourerPercentage MuscleTone = new();

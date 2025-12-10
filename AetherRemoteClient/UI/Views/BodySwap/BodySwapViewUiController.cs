@@ -95,9 +95,9 @@ public class BodySwapViewUiController(
             // Process the results
             ActionResponseParser.Parse("Body Swap", response);
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            // Ignored
+            Plugin.Log.Warning(e.ToString());
         }
     }
     
