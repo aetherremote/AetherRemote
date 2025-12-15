@@ -288,6 +288,12 @@ public static class SharedUserInterfaces
         ImGui.SetCursorPosY(startCursorPos.Y + size.Y + (includeEndPadding ? padding.Y : 0));
     }
 
+    public static bool ShouldUseWhiteText(Vector4 color)
+    {
+        var luminance = (0.299f * color.X + 0.587f * color.Y + 0.114f * color.Z) * color.W;
+        return luminance <= 0.5f;
+    }
+
     /// <summary>
     /// Initializes the two additional font sizes used in the plugin
     /// </summary>

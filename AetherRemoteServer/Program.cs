@@ -44,6 +44,7 @@ public class Program
         // Services
         builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
         builder.Services.AddSingleton<IConnectionsService, ConnectionsService>();
+        builder.Services.AddSingleton<IRequestLoggingService, RequestLoggingService>();
         
         // Managers
         builder.Services.AddSingleton<IForwardedRequestManager, ForwardedRequestManager>();
@@ -55,6 +56,7 @@ public class Program
         builder.Services.AddSingleton<CustomizePlusHandler>();
         builder.Services.AddSingleton<EmoteHandler>();
         builder.Services.AddSingleton<GetAccountDataHandler>();
+        builder.Services.AddSingleton<HonorificHandler>();
         builder.Services.AddSingleton<HypnosisHandler>();
         builder.Services.AddSingleton<HypnosisStopHandler>();
         builder.Services.AddSingleton<MoodlesHandler>();

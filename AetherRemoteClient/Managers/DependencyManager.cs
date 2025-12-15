@@ -4,6 +4,7 @@ using System.Linq;
 using System.Timers;
 using AetherRemoteClient.Dependencies.CustomizePlus.Services;
 using AetherRemoteClient.Dependencies.Glamourer.Services;
+using AetherRemoteClient.Dependencies.Honorifics.Services;
 using AetherRemoteClient.Dependencies.Moodles.Services;
 using AetherRemoteClient.Dependencies.Penumbra.Services;
 using AetherRemoteClient.Domain.Interfaces;
@@ -41,15 +42,16 @@ public class DependencyManager : IDisposable
     /// <summary>
     ///     <inheritdoc cref="DependencyManager"/>
     /// </summary>
-    public DependencyManager(CustomizePlusService customizePlusService, GlamourerService glamourerService, MoodlesService moodlesService, PenumbraService penumbraService)
+    public DependencyManager(CustomizePlusService customizePlusService, GlamourerService glamourerService, HonorificService honorificService, MoodlesService moodlesService, PenumbraService penumbraService)
     {
         _relevantPluginToService = [];
         _relevantPluginToService.Add("CustomizePlus", customizePlusService);
         _relevantPluginToService.Add("Glamourer", glamourerService);
+        _relevantPluginToService.Add("Honorific", honorificService);
         _relevantPluginToService.Add("Moodles", moodlesService);
         _relevantPluginToService.Add("Penumbra", penumbraService);
 
-        _pluginsToValidateReadiness = [customizePlusService, glamourerService, moodlesService, penumbraService];
+        _pluginsToValidateReadiness = [customizePlusService, glamourerService, honorificService, moodlesService, penumbraService];
 
         _validatePluginTimer.Elapsed += ValidateDependentPlugins;
         _validatePluginTimer.AutoReset = true;

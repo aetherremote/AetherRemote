@@ -11,5 +11,12 @@ public class DebugViewUi(DebugViewUiController controller) : IDrawable
         {
             controller.Debug();
         }
+        
+        ImGui.SameLine();
+
+        if (ImGui.Button("Debug2"))
+        {
+            controller.Debug2();
+        }
     }
 }

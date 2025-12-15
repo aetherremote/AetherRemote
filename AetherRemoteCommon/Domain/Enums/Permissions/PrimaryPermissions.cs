@@ -11,11 +11,12 @@ public enum PrimaryPermissions2
     
     // External Plugins
     GlamourerCustomization = 1 << 1,
-    GlamourerEquipment =  1 << 2,
-    Mods =  1 << 3,
-    BodySwap =  1 << 4,
-    Twinning =  1 << 5,
-    CustomizePlus =  1 << 6,
-    Moodles =  1 << 7,
-    Hypnosis =  1 << 8
+    GlamourerEquipment = 1 << 2,
+    Mods = 1 << 3,
+    BodySwap = 1 << 4,
+    Twinning = 1 << 5,
+    CustomizePlus = 1 << 6,
+    Moodles = 1 << 7,
+    Hypnosis = 1 << 8,
+    Honorific = 1 << 9
 }

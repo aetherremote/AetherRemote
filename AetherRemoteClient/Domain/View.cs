@@ -11,6 +11,7 @@ public enum View
     Emote,
     Friends,
     History,
+    Honorific,
     Hypnosis,
     Login,
     Moodles,

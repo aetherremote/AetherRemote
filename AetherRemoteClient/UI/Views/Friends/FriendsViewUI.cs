@@ -176,6 +176,8 @@ public class FriendsViewUi(
                 ImGui.Checkbox("Moodles", ref controller.EditingUserPermissions.Moodles);
                 ImGui.TableNextColumn();
                 ImGui.Checkbox("Customize+", ref controller.EditingUserPermissions.CustomizePlus);
+                ImGui.TableNextColumn();
+                ImGui.Checkbox("Honorific", ref controller.EditingUserPermissions.Honorific);
                 
                 ImGui.EndTable();
             }
@@ -219,12 +221,9 @@ public class FriendsViewUi(
             drawList.ChannelsSetCurrent(0);
             var min = final - windowPadding;
             var max = final + textSize + windowPadding;
-            drawList.AddRectFilled(min, max, ImGui.ColorConvertFloat4ToU32(new Vector4(0, 0, 0, 1)),
-                AetherRemoteStyle.Rounding);
-            drawList.AddRect(min, max, ImGui.ColorConvertFloat4ToU32(ImGuiColors.DalamudOrange),
-                AetherRemoteStyle.Rounding);
-            drawList.AddRect(pos, pos + size, ImGui.ColorConvertFloat4ToU32(ImGuiColors.DalamudOrange),
-                AetherRemoteStyle.Rounding);
+            drawList.AddRectFilled(min, max, ImGui.ColorConvertFloat4ToU32(new Vector4(0, 0, 0, 1)), AetherRemoteStyle.Rounding);
+            drawList.AddRect(min, max, ImGui.ColorConvertFloat4ToU32(ImGuiColors.DalamudOrange), AetherRemoteStyle.Rounding);
+            drawList.AddRect(pos, pos + size, ImGui.ColorConvertFloat4ToU32(ImGuiColors.DalamudOrange), AetherRemoteStyle.Rounding);
 
             drawList.ChannelsMerge();
         }

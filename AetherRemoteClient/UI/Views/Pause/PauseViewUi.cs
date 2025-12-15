@@ -148,6 +148,8 @@ public class PauseViewUi(
                     BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.Moodles);
                     ImGui.TableNextColumn();
                     BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.CustomizePlus);
+                    ImGui.TableNextColumn();
+                    BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.Honorific);
                     
                     ImGui.EndTable();
                 }

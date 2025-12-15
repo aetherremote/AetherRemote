@@ -102,7 +102,7 @@ public static class ActionResponseParser
             ActionResultEc.TargetOffline => string.Concat(name, " is offline"),
             ActionResultEc.ValueNotSet => string.Concat(name, "Report to developer the code 730"),
 
-            _ => string.Concat(name, " encountered an unknown error")
+            _ => string.Concat(name, $" encountered an unknown error: {code}")
         };
     }
 }

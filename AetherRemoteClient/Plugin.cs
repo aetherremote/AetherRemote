@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using AetherRemoteClient.Dependencies.CustomizePlus.Services;
 using AetherRemoteClient.Dependencies.Glamourer.Services;
+using AetherRemoteClient.Dependencies.Honorifics.Services;
 using AetherRemoteClient.Dependencies.Moodles.Services;
 using AetherRemoteClient.Dependencies.Penumbra.Services;
 using AetherRemoteClient.Domain.Configurations;
@@ -19,6 +20,7 @@ using AetherRemoteClient.UI.Views.Debug;
 using AetherRemoteClient.UI.Views.Emote;
 using AetherRemoteClient.UI.Views.Friends;
 using AetherRemoteClient.UI.Views.History;
+using AetherRemoteClient.UI.Views.Honorific;
 using AetherRemoteClient.UI.Views.Hypnosis;
 using AetherRemoteClient.UI.Views.Login;
 using AetherRemoteClient.UI.Views.Moodles;
@@ -100,6 +102,7 @@ public sealed class Plugin : IDalamudPlugin
         // Services - Dependencies
         services.AddSingleton<CustomizePlusService>();
         services.AddSingleton<GlamourerService>();
+        services.AddSingleton<HonorificService>();
         services.AddSingleton<MoodlesService>();
         services.AddSingleton<PenumbraService>();
         
@@ -119,6 +122,7 @@ public sealed class Plugin : IDalamudPlugin
         // Handlers Network
         services.AddSingleton<BodySwapHandler>();
         services.AddSingleton<EmoteHandler>();
+        services.AddSingleton<HonorificHandler>();
         services.AddSingleton<HypnosisHandler>();
         services.AddSingleton<HypnosisStopHandler>();
         services.AddSingleton<MoodlesHandler>();
@@ -143,6 +147,7 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<EmoteViewUiController>();
         services.AddSingleton<FriendsViewUiController>();
         services.AddSingleton<HistoryViewUiController>();
+        services.AddSingleton<HonorificViewUiController>();
         services.AddSingleton<HypnosisViewUiController>();
         services.AddSingleton<LoginViewUiController>();
         services.AddSingleton<MoodlesViewUiController>();
@@ -160,6 +165,7 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<EmoteViewUi>();
         services.AddSingleton<FriendsViewUi>();
         services.AddSingleton<HistoryViewUi>();
+        services.AddSingleton<HonorificViewUi>();
         services.AddSingleton<HypnosisViewUi>();
         services.AddSingleton<LoginViewUi>();
         services.AddSingleton<MoodlesViewUi>();
@@ -185,6 +191,7 @@ public sealed class Plugin : IDalamudPlugin
         _services.GetRequiredService<MoodlesViewUiController>();            // Required to display UI elements when IPCs are loaded
         _services.GetRequiredService<TransformationViewUiController>();     // Required to display UI elements when IPCs are loaded
         _services.GetRequiredService<CustomizePlusViewUiController>();      // Required to display UI elements when IPCs are loaded
+        _services.GetRequiredService<HonorificViewUiController>();          // Required to display UI elements when IPCs are loaded
         
         // Handlers
         _services.GetRequiredService<ChatCommandHandler>();
@@ -194,6 +201,7 @@ public sealed class Plugin : IDalamudPlugin
         // Handlers Network
         _services.GetRequiredService<BodySwapHandler>();
         _services.GetRequiredService<EmoteHandler>();
+        _services.GetRequiredService<HonorificHandler>();
         _services.GetRequiredService<HypnosisHandler>();
         _services.GetRequiredService<HypnosisStopHandler>();
         _services.GetRequiredService<MoodlesHandler>();
@@ -230,6 +238,18 @@ public sealed class Plugin : IDalamudPlugin
             return func.Invoke();
 
         return await Framework.RunOnFrameworkThread(func).ConfigureAwait(false);
+    }
+
+    public static async Task RunOnFramework(Action func)
+    {
+        if (Framework.IsInFrameworkUpdateThread)
+        {
+            func.Invoke();
+        }
+        else
+        {
+            await Framework.RunOnFrameworkThread(func).ConfigureAwait(false);
+        }
     }
     
     /// <summary>

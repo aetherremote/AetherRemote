@@ -9,6 +9,7 @@ using AetherRemoteClient.UI.Views.Debug;
 using AetherRemoteClient.UI.Views.Emote;
 using AetherRemoteClient.UI.Views.Friends;
 using AetherRemoteClient.UI.Views.History;
+using AetherRemoteClient.UI.Views.Honorific;
 using AetherRemoteClient.UI.Views.Hypnosis;
 using AetherRemoteClient.UI.Views.Login;
 using AetherRemoteClient.UI.Views.Moodles;
@@ -41,6 +42,7 @@ public class MainWindow : Window
     private readonly EmoteViewUi _emoteView;
     private readonly FriendsViewUi _friendsView;
     private readonly HistoryViewUi _historyView;
+    private readonly HonorificViewUi _honorificView;
     private readonly HypnosisViewUi _hypnosisView;
     private readonly LoginViewUi _loginView;
     private readonly MoodlesViewUi _moodlesView;
@@ -60,6 +62,7 @@ public class MainWindow : Window
         EmoteViewUi emoteView,
         FriendsViewUi friendsView,
         HistoryViewUi historyView,
+        HonorificViewUi honorificView,
         HypnosisViewUi hypnosisView,
         LoginViewUi loginView,
         MoodlesViewUi moodlesView,
@@ -86,6 +89,7 @@ public class MainWindow : Window
         _emoteView = emoteView;
         _friendsView = friendsView;
         _historyView = historyView;
+        _honorificView = honorificView;
         _hypnosisView = hypnosisView;
         _loginView = loginView;
         _moodlesView = moodlesView;
@@ -111,6 +115,7 @@ public class MainWindow : Window
             View.Emote => _emoteView,
             View.Friends => _friendsView,
             View.History => _historyView,
+            View.Honorific => _honorificView,
             View.Hypnosis => _hypnosisView,
             View.Login => _loginView,
             View.Moodles => _moodlesView,

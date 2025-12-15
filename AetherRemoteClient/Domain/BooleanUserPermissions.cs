@@ -11,7 +11,7 @@ namespace AetherRemoteClient.Domain;
 public class BooleanUserPermissions
 {
     // Primary Permissions
-    public bool Emote, Customization, Equipment, Mods, BodySwap, Twinning, CustomizePlus, Moodles, Hypnosis;
+    public bool Emote, Customization, Equipment, Mods, BodySwap, Twinning, CustomizePlus, Moodles, Hypnosis, Honorific;
     
     // Speak Permissions
     public bool Say, Yell, Shout, Tell, Party, Alliance, FreeCompany, PvPTeam, Echo, Roleplay;
@@ -37,6 +37,7 @@ public class BooleanUserPermissions
         if (CustomizePlus != other.CustomizePlus) return false;
         if (Moodles != other.Moodles) return false;
         if (Hypnosis != other.Hypnosis) return false;
+        if (Honorific != other.Honorific) return false;
         
         // Speak Permissions
         if (Say != other.Say) return false;
@@ -91,6 +92,7 @@ public class BooleanUserPermissions
             CustomizePlus = (permissions.Primary & PrimaryPermissions2.CustomizePlus) == PrimaryPermissions2.CustomizePlus,
             Moodles = (permissions.Primary & PrimaryPermissions2.Moodles) == PrimaryPermissions2.Moodles,
             Hypnosis = (permissions.Primary & PrimaryPermissions2.Hypnosis) == PrimaryPermissions2.Hypnosis,
+            Honorific = (permissions.Primary & PrimaryPermissions2.Honorific) == PrimaryPermissions2.Honorific,
             
             // Speak Permissions
             Say = (permissions.Speak & SpeakPermissions2.Say) == SpeakPermissions2.Say,
@@ -147,6 +149,7 @@ public class BooleanUserPermissions
         if (permissions.CustomizePlus) primary |= PrimaryPermissions2.CustomizePlus;
         if (permissions.Moodles) primary |= PrimaryPermissions2.Moodles;
         if (permissions.Hypnosis) primary |= PrimaryPermissions2.Hypnosis;
+        if (permissions.Honorific) primary |= PrimaryPermissions2.Honorific;
 
         // Speak Permissions
         if (permissions.Say) speak |= SpeakPermissions2.Say;

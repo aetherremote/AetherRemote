@@ -34,12 +34,12 @@ public class NetworkService : IDisposable
     public event Func<Task>? Disconnected;
     
 #if DEBUG
-    // private const string HubUrl = "https://localhost:5006/primaryHub";
-    // private const string PostUrl = "https://localhost:5006/api/auth/login";
+    private const string HubUrl = "https://localhost:5006/primaryHub";
+    private const string PostUrl = "https://localhost:5006/api/auth/login";
     // private const string HubUrl = "https://foxitsvc.com:5017/primaryHub";
     // private const string PostUrl = "https://foxitsvc.com:5017/api/auth/login";
-    private const string HubUrl = "https://foxitsvc.com:5006/primaryHub";
-    private const string PostUrl = "https://foxitsvc.com:5006/api/auth/login";
+    // private const string HubUrl = "https://foxitsvc.com:5006/primaryHub";
+    // private const string PostUrl = "https://foxitsvc.com:5006/api/auth/login";
 #else
     private const string HubUrl = "https://foxitsvc.com:5006/primaryHub";
     private const string PostUrl = "https://foxitsvc.com:5006/api/auth/login";
@@ -232,7 +232,7 @@ public class NetworkService : IDisposable
         }
         catch (HttpRequestException)
         {
-            NotificationHelper.Warning("Authentication Server Down", "Please wait and try again later. You can monitor or report this problem in the discord if it persists", false);
+            NotificationHelper.Warning("Authentication Server Down", "Please wait and try again later. You can monitor or report this problem in the discord if it persists");
             return null;
         }
         catch (Exception e)

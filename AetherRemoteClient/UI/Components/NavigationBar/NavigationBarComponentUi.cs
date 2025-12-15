@@ -39,6 +39,7 @@ public class NavigationBarComponentUi(NetworkService networkService, ViewService
                 NavBarButton(FontAwesomeIcon.PeopleArrows, "Body Swap", View.BodySwap, size, offset, spacing);
                 NavBarButton(FontAwesomeIcon.Plus, "Customize+", View.CustomizePlus, size, offset, spacing);
                 NavBarButton(FontAwesomeIcon.Smile, "Emote", View.Emote, size, offset, spacing);
+                NavBarButton(FontAwesomeIcon.Crown, "Honorific", View.Honorific, size, offset, spacing);
                 NavBarButton(FontAwesomeIcon.Stopwatch, "Hypnosis", View.Hypnosis, size, offset, spacing);
                 NavBarButton(FontAwesomeIcon.Icons, "Moodles", View.Moodles, size, offset, spacing);
                 NavBarButton(FontAwesomeIcon.Comments, "Speak", View.Speak, size, offset, spacing);
@@ -59,8 +60,8 @@ public class NavigationBarComponentUi(NetworkService networkService, ViewService
             NavBarButton(FontAwesomeIcon.Wrench, "Settings", View.Settings, size, offset, spacing);
             
 #if DEBUG
-            // ImGui.TextUnformatted("Testing");
-            // NavBarButton(FontAwesomeIcon.Bug, "Debug", View.Debug, size, offset, spacing);
+            ImGui.TextUnformatted("Testing");
+            NavBarButton(FontAwesomeIcon.Bug, "Debug", View.Debug, size, offset, spacing);
 #endif
 
             ImGui.PopStyleVar();

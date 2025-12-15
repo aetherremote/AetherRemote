@@ -1,6 +1,7 @@
 using System.Numerics;
 using AetherRemoteClient.Dependencies.CustomizePlus.Services;
 using AetherRemoteClient.Dependencies.Glamourer.Services;
+using AetherRemoteClient.Dependencies.Honorifics.Services;
 using AetherRemoteClient.Dependencies.Moodles.Services;
 using AetherRemoteClient.Dependencies.Penumbra.Services;
 using AetherRemoteClient.Domain.Interfaces;
@@ -11,7 +12,13 @@ using Dalamud.Interface.Colors;
 
 namespace AetherRemoteClient.UI.Views.Settings;
 
-public class SettingsViewUi(SettingsViewUiController controller, PenumbraService penumbraService, GlamourerService glamourerService, MoodlesService moodlesService, CustomizePlusService customizePlusService) : IDrawable
+public class SettingsViewUi(
+    SettingsViewUiController controller, 
+    PenumbraService penumbraService, 
+    GlamourerService glamourerService, 
+    MoodlesService moodlesService, 
+    CustomizePlusService customizePlusService,
+    HonorificService honorificService) : IDrawable
 {
     private static readonly Vector2 CheckboxPadding = new(8, 0);
 
@@ -60,21 +67,25 @@ public class SettingsViewUi(SettingsViewUiController controller, PenumbraService
 
             ImGui.Spacing();
 
-            ImGui.TextUnformatted("Penumbra");
-            ImGui.SameLine();
             DrawCheckmarkOrCrossOut(penumbraService.ApiAvailable);
-
-            ImGui.TextUnformatted("Glamourer");
             ImGui.SameLine();
+            ImGui.TextUnformatted("Penumbra");
+
             DrawCheckmarkOrCrossOut(glamourerService.ApiAvailable);
-
-            ImGui.TextUnformatted("Moodles");
             ImGui.SameLine();
-            DrawCheckmarkOrCrossOut(moodlesService.ApiAvailable);
+            ImGui.TextUnformatted("Glamourer");
             
-            ImGui.TextUnformatted("Customize+");
+            DrawCheckmarkOrCrossOut(moodlesService.ApiAvailable);
             ImGui.SameLine();
+            ImGui.TextUnformatted("Moodles");
+            
             DrawCheckmarkOrCrossOut(customizePlusService.ApiAvailable);
+            ImGui.SameLine();
+            ImGui.TextUnformatted("Customize+");
+            
+            DrawCheckmarkOrCrossOut(honorificService.ApiAvailable);
+            ImGui.SameLine();
+            ImGui.TextUnformatted("Honorific");
         });
 
         ImGui.PopStyleVar();
