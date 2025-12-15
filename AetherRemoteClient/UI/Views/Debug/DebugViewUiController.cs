@@ -1,7 +1,9 @@
 using System;
 using System.Numerics;
 using AetherRemoteClient.Dependencies.Honorific.Domain;
-using AetherRemoteClient.Dependencies.Honorifics.Services;
+using AetherRemoteClient.Dependencies.Honorific.Services;
+using Dalamud.Game.ClientState.Objects.Enums;
+using Newtonsoft.Json;
 
 namespace AetherRemoteClient.UI.Views.Debug;
 
@@ -11,8 +13,7 @@ public class DebugViewUiController(HonorificService honorific)
     {
         try
         {
-            if (Plugin.ObjectTable.LocalPlayer?.ObjectIndex is not { } index)
-                return;
+            //
         }
         catch (Exception e)
         {

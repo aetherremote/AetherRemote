@@ -15,6 +15,7 @@ namespace AetherRemoteClient.UI.Views.BodySwap;
 ///     Handles events from the <see cref="BodySwapViewUi"/>
 /// </summary>
 public class BodySwapViewUiController(
+    CommandLockoutService commandLockout,
     IdentityService identityService,
     NetworkService networkService,
     CharacterTransformationManager characterTransformationManager,
@@ -24,6 +25,7 @@ public class BodySwapViewUiController(
     public bool SwapMods;
     public bool SwapMoodles;
     public bool SwapCustomizePlus;
+    public bool SwapHonorific;
     
     // Permanent Swappies
     public bool PermanentTransformation = false;
@@ -38,6 +40,7 @@ public class BodySwapViewUiController(
         if (SwapMods) attributes |= CharacterAttributes.Mods;
         if (SwapMoodles) attributes |= CharacterAttributes.Moodles;
         if (SwapCustomizePlus) attributes |= CharacterAttributes.CustomizePlus;
+        if (SwapHonorific) attributes |= CharacterAttributes.Honorific;
         
         BodySwap(new BodySwapRequest(selectionManager.GetSelectedFriendCodes(), attributes, null, null));
     }
@@ -51,6 +54,7 @@ public class BodySwapViewUiController(
         if (SwapMods) attributes |= CharacterAttributes.Mods;
         if (SwapMoodles) attributes |= CharacterAttributes.Moodles;
         if (SwapCustomizePlus) attributes |= CharacterAttributes.CustomizePlus;
+        if (SwapHonorific) attributes |= CharacterAttributes.Honorific;
 
         if (Plugin.ObjectTable.LocalPlayer?.Name.TextValue is not { } playerName)
             return;
@@ -64,6 +68,8 @@ public class BodySwapViewUiController(
         {
             // Feedback Notification
             NotificationHelper.Info("Initiating body swap, this will take a moment", string.Empty);
+            
+            commandLockout.Lock();
             
             // Invoke on the server
             var response = await networkService.InvokeAsync<BodySwapResponse>(HubMethod.BodySwap, request);
@@ -110,6 +116,7 @@ public class BodySwapViewUiController(
         if (SwapMods) attributes |= PrimaryPermissions2.Mods;
         if (SwapMoodles) attributes |= PrimaryPermissions2.Moodles;
         if (SwapCustomizePlus) attributes |= PrimaryPermissions2.CustomizePlus;
+        if (SwapHonorific) attributes |= PrimaryPermissions2.Honorific;
         
         foreach (var friend in selectionManager.Selected)
             if ((friend.PermissionsGrantedByFriend.Primary & attributes) != attributes)

@@ -20,6 +20,7 @@ public class BodySwapViewUi(FriendsListComponentUi friendsList, BodySwapViewUiCo
     private const string RequiresPenumbra = "Requires Penumbra plugin for you and your targets";
     private const string RequiresMoodles = "Requires Moodles plugin for you and your targets";
     private const string RequiresCustomize = "Requires Customize plugin for you and your targets";
+    private const string RequiresHonorific = "Requires Customize plugin for you and your targets";
     
     public void Draw()
     {
@@ -65,6 +66,9 @@ public class BodySwapViewUi(FriendsListComponentUi friendsList, BodySwapViewUiCo
             ImGui.SameLine();
             if (DrawAttributeButton(FontAwesomeIcon.Plus, rowTwoButtonWidth,"Customize+", controller.SwapCustomizePlus, RequiresCustomize))
                 controller.SwapCustomizePlus = !controller.SwapCustomizePlus;
+            ImGui.Spacing();
+            if (DrawAttributeButton(FontAwesomeIcon.Crown, rowTwoButtonWidth,"Honorific", controller.SwapHonorific, RequiresHonorific))
+                controller.SwapHonorific = !controller.SwapHonorific;
             
             ImGui.EndChild();
         }

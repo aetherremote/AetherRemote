@@ -10,12 +10,13 @@ using AetherRemoteCommon.Domain.Network.Twinning;
 
 namespace AetherRemoteClient.UI.Views.Twinning;
 
-public class TwinningViewUiController(NetworkService network, SelectionManager selection)
+public class TwinningViewUiController(CommandLockoutService commandLockout, NetworkService network, SelectionManager selection)
 {
     // Swap Parameters
     public bool SwapMods;
     public bool SwapMoodles;
     public bool SwapCustomizePlus;
+    public bool SwapHonorific;
     
     // Permanent Swappies
     public bool PermanentTransformation = false;
@@ -32,6 +33,7 @@ public class TwinningViewUiController(NetworkService network, SelectionManager s
             if (SwapMods) attributes |= CharacterAttributes.Mods;
             if (SwapMoodles) attributes |= CharacterAttributes.Moodles;
             if (SwapCustomizePlus) attributes |= CharacterAttributes.CustomizePlus;
+            if (SwapHonorific) attributes |= CharacterAttributes.Honorific;
             
             // Get the local player name
             if (Plugin.ObjectTable.LocalPlayer?.Name.TextValue is not { } playerName)
@@ -40,6 +42,8 @@ public class TwinningViewUiController(NetworkService network, SelectionManager s
             // Feedback Notification
             NotificationHelper.Info("Initiating twinning, this will take a moment", string.Empty);
 
+            commandLockout.Lock();
+            
             // Create the request
             var request = new TwinningRequest(selection.GetSelectedFriendCodes(), playerName, attributes, null);
             
@@ -64,6 +68,7 @@ public class TwinningViewUiController(NetworkService network, SelectionManager s
         if (SwapMods) attributes |= PrimaryPermissions2.Mods;
         if (SwapMoodles) attributes |= PrimaryPermissions2.Moodles;
         if (SwapCustomizePlus) attributes |= PrimaryPermissions2.CustomizePlus;
+        if (SwapHonorific) attributes |= PrimaryPermissions2.Honorific;
         
         foreach (var friend in selection.Selected)
             if ((friend.PermissionsGrantedByFriend.Primary & attributes) != attributes)

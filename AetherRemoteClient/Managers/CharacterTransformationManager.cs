@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using AetherRemoteClient.Dependencies.CustomizePlus.Services;
 using AetherRemoteClient.Dependencies.Glamourer.Services;
+using AetherRemoteClient.Dependencies.Honorific.Services;
 using AetherRemoteClient.Dependencies.Moodles.Services;
 using AetherRemoteClient.Dependencies.Penumbra.Services;
 using AetherRemoteClient.Domain;
@@ -17,6 +18,8 @@ using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.Types;
 using Newtonsoft.Json.Linq;
 
+// ReSharper disable RedundantBoolCompare
+
 namespace AetherRemoteClient.Managers;
 
 /// <summary>
@@ -25,6 +28,7 @@ namespace AetherRemoteClient.Managers;
 public class CharacterTransformationManager(
     CustomizePlusService customizePlusService, 
     GlamourerService glamourerService, 
+    HonorificService honorificService,
     MoodlesService moodlesService, 
     PenumbraService penumbraService)
 {
@@ -241,6 +245,18 @@ public class CharacterTransformationManager(
             
             // Add CustomizePlus attribute
             attributes.Add(customizePlusAttribute);
+        }
+        
+        // Check if Honorific is one of the attributes to store
+        if ((characterAttributes & CharacterAttributes.Honorific) is CharacterAttributes.Honorific)
+        {
+            // Store Honorific attribute
+            var honorificAttribute = new HonorificAttribute(honorificService, gameObject.ObjectIndex);
+            if (await honorificAttribute.Store().ConfigureAwait(false) is false)
+                return null;
+            
+            // Add CustomizePlus attribute
+            attributes.Add(honorificAttribute);
         }
         
         // Return attributes

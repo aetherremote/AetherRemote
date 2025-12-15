@@ -1,8 +1,9 @@
 using System;
 using System.Threading.Tasks;
-using AetherRemoteClient.Dependencies.Honorifics.Services;
+using AetherRemoteClient.Dependencies.Honorific.Services;
 using AetherRemoteClient.Handlers.Network.Base;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
@@ -60,6 +61,7 @@ public class HonorificHandler : AbstractNetworkHandler, IDisposable
 
             if (await _honorific.SetCharacterTitle(index, request.Honorific).ConfigureAwait(false))
             {
+                NotificationHelper.Honorific();                
                 _log.Custom($"{friend.NoteOrFriendCode} applied the {request.Honorific.Title} honorific to you");
                 return ActionResultBuilder.Ok();
             }

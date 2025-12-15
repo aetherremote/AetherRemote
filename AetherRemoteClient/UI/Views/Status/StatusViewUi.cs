@@ -82,6 +82,19 @@ public class StatusViewUi(
         if (hypnosisManager.IsBeingHypnotized)
             RenderHypnosisComponent(windowPadding, windowWidth);
         
+        SharedUserInterfaces.ContentBox("OmniTool", AetherRemoteStyle.PanelBackground, false, () =>
+        {
+            SharedUserInterfaces.MediumText("Plugin Misbehaving? (Temporary Solution)");
+            if (ImGui.Button("Reset Collection"))
+                controller.ResetCollection();
+            ImGui.SameLine();
+            if (ImGui.Button("Reset Honorific"))
+                controller.ResetHonorific();
+            ImGui.SameLine();
+            if (ImGui.Button("Reset Customize+"))
+                controller.ResetCustomize();
+        });
+        
         ImGui.EndChild();
     }
     

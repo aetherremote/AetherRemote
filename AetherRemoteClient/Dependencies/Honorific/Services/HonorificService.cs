@@ -9,7 +9,7 @@ using AetherRemoteCommon.Dependencies.Honorific.Domain;
 using Dalamud.Plugin.Ipc;
 using Newtonsoft.Json;
 
-namespace AetherRemoteClient.Dependencies.Honorifics.Services;
+namespace AetherRemoteClient.Dependencies.Honorific.Services;
 
 // ReSharper disable RedundantBoolCompare
 
@@ -90,11 +90,12 @@ public class HonorificService : IExternalPlugin
     /// <summary>
     ///     Gets any character's title as JSON
     /// </summary>
-    public async Task<string?> GetCharacterTitle(int characterObjectIndex)
+    public async Task<HonorificInfo?> GetCharacterTitle(int characterObjectIndex)
     {
         try
         {
-            return await Plugin.RunOnFramework(() => _getCharacterTitle.InvokeFunc(characterObjectIndex)).ConfigureAwait(false);
+            var json = await Plugin.RunOnFramework(() => _getCharacterTitle.InvokeFunc(characterObjectIndex)).ConfigureAwait(false);
+            return JsonConvert.DeserializeObject<HonorificInfo>(json);
         }
         catch (Exception e)
         {

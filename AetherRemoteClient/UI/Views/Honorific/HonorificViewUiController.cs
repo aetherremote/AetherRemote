@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using AetherRemoteClient.Dependencies.Honorifics.Services;
+using AetherRemoteClient.Dependencies.Honorific.Services;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;

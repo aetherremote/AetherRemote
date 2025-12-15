@@ -20,6 +20,7 @@ public class TwinningViewUi(FriendsListComponentUi friendsList, TwinningViewUiCo
     private const string RequiresPenumbra = "Requires Penumbra plugin for you and your targets";
     private const string RequiresMoodles = "Requires Moodles plugin for you and your targets";
     private const string RequiresCustomize = "Requires Customize plugin for you and your targets";
+    private const string RequiresHonorific = "Requires Honorific plugin for you and your targets";
     
     public void Draw()
     {
@@ -65,6 +66,9 @@ public class TwinningViewUi(FriendsListComponentUi friendsList, TwinningViewUiCo
             ImGui.SameLine();
             if (DrawAttributeButton(FontAwesomeIcon.Plus, rowTwoButtonWidth,"Customize+", controller.SwapCustomizePlus, RequiresCustomize))
                 controller.SwapCustomizePlus = !controller.SwapCustomizePlus;
+            ImGui.Spacing();
+            if (DrawAttributeButton(FontAwesomeIcon.Crown, rowTwoButtonWidth,"Honorific", controller.SwapHonorific, RequiresHonorific))
+                controller.SwapHonorific = !controller.SwapHonorific;
             
             ImGui.EndChild();
         }
