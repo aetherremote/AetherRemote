@@ -126,6 +126,8 @@ public class HonorificViewUi(HonorificViewUiController controller, FriendsListCo
         draw.ChannelsSplit(2);
         draw.ChannelsSetCurrent(1);
         
+        parameters.ScreenOffset = ImGui.GetCursorScreenPos();
+        
         var bytes = Dalamud.Game.Text.SeStringHandling.SeString.Parse(builder.GetViewAsSpan()).Encode();
         ImGuiHelpers.SeStringWrapped(bytes, parameters);
         

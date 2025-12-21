@@ -1,23 +1,20 @@
 using MoodlesStatusInfo = (
-    System.Guid GUID,
-    int IconID,
+    int Version,
+    System.Guid Guid,
+    int IconId,
     string Title,
     string Description,
+    string CustomVfxPath,
+    long ExpireTicks,
     AetherRemoteCommon.Dependencies.Moodles.Enums.MoodleType Type,
-    string Applier,
-    bool Dispelable,
     int Stacks,
-    bool Persistent,
-    int Days,
-    int Hours,
-    int Minutes,
-    int Seconds,
-    bool NoExpire,
-    bool AsPermanent,
-    System.Guid StatusOnDispell,
-    string CustomVFXPath,
-    bool StackOnReapply,
-    int StacksIncOnReapply);
+    int StackSteps,
+    uint Modifiers,
+    System.Guid ChainedStatus,
+    AetherRemoteCommon.Dependencies.Moodles.Enums.MoodleChainTrigger ChainTrigger,
+    string Applier,
+    string Dispeller,
+    bool Permanent);
 
 using System;
 using System.Collections.Generic;
@@ -47,7 +44,7 @@ public class MoodlesService : IExternalPlugin
     
     // Moodles Statuses
     private readonly ICallGateSubscriber<List<MoodlesStatusInfo>> _listMoodles;
-    private readonly ICallGateProvider<MoodlesStatusInfo, object?> _applyMoodle;
+    private readonly ICallGateProvider<MoodlesStatusInfo, bool, object?> _applyMoodle;
     
     /// <summary>
     ///     Is Moodles available for use?
@@ -65,11 +62,10 @@ public class MoodlesService : IExternalPlugin
     public MoodlesService()
     {
         _version = Plugin.PluginInterface.GetIpcSubscriber<int>("Moodles.Version");
-        
         _getStatusManager = Plugin.PluginInterface.GetIpcSubscriber<nint, string>("Moodles.GetStatusManagerByPtrV2");
         _setStatusManager = Plugin.PluginInterface.GetIpcSubscriber<nint, string, object>("Moodles.SetStatusManagerByPtrV2");
         _listMoodles = Plugin.PluginInterface.GetIpcSubscriber<List<MoodlesStatusInfo>>("Moodles.GetStatusInfoListV2");
-        _applyMoodle = Plugin.PluginInterface.GetIpcProvider<MoodlesStatusInfo, object?>("GagSpeak.ApplyStatusInfo");
+        _applyMoodle = Plugin.PluginInterface.GetIpcProvider<MoodlesStatusInfo, bool, object?>("GagSpeak.ApplyStatusInfo");
     }
     
     /// <summary>
@@ -127,7 +123,7 @@ public class MoodlesService : IExternalPlugin
     /// </summary>
     public async Task<bool> ApplyMoodle(MoodleInfo moodle)
     {
-        return await ExecuteOnThread(() => _applyMoodle.SendMessage(ConvertMoodleToStatusInfo(moodle))).ConfigureAwait(false);
+        return await ExecuteOnThread(() => _applyMoodle.SendMessage(ConvertMoodleToStatusInfo(moodle), false)).ConfigureAwait(false);
     }
     
     /// <summary>
@@ -179,57 +175,54 @@ public class MoodlesService : IExternalPlugin
     {
         return new MoodlesStatusInfo
         {
-            GUID = info.Guid,
-            IconID = info.IconId,
+            Version = info.Version,
+            Guid = info.Guid,
+            IconId = info.IconId,
             Title = info.Title,
             Description = info.Description,
+            CustomVfxPath = info.CustomVfxPath,
+            ExpireTicks = info.ExpireTicks,
             Type = info.Type,
-            Applier = info.Applier,
-            Dispelable = info.Dispellable,
             Stacks = info.Stacks,
-            Persistent = info.Persistent,
-            Days = info.Days,
-            Hours = info.Hours,
-            Minutes = info.Minutes,
-            Seconds = info.Seconds,
-            NoExpire = info.NoExpire,
-            AsPermanent = info.AsPermanent,
-            StatusOnDispell = info.StatusOnRemoval,
-            CustomVFXPath = info.CustomVfxPath,
-            StackOnReapply = info.StackOnReapply,
-            StacksIncOnReapply = info.StacksIncOnReapply
+            StackSteps = info.StackSteps,
+            Modifiers = info.Modifiers,
+            ChainedStatus = info.ChainedStatus,
+            ChainTrigger = info.ChainTrigger,
+            Applier = info.Applier,
+            Dispeller = info.Dispeller,
+            Permanent = info.Permanent
         };
     }
 
     private static Moodle ConvertStatusInfoToMoodle(MoodlesStatusInfo info)
     {
+        var time = TimeSpan.FromMilliseconds(info.ExpireTicks < 0 ? 0 : info.ExpireTicks);
+        
         return new Moodle
         {
             Info = new MoodleInfo
             {
-                Guid = info.GUID,
-                IconId = info.IconID,
+                Version = info.Version,
+                Guid = info.Guid,
+                IconId = info.IconId,
                 Title = info.Title,
                 Description = info.Description,
+                CustomVfxPath = info.CustomVfxPath,
+                ExpireTicks = info.ExpireTicks,
                 Type = info.Type,
-                Applier = info.Applier,
-                Dispellable = info.Dispelable,
                 Stacks = info.Stacks,
-                Persistent = info.Persistent,
-                Days = info.Days,
-                Hours = info.Hours,
-                Minutes = info.Minutes,
-                Seconds = info.Seconds,
-                NoExpire = info.NoExpire,
-                AsPermanent = info.AsPermanent,
-                StatusOnRemoval = info.StatusOnDispell,
-                CustomVfxPath = info.CustomVFXPath,
-                StackOnReapply = info.StackOnReapply,
-                StacksIncOnReapply = info.StacksIncOnReapply,
+                StackSteps = info.StackSteps,
+                Modifiers = info.Modifiers,
+                ChainedStatus = info.ChainedStatus,
+                ChainTrigger = info.ChainTrigger,
+                Applier = info.Applier,
+                Dispeller = info.Dispeller,
+                Permanent = info.Permanent
             },
                 
             PrettyTitle = RemoveTagsFromTitle(info.Title),
-            PrettyDescription = RemoveTagsFromTitle(info.Description, true)
+            PrettyDescription = RemoveTagsFromTitle(info.Description, true),
+            PrettyExpiration = $"{time.Days}d, {time.Hours}h, {time.Minutes}m, {time.Seconds}s"
         };
     }
     

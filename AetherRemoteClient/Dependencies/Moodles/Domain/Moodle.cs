@@ -22,4 +22,9 @@ public record Moodle
     ///     A formatting of the <see cref="MoodleInfo.Description"/> field with all colors, accents, and other fields removed
     /// </summary>
     public string PrettyDescription = string.Empty;
+
+    /// <summary>
+    ///     A formatting of the <see cref="MoodleInfo.ExpireTicks"/> field to display all relevant times
+    /// </summary>
+    public string PrettyExpiration = string.Empty;
 }

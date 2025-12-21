@@ -159,11 +159,7 @@ public class MoodlesViewUi(
             ImGui.Separator();
             ImGui.TextWrapped(moodle.PrettyDescription);
             ImGui.Separator();
-
-            ImGui.TextUnformatted(moodle.Info.NoExpire 
-                ? "Does not expire."
-                : $"Expires in {moodle.Info.Days}d, {moodle.Info.Hours}h, {moodle.Info.Minutes}m, and {moodle.Info.Seconds}s");
-
+            ImGui.TextUnformatted(moodle.Info.ExpireTicks < 0 ? "Does not expire" : $"Expires in {moodle.PrettyExpiration}");
             ImGui.EndTooltip();
         }
     }
