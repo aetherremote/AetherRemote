@@ -1,4 +1,5 @@
 using System;
+using AetherRemoteClient.Style;
 using AetherRemoteClient.UI;
 using AetherRemoteClient.Utils;
 using Dalamud.Interface.Windowing;
@@ -27,9 +28,11 @@ public class WindowManager : IDisposable
 
     private void Draw()
     {
+        AetherRemoteImGui.Push();
         AetherRemoteStyle.Stylize();
         _windowSystem.Draw();
         AetherRemoteStyle.UnStylize();
+        AetherRemoteImGui.Pop();
     }
 
     private void OpenMainUi()

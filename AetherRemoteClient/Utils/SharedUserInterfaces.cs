@@ -4,6 +4,7 @@ using System.IO;
 using System.Numerics;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain;
+using AetherRemoteClient.Style;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
@@ -266,7 +267,7 @@ public static class SharedUserInterfaces
     public static void ContentBox(string id, uint backgroundColor, bool includeEndPadding, Action contentToDraw)
     {
         var draw = ImGui.GetWindowDrawList();
-        var padding = ImGui.GetStyle().WindowPadding;
+        var padding = AetherRemoteImGui.WindowPadding;
         var startCursorPos = ImGui.GetCursorPos();
         var startScreenPos = ImGui.GetCursorScreenPos();
 
@@ -276,15 +277,13 @@ public static class SharedUserInterfaces
         ImGui.SetCursorPos(startCursorPos + padding);
         
         ImGui.BeginGroup();
-        contentToDraw.Invoke();
+        contentToDraw();
         ImGui.EndGroup();
 
-        var size = ImGui.GetItemRectSize() + padding * 2;
-        size.X = ImGui.GetWindowWidth();
+        var itemSize = ImGui.GetItemRectSize();
+        var size = new Vector2(ImGui.GetWindowWidth(), itemSize.Y + padding.Y * 2);
         
-        if (cached.Equals(size) is false)
-            ContextBoxSizeCache[id] = size;
-        
+        ContextBoxSizeCache[id] = size;
         ImGui.SetCursorPosY(startCursorPos.Y + size.Y + (includeEndPadding ? padding.Y : 0));
     }
 

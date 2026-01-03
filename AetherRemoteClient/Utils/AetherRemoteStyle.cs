@@ -22,6 +22,7 @@ public static class AetherRemoteStyle
     
     public static void Stylize()
     {
+        return;
         ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, Rounding);
         
         ImGui.PushStyleColor(ImGuiCol.WindowBg, WindowBackground);
@@ -33,6 +34,7 @@ public static class AetherRemoteStyle
 
     public static void UnStylize()
     {
+        return;
         ImGui.PopStyleColor(5);
         
         ImGui.PopStyleVar();

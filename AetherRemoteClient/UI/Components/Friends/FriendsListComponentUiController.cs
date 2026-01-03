@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Enums;
@@ -21,6 +22,8 @@ public class FriendsListComponentUiController : IDisposable
     private readonly SelectionManager _selectionManager;
     
     public readonly FilterFriends Filter;
+
+    public readonly List<Friend> Pending = [];
     
     public FriendsListComponentUiController(FriendsListService friendsListService, NetworkService networkService, SelectionManager selectionManager)
     {
