@@ -11,47 +11,49 @@ namespace AetherRemoteServer.SignalR.Handlers;
 /// <summary>
 ///     Handles the logic for fulfilling a <see cref="AddFriendRequest"/>
 /// </summary>
-public class AddFriendHandler(
-    IConnectionsService connections, 
-    IDatabaseService database,
-    ILogger<AddFriendHandler> logger)
+public class AddFriendHandler(IConnectionsService connections, IDatabaseService database, ILogger<AddFriendHandler> logger)
 {
     /// <summary>
     ///     Handles the request
     /// </summary>
     public async Task<AddFriendResponse> Handle(string friendCode, AddFriendRequest request, IHubCallerClients clients)
     {
+        // Create the permissions in the database
         var result = await database.CreatePermissions(friendCode, request.TargetFriendCode);
+        
+        // Map the result
         var code = result switch
         {
-            DatabaseResultEc.Uninitialized => AddFriendEc.Uninitialized,
-            DatabaseResultEc.NoSuchFriendCode => AddFriendEc.NoSuchFriendCode,
-            DatabaseResultEc.AlreadyFriends => AddFriendEc.AlreadyFriends,
             DatabaseResultEc.Success => AddFriendEc.Success,
+            DatabaseResultEc.Pending => AddFriendEc.Pending,
+            DatabaseResultEc.AlreadyFriends => AddFriendEc.AlreadyFriends,
+            DatabaseResultEc.NoSuchFriendCode => AddFriendEc.NoSuchFriendCode,
             _ => AddFriendEc.Unknown
         };
-
-        // Check if they are online
-        var target = connections.TryGetClient(request.TargetFriendCode);
-        if (target is null)
-            return new AddFriendResponse(code, false);
         
-        // Check if they are friends with the person who added them
-        var permissions = await database.GetPermissions(request.TargetFriendCode);
-        if (permissions.Permissions.ContainsKey(friendCode) is false)
-            return new AddFriendResponse(code, false);
+        // Only update other person if it is a success
+        if (code is not AddFriendEc.Success)
+        {
+            return code is AddFriendEc.Pending 
+                ? new AddFriendResponse(code, FriendOnlineStatus.Pending) 
+                : new AddFriendResponse(code, FriendOnlineStatus.Offline);
+        }
+
+        // Only update if they are online
+        if (connections.TryGetClient(request.TargetFriendCode) is not { } target)
+            return new AddFriendResponse(code, FriendOnlineStatus.Offline);
         
         try
         {
-            var sync = new SyncOnlineStatusForwardedRequest(friendCode, true, new UserPermissions());
+            // Try to send an update to that client that we've accepted the friend request
+            var sync = new SyncOnlineStatusForwardedRequest(friendCode, FriendOnlineStatus.Online, new UserPermissions());
             await clients.Client(target.ConnectionId).SendAsync(HubMethod.SyncOnlineStatus, sync);
         }
         catch (Exception e)
         {
-            logger.LogWarning("Unable to sync {FriendCode}'s online status to {Target} while adding them, {Exception}", 
-                friendCode, target, e.Message);
+            logger.LogError("Syncing online status {Sender} -> {Target} failed, {Error}", friendCode, request.TargetFriendCode, e);
         }
         
-        return new AddFriendResponse(code, true);
+        return new AddFriendResponse(code, FriendOnlineStatus.Online);
     }
 }

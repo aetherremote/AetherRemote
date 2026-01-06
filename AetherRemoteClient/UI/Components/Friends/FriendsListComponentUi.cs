@@ -5,6 +5,7 @@ using AetherRemoteClient.Domain.Enums;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Style;
 using AetherRemoteClient.Utils;
+using AetherRemoteCommon.Domain.Enums;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
@@ -47,16 +48,36 @@ public class FriendsListComponentUi(FriendsListComponentUiController controller,
         });
 
         var height = displayAddFriendsBox
-            ? AetherRemoteImGui.WindowPadding.Y * 3 + AetherRemoteImGui.FramePadding.Y * 4 + ImGui.GetFontSize() * 2 + AetherRemoteImGui.ItemSpacing.Y
+            ? AetherRemoteImGui.WindowPadding.Y * 3 + AetherRemoteImGui.FramePadding.Y * 4 + ImGui.GetFontSize() * 2 + AetherRemoteImGui.ItemSpacing.Y * 2
             : 0;
 
         if (ImGui.BeginChild("###PermissionViewFriendsList", new Vector2(0, -height), true))
         {
+            var pending = new List<Friend>();
             var online = new List<Friend>();
             var offline = new List<Friend>();
 
             foreach (var friend in controller.Filter.List)
-                (friend.Online ? online : offline).Add(friend);
+            {
+                var list = friend.Status switch
+                {
+                    FriendOnlineStatus.Pending => pending,
+                    FriendOnlineStatus.Online => online,
+                    _ => offline
+                };
+                
+                list.Add(friend);
+            }
+
+            if (displayOfflineFriends && pending.Count > 0)
+            {
+                ImGui.TextColored(ImGuiColors.ParsedPink, "Pending");
+                foreach (var friend in pending)
+                {
+                    if (ImGui.Selectable($"{friend.NoteOrFriendCode}##{friend.FriendCode}", selectionManager.Contains(friend)))
+                        selectionManager.Select(friend, ImGui.GetIO().KeyCtrl);
+                }
+            }
 
             ImGui.TextColored(ImGuiColors.HealerGreen, "Online");
             foreach (var friend in online)
@@ -82,10 +103,15 @@ public class FriendsListComponentUi(FriendsListComponentUiController controller,
         {
             ImGui.Spacing();
 
-            SharedUserInterfaces.ContentBox("whgdwuih", AetherRemoteStyle.PanelBackground, false, () =>
+            SharedUserInterfaces.ContentBox("AddFriendContentBox", AetherRemoteStyle.PanelBackground, false, () =>
             {
                 ImGui.SetNextItemWidth(width);
                 ImGui.InputTextWithHint("###AddFriendInputText", "Friend code", ref controller.FriendCodeToAdd, 128);
+
+                if (ImGui.IsItemHovered())
+                    ImGui.SetTooltip("Friend codes are case sensitive");
+                
+                ImGui.Spacing();
                 if (ImGui.Button("Add Friend", new Vector2(width, 0)))
                     _ = controller.Add();
             });

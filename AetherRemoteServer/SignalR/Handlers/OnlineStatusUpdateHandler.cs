@@ -1,3 +1,4 @@
+using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.SyncOnlineStatus;
 using AetherRemoteServer.Domain;
@@ -9,10 +10,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 /// <summary>
 ///     Processes clients connecting and disconnecting from the server
 /// </summary>
-public class OnlineStatusUpdateHandler(
-    IConnectionsService connections,
-    IDatabaseService database,
-    ILogger<OnlineStatusUpdateHandler> logger)
+public class OnlineStatusUpdateHandler(IConnectionsService connections, IDatabaseService database, ILogger<OnlineStatusUpdateHandler> logger)
 {
     /// <summary>
     ///     Handle the event, removing or adding from the current client list, and updating all the user's friends who are online
@@ -24,22 +22,33 @@ public class OnlineStatusUpdateHandler(
         else
             connections.TryRemoveClient(friendCode);
 
-        var friendPermissions = await database.GetPermissions(friendCode);
-        foreach (var (target, permissions) in friendPermissions.Permissions)
+        var permissions = await database.GetAllPermissions(friendCode);
+        foreach (var permission in permissions)
         {
-            if (connections.TryGetClient(target) is not { } friendInfo)
+            // Ignore pending friends
+            if (permission.PermissionsGrantedBy is null)
                 continue;
 
-            var request = new SyncOnlineStatusForwardedRequest(friendCode, online, online ? permissions : null);
+            // Only evaluate online friends
+            if (connections.TryGetClient(permission.TargetFriendCode) is not { } friend)
+                continue;
 
             try
             {
-                await clients.Client(friendInfo.ConnectionId).SendAsync(HubMethod.SyncOnlineStatus, request);
+                if (online)
+                {
+                    var request = new SyncOnlineStatusForwardedRequest(friendCode, FriendOnlineStatus.Online, permission.PermissionsGrantedTo);
+                    await clients.Client(friend.ConnectionId).SendAsync(HubMethod.SyncOnlineStatus, request);
+                }
+                else
+                {
+                    var request = new SyncOnlineStatusForwardedRequest(friendCode, FriendOnlineStatus.Offline, null);
+                    await clients.Client(friend.ConnectionId).SendAsync(HubMethod.SyncOnlineStatus, request);
+                }
             }
             catch (Exception e)
             {
-                logger.LogWarning("Unable to sync {FriendCode}'s online status to {Target}, {Exception}", friendCode,
-                    target, e.Message);
+                logger.LogError("Syncing online status {Sender} -> {Target} failed, {Error}", friendCode, permission.TargetFriendCode, e);
             }
         }
     }

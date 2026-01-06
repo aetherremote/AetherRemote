@@ -24,9 +24,14 @@ public interface IDatabaseService
     public Task<DatabaseResultEc> UpdatePermissions(string senderFriendCode, string targetFriendCode, UserPermissions permissions);
 
     /// <summary>
-    ///     Retrieves all the permission sets for a specific user
+    ///     Returns the permissions a friend has granted another, if they exists
     /// </summary>
-    public Task<FriendPermissions> GetPermissions(string friendCode);
+    public Task<UserPermissions?> GetPermissions(string friendCode, string targetFriendCode);
+    
+    /// <summary>
+    ///     Returns a list of all the permissions that friend code has granted others, as well as the permissions those friends have granted the friend code
+    /// </summary>
+    public Task<List<TwoWayPermissions>> GetAllPermissions(string friendCode);
 
     /// <summary>
     ///     Deletes a permission set between two users

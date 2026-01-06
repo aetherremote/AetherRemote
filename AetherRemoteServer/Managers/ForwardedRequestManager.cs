@@ -26,16 +26,15 @@ public class ForwardedRequestManager(IConnectionsService connections, IDatabaseS
                 continue;
             }
 
-            var targetPermissions = await database.GetPermissions(targetFriendCode);
-            if (targetPermissions.Permissions.TryGetValue(sender, out var permissionsGranted) is false)
+            if (await database.GetPermissions(targetFriendCode, sender) is not { } targetPermissions)
             {
                 pending[i] = Task.FromResult(ActionResultBuilder.Fail(ActionResultEc.TargetNotFriends));
                 continue;
             }
             
-            var primary = (permissionsGranted.Primary & permissions.Primary) == permissions.Primary;
-            var speak = (permissionsGranted.Speak & permissions.Speak) == permissions.Speak;
-            var elevated = (permissionsGranted.Elevated & permissions.Elevated) == permissions.Elevated;
+            var primary = (targetPermissions.Primary & permissions.Primary) == permissions.Primary;
+            var speak = (targetPermissions.Speak & permissions.Speak) == permissions.Speak;
+            var elevated = (targetPermissions.Elevated & permissions.Elevated) == permissions.Elevated;
             if (primary is false || speak is false || elevated is false)
             {
                 pending[i] = Task.FromResult(ActionResultBuilder.Fail(ActionResultEc.TargetHasNotGrantedSenderPermissions));
@@ -64,10 +63,7 @@ public class ForwardedRequestManager(IConnectionsService connections, IDatabaseS
     /// <summary>
     ///     Forwards a request to a client with a timeout of 8 seconds
     /// </summary>
-    public static Task<ActionResult<T>> ForwardRequestWithTimeout<T>(
-        string methodName,
-        ISingleClientProxy clientProxy, 
-        ForwardedActionRequest forwardedRequest)
+    public static Task<ActionResult<T>> ForwardRequestWithTimeout<T>(string methodName, ISingleClientProxy clientProxy, ForwardedActionRequest forwardedRequest)
     {
         var token = new CancellationTokenSource(TimeOutDuration);
         return clientProxy.InvokeAsync<ActionResult<T>>(methodName, forwardedRequest, token.Token)

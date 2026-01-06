@@ -1,6 +1,7 @@
 using System;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.SyncOnlineStatus;
 using Microsoft.AspNetCore.SignalR.Client;
@@ -38,9 +39,9 @@ public class SyncOnlineStatusHandler : IDisposable
         if (_friends.Get(action.SenderFriendCode) is not { } friend)
             return;
         
-        friend.Online = action.Online;
+        friend.Status = action.Status;
 
-        if (!friend.Online)
+        if (friend.Status is FriendOnlineStatus.Offline)
         {
             _selection.Deselect(friend);
             return;

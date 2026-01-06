@@ -55,21 +55,17 @@ public class ConnectionManager : IDisposable
         
         // Clear the friend list in preparation for adding friends returned from the server
         _friendsListService.Clear();
-        
-        // Iterate over all the permissions we've granted to others
-        foreach (var (friendCode, permissionsGrantedToFriend) in response.PermissionsGrantedToOthers)
+
+        // Iterate over all the relationships to transform them into domain models
+        foreach (var relationship in response.Relationships)
         {
-            // Check if they're online. Server will only include online friends in this permission-granted-by-others dictionary
-            var online = response.PermissionsGrantedByOthers.TryGetValue(friendCode, out var permissionsGrantedByOther);
+            Plugin.Log.Info($"{relationship.TargetFriendCode} is {relationship.Status}");
             
             // Try to extract the note
-            Plugin.Configuration.Notes.TryGetValue(friendCode, out var note);
-
-            // Create a new friends object with everything we've gathered
-            var friend = new Friend(friendCode, online, note, permissionsGrantedToFriend, permissionsGrantedByOther);
+            Plugin.Configuration.Notes.TryGetValue(relationship.TargetFriendCode, out var note);
             
-            // Add to our friend list
-            _friendsListService.Add(friend);
+            // Add the new friend with all the data required
+            _friendsListService.Add(new Friend(relationship.TargetFriendCode, relationship.Status, note, relationship.PermissionsGrantedTo, relationship.PermissionsGrantedBy));
         }
 
         // Set the view to the 'home screen'

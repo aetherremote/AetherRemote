@@ -99,12 +99,19 @@ public class BodySwapViewUi(FriendsListComponentUi friendsList, BodySwapViewUiCo
                 }
                 else
                 {
-                    if (SharedUserInterfaces.IconButton(FontAwesomeIcon.StreetView, new Vector2(InitiateBodySwapButtonHeight), "Initiate body swap including yourself"))
+                    if (ImGui.Button("Swap (Include Self)", new Vector2(width * 0.5f - padding * 2, InitiateBodySwapButtonHeight)))
                         controller.SwapBodiesIncludingSelf();
+
+                    if (ImGui.IsItemHovered())
+                    {
+                        ImGui.BeginTooltip();
+                        ImGui.Text("Make sure you do not have yourself selected when using this");
+                        ImGui.EndTooltip();
+                    }
                     
                     ImGui.SameLine();
 
-                    if (ImGui.Button("Initiate Body Swap", new Vector2(ImGui.GetWindowWidth() - ImGui.GetCursorPosX() - padding, InitiateBodySwapButtonHeight)))
+                    if (ImGui.Button("Swap", new Vector2(ImGui.GetWindowWidth() - ImGui.GetCursorPosX() - padding, InitiateBodySwapButtonHeight)))
                         controller.SwapBodies();
                 }
             }

@@ -26,6 +26,11 @@ public enum DatabaseResultEc
     AlreadyFriends,
     
     /// <summary>
+    ///     Successfully added a user, but awaiting them to add you back
+    /// </summary>
+    Pending,
+    
+    /// <summary>
     ///     Unknown issue occurred
     /// </summary>
     Unknown,

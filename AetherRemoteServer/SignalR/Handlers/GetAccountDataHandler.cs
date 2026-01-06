@@ -1,4 +1,5 @@
-using AetherRemoteCommon.Domain;
+using AetherRemoteCommon;
+using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network.GetAccountData;
 using AetherRemoteServer.Domain.Interfaces;
 
@@ -19,19 +20,19 @@ public class GetAccountDataHandler(IConnectionsService connections, IDatabaseSer
 
         client.CharacterName = request.CharacterName;
         
-        var friendPermissions = await database.GetPermissions(friendCode);
-        var permissionsGrantedToOthers = friendPermissions.Permissions;
-        var permissionsGrantedByOthers = new Dictionary<string, UserPermissions>();
-        foreach (var friend in permissionsGrantedToOthers)
+        var results = new List<FriendRelationship>();
+        var permissions = await database.GetAllPermissions(friendCode);
+        foreach (var permission in permissions)
         {
-            if (connections.TryGetClient(friend.Key) is null)
-                continue;
+            var online = permission.PermissionsGrantedBy is null
+                ? FriendOnlineStatus.Pending
+                : connections.TryGetClient(permission.TargetFriendCode) is null
+                    ? FriendOnlineStatus.Offline
+                    : FriendOnlineStatus.Online;
+            
+            results.Add(new FriendRelationship(permission.TargetFriendCode, online, permission.PermissionsGrantedTo, permission.PermissionsGrantedBy));
+        } 
 
-            var friendsPermissions = await database.GetPermissions(friend.Key);
-            if (friendsPermissions.Permissions.TryGetValue(friendCode, out var permissionsGranted))
-                permissionsGrantedByOthers[friend.Key] = permissionsGranted;
-        }
-
-        return new GetAccountDataResponse(friendCode, permissionsGrantedToOthers, permissionsGrantedByOthers);
+        return new GetAccountDataResponse(friendCode, results);
     }
 }

@@ -13,7 +13,7 @@ public static class AetherRemoteImGui
     public const int ChildBorderSize = 1;
     public const int ChildRounding = 8;
     public static readonly Vector2 CellPadding = new(4, 2);
-    public static readonly Vector2 FramePadding = new(4, 4);
+    public static readonly Vector2 FramePadding = new(4, 3);
     public static readonly Vector2 ItemSpacing = new(8, 4);
     public static readonly Vector2 ItemInnerSpacing = new(4, 4);
     public static readonly Vector2 WindowPadding = new(8, 8);

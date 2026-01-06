@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Services;
+using AetherRemoteCommon.Domain.Enums;
 
 namespace AetherRemoteClient.Managers;
 
@@ -110,7 +111,7 @@ public class SelectionManager : IDisposable
     /// </summary>
     public void ClearOfflineFriends()
     {
-        _selected.RemoveWhere(friend => friend.Online is false);
+        _selected.RemoveWhere(friend => friend.Status is FriendOnlineStatus.Offline);
     }
 
     /// <summary>

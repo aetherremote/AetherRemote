@@ -81,7 +81,7 @@ public class PrimaryHub(
     {
         var friendCode = FriendCode;
         LogWithBehavior($"[RemoveFriendRequest] Sender = {friendCode}, Target = {request.TargetFriendCode}", LogMode.Both);
-        return await removeFriendHandler.Handle(friendCode, request);
+        return await removeFriendHandler.Handle(friendCode, request, Clients);
     }
     
     [HubMethodName(HubMethod.UpdateFriend)]

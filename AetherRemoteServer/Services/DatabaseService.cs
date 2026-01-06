@@ -4,6 +4,7 @@ using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteServer.Domain;
 using AetherRemoteServer.Domain.Interfaces;
 using Microsoft.Data.Sqlite;
+// ReSharper disable RedundantBoolCompare
 
 namespace AetherRemoteServer.Services;
 
@@ -73,45 +74,59 @@ public class DatabaseService : IDatabaseService
     /// </summary>
     public async Task<DatabaseResultEc> CreatePermissions(string senderFriendCode, string targetFriendCode)
     {
-        await using var command = _database.CreateCommand();
-        command.CommandText = "INSERT INTO Permissions VALUES (@friendCode, @targetFriendCode, @primary, @speak, @elevated)";
-        command.Parameters.AddWithValue("@friendCode", senderFriendCode);
-        command.Parameters.AddWithValue("@targetFriendCode", targetFriendCode);
-        command.Parameters.AddWithValue("@primary", PrimaryPermissions2.None);
-        command.Parameters.AddWithValue("@speak", SpeakPermissions2.None);
-        command.Parameters.AddWithValue("@elevated", ElevatedPermissions.None);
+        await using var transaction = (SqliteTransaction)await _database.BeginTransactionAsync();
 
         try
         {
-            return await command.ExecuteNonQueryAsync() is 0 ? DatabaseResultEc.NoOp : DatabaseResultEc.Success;
-        }
-        catch (SqliteException e)
-        {
-            _logger.LogWarning("Unable to create {FriendCode}'s permissions for {TargetFriendCode}, {Exception}", senderFriendCode, targetFriendCode, e.Message);
+            // Result object awaiting population
+            DatabaseResultEc result;
             
-            // Constraint
-            if (e.SqliteErrorCode is not 19)
+            // Initial add command
+            var command = _database.CreateCommand();
+            command.Transaction = transaction;
+            command.CommandText = 
+                 """
+                    INSERT INTO Permissions (FriendCode, TargetFriendCode, PrimaryPermissions, SpeakPermissions, ElevatedPermissions)
+                    SELECT @friendCode, @targetFriendCode, @primary, @speak, @elevated
+                    WHERE EXISTS (
+                        SELECT 1 FROM Accounts WHERE FriendCode = @targetFriendCode
+                    )
+                 """;
+            command.Parameters.AddWithValue("@friendCode", senderFriendCode);
+            command.Parameters.AddWithValue("@targetFriendCode", targetFriendCode);
+            command.Parameters.AddWithValue("@primary", PrimaryPermissions2.None);
+            command.Parameters.AddWithValue("@speak", SpeakPermissions2.None);
+            command.Parameters.AddWithValue("@elevated", ElevatedPermissions.None);
+            
+            // If nothing was added, that means we're already friends or friend code doesn't exist
+            if (await command.ExecuteNonQueryAsync() is 0)
             {
-                _logger.LogWarning("{User} failed to add {Target} due to unknown error {Exception} - {ExtendedException}", senderFriendCode, targetFriendCode, e.SqliteErrorCode, e.SqliteExtendedErrorCode);
-                return DatabaseResultEc.Unknown;
+                // Check to see if the friend code exists, SenderAccountId will always exist because it is a requirement to connect and use the plugin
+                var failure = _database.CreateCommand();
+                failure.Transaction = transaction;
+                failure.CommandText = "SELECT 1 FROM Accounts WHERE FriendCode = @targetFriendCode LIMIT 1";
+                failure.Parameters.AddWithValue("@targetFriendCode", targetFriendCode);
+                result = await failure.ExecuteScalarAsync() is null ? DatabaseResultEc.NoSuchFriendCode : DatabaseResultEc.AlreadyFriends;
             }
-
-            switch (e.SqliteExtendedErrorCode)
+            else
             {
-                case 787:
-                    return DatabaseResultEc.NoSuchFriendCode;
-                
-                case 2067:
-                    return DatabaseResultEc.AlreadyFriends;
-                
-                default:
-                    _logger.LogWarning("{User} failed to add {Target} due to unknown error sqlite 19 error {Exception} - {ExtendedException}", senderFriendCode, targetFriendCode, e.SqliteErrorCode, e.SqliteExtendedErrorCode);
-                    return DatabaseResultEc.Unknown;
+                // Otherwise, check to see if they added us back
+                var pair = _database.CreateCommand();
+                pair.Transaction = transaction;
+                pair.CommandText = "SELECT 1 FROM Permissions WHERE FriendCode = @targetFriendCode AND TargetFriendCode = @senderFriendCode LIMIT 1";
+                pair.Parameters.AddWithValue("@senderFriendCode", senderFriendCode);
+                pair.Parameters.AddWithValue("@targetFriendCode", targetFriendCode);
+                result = await pair.ExecuteScalarAsync() is null ? DatabaseResultEc.Pending : DatabaseResultEc.Success;
             }
+            
+            // Commit changes and return what happened
+            await transaction.CommitAsync();
+            return result;
         }
         catch (Exception e)
         {
-            _logger.LogWarning("Unable to create {FriendCode}'s permissions for {TargetFriendCode}, {Exception}", senderFriendCode, targetFriendCode, e.Message);
+            _logger.LogError("[AddOrAcceptFriendship] {Error}", e);
+            await transaction.RollbackAsync();
             return DatabaseResultEc.Unknown;
         }
     }
@@ -141,35 +156,94 @@ public class DatabaseService : IDatabaseService
     }
 
     /// <summary>
-    ///     Gets all the permissions sender has granted to others
+    ///     <inheritdoc cref="IDatabaseService.GetPermissions"/>
     /// </summary>
-    public async Task<FriendPermissions> GetPermissions(string friendCode)
+    public async Task<UserPermissions?> GetPermissions(string friendCode, string targetFriendCode)
+    {   
+        await using var command = _database.CreateCommand();
+        command.CommandText = 
+            """
+                SELECT PrimaryPermissions, SpeakPermissions, ElevatedPermissions 
+                FROM Permissions 
+                WHERE FriendCode = @friendCode AND TargetFriendCode = @targetFriendCode LIMIT 1
+            """;
+        command.Parameters.AddWithValue("@friendCode", friendCode);
+        command.Parameters.AddWithValue("@targetFriendCode", targetFriendCode);
+
+        try
+        {
+            await using var reader = await command.ExecuteReaderAsync();
+            if (await reader.ReadAsync() is false)
+                return null;
+            
+            var primary = (PrimaryPermissions2)reader.GetInt32(0);
+            var speak = (SpeakPermissions2)reader.GetInt32(1);
+            var elevated = (ElevatedPermissions)reader.GetInt32(2);
+            return new UserPermissions(primary, speak, elevated);
+        }
+        catch (Exception e)
+        {
+            _logger.LogError("[GetPermissions] {Error}", e);
+            return null;
+        }
+    }
+
+    /// <summary>
+    ///     <inheritdoc cref="IDatabaseService.GetAllPermissions"/>
+    /// </summary>
+    public async Task<List<TwoWayPermissions>> GetAllPermissions(string friendCode)
     {
         await using var command = _database.CreateCommand();
-        command.CommandText = "SELECT TargetFriendCode, PrimaryPermissions, SpeakPermissions, ElevatedPermissions FROM Permissions WHERE FriendCode = @friendCode";
+        command.CommandText =
+            """
+                SELECT
+                p.TargetFriendCode,
+                p.PrimaryPermissions,
+                p.SpeakPermissions,
+                p.ElevatedPermissions,
+                r.PrimaryPermissions AS PrimaryPermissionsToUs,
+                r.SpeakPermissions AS SpeakPermissionsToUs,
+                r.ElevatedPermissions AS ElevatedPermissionsToUs
+                FROM Permissions AS p LEFT JOIN Permissions AS r ON r.FriendCode = p.TargetFriendCode AND r.TargetFriendCode = p.FriendCode
+                WHERE p.FriendCode = @friendCode;
+            """;
         command.Parameters.AddWithValue("@friendCode", friendCode);
 
-        var result = new Dictionary<string, UserPermissions>();
+        var results = new List<TwoWayPermissions>();
+        
         try
         {
             await using var reader = await command.ExecuteReaderAsync();
             while (reader.Read())
             {
+                // Always get the friend code
                 var targetFriendCode = reader.GetString(0);
-                var primary = reader.GetInt32(1);
-                var speak = reader.GetInt32(2);
-                var elevated = reader.GetInt32(3);
                 
-                var permissions = new UserPermissions((PrimaryPermissions2)primary, (SpeakPermissions2)speak, (ElevatedPermissions)elevated);
-                result.Add(targetFriendCode, permissions);
+                // Get the permissions we've granted to them
+                var primary = (PrimaryPermissions2)reader.GetInt32(1);
+                var speak = (SpeakPermissions2)reader.GetInt32(2);
+                var elevated = (ElevatedPermissions)reader.GetInt32(3);
+
+                // If 4 is null, 5 and 6 will also be null because that means they do not have permissions for us
+                if (reader.IsDBNull(4))
+                {
+                    results.Add(new TwoWayPermissions(friendCode, targetFriendCode, primary, speak, elevated));
+                    continue;
+                }
+                
+                // Get the permissions they've granted to us
+                var primary2 = (PrimaryPermissions2)reader.GetInt32(4);
+                var speak2 = (SpeakPermissions2)reader.GetInt32(5);
+                var elevated2 = (ElevatedPermissions)reader.GetInt32(6);
+                results.Add(new TwoWayPermissions(friendCode, targetFriendCode, primary, speak, elevated, primary2, speak2, elevated2));
             }
-            
-            return new FriendPermissions { Permissions = result };
+
+            return results;
         }
         catch (Exception e)
         {
-            _logger.LogWarning("Unable to get permissions for {FriendCode}, {Exception}", friendCode, e.Message);
-            return new FriendPermissions();
+            _logger.LogError("[GetAllPermissions] {Error}", e);
+            return [];
         }
     }
 

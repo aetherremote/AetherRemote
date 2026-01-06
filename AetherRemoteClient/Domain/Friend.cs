@@ -1,4 +1,5 @@
 using AetherRemoteCommon.Domain;
+using AetherRemoteCommon.Domain.Enums;
 
 namespace AetherRemoteClient.Domain;
 
@@ -7,7 +8,7 @@ namespace AetherRemoteClient.Domain;
 /// </summary>
 public class Friend(
     string friendCode,
-    bool online,
+    FriendOnlineStatus status,
     string? note = null,
     UserPermissions? permissionsGrantedToFriend = null,
     UserPermissions? permissionsGrantedByFriend = null)
@@ -25,7 +26,7 @@ public class Friend(
     /// <summary>
     ///     If a friend is online or not
     /// </summary>
-    public bool Online = online;
+    public FriendOnlineStatus Status = status;
     
     /// <summary>
     ///     The permissions you have granted to a friend

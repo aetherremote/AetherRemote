@@ -18,6 +18,11 @@ public enum AddFriendEc
     AlreadyFriends,
     
     /// <summary>
+    ///     Successfully added a user, but awaiting them to add you back
+    /// </summary>
+    Pending,
+    
+    /// <summary>
     ///     An unknown error occurred
     /// </summary>
     Unknown,

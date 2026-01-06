@@ -69,22 +69,40 @@ public class FriendsListComponentUiController : IDisposable
         
         var request = new AddFriendRequest(FriendCodeToAdd);
         var response = await _networkService.InvokeAsync<AddFriendResponse>(HubMethod.AddFriend, request).ConfigureAwait(false);
+        switch (response.Result)
+        {
+            case AddFriendEc.Success:
+            case AddFriendEc.Pending:
+                
+                // Try to get the name from our notes just in case they are a previous friend
+                Plugin.Configuration.Notes.TryGetValue(request.TargetFriendCode, out var note);
+                
+                // Create the new object with notes
+                var friend = new Friend(request.TargetFriendCode, response.Status, note);
+                
+                // Add to the friends list
+                _friendsListService.Add(friend);
+                
+                // Add to the list of selected friends to allow for immediate editing
+                _selectionManager.Select(friend, false);
+                
+                NotificationHelper.Success("Successfully Added Friend", $"Successfully added {FriendCodeToAdd} as a friend");
+                break;
+            
+            case AddFriendEc.AlreadyFriends:
+                NotificationHelper.Info("You are already friends", string.Empty);
+                break;
 
-        if (response.Result is AddFriendEc.Success)
-        {
-            var friend = new Friend(request.TargetFriendCode, response.Online);
-            
-            _friendsListService.Add(friend);
-            
-            _selectionManager.Select(friend, false);
-            
-            FriendCodeToAdd = string.Empty;
-            NotificationHelper.Success("Successfully Added Friend", $"Successfully added {FriendCodeToAdd} as a friend");
+            case AddFriendEc.Uninitialized:
+            case AddFriendEc.NoSuchFriendCode:
+            case AddFriendEc.Unknown:
+            default:
+                NotificationHelper.Error("Failed to Add Friend", $"{response.Result}");
+                break;
         }
-        else
-        {
-            NotificationHelper.Error("Failed to Add Friend", $"{response.Result}");
-        }
+        
+        // Reset the UI element
+        FriendCodeToAdd = string.Empty;
     }
 
     public void ToggleSortMode()

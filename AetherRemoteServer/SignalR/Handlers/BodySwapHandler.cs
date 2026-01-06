@@ -66,9 +66,6 @@ public class BodySwapHandler(IConnectionsService connections, IDatabaseService d
         var elevated = ElevatedPermissions.None;
         if (request.LockCode is not null)
             elevated = ElevatedPermissions.PermanentTransformation;
-        
-        // Build permission set to check against
-        var permissions = new UserPermissions(primary, SpeakPermissions2.None, elevated);
 
         // Get the names of everyone involved in the swap
         var characters = new List<string>();
@@ -77,12 +74,12 @@ public class BodySwapHandler(IConnectionsService connections, IDatabaseService d
             if (connections.TryGetClient(targetFriendCode) is not { } connectionClient)
                 return new BodySwapResponse(ActionResponseEc.TargetOffline);
 
-            var targetPermissions = await database.GetPermissions(targetFriendCode);
-            if (targetPermissions.Permissions.TryGetValue(sender, out var permissionsGranted) is false)
+            // Get the target's permissions for the sender
+            if (await database.GetPermissions(targetFriendCode, sender) is not { } targetPermissions)
                 return new BodySwapResponse(ActionResponseEc.TargetBodySwapIsNotFriends);
-            
+
             // Body swap will only every make use of primary and elevated permissions
-            if (((permissionsGranted.Primary & permissions.Primary) == permissions.Primary) is false || ((permissionsGranted.Elevated & permissions.Elevated) == permissions.Elevated) is false)
+            if ((targetPermissions.Primary & primary) != primary || (targetPermissions.Elevated & elevated) != elevated)
                 return new BodySwapResponse(ActionResponseEc.TargetBodySwapLacksPermissions);
             
             characters.Add(connectionClient.CharacterName);

@@ -29,9 +29,7 @@ public class WindowManager : IDisposable
     private void Draw()
     {
         AetherRemoteImGui.Push();
-        AetherRemoteStyle.Stylize();
         _windowSystem.Draw();
-        AetherRemoteStyle.UnStylize();
         AetherRemoteImGui.Pop();
     }
 

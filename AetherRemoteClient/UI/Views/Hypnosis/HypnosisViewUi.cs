@@ -164,6 +164,12 @@ public class HypnosisViewUi(
                 controller.SetColorText();
             
             ImGui.TextUnformatted("Words");
+            
+            ImGui.SameLine();
+            SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
+            if (ImGui.IsItemHovered())
+                ImGui.SetTooltip("Separate words or phrases with a new line");
+            
             if (ImGui.InputTextMultiline("##WordBank", ref controller.TextWords, Constraints.Hypnosis.TextWordsMax, new Vector2(width - padding * 2 ,0)))
                 controller.BeginTextRefreshTimer();
         });

@@ -16,27 +16,4 @@ public static class AetherRemoteStyle
 
     public const ushort TextColorGreen = 45;
     public const ushort TextColorPurple = 48;
-    
-    private static readonly Vector4 PrimaryColorHovered = PrimaryColor with { W = 0.9f };
-    private static readonly Vector4 WindowBackground = new(0.0431f, 0.0549f, 0.0588f, 0.95f);
-    
-    public static void Stylize()
-    {
-        return;
-        ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, Rounding);
-        
-        ImGui.PushStyleColor(ImGuiCol.WindowBg, WindowBackground);
-        ImGui.PushStyleColor(ImGuiCol.ChildBg, PanelBackground);
-        ImGui.PushStyleColor(ImGuiCol.Border, PanelBackground);
-        ImGui.PushStyleColor(ImGuiCol.ButtonHovered, PrimaryColorHovered);
-        ImGui.PushStyleColor(ImGuiCol.ButtonActive, PrimaryColor);
-    }
-
-    public static void UnStylize()
-    {
-        return;
-        ImGui.PopStyleColor(5);
-        
-        ImGui.PopStyleVar();
-    }
 }
