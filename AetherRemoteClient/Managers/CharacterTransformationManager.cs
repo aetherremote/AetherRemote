@@ -91,6 +91,9 @@ public class CharacterTransformationManager(
         // Ready an object to store all the transformation data
         var permanent = new PermanentTransformationData();
         
+        // Apply in reverse order so that C+, Mods, etc... are applied first before glamourer
+        attributes.Reverse();
+        
         // Iterate over all the attributes and try to apply them one by one
         foreach(var attribute in attributes)
             if (await attribute.Apply(permanent).ConfigureAwait(false) is false)

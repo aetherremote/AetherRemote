@@ -26,7 +26,7 @@ public class AuthController(Configuration config, IDatabaseService database) : C
     [HttpPost("login")]
     public async Task<IActionResult> Login([FromBody] GetTokenRequest request)
     {
-        if (request.Version != ExpectedVersion)
+        if (request.Version < ExpectedVersion)
             return StatusCode(StatusCodes.Status409Conflict, new LoginAuthenticationResult(LoginAuthenticationErrorCode.VersionMismatch));
         
         if (await database.GetFriendCodeBySecret(request.Secret) is not { } friendCode)

@@ -60,8 +60,7 @@ public sealed class Plugin : IDalamudPlugin
     /// <summary>
     ///     Internal plugin version
     /// </summary>
-    public static readonly Version Version =
-        Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0, 0);
+    public static readonly Version Version = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0, 0);
     
     // Instantiated
     private readonly ServiceProvider _services;
