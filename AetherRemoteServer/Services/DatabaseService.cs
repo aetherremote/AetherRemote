@@ -3,6 +3,7 @@ using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteServer.Domain;
 using AetherRemoteServer.Domain.Interfaces;
+using AetherRemoteServer.Domain.Shared;
 using Microsoft.Data.Sqlite;
 // ReSharper disable RedundantBoolCompare
 
@@ -264,6 +265,120 @@ public class DatabaseService : IDatabaseService
         catch (Exception e)
         {
             _logger.LogWarning("Unable to delete {FriendCode}'s permissions for {TargetFriendCode}, {Exception}", senderFriendCode, targetFriendCode, e);
+            return DatabaseResultEc.Unknown;
+        }
+    }
+    
+    /// <summary>
+    ///     <inheritdoc cref="IDatabaseService.AdminCreateAccount"/>
+    /// </summary>
+    public async Task<DatabaseResultEc> AdminCreateAccount(ulong discord, string friendCode, string secret)
+    {
+        await using var command = _database.CreateCommand();
+        command.CommandText =
+            """
+                INSERT OR IGNORE INTO Accounts (DiscordId, FriendCode, Secret, Admin) 
+                VALUES (@discord, @friendCode, @secret, 0)
+                RETURNING 1;
+            """;
+        command.Parameters.AddWithValue("@discord", discord);
+        command.Parameters.AddWithValue("@friendCode", friendCode);
+        command.Parameters.AddWithValue("@secret", secret);
+
+        try
+        {
+            return await command.ExecuteScalarAsync() is null ? DatabaseResultEc.FriendCodeAlreadyExists : DatabaseResultEc.Success;
+        }
+        catch (Exception e)
+        {
+            _logger.LogError("[DatabaseProvider.AdminInsertAccount] Failed to register users for discord id {Discord}, {Error}", discord, e);
+            return DatabaseResultEc.Unknown;
+        }
+    }
+
+
+    /// <summary>
+    ///     <inheritdoc cref="IDatabaseService.AdminGetAccounts"/>
+    /// </summary>
+    public async Task<List<Account>?> AdminGetAccounts(ulong discord)
+    {
+        await using var command = _database.CreateCommand();
+        command.CommandText = "SELECT * FROM Accounts WHERE DiscordId = @discord";
+        command.Parameters.AddWithValue("@discord", discord);
+        
+        try
+        {
+            await using var reader = await command.ExecuteReaderAsync();
+            
+            var results = new List<Account>();
+            while (reader.Read())
+            {
+                var friendCode = reader.GetString(2);
+                var secret = reader.GetString(3);
+                var admin = reader.GetInt32(4);
+                
+                results.Add(new Account(friendCode, secret, admin is 1));
+            }
+
+            return results;
+        }
+        catch (Exception e)
+        {
+            _logger.LogError("[DatabaseProvider.AdminGetAccounts] Failed to get registered users for discord id {Discord}, error: {Error}", discord, e);
+            return null;
+        }
+    }
+    
+    /// <summary>
+    ///     <inheritdoc cref="IDatabaseService.AdminUpdateAccount"/>
+    /// </summary>
+    public async Task<DatabaseResultEc> AdminUpdateAccount(ulong discord, string oldFriendCode, string newFriendCode)
+    {
+        await using var command = _database.CreateCommand();
+        command.CommandText =
+            """
+                UPDATE Accounts 
+                SET FriendCode = @newFriendCode 
+                WHERE DiscordId = @discord AND FriendCode = @friendCode
+                RETURNING 1;
+            """;
+        command.Parameters.AddWithValue("@discord", discord);
+        command.Parameters.AddWithValue("@friendCode", oldFriendCode);
+        command.Parameters.AddWithValue("@newFriendCode", newFriendCode);
+
+        try
+        {
+            return await command.ExecuteScalarAsync() is null ? DatabaseResultEc.NoSuchFriendCode : DatabaseResultEc.Success;
+        }
+        catch (Exception e)
+        {
+            _logger.LogError("[DatabaseProvider.TryUpdateFriendCode] Failed update user for discord id {Discord}, {Error}", discord, e);
+            return DatabaseResultEc.Unknown;
+        }
+    }
+    
+    /// <summary>
+    ///     <inheritdoc cref="IDatabaseService.AdminDeleteAccount"/>
+    /// </summary>
+    public async Task<DatabaseResultEc> AdminDeleteAccount(ulong discord, string friendCode)
+    {
+        await using var command = _database.CreateCommand();
+        command.CommandText =
+            """
+                DELETE FROM Accounts 
+                WHERE DiscordId = @discord AND FriendCode = @friendCode
+                RETURNING 1
+            """;
+        command.Parameters.AddWithValue("@discord", discord);
+        command.Parameters.AddWithValue("@friendCode", friendCode);
+        
+        try
+        {
+            return await command.ExecuteScalarAsync() is null ? DatabaseResultEc.NoSuchFriendCode : DatabaseResultEc.Success;
+        }
+        catch (Exception e)
+        {
+            Console.WriteLine($"[DatabaseProvider.TryDeleteFriendCode] Failed update user for discord id {discord}, {e}");
             return DatabaseResultEc.Unknown;
         }
     }

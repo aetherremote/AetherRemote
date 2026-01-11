@@ -21,6 +21,11 @@ public enum DatabaseResultEc
     NoSuchFriendCode,
     
     /// <summary>
+    ///     The friend code already exists
+    /// </summary>
+    FriendCodeAlreadyExists,
+    
+    /// <summary>
     ///     Already friends with a target
     /// </summary>
     AlreadyFriends,

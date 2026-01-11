@@ -1,5 +1,6 @@
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteServer.Domain.Shared;
 
 namespace AetherRemoteServer.Domain.Interfaces;
 
@@ -37,4 +38,26 @@ public interface IDatabaseService
     ///     Deletes a permission set between two users
     /// </summary>
     public Task<DatabaseResultEc> DeletePermissions(string senderFriendCode, string targetFriendCode);
+
+    /// <summary>
+    ///     Admin function to add a new account to the database
+    /// </summary>
+    /// <returns></returns>
+    public Task<DatabaseResultEc> AdminCreateAccount(ulong discord, string friendCode, string secret);
+
+    /// <summary>
+    ///     Attempts to get all the friend codes associated with provided discord id
+    /// </summary>
+    /// <param name="discord">Discord Id</param>
+    public Task<List<Account>?> AdminGetAccounts(ulong discord);
+
+    /// <summary>
+    ///     Attempts to update an existing account's friend code, and all the relationships associated with them
+    /// </summary>
+    public Task<DatabaseResultEc> AdminUpdateAccount(ulong discord, string oldFriendCode, string newFriendCode);
+
+    /// <summary>
+    ///     Attempts to delete an existing account, and all associated relationships.
+    /// </summary>
+    public Task<DatabaseResultEc> AdminDeleteAccount(ulong discord, string friendCode);
 }

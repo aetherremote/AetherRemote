@@ -29,7 +29,7 @@
     <ItemGroup>
         <PackageReference Include="Glamourer.Api" Version="2.8.0" />
         <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="8.0.11"/>
-        <PackageReference Include="Penumbra.Api" Version="5.13.0" />
+        <PackageReference Include="Penumbra.Api" Version="5.13.1" />
         <PackageReference Update="DalamudPackager" Version="14.0.1" />
         <PackageReference Include="Svg.Skia" Version="3.2.1" />
         <PackageReference Remove="DotNet.ReproducibleBuilds" />
