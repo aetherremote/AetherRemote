@@ -3,24 +3,8 @@ using MessagePack;
 
 namespace AetherRemoteCommon.Domain.Network;
 
-[MessagePackObject(true)]
-public record ActionResponse 
-{
-    public ActionResponseEc Result { get; set; }
-    public Dictionary<string, ActionResultEc> Results { get; set; } = [];
-
-    public ActionResponse()
-    {
-    }
-
-    public ActionResponse(ActionResponseEc code)
-    {
-        Result = code;
-    }
-    
-    public ActionResponse(Dictionary<string, ActionResultEc> results)
-    {
-        Result = ActionResponseEc.Success;
-        Results = results;
-    }
-}
+[MessagePackObject]
+public record ActionResponse(
+    [property: Key(0)] ActionResponseEc Result,
+    [property: Key(1)] Dictionary<string, ActionResultEc> Results
+);

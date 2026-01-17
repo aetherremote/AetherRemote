@@ -9,6 +9,7 @@ namespace AetherRemoteServer.SignalR.Hubs;
 [Authorize]
 public partial class PrimaryHub(
     // Services
+    IPresenceService presenceService,
     IRequestLoggingService requestLoggingService,
     
     // Managers
@@ -43,7 +44,7 @@ public partial class PrimaryHub(
     /// </summary>
     public override async Task OnConnectedAsync()
     {
-        await onlineStatusUpdateHandler.Handle(FriendCode, true, Context, Clients);
+        await onlineStatusUpdateHandler.Handle(FriendCode, true);
         await base.OnConnectedAsync();
     }
 
@@ -52,7 +53,7 @@ public partial class PrimaryHub(
     /// </summary>
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        await onlineStatusUpdateHandler.Handle(FriendCode, false, Context, Clients);
+        await onlineStatusUpdateHandler.Handle(FriendCode, false);
         await base.OnDisconnectedAsync(exception);
     }
 

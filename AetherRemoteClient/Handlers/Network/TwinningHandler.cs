@@ -16,7 +16,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 namespace AetherRemoteClient.Handlers.Network;
 
 /// <summary>
-///     Handles a <see cref="TwinningForwardedRequest"/>
+///     Handles a <see cref="TwinningCommand"/>
 /// </summary>
 public class TwinningHandler : AbstractNetworkHandler, IDisposable
 {
@@ -40,13 +40,13 @@ public class TwinningHandler : AbstractNetworkHandler, IDisposable
         _log = log;
         _characterTransformation = characterTransformation;
 
-        _handler = network.Connection.On<TwinningForwardedRequest, ActionResult<Unit>>(HubMethod.Twinning, Handle);
+        _handler = network.Connection.On<TwinningCommand, ActionResult<Unit>>(HubMethod.Twinning, Handle);
     }
     
     /// <summary>
     ///     <inheritdoc cref="TwinningHandler"/>
     /// </summary>
-    private async Task<ActionResult<Unit>> Handle(TwinningForwardedRequest request)
+    private async Task<ActionResult<Unit>> Handle(TwinningCommand request)
     {
         Plugin.Log.Verbose($"{request}");
         

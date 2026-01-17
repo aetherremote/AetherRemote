@@ -3,26 +3,10 @@ using MessagePack;
 
 namespace AetherRemoteCommon.Domain.Network.Transform;
 
-[MessagePackObject(keyAsPropertyName: true)]
-public record TransformRequest : ActionRequest
-{
-    public string GlamourerData { get; set; } = string.Empty;
-    public GlamourerApplyFlags GlamourerApplyType { get; set; }
-
-    /// <summary>
-    ///     Set this code to include a lock on the transform request
-    /// </summary>
-    public string? LockCode { get; set; }
-    
-    public TransformRequest()
-    {
-    }
-    
-    public TransformRequest(List<string> targets, string data, GlamourerApplyFlags flags, string? lockCode)
-    {
-        TargetFriendCodes = targets;
-        GlamourerData = data;
-        GlamourerApplyType = flags;
-        LockCode = lockCode;
-    }
-}
+[MessagePackObject]
+public record TransformRequest(
+    List<string> TargetFriendCodes,
+    [property: Key(1)] string GlamourerData,
+    [property: Key(2)] GlamourerApplyFlags GlamourerApplyType,
+    [property: Key(3)] string? LockCode
+) : ActionRequest(TargetFriendCodes);

@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 namespace AetherRemoteClient.Handlers.Network;
 
 /// <summary>
-///     Handles a <see cref="EmoteForwardedRequest"/>
+///     Handles a <see cref="EmoteCommand"/>
 /// </summary>
 public class EmoteHandler : AbstractNetworkHandler, IDisposable
 {
@@ -35,13 +35,13 @@ public class EmoteHandler : AbstractNetworkHandler, IDisposable
         _emote = emote;
         _log = log;
         
-        _handler = network.Connection.On<EmoteForwardedRequest, ActionResult<Unit>>(HubMethod.Emote, Handle);
+        _handler = network.Connection.On<EmoteCommand, ActionResult<Unit>>(HubMethod.Emote, Handle);
     }
     
     /// <summary>
     ///     <inheritdoc cref="EmoteHandler"/>
     /// </summary>
-    private ActionResult<Unit> Handle(EmoteForwardedRequest request)
+    private ActionResult<Unit> Handle(EmoteCommand request)
     {
         Plugin.Log.Verbose($"{request}");
         

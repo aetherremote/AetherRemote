@@ -46,7 +46,7 @@ public class AddFriendHandler(IConnectionsService connections, IDatabaseService 
         try
         {
             // Try to send an update to that client that we've accepted the friend request
-            var sync = new SyncOnlineStatusForwardedRequest(friendCode, FriendOnlineStatus.Online, new UserPermissions());
+            var sync = new SyncOnlineStatusCommand(friendCode, FriendOnlineStatus.Online, new UserPermissions());
             await clients.Client(target.ConnectionId).SendAsync(HubMethod.SyncOnlineStatus, sync);
         }
         catch (Exception e)

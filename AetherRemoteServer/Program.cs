@@ -42,8 +42,9 @@ public class Program
         builder.Services.AddSingleton(configuration);
 
         // Services
-        builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
         builder.Services.AddSingleton<IConnectionsService, ConnectionsService>();
+        builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
+        builder.Services.AddSingleton<IPresenceService, PresenceService>();
         builder.Services.AddSingleton<IRequestLoggingService, RequestLoggingService>();
         
         // Managers

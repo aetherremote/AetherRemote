@@ -5,6 +5,7 @@ using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Twinning;
 using AetherRemoteCommon.Util;
 using AetherRemoteServer.Domain.Interfaces;
+using AetherRemoteServer.Utilities;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AetherRemoteServer.SignalR.Handlers;
@@ -12,28 +13,19 @@ namespace AetherRemoteServer.SignalR.Handlers;
 /// <summary>
 ///     Handles the logic for fulfilling a <see cref="TwinningRequest"/>
 /// </summary>
-public class TwinningHandler(
-    IConnectionsService connections,
-    IForwardedRequestManager forwardedRequestManager,
-    ILogger<AddFriendHandler> logger)
+public class TwinningHandler(IPresenceService presenceService, IForwardedRequestManager forwardedRequestManager, ILogger<AddFriendHandler> logger)
 {
     private const string Method = HubMethod.Twinning;
 
     /// <summary>
     ///     Handle the request
     /// </summary>
-    public async Task<ActionResponse> Handle(string sender, TwinningRequest request, IHubCallerClients clients)
+    public async Task<ActionResponse> Handle(string senderFriendCode, TwinningRequest request, IHubCallerClients clients)
     {
-        if (connections.TryGetClient(sender) is not { } connectedClient)
+        if (ValidateEmoteRequest(senderFriendCode, request) is { } error)
         {
-            logger.LogWarning("{Sender} tried to issue a command but is not in the connections list", sender);
-            return new ActionResponse(ActionResponseEc.UnexpectedState);
-        }
-
-        if (connections.IsUserExceedingRequestLimit(connectedClient))
-        {
-            logger.LogWarning("{Sender} exceeded request limit", sender);
-            return new ActionResponse(ActionResponseEc.TooManyRequests);
+            logger.LogWarning("{Sender} sent invalid twinning request", senderFriendCode);
+            return new ActionResponse(error, []);
         }
         
         var primary = request.SwapAttributes.ToPrimaryPermission();
@@ -44,9 +36,18 @@ public class TwinningHandler(
             elevated = ElevatedPermissions.PermanentTransformation;
         
         var permissions = new UserPermissions(primary, SpeakPermissions2.None, elevated);
+        var command = new TwinningCommand(senderFriendCode, request.CharacterName, request.CharacterWorld, request.SwapAttributes, request.LockCode);
+        return await forwardedRequestManager.CheckPermissionsAndSend(senderFriendCode, request.TargetFriendCodes, Method, permissions, command, clients);
+    }
+    
+    private ActionResponseEc? ValidateEmoteRequest(string senderFriendCode, TwinningRequest request)
+    {
+        if (presenceService.IsUserExceedingCooldown(senderFriendCode))
+            return ActionResponseEc.TooManyRequests;
         
-        var forwardedRequest = new TwinningForwardedRequest(sender, request.CharacterName, request.SwapAttributes, request.LockCode);
-        return await forwardedRequestManager.CheckPermissionsAndSend(sender, request.TargetFriendCodes, Method,
-            permissions, forwardedRequest, clients);
+        if (VerificationUtilities.ValidListOfFriendCodes(request.TargetFriendCodes) is false)
+            return ActionResponseEc.BadDataInRequest;
+
+        return null;
     }
 }

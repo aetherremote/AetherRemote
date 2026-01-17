@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 namespace AetherRemoteClient.Handlers.Network;
 
 /// <summary>
-///     Handles a <see cref="HypnosisStopForwardedRequest"/>
+///     Handles a <see cref="HypnosisStopCommand"/>
 /// </summary>
 public class HypnosisStopHandler : AbstractNetworkHandler, IDisposable
 {
@@ -36,13 +36,13 @@ public class HypnosisStopHandler : AbstractNetworkHandler, IDisposable
         _log = log;
         _hypnosis = hypnosis;
         
-        _handler = network.Connection.On<HypnosisStopForwardedRequest, ActionResult<Unit>>(HubMethod.HypnosisStop, Handle);
+        _handler = network.Connection.On<HypnosisStopCommand, ActionResult<Unit>>(HubMethod.HypnosisStop, Handle);
     }
     
     /// <summary>
     ///     <inheritdoc cref="HypnosisHandler"/>
     /// </summary>
-    private async Task<ActionResult<Unit>> Handle(HypnosisStopForwardedRequest request)
+    private async Task<ActionResult<Unit>> Handle(HypnosisStopCommand request)
     {
         Plugin.Log.Verbose($"{request}");
         

@@ -39,7 +39,7 @@ public class RemoveFriendHandler(IConnectionsService connections, IDatabaseServi
         try
         {
             // Send a message to say our status goes from online to pending
-            var forward = new SyncOnlineStatusForwardedRequest(senderFriendCode, FriendOnlineStatus.Pending, null);
+            var forward = new SyncOnlineStatusCommand(senderFriendCode, FriendOnlineStatus.Pending, null);
             await clients.Client(friend.ConnectionId).SendAsync(HubMethod.SyncOnlineStatus, forward);
         }
         catch (Exception e)

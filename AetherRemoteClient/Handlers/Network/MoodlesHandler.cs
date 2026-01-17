@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 namespace AetherRemoteClient.Handlers.Network;
 
 /// <summary>
-///     Handles a <see cref="MoodlesForwardedRequest"/>
+///     Handles a <see cref="MoodlesCommand"/>
 /// </summary>
 public class MoodlesHandler : AbstractNetworkHandler, IDisposable
 {
@@ -36,13 +36,13 @@ public class MoodlesHandler : AbstractNetworkHandler, IDisposable
         _log = log;
         _moodles = moodles;
 
-        _handler = network.Connection.On<MoodlesForwardedRequest, ActionResult<Unit>>(HubMethod.Moodles, Handle);
+        _handler = network.Connection.On<MoodlesCommand, ActionResult<Unit>>(HubMethod.Moodles, Handle);
     }
     
     /// <summary>
     ///     <inheritdoc cref="MoodlesHandler"/>
     /// </summary>
-    private async Task<ActionResult<Unit>> Handle(MoodlesForwardedRequest request)
+    private async Task<ActionResult<Unit>> Handle(MoodlesCommand request)
     {
         Plugin.Log.Verbose($"{request}");
         

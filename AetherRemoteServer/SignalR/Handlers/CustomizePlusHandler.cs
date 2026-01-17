@@ -26,28 +26,28 @@ public class CustomizePlusHandler(
         if (connections.TryGetClient(sender) is not { } connectedClient)
         {
             logger.LogWarning("{Sender} tried to issue a command but is not in the connections list", sender);
-            return new ActionResponse(ActionResponseEc.UnexpectedState);
+            return new ActionResponse(ActionResponseEc.UnexpectedState, []);
         }
 
         if (connections.IsUserExceedingRequestLimit(connectedClient))
         {
             logger.LogWarning("{Sender} exceeded request limit", sender);
-            return new ActionResponse(ActionResponseEc.TooManyRequests);
+            return new ActionResponse(ActionResponseEc.TooManyRequests, []);
         }
 
-        if (VerificationUtilities.IsValidListOfFriendCodes(request.TargetFriendCodes) is false)
+        if (VerificationUtilities.ValidListOfFriendCodes(request.TargetFriendCodes) is false)
         {
             logger.LogWarning("{Sender} sent invalid friend codes", sender);
-            return new ActionResponse(ActionResponseEc.BadDataInRequest);
+            return new ActionResponse(ActionResponseEc.BadDataInRequest, []);
         }
 
         if (VerificationUtilities.IsJsonBytes(request.JsonBoneDataBytes) is false)
         {
             logger.LogWarning("{Sender} sent invalid bone data", sender);
-            return new ActionResponse(ActionResponseEc.BadDataInRequest);
+            return new ActionResponse(ActionResponseEc.BadDataInRequest, []);
         }
         
-        var forwardedRequest = new CustomizeForwardedRequest(sender, request.JsonBoneDataBytes);
+        var forwardedRequest = new CustomizeCommand(sender, request.JsonBoneDataBytes);
         return await forwardedRequestManager.CheckPermissionsAndSend(sender, request.TargetFriendCodes, Method,
             Permissions, forwardedRequest, clients);
     }

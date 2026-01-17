@@ -9,32 +9,31 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace AetherRemoteServer.SignalR.Handlers;
 
-public class HypnosisStopHandler(IConnectionsService connections, IForwardedRequestManager forwardedRequestManager, ILogger<HypnosisHandler> logger)
+public class HypnosisStopHandler(IPresenceService presenceService, IForwardedRequestManager forwardedRequestManager, ILogger<HypnosisHandler> logger)
 {
     private const string Method = HubMethod.HypnosisStop;
     private static readonly UserPermissions Permissions = new(PrimaryPermissions2.Hypnosis, SpeakPermissions2.None, ElevatedPermissions.None);
     
-    public async Task<ActionResponse> Handle(string sender, HypnosisStopRequest request, IHubCallerClients clients)
+    public async Task<ActionResponse> Handle(string senderFriendCode, HypnosisStopRequest request, IHubCallerClients clients)
     {
-        if (connections.TryGetClient(sender) is not { } connectedClient)
+        if (ValidateEmoteRequest(senderFriendCode, request) is { } error)
         {
-            logger.LogWarning("{Sender} tried to issue a command but is not in the connections list", sender);
-            return new ActionResponse(ActionResponseEc.UnexpectedState);
+            logger.LogWarning("{Sender} sent invalid hypnosis stop request", senderFriendCode);
+            return new ActionResponse(error, []);
         }
+        
+        var command = new HypnosisStopCommand(senderFriendCode);
+        return await forwardedRequestManager.CheckPermissionsAndSend(senderFriendCode, request.TargetFriendCodes, Method, Permissions, command, clients);
+    }
+    
+    private ActionResponseEc? ValidateEmoteRequest(string senderFriendCode, HypnosisStopRequest request)
+    {
+        if (presenceService.IsUserExceedingCooldown(senderFriendCode))
+            return ActionResponseEc.TooManyRequests;
+        
+        if (VerificationUtilities.ValidListOfFriendCodes(request.TargetFriendCodes) is false)
+            return ActionResponseEc.BadDataInRequest;
 
-        if (connections.IsUserExceedingRequestLimit(connectedClient))
-        {
-            logger.LogWarning("{Sender} exceeded request limit", sender);
-            return new ActionResponse(ActionResponseEc.TooManyRequests);
-        }
-        
-        if (VerificationUtilities.IsValidListOfFriendCodes(request.TargetFriendCodes) is false)
-        {
-            logger.LogWarning("{Sender} sent invalid friend codes", sender);
-            return new ActionResponse(ActionResponseEc.BadDataInRequest);
-        }
-        
-        var forwardedRequest = new HypnosisStopForwardedRequest(sender);
-        return await forwardedRequestManager.CheckPermissionsAndSend(sender, request.TargetFriendCodes, Method, Permissions, forwardedRequest, clients);
+        return null;
     }
 }

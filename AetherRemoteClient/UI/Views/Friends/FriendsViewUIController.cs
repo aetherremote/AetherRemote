@@ -74,13 +74,8 @@ public class FriendsViewUiController : IDisposable
 
             var permissions = BooleanUserPermissions.To(EditingUserPermissions);
 
-            var input = new UpdateFriendRequest
-            {
-                TargetFriendCode = FriendCode,
-                Permissions = permissions
-            };
-
-            var response = await _networkService.InvokeAsync<UpdateFriendResponse>(HubMethod.UpdateFriend, input).ConfigureAwait(false);
+            var request = new UpdateFriendRequest(FriendCode, permissions);
+            var response = await _networkService.InvokeAsync<UpdateFriendResponse>(HubMethod.UpdateFriend, request).ConfigureAwait(false);
             if (response.Result is UpdateFriendEc.Success)
             {
                 _friendBeingEdited.Note = Note == string.Empty ? null : Note;
@@ -110,8 +105,8 @@ public class FriendsViewUiController : IDisposable
             if (_friendBeingEdited is null)
                 return;
 
-            var input = new RemoveFriendRequest { TargetFriendCode = FriendCode };
-            var response = await _networkService.InvokeAsync<RemoveFriendResponse>(HubMethod.RemoveFriend, input);
+            var request = new RemoveFriendRequest(FriendCode);
+            var response = await _networkService.InvokeAsync<RemoveFriendResponse>(HubMethod.RemoveFriend, request);
             if (response.Result is RemoveFriendEc.Success)
             {
                 _friendsListService.Delete(_friendBeingEdited);

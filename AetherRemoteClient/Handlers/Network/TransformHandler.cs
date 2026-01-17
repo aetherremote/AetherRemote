@@ -18,7 +18,7 @@ namespace AetherRemoteClient.Handlers.Network;
 // ReSharper disable once ConvertToPrimaryConstructor
 
 /// <summary>
-///     Handles a <see cref="TransformForwardedRequest"/>
+///     Handles a <see cref="TransformCommand"/>
 /// </summary>
 public class TransformHandler : AbstractNetworkHandler, IDisposable
 {
@@ -42,13 +42,13 @@ public class TransformHandler : AbstractNetworkHandler, IDisposable
        _log = log;
        _characterTransformation = characterTransformation;
 
-       _handler = network.Connection.On<TransformForwardedRequest, ActionResult<Unit>>(HubMethod.Transform, Handle);
+       _handler = network.Connection.On<TransformCommand, ActionResult<Unit>>(HubMethod.Transform, Handle);
     }
     
     /// <summary>
     ///     <inheritdoc cref="TransformHandler"/>
     /// </summary>
-    private async Task<ActionResult<Unit>> Handle(TransformForwardedRequest request)
+    private async Task<ActionResult<Unit>> Handle(TransformCommand request)
     {
         Plugin.Log.Verbose($"{request}");
         

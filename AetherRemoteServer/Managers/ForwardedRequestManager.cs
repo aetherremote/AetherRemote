@@ -9,72 +9,71 @@ namespace AetherRemoteServer.Managers;
 /// <summary>
 ///     <inheritdoc cref="IForwardedRequestManager"/>
 /// </summary>
-public class ForwardedRequestManager(IConnectionsService connections, IDatabaseService database, ILogger<ForwardedRequestManager> logger) : IForwardedRequestManager
+public class ForwardedRequestManager(IDatabaseService database, IPresenceService presence, ILogger<ForwardedRequestManager> logger) : IForwardedRequestManager
 {
     private static readonly TimeSpan TimeOutDuration = TimeSpan.FromSeconds(8);
-    
-    public async Task<ActionResponse> CheckPermissionsAndSend(string sender, List<string> targets, string method, UserPermissions permissions, ForwardedActionRequest request, IHubCallerClients clients)
+
+    public async Task<ActionResponse> CheckPermissionsAndSend(string sender, List<string> targets, string method, UserPermissions permissions, ActionCommand request, IHubCallerClients clients)
     {
-        var results = new Dictionary<string, ActionResultEc>();
-        var pending = new Task<ActionResult<Unit>>[targets.Count];
+        var tasks = new Task<ActionResult<Unit>>[targets.Count];
         for (var i = 0; i < targets.Count; i++)
         {
-            var targetFriendCode = targets[i];
-            if (connections.TryGetClient(targetFriendCode) is not { } connectionClient)
-            {
-                pending[i] = Task.FromResult(ActionResultBuilder.Fail(ActionResultEc.TargetOffline));
-                continue;
-            }
-
-            if (await database.GetPermissions(targetFriendCode, sender) is not { } targetPermissions)
-            {
-                pending[i] = Task.FromResult(ActionResultBuilder.Fail(ActionResultEc.TargetNotFriends));
-                continue;
-            }
+            var target = targets[i];
+            var (client, failure) = await EvaluateTargetAsync(sender, target, permissions, clients);
             
-            var primary = (targetPermissions.Primary & permissions.Primary) == permissions.Primary;
-            var speak = (targetPermissions.Speak & permissions.Speak) == permissions.Speak;
-            var elevated = (targetPermissions.Elevated & permissions.Elevated) == permissions.Elevated;
-            if (primary is false || speak is false || elevated is false)
-            {
-                pending[i] = Task.FromResult(ActionResultBuilder.Fail(ActionResultEc.TargetHasNotGrantedSenderPermissions));
-                continue;
-            }
-            
-            try
-            {
-                var client = clients.Client(connectionClient.ConnectionId);
-                pending[i] = ForwardRequestWithTimeout<Unit>(method, client, request);
-            }
-            catch (Exception e)
-            {
-                logger.LogWarning("{Issuer} send action to {Target} failed, {Error}", sender, targetFriendCode, e.Message);
-                pending[i] = Task.FromResult(ActionResultBuilder.Fail(ActionResultEc.Unknown));
-            }
+            // If there is not a failure, proceed with the call, otherwise return the failure
+            tasks[i] = failure is null
+                ? ForwardRequestWithTimeout<Unit>(method, client, request)
+                : Task.FromResult(failure);
         }
+
+        var completed = await Task.WhenAll(tasks);
+        var results = new Dictionary<string, ActionResultEc>(targets.Count);
+        for (var i = 0; i < targets.Count; i++)
+            results[targets[i]] = completed[i].Result;
+
+        return new ActionResponse(ActionResponseEc.Success, results);
+    }
+
+    private async Task<(ISingleClientProxy client, ActionResult<Unit>? result)> EvaluateTargetAsync(string senderFriendCode, string targetFriendCode, UserPermissions required, IHubCallerClients clients)
+    {
+        if (presence.TryGet(targetFriendCode) is not { } target)
+            return (null!, ActionResultBuilder.Fail(ActionResultEc.TargetOffline));
         
-        var completed = await Task.WhenAll(pending).ConfigureAwait(false);
-        for(var i = 0; i < completed.Length; i++)
-            results.Add(targets[i], completed[i].Result);
+        if (await database.GetPermissions(senderFriendCode, targetFriendCode) is not { } permissions)
+            return (null!, ActionResultBuilder.Fail(ActionResultEc.TargetNotFriends));
         
-        return new ActionResponse(results);
+        if (HasRequiredPermissions(permissions, required) is false)
+            return  (null!, ActionResultBuilder.Fail(ActionResultEc.TargetHasNotGrantedSenderPermissions));
+
+        return (clients.Client(target.ConnectionId), null);
+    }
+
+    private static bool HasRequiredPermissions(UserPermissions granted, UserPermissions required)
+    {
+        return (granted.Primary & required.Primary) == required.Primary
+               && (granted.Speak & required.Speak) == required.Speak
+               && (granted.Elevated & required.Elevated) == required.Elevated;
     }
     
     /// <summary>
     ///     Forwards a request to a client with a timeout of 8 seconds
     /// </summary>
-    public static Task<ActionResult<T>> ForwardRequestWithTimeout<T>(string methodName, ISingleClientProxy clientProxy, ForwardedActionRequest forwardedRequest)
+    public static async Task<ActionResult<T>> ForwardRequestWithTimeout<T>(string method, ISingleClientProxy client, ActionCommand forward)
     {
-        var token = new CancellationTokenSource(TimeOutDuration);
-        return clientProxy.InvokeAsync<ActionResult<T>>(methodName, forwardedRequest, token.Token)
-            .ContinueWith(task =>
-            {
-                if (task.IsCanceled || token.IsCancellationRequested)
-                    return ActionResultBuilder.Fail<T>(ActionResultEc.TargetTimeout);
+        using var token = new CancellationTokenSource(TimeOutDuration);
 
-                return task.IsFaulted
-                    ? ActionResultBuilder.Fail<T>(ActionResultEc.Unknown)
-                    : task.Result;
-            }, TaskContinuationOptions.ExecuteSynchronously);
+        try
+        {
+            return await client.InvokeAsync<ActionResult<T>>(method, forward, token.Token);
+        }
+        catch (OperationCanceledException)
+        {
+            return ActionResultBuilder.Fail<T>(ActionResultEc.TargetTimeout);
+        }
+        catch
+        {
+            return ActionResultBuilder.Fail<T>(ActionResultEc.Unknown);
+        }
     }
 }

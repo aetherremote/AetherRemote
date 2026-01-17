@@ -14,7 +14,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 namespace AetherRemoteClient.Handlers.Network;
 
 /// <summary>
-///     Handles a <see cref="HonorificForwardedRequest"/>
+///     Handles a <see cref="HonorificCommand"/>
 /// </summary>
 public class HonorificHandler : AbstractNetworkHandler, IDisposable
 {
@@ -37,13 +37,13 @@ public class HonorificHandler : AbstractNetworkHandler, IDisposable
         _honorific = honorific;
         _log = log;
         
-        _handler = network.Connection.On<HonorificForwardedRequest, ActionResult<Unit>>(HubMethod.Honorific, Handle);
+        _handler = network.Connection.On<HonorificCommand, ActionResult<Unit>>(HubMethod.Honorific, Handle);
     }
 
     /// <summary>
     ///     <inheritdoc cref="EmoteHandler"/>
     /// </summary>
-    private async Task<ActionResult<Unit>> Handle(HonorificForwardedRequest request)
+    private async Task<ActionResult<Unit>> Handle(HonorificCommand request)
     {
         Plugin.Log.Verbose($"{request}");
         

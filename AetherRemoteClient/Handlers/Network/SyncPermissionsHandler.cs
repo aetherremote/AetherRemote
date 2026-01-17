@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 namespace AetherRemoteClient.Handlers.Network;
 
 /// <summary>
-///     Handles a <see cref="SyncPermissionsForwardedRequest"/>
+///     Handles a <see cref="SyncPermissionsCommand"/>
 /// </summary>
 public class SyncPermissionsHandler : IDisposable
 {
@@ -25,18 +25,18 @@ public class SyncPermissionsHandler : IDisposable
     {
         _friends = friends;
         
-        _handler = network.Connection.On<SyncPermissionsForwardedRequest>(HubMethod.SyncPermissions, Handle);
+        _handler = network.Connection.On<SyncPermissionsCommand>(HubMethod.SyncPermissions, Handle);
     }
     
     /// <summary>
     ///     <inheritdoc cref="SyncPermissionsHandler"/>
     /// </summary>
-    private void Handle(SyncPermissionsForwardedRequest forwardedRequest)
+    private void Handle(SyncPermissionsCommand command)
     {
-        if (_friends.Get(forwardedRequest.SenderFriendCode) is not { } friend)
+        if (_friends.Get(command.SenderFriendCode) is not { } friend)
             return;
 
-        friend.PermissionsGrantedByFriend = forwardedRequest.PermissionsGrantedBySender;
+        friend.PermissionsGrantedByFriend = command.PermissionsGrantedBySender;
     }
 
     public void Dispose()

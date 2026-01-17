@@ -3,9 +3,8 @@ using MessagePack;
 
 namespace AetherRemoteCommon.Domain.Network;
 
-[MessagePackObject(true)]
-public record ActionResult<T>
-{
-    public ActionResultEc Result { get; set; }
-    public T? Value { get; set; }
-}
+[MessagePackObject]
+public record ActionResult<T>(
+    [property: Key(0)] ActionResultEc Result,
+    [property: Key(1)] T? Value
+);

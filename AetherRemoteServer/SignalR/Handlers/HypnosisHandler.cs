@@ -13,10 +13,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 /// <summary>
 ///     Handles the logic for fulling a <see cref="HypnosisRequest"/>
 /// </summary>
-public class HypnosisHandler(
-    IConnectionsService connections,
-    IForwardedRequestManager forwardedRequestManager,
-    ILogger<HypnosisHandler> logger)
+public class HypnosisHandler(IPresenceService presenceService, IForwardedRequestManager forwardedRequestManager, ILogger<HypnosisHandler> logger)
 {
     private const string Method = HubMethod.Hypnosis;
     private static readonly UserPermissions Permissions = new(PrimaryPermissions2.Hypnosis, SpeakPermissions2.None,
@@ -25,54 +22,42 @@ public class HypnosisHandler(
     /// <summary>
     ///     Handles the request
     /// </summary>
-    public async Task<ActionResponse> Handle(string sender, HypnosisRequest request, IHubCallerClients clients)
+    public async Task<ActionResponse> Handle(string senderFriendCode, HypnosisRequest request, IHubCallerClients clients)
     {
-        if (connections.TryGetClient(sender) is not { } connectedClient)
+        if (ValidateHypnosisRequest(senderFriendCode, request) is { } error)
         {
-            logger.LogWarning("{Sender} tried to issue a command but is not in the connections list", sender);
-            return new ActionResponse(ActionResponseEc.UnexpectedState);
+            logger.LogWarning("{Sender} sent invalid hypnosis request", senderFriendCode);
+            return new ActionResponse(error, []);
         }
 
-        if (connections.IsUserExceedingRequestLimit(connectedClient))
-        {
-            logger.LogWarning("{Sender} exceeded request limit", sender);
-            return new ActionResponse(ActionResponseEc.TooManyRequests);
-        }
-        
-        if (VerificationUtilities.IsValidListOfFriendCodes(request.TargetFriendCodes) is false)
-        {
-            logger.LogWarning("{Sender} sent invalid friend codes", sender);
-            return new ActionResponse(ActionResponseEc.BadDataInRequest);
-        }
-
-        if (IsValidHypnosisRequest(request) is false)
-        {
-            logger.LogWarning("{Sender} sent invalid hypnosis data", sender);
-            return new ActionResponse(ActionResponseEc.BadDataInRequest);
-        }
-
-        var forwardedRequest = new HypnosisForwardedRequest(sender, request.Data);
-        return await forwardedRequestManager.CheckPermissionsAndSend(sender, request.TargetFriendCodes, Method,
-            Permissions, forwardedRequest, clients);
+        var command = new HypnosisCommand(senderFriendCode, request.Data);
+        return await forwardedRequestManager.CheckPermissionsAndSend(senderFriendCode, request.TargetFriendCodes, Method, Permissions, command, clients);
     }
 
-    private static bool IsValidHypnosisRequest(HypnosisRequest request)
+    private ActionResponseEc? ValidateHypnosisRequest(string senderFriendCode, HypnosisRequest request)
     {
-        if (request.Data.SpiralArms is < Constraints.Hypnosis.ArmsMin or > Constraints.Hypnosis.ArmsMax) return false;
-        if (request.Data.SpiralTurns is < Constraints.Hypnosis.TurnsMin or > Constraints.Hypnosis.TurnsMax) return false;
-        if (request.Data.SpiralCurve is < Constraints.Hypnosis.CurvesMin or > Constraints.Hypnosis.CurvesMax) return false;
-        if (request.Data.SpiralThickness is < Constraints.Hypnosis.ThicknessMin or > Constraints.Hypnosis.ThicknessMax) return false;
-        if (request.Data.SpiralSpeed is < Constraints.Hypnosis.SpeedMin or > Constraints.Hypnosis.SpeedMax) return false;
-        if (request.Data.TextDelay is < Constraints.Hypnosis.TextDelayMin or > Constraints.Hypnosis.TextDelayMax) return false;
-        if (request.Data.TextDuration is < Constraints.Hypnosis.TextDurationMin or > Constraints.Hypnosis.TextDurationMax) return false;
-
+        if (presenceService.IsUserExceedingCooldown(senderFriendCode))
+            return ActionResponseEc.TooManyRequests;
+        
+        if (VerificationUtilities.ValidListOfFriendCodes(request.TargetFriendCodes) is false)
+            return ActionResponseEc.BadDataInRequest;
+        
+        if (request.Data.SpiralArms is < Constraints.Hypnosis.ArmsMin or > Constraints.Hypnosis.ArmsMax) return ActionResponseEc.BadDataInRequest;
+        if (request.Data.SpiralTurns is < Constraints.Hypnosis.TurnsMin or > Constraints.Hypnosis.TurnsMax) return ActionResponseEc.BadDataInRequest;
+        if (request.Data.SpiralCurve is < Constraints.Hypnosis.CurvesMin or > Constraints.Hypnosis.CurvesMax) return ActionResponseEc.BadDataInRequest;
+        if (request.Data.SpiralThickness is < Constraints.Hypnosis.ThicknessMin or > Constraints.Hypnosis.ThicknessMax) return ActionResponseEc.BadDataInRequest;
+        if (request.Data.SpiralSpeed is < Constraints.Hypnosis.SpeedMin or > Constraints.Hypnosis.SpeedMax) return ActionResponseEc.BadDataInRequest;
+        if (request.Data.TextDelay is < Constraints.Hypnosis.TextDelayMin or > Constraints.Hypnosis.TextDelayMax) return ActionResponseEc.BadDataInRequest;
+        if (request.Data.TextDuration is < Constraints.Hypnosis.TextDurationMin or > Constraints.Hypnosis.TextDurationMax) return ActionResponseEc.BadDataInRequest;
+        
         var length = 0;
         foreach (var word in request.Data.TextWords)
             length += word.Length;
         
         if (length is < Constraints.Hypnosis.TextWordsMin or > Constraints.Hypnosis.TextWordsMax)
-            return false;
+            return ActionResponseEc.BadDataInRequest;
 
-        return true;
+        return null;
     }
+    
 }

@@ -19,6 +19,5 @@ public interface IForwardedRequestManager
     /// <param name="request">The request object to send to targets</param>
     /// <param name="clients">The client context containing all the connected clients</param>
     /// <returns>The result of sending to all the clients</returns>
-    public Task<ActionResponse> CheckPermissionsAndSend(string sender, List<string> targets, string method,
-        UserPermissions permissions, ForwardedActionRequest request, IHubCallerClients clients);
+    public Task<ActionResponse> CheckPermissionsAndSend(string sender, List<string> targets, string method, UserPermissions permissions, ActionCommand request, IHubCallerClients clients);
 }

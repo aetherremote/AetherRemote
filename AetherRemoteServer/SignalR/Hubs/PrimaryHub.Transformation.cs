@@ -13,7 +13,7 @@ public partial class PrimaryHub
     public async Task<ActionResponse> BodySwap(BodySwapRequest request)
     {
         if (request.LockCode is not null)
-            return new ActionResponse(ActionResponseEc.Disabled);
+            return new ActionResponse(ActionResponseEc.Disabled, []);
         
         return await bodySwapHandler.Handle(FriendCode, request, Clients);
     }
@@ -22,7 +22,7 @@ public partial class PrimaryHub
     public async Task<ActionResponse> Transform(TransformRequest request)
     {
         if (request.LockCode is not null)
-            return new ActionResponse(ActionResponseEc.Disabled);
+            return new ActionResponse(ActionResponseEc.Disabled, []);
         
         return await transformHandler.Handle(FriendCode, request, Clients);
     }
@@ -31,7 +31,7 @@ public partial class PrimaryHub
     public async Task<ActionResponse> Twinning(TwinningRequest request)
     {
         if (request.LockCode is not null)
-            return new ActionResponse(ActionResponseEc.Disabled);
+            return new ActionResponse(ActionResponseEc.Disabled, []);
         
         return await twinningHandler.Handle(FriendCode, request, Clients);
     }

@@ -27,10 +27,10 @@ public class AuthController(Configuration config, IDatabaseService database) : C
     public async Task<IActionResult> Login([FromBody] GetTokenRequest request)
     {
         if (request.Version < ExpectedVersion)
-            return StatusCode(StatusCodes.Status409Conflict, new LoginAuthenticationResult(LoginAuthenticationErrorCode.VersionMismatch));
+            return StatusCode(StatusCodes.Status409Conflict, new LoginAuthenticationResult(LoginAuthenticationErrorCode.VersionMismatch, null));
         
         if (await database.GetFriendCodeBySecret(request.Secret) is not { } friendCode)
-            return StatusCode(StatusCodes.Status401Unauthorized, new LoginAuthenticationResult(LoginAuthenticationErrorCode.UnknownSecret));
+            return StatusCode(StatusCodes.Status401Unauthorized, new LoginAuthenticationResult(LoginAuthenticationErrorCode.UnknownSecret, null));
 
         var token = GenerateJwtToken([new Claim(AuthClaimTypes.FriendCode, friendCode)]);
 

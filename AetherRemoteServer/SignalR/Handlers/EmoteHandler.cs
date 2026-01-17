@@ -1,4 +1,3 @@
-using AetherRemoteCommon;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
@@ -14,46 +13,37 @@ namespace AetherRemoteServer.SignalR.Handlers;
 /// <summary>
 ///     Handles the logic for fulfilling a <see cref="EmoteRequest"/>
 /// </summary>
-public class EmoteHandler(
-    IConnectionsService connections,
-    IForwardedRequestManager forwardedRequestManager,
-    ILogger<EmoteHandler> logger)
+public class EmoteHandler(IPresenceService presenceService, IForwardedRequestManager forwardedRequestManager, ILogger<EmoteHandler> logger)
 {
     private const string Method = HubMethod.Emote;
-    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.Emote, SpeakPermissions2.None,
-        ElevatedPermissions.None);
+    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.Emote, SpeakPermissions2.None, ElevatedPermissions.None);
     
     /// <summary>
     ///     Handles the request
     /// </summary>
-    public async Task<ActionResponse> Handle(string sender, EmoteRequest request, IHubCallerClients clients)
+    public async Task<ActionResponse> Handle(string senderFriendCode, EmoteRequest request, IHubCallerClients clients)
     {
-        if (connections.TryGetClient(sender) is not { } connectedClient)
+        if (ValidateEmoteRequest(senderFriendCode, request) is { } error)
         {
-            logger.LogWarning("{Sender} tried to issue a command but is not in the connections list", sender);
-            return new ActionResponse(ActionResponseEc.UnexpectedState);
-        }
-
-        if (connections.IsUserExceedingRequestLimit(connectedClient))
-        {
-            logger.LogWarning("{Sender} exceeded request limit", sender);
-            return new ActionResponse(ActionResponseEc.TooManyRequests);
+            logger.LogWarning("{Sender} sent invalid speak request", senderFriendCode);
+            return new ActionResponse(error, []);
         }
         
-        if (VerificationUtilities.IsValidListOfFriendCodes(request.TargetFriendCodes) is false)
-        {
-            logger.LogWarning("{Sender} sent invalid friend codes", sender);
-            return new ActionResponse(ActionResponseEc.BadDataInRequest);
-        }
+        var command = new EmoteCommand(senderFriendCode, request.Emote, request.DisplayLogMessage);
+        return await forwardedRequestManager.CheckPermissionsAndSend(senderFriendCode, request.TargetFriendCodes, Method, Permissions, command, clients);
+    }
+
+    private ActionResponseEc? ValidateEmoteRequest(string senderFriendCode, EmoteRequest request)
+    {
+        if (presenceService.IsUserExceedingCooldown(senderFriendCode))
+            return ActionResponseEc.TooManyRequests;
+        
+        if (VerificationUtilities.ValidListOfFriendCodes(request.TargetFriendCodes) is false)
+            return ActionResponseEc.BadDataInRequest;
 
         if (request.TargetFriendCodes.Count > Constraints.MaximumTargetsForInGameOperations)
-        {
-            logger.LogWarning("{Sender} tried to target more than the allowed amount for in-game actions", sender);
-            return new ActionResponse(ActionResponseEc.TooManyTargets);
-        }
-        
-        var forwardedRequest = new EmoteForwardedRequest(sender, request.Emote, request.DisplayLogMessage);
-        return await forwardedRequestManager.CheckPermissionsAndSend(sender, request.TargetFriendCodes, Method,
-            Permissions, forwardedRequest, clients);
+            return ActionResponseEc.TooManyTargets;
+
+        return null;
     }
 }

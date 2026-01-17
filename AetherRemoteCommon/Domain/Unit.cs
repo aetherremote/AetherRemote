@@ -6,4 +6,7 @@ namespace AetherRemoteCommon.Domain;
 ///     An empty object
 /// </summary>
 [MessagePackObject(true)]
-public readonly struct Unit;
+public readonly struct Unit
+{
+    public static readonly Unit Empty = new();
+}

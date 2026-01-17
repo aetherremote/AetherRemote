@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 namespace AetherRemoteClient.Handlers.Network;
 
 /// <summary>
-///     Handles a <see cref="SpeakForwardedRequest"/>
+///     Handles a <see cref="SpeakCommand"/>
 /// </summary>
 public class SpeakHandler : AbstractNetworkHandler, IDisposable
 {
@@ -35,13 +35,13 @@ public class SpeakHandler : AbstractNetworkHandler, IDisposable
         _actionQueue = actionQueue;
         _log = log;
 
-        _handler = network.Connection.On<SpeakForwardedRequest, ActionResult<Unit>>(HubMethod.Speak, Handle);
+        _handler = network.Connection.On<SpeakCommand, ActionResult<Unit>>(HubMethod.Speak, Handle);
     }
     
     /// <summary>
     ///     <inheritdoc cref="SpeakHandler"/>
     /// </summary>
-    private ActionResult<Unit> Handle(SpeakForwardedRequest request)
+    private ActionResult<Unit> Handle(SpeakCommand request)
     {
         Plugin.Log.Verbose($"{request}");
         

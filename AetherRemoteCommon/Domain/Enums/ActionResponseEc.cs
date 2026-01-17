@@ -42,9 +42,19 @@ public enum ActionResponseEc
     TargetBodySwapIsNotFriends,
     
     /// <summary>
+    ///     The requester included themselves as a target for body swapping
+    /// </summary>
+    IncludedSelfInBodySwap,
+    
+    /// <summary>
     ///     When the sender did not provide valid data in a request
     /// </summary>
     BadDataInRequest,
+    
+    /// <summary>
+    ///     When the sender includes a list of invalid targets (malformed, too long named, etc...)
+    /// </summary>
+    BadTargets,
     
     /// <summary>
     ///     When the sender is in a state not expected by the server

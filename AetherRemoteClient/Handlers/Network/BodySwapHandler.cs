@@ -16,7 +16,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 namespace AetherRemoteClient.Handlers.Network;
 
 /// <summary>
-///     Handles a <see cref="BodySwapForwardedRequest"/>
+///     Handles a <see cref="BodySwapCommand"/>
 /// </summary>
 public class BodySwapHandler : AbstractNetworkHandler, IDisposable
 {
@@ -40,13 +40,13 @@ public class BodySwapHandler : AbstractNetworkHandler, IDisposable
         _log = log;
         _characterTransformation = characterTransformation;
 
-        _handler = network.Connection.On<BodySwapForwardedRequest, ActionResult<Unit>>(HubMethod.BodySwap, Handle);
+        _handler = network.Connection.On<BodySwapCommand, ActionResult<Unit>>(HubMethod.BodySwap, Handle);
     }
     
     /// <summary>
     ///     <inheritdoc cref="BodySwapHandler"/>
     /// </summary>
-    private async Task<ActionResult<Unit>> Handle(BodySwapForwardedRequest request)
+    private async Task<ActionResult<Unit>> Handle(BodySwapCommand request)
     {
         Plugin.Log.Verbose($"{request}");
         

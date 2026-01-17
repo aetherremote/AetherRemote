@@ -24,7 +24,7 @@ public class UpdateFriendHandler(IConnectionsService connections, IDatabaseServi
         
         try
         {
-            var sync = new SyncPermissionsForwardedRequest(friendCode, request.Permissions);
+            var sync = new SyncPermissionsCommand(friendCode, request.Permissions);
             await clients.Client(connectedClient.ConnectionId).SendAsync(HubMethod.SyncPermissions, sync);
         }
         catch (Exception e)

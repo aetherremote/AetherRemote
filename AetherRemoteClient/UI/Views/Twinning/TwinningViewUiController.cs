@@ -35,8 +35,7 @@ public class TwinningViewUiController(CommandLockoutService commandLockout, Netw
             if (SwapCustomizePlus) attributes |= CharacterAttributes.CustomizePlus;
             if (SwapHonorific) attributes |= CharacterAttributes.Honorific;
             
-            // Get the local player name
-            if (Plugin.ObjectTable.LocalPlayer?.Name.TextValue is not { } playerName)
+            if (Plugin.CharacterConfiguration is not { } character)
                 return;
             
             // Feedback Notification
@@ -45,7 +44,7 @@ public class TwinningViewUiController(CommandLockoutService commandLockout, Netw
             commandLockout.Lock();
             
             // Create the request
-            var request = new TwinningRequest(selection.GetSelectedFriendCodes(), playerName, attributes, null);
+            var request = new TwinningRequest(selection.GetSelectedFriendCodes(), character.Name, character.World, attributes, null);
             
             // Invoke on the server
             var response = await network.InvokeAsync<ActionResponse>(HubMethod.Twinning, request);

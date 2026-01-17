@@ -41,8 +41,8 @@ public class BodySwapViewUiController(
         if (SwapMoodles) attributes |= CharacterAttributes.Moodles;
         if (SwapCustomizePlus) attributes |= CharacterAttributes.CustomizePlus;
         if (SwapHonorific) attributes |= CharacterAttributes.Honorific;
-        
-        BodySwap(new BodySwapRequest(selectionManager.GetSelectedFriendCodes(), attributes, null, null));
+
+        BodySwap(new BodySwapRequest(selectionManager.GetSelectedFriendCodes(), null, null, attributes, null));
     }
 
     /// <summary>
@@ -56,10 +56,10 @@ public class BodySwapViewUiController(
         if (SwapCustomizePlus) attributes |= CharacterAttributes.CustomizePlus;
         if (SwapHonorific) attributes |= CharacterAttributes.Honorific;
 
-        if (Plugin.ObjectTable.LocalPlayer?.Name.TextValue is not { } playerName)
+        if (Plugin.CharacterConfiguration is not { } character)
             return;
         
-        BodySwap(new BodySwapRequest(selectionManager.GetSelectedFriendCodes(), attributes, playerName, null));
+        BodySwap(new BodySwapRequest(selectionManager.GetSelectedFriendCodes(), character.Name, character.World, attributes, null));
     }
 
     private async void BodySwap(BodySwapRequest request)

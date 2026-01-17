@@ -3,24 +3,10 @@ using MessagePack;
 
 namespace AetherRemoteCommon.Domain.Network.BodySwap;
 
-[MessagePackObject(keyAsPropertyName: true)]
-public record BodySwapResponse : ActionResponse
-{
-    public string? CharacterName { get; set; }
-
-    public BodySwapResponse()
-    {
-    }
-
-    public BodySwapResponse(ActionResponseEc code)
-    {
-        Result = code;
-    }
-    
-    public BodySwapResponse(Dictionary<string, ActionResultEc> results, string? characterName = null)
-    {
-        Result = ActionResponseEc.Success;
-        Results = results;
-        CharacterName = characterName;
-    }
-}
+[MessagePackObject]
+public record BodySwapResponse(
+    ActionResponseEc Result,
+    Dictionary<string, ActionResultEc> Results,
+    [property: Key(2)] string? CharacterName,
+    [property: Key(3)] string? CharacterWorld
+) : ActionResponse (Result, Results);

@@ -33,13 +33,11 @@ public class ConnectionManager : IDisposable
     
     private async Task OnConnected()
     {
-        // Get the local player
-        if (await Plugin.RunOnFramework(() => Plugin.ObjectTable.LocalPlayer).ConfigureAwait(false) is not { } player)
+        if (Plugin.CharacterConfiguration is not { } character)
             return;
         
         // Get account data from the server
-        // TODO: Expand this to include the world as well to prevent same-name alts from disrupting workflow
-        var request = new GetAccountDataRequest(player.Name.ToString());
+        var request = new GetAccountDataRequest(character.Name, character.World);
         var response = await _networkService.InvokeAsync<GetAccountDataResponse>(HubMethod.GetAccountData, request).ConfigureAwait(false);
 
         // If there wasn't a success, don't stay connected; the plugin is not usable in this state

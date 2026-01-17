@@ -9,6 +9,6 @@ public partial class PrimaryHub
     [HubMethodName(HubMethod.GetAccountData)]
     public async Task<GetAccountDataResponse> GetAccountData(GetAccountDataRequest request)
     {
-        return await getAccountDataHandler.Handle(FriendCode, request);
+        return await getAccountDataHandler.Handle(FriendCode, Context.ConnectionId, request);
     }
 }

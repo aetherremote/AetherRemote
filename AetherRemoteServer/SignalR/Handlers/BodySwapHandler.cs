@@ -13,49 +13,17 @@ namespace AetherRemoteServer.SignalR.Handlers;
 /// <summary>
 ///     Handles the logic for fulfilling a <see cref="BodySwapRequest"/>
 /// </summary>
-public class BodySwapHandler(IConnectionsService connections, IDatabaseService database, ILogger<BodySwapHandler> logger)
+public class BodySwapHandler(IDatabaseService database, IPresenceService presenceService, ILogger<BodySwapHandler> logger)
 {
     /// <summary>
     ///     Handles the request
     /// </summary>
-    public async Task<BodySwapResponse> Handle(string sender, BodySwapRequest request, IHubCallerClients clients)
+    public async Task<BodySwapResponse> Handle(string senderFriendCode, BodySwapRequest request, IHubCallerClients clients)
     {
-        if (connections.TryGetClient(sender) is not { } connectedClient)
+        if (ValidateBodySwapRequest(senderFriendCode, request) is { } error)
         {
-            logger.LogWarning("{Sender} tried to issue a command but is not in the connections list", sender);
-            return new BodySwapResponse(ActionResponseEc.UnexpectedState);
-        }
-
-        if (connections.IsUserExceedingRequestLimit(connectedClient))
-        {
-            logger.LogWarning("{Sender} exceeded request limit", sender);
-            return new BodySwapResponse(ActionResponseEc.TooManyRequests);
-        }
-        
-        var targets = request.TargetFriendCodes;
-        
-        // This function does not function if the sender includes themselves in the target
-        foreach (var target in targets)
-        {
-            if (target == sender)
-            {
-                logger.LogWarning("{Sender} tried to include themselves in the body swap targets", sender);
-                return new BodySwapResponse(ActionResponseEc.UnexpectedState);
-            }
-        }
-        
-        // Cannot be zero targets no matter what
-        if (targets.Count is 0)
-        {
-            logger.LogWarning("{Sender} tried to swap bodies with only one target", sender);
-            return new BodySwapResponse(ActionResponseEc.TooFewTargets);
-        }
-        
-        // Needs at least one person
-        if (targets.Count is 1 && request.SenderCharacterName is null)
-        {
-            logger.LogWarning("{Sender} tried to swap bodies with only one target", sender);
-            return new BodySwapResponse(ActionResponseEc.TooFewTargets);
+            logger.LogWarning("{Sender} sent invalid body swap request", senderFriendCode);
+            return new BodySwapResponse(error, [], null, null);
         }
         
         // Convert the swap attributes to primary permissions
@@ -68,42 +36,43 @@ public class BodySwapHandler(IConnectionsService connections, IDatabaseService d
             elevated = ElevatedPermissions.PermanentTransformation;
 
         // Get the names of everyone involved in the swap
-        var characters = new List<string>();
-        foreach (var targetFriendCode in targets)
+        var characters = new List<Character>();
+        foreach (var targetFriendCode in request.TargetFriendCodes)
         {
-            if (connections.TryGetClient(targetFriendCode) is not { } connectionClient)
-                return new BodySwapResponse(ActionResponseEc.TargetOffline);
+            if (presenceService.TryGet(targetFriendCode) is not { } target)
+                return new BodySwapResponse(ActionResponseEc.TargetOffline, [], null, null);
 
             // Get the target's permissions for the sender
-            if (await database.GetPermissions(targetFriendCode, sender) is not { } targetPermissions)
-                return new BodySwapResponse(ActionResponseEc.TargetBodySwapIsNotFriends);
+            if (await database.GetPermissions(targetFriendCode, senderFriendCode) is not { } targetPermissions)
+                return new BodySwapResponse(ActionResponseEc.TargetBodySwapIsNotFriends, [], null, null);
 
             // Body swap will only every make use of primary and elevated permissions
             if ((targetPermissions.Primary & primary) != primary || (targetPermissions.Elevated & elevated) != elevated)
-                return new BodySwapResponse(ActionResponseEc.TargetBodySwapLacksPermissions);
+                return new BodySwapResponse(ActionResponseEc.TargetBodySwapLacksPermissions, [], null, null);
             
-            characters.Add(connectionClient.CharacterName);
+            characters.Add(new Character(target.CharacterName, target.CharacterName));
         }
 
         // Including yourself if you marked as such
-        if (request.SenderCharacterName is not null)
-            characters.Add(request.SenderCharacterName);
+        if (request.SenderCharacterName is not null && request.SenderCharacterWorld is not null)
+            characters.Add(new Character(request.SenderCharacterName, request.SenderCharacterWorld));
 
         // Shuffle everyone around
         var deranged = Derange(characters);
 
         var results = new Dictionary<string, ActionResultEc>();
-        var pending = new Task<ActionResult<Unit>>[targets.Count];
-        for (var i = 0; i < targets.Count; i++)
+        var pending = new Task<ActionResult<Unit>>[request.TargetFriendCodes.Count];
+        for (var i = 0; i < request.TargetFriendCodes.Count; i++)
         {
-            var targetFriendCode = targets[i];
+            // Get the new body to be assigned to this person
+            var character = deranged[i];
             
             // Construct the tailored request
-            var forwarded = new BodySwapForwardedRequest(sender, deranged[i], request.SwapAttributes, request.LockCode);
+            var forwarded = new BodySwapCommand(senderFriendCode, character.Name, character.World, request.SwapAttributes, request.LockCode);
 
             // Double-check the target is still online
-            if (connections.TryGetClient(targetFriendCode) is not { } connectionClient)
-                return new BodySwapResponse(ActionResponseEc.TargetOffline);
+            if (presenceService.TryGet(request.TargetFriendCodes[i]) is not { } connectionClient)
+                return new BodySwapResponse(ActionResponseEc.TargetOffline, [], null, null);
             
             try
             {
@@ -112,56 +81,68 @@ public class BodySwapHandler(IConnectionsService connections, IDatabaseService d
             }
             catch (Exception e)
             {
-                logger.LogWarning("{Issuer} send action to {Target} failed, {Error}", sender, targetFriendCode, e.Message);
+                logger.LogWarning("{Issuer} send action to {Target} failed, {Error}", senderFriendCode, request.TargetFriendCodes[i], e.Message);
                 pending[i] = Task.FromResult(ActionResultBuilder.Fail(ActionResultEc.Unknown));
             }
         }
 
         var completed = await Task.WhenAll(pending).ConfigureAwait(false);
         for (var i = 0; i < completed.Length; i++)
-            results.Add(targets[i], completed[i].Result);
+            results.Add(request.TargetFriendCodes[i], completed[i].Result);
 
-        return new BodySwapResponse(results, targets.Count < deranged.Count ? deranged[^1] : null);
+        // In practice, this will never be greater than, only equal to
+        if (request.TargetFriendCodes.Count >= deranged.Count)
+            return new BodySwapResponse(ActionResponseEc.Success, results, null, null);
+        
+        var own = deranged[^1];
+        return new BodySwapResponse(ActionResponseEc.Success, results, own.Name, own.World);
     }
 
-    /// <summary>
-    ///     Derange a list, ensuring every element ends up in an index different from its starting position
-    /// </summary>
-    /// <param name="input">A list of more than two elements</param>
-    /// <returns>The deranged list</returns>
-    private static List<T> Derange<T>(List<T> input)
+    private ActionResponseEc? ValidateBodySwapRequest(string senderFriendCode, BodySwapRequest request)
     {
-        if (input.Count < 2)
-            return input;
+        if (presenceService.IsUserExceedingCooldown(senderFriendCode))
+            return ActionResponseEc.TooManyRequests;
+        
+        // This function does not function if the sender includes themselves in the target
+        foreach (var target in request.TargetFriendCodes)
+            if (target == senderFriendCode)
+                return ActionResponseEc.IncludedSelfInBodySwap;
+        
+        // Needs at least two people total
+        if (request.TargetFriendCodes.Count < 2 && request.SenderCharacterName is null)
+            return ActionResponseEc.TooFewTargets;
 
-        var size = input.Count;
-        var derangement = new List<T>(input);
-        var random = new Random();
+        return null;
+    }
+    
+    private static List<Character> Derange(IReadOnlyList<Character> source)
+    {
+        if (source.Count < 2)
+            return source.ToList();
+        
+        var result = source.ToList();
+        var random = Random.Shared;
 
-        do
+        while (HasAnyEntriesInTheSameSpot(source, result))
         {
-            for (var i = 0; i < size; i++)
+            for (var index = 0; index < result.Count; index++)
             {
-                var j = random.Next(size);
-                (derangement[i], derangement[j]) = (derangement[j], derangement[i]);
+                var swap = random.Next(index, result.Count);
+                (result[index], result[swap]) = (result[swap], result[index]);
             }
-        } while (ValidDerangement(input, derangement) is false);
-
-        return derangement;
-    }
-
-    /// <summary>
-    ///     Test if the list is in a deranged state
-    /// </summary>
-    private static bool ValidDerangement<T>(List<T> original, List<T> deranged)
-    {
-        // ReSharper disable once LoopCanBeConvertedToQuery
-        for (var i = 0; i < original.Count; i++)
-        {
-            if (EqualityComparer<T>.Default.Equals(original[i], deranged[i]))
-                return false;
         }
+
+        return result;
+    }
+    
+    private static bool HasAnyEntriesInTheSameSpot(IReadOnlyList<Character> original, IReadOnlyList<Character> permuted)
+    {
+        for (var i = 0; i < original.Count; i++)
+            if (original[i] == permuted[i])
+                return false;
 
         return true;
     }
+    
+    private record Character(string Name, string World);
 }

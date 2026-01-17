@@ -2,17 +2,8 @@ using MessagePack;
 
 namespace AetherRemoteCommon.Domain.Network.GetAccountData;
 
-[MessagePackObject(keyAsPropertyName: true)]
-public record GetAccountDataRequest
-{
-    public string CharacterName { get; set; } = string.Empty;
-
-    public GetAccountDataRequest()
-    {
-    }
-
-    public GetAccountDataRequest(string characterName)
-    {
-        CharacterName = characterName;
-    }
-}
+[MessagePackObject]
+public record GetAccountDataRequest(
+    [property: Key(0)] string CharacterName,
+    [property: Key(1)] string CharacterWorld
+);

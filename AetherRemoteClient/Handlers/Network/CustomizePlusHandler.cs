@@ -14,7 +14,7 @@ using Microsoft.AspNetCore.SignalR.Client;
 namespace AetherRemoteClient.Handlers.Network;
 
 /// <summary>
-///     Handles a <see cref="CustomizeForwardedRequest"/>
+///     Handles a <see cref="CustomizeCommand"/>
 /// </summary>
 public class CustomizePlusHandler : AbstractNetworkHandler, IDisposable
 {
@@ -37,13 +37,13 @@ public class CustomizePlusHandler : AbstractNetworkHandler, IDisposable
         _customize = customize;
         _log = log;
 
-        _handler = network.Connection.On<CustomizeForwardedRequest, ActionResult<Unit>>(HubMethod.CustomizePlus, Handle);
+        _handler = network.Connection.On<CustomizeCommand, ActionResult<Unit>>(HubMethod.CustomizePlus, Handle);
     }
     
     /// <summary>
     ///     <inheritdoc cref="MoodlesHandler"/>
     /// </summary>
-    private async Task<ActionResult<Unit>> Handle(CustomizeForwardedRequest request)
+    private async Task<ActionResult<Unit>> Handle(CustomizeCommand request)
     {
         Plugin.Log.Verbose($"{request}");
         
