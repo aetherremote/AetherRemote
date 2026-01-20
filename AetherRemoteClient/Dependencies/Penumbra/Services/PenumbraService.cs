@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain.Interfaces;
+using AetherRemoteClient.Utils;
 using Penumbra.Api.Enums;
 using Penumbra.Api.IpcSubscribers;
 
@@ -192,8 +193,15 @@ public class PenumbraService : IExternalPlugin
                 try
                 {
                     var result = _addTemporaryMod.Invoke(TemporaryModName, collectionGuid, modifiedPaths, meta, Priority);
-                    if (result is PenumbraApiEc.Success)
-                        return true;
+                    switch (result)
+                    {
+                        case PenumbraApiEc.Success:
+                            return true;
+                        
+                        case PenumbraApiEc.InvalidGamePath:
+                            NotificationHelper.Error("Invalid Game Files", "The person you are being transformed into contains mods that do not all have valid game file paths. Most commonly, this happens when a mod maker includes two or more assets with the same name, but different punctuation: \"aether_remote.png\" and \"Aether_Remote.png\" as an example.");
+                            break;
+                    }
 
                     Plugin.Log.Warning($"[PenumbraService] Adding temporary mod was unsuccessful, result was {result}");
                     return false;
