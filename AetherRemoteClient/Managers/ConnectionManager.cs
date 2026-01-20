@@ -57,8 +57,6 @@ public class ConnectionManager : IDisposable
         // Iterate over all the relationships to transform them into domain models
         foreach (var relationship in response.Relationships)
         {
-            Plugin.Log.Info($"{relationship.TargetFriendCode} is {relationship.Status}");
-            
             // Try to extract the note
             Plugin.Configuration.Notes.TryGetValue(relationship.TargetFriendCode, out var note);
             

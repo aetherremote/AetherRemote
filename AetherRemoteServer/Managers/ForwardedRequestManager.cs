@@ -42,9 +42,13 @@ public class ForwardedRequestManager(IDatabaseService database, IPresenceService
         
         if (await database.GetPermissions(senderFriendCode, targetFriendCode) is not { } permissions)
             return (null!, ActionResultBuilder.Fail(ActionResultEc.TargetNotFriends));
-        
+
         if (HasRequiredPermissions(permissions, required) is false)
+        {
+            logger.LogWarning("{Sender} @ {Target} needed {Required} but has {Permissions}", senderFriendCode, targetFriendCode, required, permissions);
             return  (null!, ActionResultBuilder.Fail(ActionResultEc.TargetHasNotGrantedSenderPermissions));
+        }
+            
 
         return (clients.Client(target.ConnectionId), null);
     }

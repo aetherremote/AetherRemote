@@ -47,6 +47,8 @@ public static class ActionResponseParser
 
     private static string BuildActionFailedNotification(ActionResponseEc code)
     {
+        Plugin.Log.Warning($"[ActionResponseParser] The client recorded a failure of {code}");
+        
         if (code is ActionResponseEc.Success)
             return "Code was successful but the error handling method was called.";
 
