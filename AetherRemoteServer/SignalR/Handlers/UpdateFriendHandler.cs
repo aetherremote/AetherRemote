@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace AetherRemoteServer.SignalR.Handlers;
 
-public class UpdateFriendHandler(IConnectionsService connections, IDatabaseService database, ILogger<UpdateFriendHandler> logger)
+public class UpdateFriendHandler(IPresenceService presenceService, IDatabaseService database, ILogger<UpdateFriendHandler> logger)
 {
     public async Task<UpdateFriendResponse> Handle(string friendCode, UpdateFriendRequest request, IHubCallerClients clients)
     {
@@ -19,7 +19,7 @@ public class UpdateFriendHandler(IConnectionsService connections, IDatabaseServi
             _ => UpdateFriendEc.Unknown
         };
         
-        if (connections.TryGetClient(request.TargetFriendCode) is not { } connectedClient)
+        if (presenceService.TryGet(request.TargetFriendCode) is not { } connectedClient)
             return new UpdateFriendResponse(result);
         
         try

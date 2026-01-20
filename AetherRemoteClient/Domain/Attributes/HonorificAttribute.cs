@@ -26,7 +26,7 @@ public class HonorificAttribute(HonorificService honorific, ushort characterInde
 
     public async Task<bool> Apply(PermanentTransformationData data)
     {
-        if (await honorific.SetCharacterTitle(characterIndex, _honorific) is false)
+        if (await honorific.SetCharacterTitle(0, _honorific) is false)
         {
             Plugin.Log.Warning("[HonorificAttribute.Apply] Could not set title");
             return false;

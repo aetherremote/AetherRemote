@@ -11,7 +11,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 /// <summary>
 ///     Handles the logic for fulfilling a <see cref="AddFriendRequest"/>
 /// </summary>
-public class AddFriendHandler(IConnectionsService connections, IDatabaseService database, ILogger<AddFriendHandler> logger)
+public class AddFriendHandler(IPresenceService presenceService, IDatabaseService database, ILogger<AddFriendHandler> logger)
 {
     /// <summary>
     ///     Handles the request
@@ -40,7 +40,7 @@ public class AddFriendHandler(IConnectionsService connections, IDatabaseService 
         }
 
         // Only update if they are online
-        if (connections.TryGetClient(request.TargetFriendCode) is not { } target)
+        if (presenceService.TryGet(request.TargetFriendCode) is not { } target)
             return new AddFriendResponse(code, FriendOnlineStatus.Offline);
         
         try

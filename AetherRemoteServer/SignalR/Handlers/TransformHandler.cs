@@ -24,7 +24,7 @@ public class TransformHandler(IPresenceService presenceService, IForwardedReques
     {
         if (ValidateEmoteRequest(senderFriendCode, request) is { } error)
         {
-            logger.LogWarning("{Sender} sent invalid transform request", senderFriendCode);
+            logger.LogWarning("{Sender} sent invalid transform request {Error}", senderFriendCode, error);
             return new ActionResponse(error, []);
         }
 

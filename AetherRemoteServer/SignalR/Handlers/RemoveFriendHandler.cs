@@ -10,7 +10,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 /// <summary>
 ///     Handles the logic for fulfilling a <see cref="RemoveFriendRequest"/>
 /// </summary>
-public class RemoveFriendHandler(IConnectionsService connections, IDatabaseService databaseService, ILogger<RemoveFriendHandler> logger)
+public class RemoveFriendHandler(IPresenceService presenceService, IDatabaseService databaseService, ILogger<RemoveFriendHandler> logger)
 {
     /// <summary>
     ///     Handles the request
@@ -29,7 +29,7 @@ public class RemoveFriendHandler(IConnectionsService connections, IDatabaseServi
             return new RemoveFriendResponse(result);
         
         // If the target isn't online
-        if (connections.TryGetClient(request.TargetFriendCode) is not { } friend)
+        if (presenceService.TryGet(request.TargetFriendCode) is not { } friend)
             return new RemoveFriendResponse(result);
         
         // If the target is online, but they don't have us added

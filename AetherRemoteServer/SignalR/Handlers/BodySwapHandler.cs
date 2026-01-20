@@ -22,7 +22,7 @@ public class BodySwapHandler(IDatabaseService database, IPresenceService presenc
     {
         if (ValidateBodySwapRequest(senderFriendCode, request) is { } error)
         {
-            logger.LogWarning("{Sender} sent invalid body swap request", senderFriendCode);
+            logger.LogWarning("{Sender} sent invalid body swap request {Error}", senderFriendCode, error);
             return new BodySwapResponse(error, [], null, null);
         }
         
@@ -117,31 +117,21 @@ public class BodySwapHandler(IDatabaseService database, IPresenceService presenc
     
     private static List<Character> Derange(IReadOnlyList<Character> source)
     {
-        if (source.Count < 2)
-            return source.ToList();
-        
-        var result = source.ToList();
-        var random = Random.Shared;
+        var list = source.ToList();
+        var n = list.Count;
 
-        while (HasAnyEntriesInTheSameSpot(source, result))
+        for (var index = 0; index < n - 1; index++)
         {
-            for (var index = 0; index < result.Count; index++)
-            {
-                var swap = random.Next(index, result.Count);
-                (result[index], result[swap]) = (result[swap], result[index]);
-            }
+            var swap = Random.Shared.Next(index + 1, n);
+            (list[index], list[swap]) = (list[swap], list[index]);
         }
 
-        return result;
-    }
-    
-    private static bool HasAnyEntriesInTheSameSpot(IReadOnlyList<Character> original, IReadOnlyList<Character> permuted)
-    {
-        for (var i = 0; i < original.Count; i++)
-            if (original[i] == permuted[i])
-                return false;
+        if (Equals(list[n - 1], source[n - 1]) is false)
+            return list;
 
-        return true;
+        var fix = Random.Shared.Next(0, n - 1);
+        (list[n - 1], list[fix]) = (list[fix], list[n - 1]);
+        return list;
     }
     
     private record Character(string Name, string World);

@@ -61,7 +61,7 @@ public class HonorificHandler : AbstractNetworkHandler, IDisposable
 
             if (await _honorific.SetCharacterTitle(index, request.Honorific).ConfigureAwait(false))
             {
-                NotificationHelper.Honorific();                
+                NotificationHelper.Honorific();
                 _log.Custom($"{friend.NoteOrFriendCode} applied the {request.Honorific.Title} honorific to you");
                 return ActionResultBuilder.Ok();
             }

@@ -3,7 +3,6 @@ using AetherRemoteClient.Dependencies.Glamourer.Services;
 using AetherRemoteClient.Domain.Enums;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
-using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
 using Newtonsoft.Json.Linq;

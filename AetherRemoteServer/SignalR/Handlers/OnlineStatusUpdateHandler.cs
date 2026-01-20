@@ -2,7 +2,6 @@ using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.SyncOnlineStatus;
 using AetherRemoteServer.Domain.Interfaces;
-using AetherRemoteServer.SignalR.Hubs;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AetherRemoteServer.SignalR.Handlers;
@@ -10,16 +9,12 @@ namespace AetherRemoteServer.SignalR.Handlers;
 /// <summary>
 ///     Processes clients connecting and disconnecting from the server
 /// </summary>
-public class OnlineStatusUpdateHandler(
-    IDatabaseService database,
-    IPresenceService presenceService,
-    IHubContext<PrimaryHub> hub,
-    ILogger<OnlineStatusUpdateHandler> logger)
+public class OnlineStatusUpdateHandler(IDatabaseService database, IPresenceService presenceService, ILogger<OnlineStatusUpdateHandler> logger)
 {
     /// <summary>
     ///     Handle the event, removing or adding from the current client list, and updating all the user's friends who are online
     /// </summary>
-    public async Task Handle(string friendCode, bool online)
+    public async Task Handle(string friendCode, bool online, IHubCallerClients clients)
     {
         if (online is false)
             presenceService.Remove(friendCode);
@@ -32,7 +27,7 @@ public class OnlineStatusUpdateHandler(
                 continue;
             
             // Only evaluate online friends
-            if (presenceService.TryGet(permission.TargetFriendCode) is null)
+            if (presenceService.TryGet(permission.TargetFriendCode) is not { } target)
                 continue;
 
             try
@@ -40,12 +35,12 @@ public class OnlineStatusUpdateHandler(
                 if (online)
                 {
                     var request = new SyncOnlineStatusCommand(friendCode, FriendOnlineStatus.Online, permission.PermissionsGrantedTo);
-                    await hub.Clients.Group(permission.TargetFriendCode).SendAsync(HubMethod.SyncOnlineStatus, request);
+                    await clients.Client(target.ConnectionId).SendAsync(HubMethod.SyncOnlineStatus, request);
                 }
                 else
                 {
                     var request = new SyncOnlineStatusCommand(friendCode, FriendOnlineStatus.Offline, null);
-                    await hub.Clients.Group(permission.TargetFriendCode).SendAsync(HubMethod.SyncOnlineStatus, request);
+                    await clients.Client(target.ConnectionId).SendAsync(HubMethod.SyncOnlineStatus, request);
                 }
             }
             catch (Exception e)

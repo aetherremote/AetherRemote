@@ -9,46 +9,37 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace AetherRemoteServer.SignalR.Handlers;
 
-public class CustomizePlusHandler(
-    IConnectionsService connections,
-    IForwardedRequestManager forwardedRequestManager,
-    ILogger<CustomizePlusHandler> logger)
+public class CustomizePlusHandler(IPresenceService presenceService, IForwardedRequestManager forwardedRequestManager, ILogger<CustomizePlusHandler> logger)
 {
     private const string Method = HubMethod.CustomizePlus;
-    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.CustomizePlus, SpeakPermissions2.None,
-        ElevatedPermissions.None);
+    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.CustomizePlus, SpeakPermissions2.None, ElevatedPermissions.None);
 
     /// <summary>
     ///     Handles the request
     /// </summary>
-    public async Task<ActionResponse> Handle(string sender, CustomizeRequest request, IHubCallerClients clients)
+    public async Task<ActionResponse> Handle(string senderFriendCode, CustomizeRequest request, IHubCallerClients clients)
     {
-        if (connections.TryGetClient(sender) is not { } connectedClient)
+        if (ValidateCustomizeRequest(senderFriendCode, request) is { } error)
         {
-            logger.LogWarning("{Sender} tried to issue a command but is not in the connections list", sender);
-            return new ActionResponse(ActionResponseEc.UnexpectedState, []);
-        }
-
-        if (connections.IsUserExceedingRequestLimit(connectedClient))
-        {
-            logger.LogWarning("{Sender} exceeded request limit", sender);
-            return new ActionResponse(ActionResponseEc.TooManyRequests, []);
-        }
-
-        if (VerificationUtilities.ValidListOfFriendCodes(request.TargetFriendCodes) is false)
-        {
-            logger.LogWarning("{Sender} sent invalid friend codes", sender);
-            return new ActionResponse(ActionResponseEc.BadDataInRequest, []);
-        }
-
-        if (VerificationUtilities.IsJsonBytes(request.JsonBoneDataBytes) is false)
-        {
-            logger.LogWarning("{Sender} sent invalid bone data", sender);
-            return new ActionResponse(ActionResponseEc.BadDataInRequest, []);
+            logger.LogWarning("{Sender} sent invalid customize+ request {Error}", senderFriendCode, error);
+            return new ActionResponse(error, []);
         }
         
-        var forwardedRequest = new CustomizeCommand(sender, request.JsonBoneDataBytes);
-        return await forwardedRequestManager.CheckPermissionsAndSend(sender, request.TargetFriendCodes, Method,
-            Permissions, forwardedRequest, clients);
+        var forwardedRequest = new CustomizeCommand(senderFriendCode, request.JsonBoneDataBytes);
+        return await forwardedRequestManager.CheckPermissionsAndSend(senderFriendCode, request.TargetFriendCodes, Method, Permissions, forwardedRequest, clients);
+    }
+    
+    private ActionResponseEc? ValidateCustomizeRequest(string senderFriendCode, CustomizeRequest request)
+    {
+        if (presenceService.IsUserExceedingCooldown(senderFriendCode))
+            return ActionResponseEc.TooManyRequests;
+        
+        if (VerificationUtilities.ValidListOfFriendCodes(request.TargetFriendCodes) is false)
+            return ActionResponseEc.BadDataInRequest;
+
+        if (VerificationUtilities.IsJsonBytes(request.JsonBoneDataBytes) is false)
+            return ActionResponseEc.BadDataInRequest;
+        
+        return null;
     }
 }

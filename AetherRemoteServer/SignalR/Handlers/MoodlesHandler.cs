@@ -25,7 +25,7 @@ public class MoodlesHandler(IPresenceService presenceService, IForwardedRequestM
     {
         if (ValidateEmoteRequest(senderFriendCode, request) is { } error)
         {
-            logger.LogWarning("{Sender} sent invalid moodles request", senderFriendCode);
+            logger.LogWarning("{Sender} sent invalid moodles request {Error}", senderFriendCode, error);
             return new ActionResponse(error, []);
         }
 

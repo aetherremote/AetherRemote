@@ -25,7 +25,7 @@ public class EmoteHandler(IPresenceService presenceService, IForwardedRequestMan
     {
         if (ValidateEmoteRequest(senderFriendCode, request) is { } error)
         {
-            logger.LogWarning("{Sender} sent invalid speak request", senderFriendCode);
+            logger.LogWarning("{Sender} sent invalid speak request {Error}", senderFriendCode, error);
             return new ActionResponse(error, []);
         }
         

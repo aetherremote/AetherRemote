@@ -26,7 +26,7 @@ public class HypnosisHandler(IPresenceService presenceService, IForwardedRequest
     {
         if (ValidateHypnosisRequest(senderFriendCode, request) is { } error)
         {
-            logger.LogWarning("{Sender} sent invalid hypnosis request", senderFriendCode);
+            logger.LogWarning("{Sender} sent invalid hypnosis request {Error}", senderFriendCode, error);
             return new ActionResponse(error, []);
         }
 

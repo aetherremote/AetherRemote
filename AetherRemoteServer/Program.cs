@@ -34,15 +34,10 @@ public class Program
         // Add services to the container
         builder.Services.AddControllers();
         builder.Services.AddSignalR(options => options.EnableDetailedErrors = true)
-            .AddMessagePackProtocol(options =>
-            {
-                options.SerializerOptions = MessagePackSerializerOptions.Standard
-                    .WithSecurity(MessagePackSecurity.UntrustedData);
-            });
+            .AddMessagePackProtocol(options => options.SerializerOptions = MessagePackSerializerOptions.Standard.WithSecurity(MessagePackSecurity.UntrustedData));
         builder.Services.AddSingleton(configuration);
 
         // Services
-        builder.Services.AddSingleton<IConnectionsService, ConnectionsService>();
         builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
         builder.Services.AddSingleton<IPresenceService, PresenceService>();
         builder.Services.AddSingleton<IRequestLoggingService, RequestLoggingService>();
@@ -68,8 +63,8 @@ public class Program
         builder.Services.AddSingleton<UpdateFriendHandler>();
 
 #if DEBUG
-        builder.WebHost.UseUrls("https://localhost:5006");
-        /*
+        // builder.WebHost.UseUrls("https://localhost:5006");
+        
         builder.WebHost.ConfigureKestrel(options =>
         {
             var ip = IPAddress.Parse("192.168.1.14");
@@ -78,7 +73,6 @@ public class Program
                 listenOptions.UseHttps($"{configuration.CertificatePath}", $"{configuration.CertificatePasswordPath}");
             });
         });
-        */
 #else
         builder.WebHost.ConfigureKestrel(options =>
         {
