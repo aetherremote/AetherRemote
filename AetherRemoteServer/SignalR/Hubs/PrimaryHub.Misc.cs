@@ -18,7 +18,7 @@ public partial class PrimaryHub
     public async Task<ActionResponse> Honorific(HonorificRequest request)
     {
         var friendCode = FriendCode;
-        LogWithBehavior($"[HonorificRequest] Sender = {friendCode}, Honorific = {request.Honorific}", LogMode.Console);
+        LogWithBehavior($"[HonorificRequest] Sender = {friendCode}, Targets = {string.Join(", ", request.TargetFriendCodes)}, Honorific = {request.Honorific}", LogMode.Console);
         return await honorificHandler.Handle(friendCode, request, Clients);
     }
     
