@@ -9,7 +9,7 @@ namespace AetherRemoteServer.Managers;
 /// <summary>
 ///     <inheritdoc cref="IForwardedRequestManager"/>
 /// </summary>
-public class ForwardedRequestManager(IDatabaseService database, IPresenceService presence, ILogger<ForwardedRequestManager> logger) : IForwardedRequestManager
+public class ForwardedRequestManager(IDatabaseService database, IPresenceService presence) : IForwardedRequestManager
 {
     private static readonly TimeSpan TimeOutDuration = TimeSpan.FromSeconds(8);
 
@@ -40,15 +40,11 @@ public class ForwardedRequestManager(IDatabaseService database, IPresenceService
         if (presence.TryGet(targetFriendCode) is not { } target)
             return (null!, ActionResultBuilder.Fail(ActionResultEc.TargetOffline));
         
-        if (await database.GetPermissions(senderFriendCode, targetFriendCode) is not { } permissions)
+        if (await database.GetPermissions(targetFriendCode, senderFriendCode) is not { } permissions)
             return (null!, ActionResultBuilder.Fail(ActionResultEc.TargetNotFriends));
 
         if (HasRequiredPermissions(permissions, required) is false)
-        {
-            logger.LogWarning("{Sender} @ {Target} needed {Required} but has {Permissions}", senderFriendCode, targetFriendCode, required, permissions);
             return  (null!, ActionResultBuilder.Fail(ActionResultEc.TargetHasNotGrantedSenderPermissions));
-        }
-            
 
         return (clients.Client(target.ConnectionId), null);
     }
