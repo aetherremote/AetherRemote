@@ -46,6 +46,6 @@ public static class VerificationUtilities
         if (extra is null)
             return true;
 
-        return extra.Length is > Constraints.Speak.MessageExtraMin and < Constraints.Speak.MessageExtraMax;
+        return extra.Length is >= Constraints.Speak.MessageExtraMin and <= Constraints.Speak.MessageExtraMax;
     }
 }
