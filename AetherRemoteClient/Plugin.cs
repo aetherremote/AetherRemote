@@ -53,6 +53,8 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static IFramework Framework { get; set; } = null!;
     [PluginService] internal static INotificationManager NotificationManager { get; private set; } = null!;
     [PluginService] internal static ITextureProvider TextureProvider { get; private set; } = null!;
+    [PluginService] internal static IGameInteropProvider GameInteropProvider { get; private set; } = null!;
+    [PluginService] internal static ISigScanner SigScanner { get; private set; } = null!;
     internal static Configuration Configuration { get; private set; } = null!;
     internal static CharacterConfiguration? CharacterConfiguration { get; set; }
     internal static LegacyConfiguration? LegacyConfiguration { get; private set; }

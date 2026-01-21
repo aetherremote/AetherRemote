@@ -34,7 +34,7 @@ public class CustomizePlusHandler(IPresenceService presenceService, IForwardedRe
         if (presenceService.IsUserExceedingCooldown(senderFriendCode))
             return ActionResponseEc.TooManyRequests;
         
-        if (VerificationUtilities.ValidListOfFriendCodes(request.TargetFriendCodes) is false)
+        if (VerificationUtilities.ValidFriendCodes(request.TargetFriendCodes) is false)
             return ActionResponseEc.BadDataInRequest;
 
         if (VerificationUtilities.IsJsonBytes(request.JsonBoneDataBytes) is false)

@@ -38,7 +38,7 @@ public class HypnosisHandler(IPresenceService presenceService, IForwardedRequest
         if (presenceService.IsUserExceedingCooldown(senderFriendCode))
             return ActionResponseEc.TooManyRequests;
         
-        if (VerificationUtilities.ValidListOfFriendCodes(request.TargetFriendCodes) is false)
+        if (VerificationUtilities.ValidFriendCodes(request.TargetFriendCodes) is false)
             return ActionResponseEc.BadDataInRequest;
         
         if (request.Data.SpiralArms is < Constraints.Hypnosis.ArmsMin or > Constraints.Hypnosis.ArmsMax) return ActionResponseEc.BadDataInRequest;

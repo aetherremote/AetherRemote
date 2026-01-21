@@ -31,7 +31,7 @@ public class HypnosisStopHandler(IPresenceService presenceService, IForwardedReq
         if (presenceService.IsUserExceedingCooldown(senderFriendCode))
             return ActionResponseEc.TooManyRequests;
         
-        if (VerificationUtilities.ValidListOfFriendCodes(request.TargetFriendCodes) is false)
+        if (VerificationUtilities.ValidFriendCodes(request.TargetFriendCodes) is false)
             return ActionResponseEc.BadDataInRequest;
 
         return null;

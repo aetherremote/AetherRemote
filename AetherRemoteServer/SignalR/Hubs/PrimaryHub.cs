@@ -11,9 +11,6 @@ public partial class PrimaryHub(
     // Services
     IRequestLoggingService requestLoggingService,
     
-    // Managers
-    OnlineStatusUpdateHandler onlineStatusUpdateHandler,
-
     // Handlers
     AddFriendHandler addFriendHandler,
     BodySwapHandler bodySwapHandler,
@@ -24,6 +21,11 @@ public partial class PrimaryHub(
     HypnosisHandler hypnosisHandler,
     HypnosisStopHandler hypnosisStopHandler,
     MoodlesHandler moodlesHandler,
+    OnlineStatusUpdateHandler onlineStatusUpdateHandler,
+    PossessionBeginHandler possessionBeginHandler,
+    PossessionMovementHandler possessionMovementHandler,
+    PossessionCameraHandler possessionCameraHandler,
+    PossessionEndHandler possessionEndHandler,
     RemoveFriendHandler removeFriendHandler,
     SpeakHandler speakHandler,
     TransformHandler transformHandler,

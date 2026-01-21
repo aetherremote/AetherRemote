@@ -12,5 +12,10 @@ public enum ElevatedPermissions
     /// <summary>
     ///     Allows for the saving of an appearance permanently
     /// </summary>
-    PermanentTransformation = 1 << 0
+    PermanentTransformation = 1 << 0,
+    
+    /// <summary>
+    ///     Allows for the possessing of another character
+    /// </summary>
+    Possession = 1 << 1
 }

@@ -44,7 +44,7 @@ public class SpeakHandler(IPresenceService presenceService, IForwardedRequestMan
         if (request.TargetFriendCodes.Count > Constraints.MaximumTargetsForInGameOperations)
             return ActionResponseEc.TooManyTargets;
         
-        if (VerificationUtilities.ValidListOfFriendCodes(request.TargetFriendCodes) is false)
+        if (VerificationUtilities.ValidFriendCodes(request.TargetFriendCodes) is false)
             return ActionResponseEc.BadTargets;
         
         if (VerificationUtilities.ValidMessageLengths(request.Message, request.Extra) is false)

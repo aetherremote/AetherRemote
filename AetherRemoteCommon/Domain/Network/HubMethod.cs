@@ -25,4 +25,12 @@ public static class HubMethod
     public const string Hypnosis = "Hypnosis";
     public const string HypnosisStop = "HypnosisStop";
     public const string Honorific = "Honorific";
+
+    public static class Possession
+    {
+        public const string Begin = "PossessionBegin";
+        public const string Camera = "PossessionCamera";
+        public const string End = "PossessionEnd";
+        public const string Movement = "PossessionMovement";
+    }
 }

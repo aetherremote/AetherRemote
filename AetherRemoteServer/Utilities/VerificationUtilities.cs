@@ -26,13 +26,18 @@ public static class VerificationUtilities
     /// <summary>
     ///     Validates that all provided friend codes are within the allowed length
     /// </summary>
-    public static bool ValidListOfFriendCodes(List<string> friendCodes)
+    public static bool ValidFriendCodes(List<string> friendCodes)
     {
         foreach (var friendCode in friendCodes)
             if (friendCode.Length is < Constraints.FriendCodeMinimumLength or > Constraints.FriendCodeMaximumLength)
                 return false;
 
         return true;
+    }
+    
+    public static bool ValidFriendCode(string friendCode)
+    {
+        return friendCode.Length is >= Constraints.FriendCodeMinimumLength and <= Constraints.FriendCodeMaximumLength;
     }
 
     /// <summary>
