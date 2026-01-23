@@ -20,7 +20,7 @@ public class BooleanUserPermissions
     public bool Ls1, Ls2, Ls3, Ls4, Ls5, Ls6, Ls7, Ls8, Cwl1, Cwl2, Cwl3, Cwl4, Cwl5, Cwl6, Cwl7, Cwl8;
     
     // Elevated Permissions
-    public bool PermanentTransformation;
+    public bool PermanentTransformation, Possession;
 
     /// <summary>
     ///     Tests if this object is equal to another <see cref="BooleanUserPermissions"/>
@@ -71,6 +71,7 @@ public class BooleanUserPermissions
 
         // Elevated Permissions
         if (PermanentTransformation != other.PermanentTransformation) return false;
+        if (Possession != other.Possession) return false;
         
         return true;
     }
@@ -125,7 +126,8 @@ public class BooleanUserPermissions
             Cwl8 = (permissions.Speak & SpeakPermissions2.Cwl8) == SpeakPermissions2.Cwl8,
             
             // Elevated Permissions
-            PermanentTransformation = (permissions.Elevated & ElevatedPermissions.PermanentTransformation) == ElevatedPermissions.PermanentTransformation 
+            PermanentTransformation = (permissions.Elevated & ElevatedPermissions.PermanentTransformation) == ElevatedPermissions.PermanentTransformation,
+            Possession = (permissions.Elevated & ElevatedPermissions.Possession) == ElevatedPermissions.Possession
         };
     }
 
@@ -183,6 +185,7 @@ public class BooleanUserPermissions
         
         // Elevated Permissions
         if (permissions.PermanentTransformation) elevated |= ElevatedPermissions.PermanentTransformation;
+        if (permissions.Possession) elevated |= ElevatedPermissions.Possession;
         
         return new UserPermissions(primary, speak, elevated);
     }

@@ -18,10 +18,5 @@ public interface IForwardedRequestManager
     /// <summary>
     ///     TODO
     /// </summary>
-    public Task CheckPossessionAndSend(string senderFriendCode, string targetFriendCode, string method, UserPermissions required, ActionCommand request, IHubCallerClients clients);
-    
-    /// <summary>
-    ///     TODO
-    /// </summary>
     public Task<PossessionResponse> CheckPossessionAndInvoke(string senderFriendCode, string targetFriendCode, string method, UserPermissions required, ActionCommand request, IHubCallerClients clients);
 }

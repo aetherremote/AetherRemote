@@ -9,6 +9,7 @@ using AetherRemoteClient.Dependencies.Penumbra.Services;
 using AetherRemoteClient.Domain.Configurations;
 using AetherRemoteClient.Handlers;
 using AetherRemoteClient.Handlers.Network;
+using AetherRemoteClient.Hooks;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI;
@@ -25,13 +26,15 @@ using AetherRemoteClient.UI.Views.Hypnosis;
 using AetherRemoteClient.UI.Views.Login;
 using AetherRemoteClient.UI.Views.Moodles;
 using AetherRemoteClient.UI.Views.Pause;
+using AetherRemoteClient.UI.Views.Possession;
 using AetherRemoteClient.UI.Views.Settings;
 using AetherRemoteClient.UI.Views.Speak;
 using AetherRemoteClient.UI.Views.Status;
 using AetherRemoteClient.UI.Views.Transformation;
 using AetherRemoteClient.UI.Views.Twinning;
 using AetherRemoteClient.Utils;
-using Dalamud.Game.ClientState.Objects;
+using Dalamud.Game.ClientState.Objects.Enums;
+using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
@@ -107,12 +110,20 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<MoodlesService>();
         services.AddSingleton<PenumbraService>();
         
+        // Hooks
+        services.AddSingleton<CameraInputHook>();
+        services.AddSingleton<CameraTargetHook>();
+        services.AddSingleton<MovementInputHook>();
+        services.AddSingleton<MovementHook>();
+        services.AddSingleton<MovementLockHook>();
+        
         // Managers
         services.AddSingleton<CharacterTransformationManager>();
         services.AddSingleton<ConnectionManager>();
         services.AddSingleton<DependencyManager>();
         services.AddSingleton<HypnosisManager>();
         services.AddSingleton<LoginManager>();
+        services.AddSingleton<PossessionManager>();
         services.AddSingleton<PermanentTransformationHandler>();
         services.AddSingleton<SelectionManager>();
         
@@ -127,6 +138,10 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<HypnosisHandler>();
         services.AddSingleton<HypnosisStopHandler>();
         services.AddSingleton<MoodlesHandler>();
+        services.AddSingleton<PossessionBeginHandler>();
+        services.AddSingleton<PossessionCameraHandler>();
+        services.AddSingleton<PossessionEndHandler>();
+        services.AddSingleton<PossessionMovementHandler>();
         services.AddSingleton<SpeakHandler>();
         services.AddSingleton<SyncOnlineStatusHandler>();
         services.AddSingleton<SyncPermissionsHandler>();
@@ -153,6 +168,7 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<LoginViewUiController>();
         services.AddSingleton<MoodlesViewUiController>();
         services.AddSingleton<PauseViewUiController>();
+        services.AddSingleton<PossessionViewUiController>();
         services.AddSingleton<SettingsViewUiController>();
         services.AddSingleton<SpeakViewUiController>();
         services.AddSingleton<StatusViewUiController>();
@@ -171,6 +187,7 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<LoginViewUi>();
         services.AddSingleton<MoodlesViewUi>();
         services.AddSingleton<PauseViewUi>();
+        services.AddSingleton<PossessionViewUi>();
         services.AddSingleton<SettingsViewUi>();
         services.AddSingleton<SpeakViewUi>();
         services.AddSingleton<StatusViewUi>();
@@ -206,6 +223,10 @@ public sealed class Plugin : IDalamudPlugin
         _services.GetRequiredService<HypnosisHandler>();
         _services.GetRequiredService<HypnosisStopHandler>();
         _services.GetRequiredService<MoodlesHandler>();
+        _services.GetRequiredService<PossessionBeginHandler>();
+        _services.GetRequiredService<PossessionCameraHandler>();
+        _services.GetRequiredService<PossessionEndHandler>();
+        _services.GetRequiredService<PossessionMovementHandler>();
         _services.GetRequiredService<SpeakHandler>();
         _services.GetRequiredService<SyncOnlineStatusHandler>();
         _services.GetRequiredService<SyncPermissionsHandler>();
@@ -271,6 +292,27 @@ public sealed class Plugin : IDalamudPlugin
             Log.Warning($"[DependencyManager.RunOnFrameworkSafely] An error occurred, {e}");
             return Activator.CreateInstance<T>();
         }
+    }
+    
+    /// <summary>
+    ///     Attempts to find a character in the object list by name
+    /// </summary>
+    public static async Task<IntPtr> TryFindAddressByCharacter(string characterName, string characterWorld)
+    {
+        return await RunOnFrameworkSafely(() =>
+        {
+            foreach (var entity in ObjectTable)
+            {
+                var player = entity.ObjectKind is ObjectKind.Player ? (IPlayerCharacter)entity : null;
+                if (player is null)
+                    continue;
+                
+                if (player.Name.ToString() == characterName && player.HomeWorld.Value.Name.ToString() == characterWorld)
+                    return player.Address;
+            }
+
+            return IntPtr.Zero;
+        }).ConfigureAwait(false);
     }
 
     /*

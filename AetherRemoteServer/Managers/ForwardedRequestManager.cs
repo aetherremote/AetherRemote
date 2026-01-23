@@ -44,46 +44,9 @@ public class ForwardedRequestManager(IDatabaseService database, IPresenceService
 
         return new ActionResponse(ActionResponseEc.Success, results);
     }
-
-    /// <summary>
-    ///     <inheritdoc cref="IForwardedRequestManager.CheckPossessionAndSend"/>
-    /// </summary>
-    public async Task CheckPossessionAndSend(
-        string senderFriendCode, 
-        string targetFriendCode, 
-        string method, 
-        UserPermissions required, 
-        ActionCommand request, 
-        IHubCallerClients clients)
-    {
-        if (presence.TryGet(targetFriendCode) is not { } target)
-            return;
-
-        if (await database.GetPermissions(targetFriendCode, senderFriendCode) is not { } permissions)
-            return;
-
-        if (HasRequiredPermissions(permissions, required) is false)
-            return;
-
-        var client = clients.Client(target.ConnectionId);
-
-        using var token = new CancellationTokenSource(TimeOutDuration);
-        try
-        {
-            await client.SendAsync(method, request, token.Token);
-        }
-        catch (OperationCanceledException)
-        {
-            logger.LogWarning("[CheckPossessionAndInvoke] {Sender} SendAsync message timed out", senderFriendCode);
-        }
-        catch (Exception e)
-        {
-            logger.LogWarning("[CheckPossessionAndInvoke] {Sender} SendAsync message failed unexpectedly {Error}", senderFriendCode, e);
-        }
-    }
     
     /// <summary>
-    ///     <inheritdoc cref="IForwardedRequestManager.CheckPossessionAndSend"/>
+    ///     <inheritdoc cref="IForwardedRequestManager.CheckPossessionAndInvoke"/>
     /// </summary>
     public async Task<PossessionResponse> CheckPossessionAndInvoke(
         string senderFriendCode, 
@@ -103,7 +66,6 @@ public class ForwardedRequestManager(IDatabaseService database, IPresenceService
             return new PossessionResponse(PossessionResponseEc.LacksPermissions, PossessionResultEc.Uninitialized);
 
         var client = clients.Client(target.ConnectionId);
-
         using var token = new CancellationTokenSource(TimeOutDuration);
         try
         {
@@ -114,8 +76,9 @@ public class ForwardedRequestManager(IDatabaseService database, IPresenceService
         {
             return new PossessionResponse(PossessionResponseEc.Timeout, PossessionResultEc.Uninitialized);
         }
-        catch
+        catch (Exception e)
         {
+            logger.LogError("{Error}", e);
             return new PossessionResponse(PossessionResponseEc.Unknown, PossessionResultEc.Uninitialized);
         }
     }

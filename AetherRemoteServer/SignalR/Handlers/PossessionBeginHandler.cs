@@ -22,24 +22,27 @@ public class PossessionBeginHandler(
     private const string Method = HubMethod.Possession.Begin;
     private static readonly UserPermissions Required = new(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.Possession);
     
-    public async Task<PossessionResponse> Handle(string senderFriendCode, PossessionBeginRequest request, IHubCallerClients clients)
+    public async Task<PossessionBeginResponse> Handle(string senderFriendCode, PossessionBeginRequest request, IHubCallerClients clients)
     {
         if (ValidatePossessionBeginRequest(senderFriendCode, request) is { } error)
         {
             logger.LogWarning("{Sender} sent invalid possession begin request {Error}", senderFriendCode, error);
-            return new PossessionResponse(error, PossessionResultEc.Uninitialized);
+            return new PossessionBeginResponse(error, PossessionResultEc.Uninitialized, string.Empty, string.Empty);
         }
-
+        
         var command = new PossessionBeginCommand(senderFriendCode);
         var response = await forwarder.CheckPossessionAndInvoke(senderFriendCode, request.TargetFriendCode, Method, Required, command, clients);
 
         // If the response or the result is not success, just return the response object
         if (response.Response is not PossessionResponseEc.Success || response.Result is not PossessionResultEc.Success)
-            return response;
+            return new PossessionBeginResponse(response.Response, response.Result, string.Empty, string.Empty);
 
+        if (presences.TryGet(request.TargetFriendCode) is not { } target)
+            return new PossessionBeginResponse(PossessionResponseEc.TargetOffline, PossessionResultEc.Uninitialized, string.Empty, string.Empty);
+        
         var session = new Session(senderFriendCode, request.TargetFriendCode);
         possessionManager.TryAddSession(senderFriendCode, request.TargetFriendCode, session);
-        return response;
+        return new PossessionBeginResponse(response.Response, response.Result, target.CharacterName, target.CharacterWorld);
     }
     
     private PossessionResponseEc? ValidatePossessionBeginRequest(string senderFriendCode, PossessionBeginRequest request)

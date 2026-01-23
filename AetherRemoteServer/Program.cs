@@ -44,6 +44,7 @@ public class Program
         
         // Managers
         builder.Services.AddSingleton<IForwardedRequestManager, ForwardedRequestManager>();
+        builder.Services.AddSingleton<IPossessionManager, PossessionManager>();
 
         // Handles
         builder.Services.AddSingleton<OnlineStatusUpdateHandler>();
@@ -61,6 +62,10 @@ public class Program
         builder.Services.AddSingleton<TransformHandler>();
         builder.Services.AddSingleton<TwinningHandler>();
         builder.Services.AddSingleton<UpdateFriendHandler>();
+        builder.Services.AddSingleton<PossessionBeginHandler>();
+        builder.Services.AddSingleton<PossessionCameraHandler>();
+        builder.Services.AddSingleton<PossessionEndHandler>();
+        builder.Services.AddSingleton<PossessionMovementHandler>();
 
 #if DEBUG
         builder.WebHost.UseUrls("https://localhost:5006");

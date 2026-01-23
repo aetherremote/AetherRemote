@@ -29,9 +29,18 @@ public unsafe class CameraTargetHook : IDisposable
         var address = extendedCamera->VirtualTable is null ? 0 : extendedCamera->VirtualTable[GetCameraTargetVirtualTableIndex];
         _hook = Plugin.GameInteropProvider.HookFromAddress<Delegate>(address, Detour);
     }
-    
-    public void Target(nint address) => _target = address;
-    public void Clear() => _target = null;
+
+    public void Target(nint address)
+    {
+        _target = address;
+        _hook.Enable();
+    }
+
+    public void Clear()
+    {
+        _target = null;
+        _hook.Disable();
+    }
     
     private GameObject* Detour(ClientStructsCameraExtended* camera)
     {

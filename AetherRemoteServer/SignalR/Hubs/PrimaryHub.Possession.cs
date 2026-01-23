@@ -11,7 +11,7 @@ namespace AetherRemoteServer.SignalR.Hubs;
 public partial class PrimaryHub
 {
     [HubMethodName(HubMethod.Possession.Begin)]
-    public async Task<PossessionResponse> PossessionBegin(PossessionBeginRequest request)
+    public async Task<PossessionBeginResponse> PossessionBegin(PossessionBeginRequest request)
     {
         logger.LogInformation("{Request}", request);
         var friendCode = FriendCode;
@@ -20,21 +20,21 @@ public partial class PrimaryHub
     }
     
     [HubMethodName(HubMethod.Possession.Camera)]
-    public async Task PossessionCamera(PossessionCameraRequest request)
+    public async Task<PossessionResponse> PossessionCamera(PossessionCameraRequest request)
     {
         logger.LogInformation("{Request}", request);
         var friendCode = FriendCode;
         LogWithBehavior($"[PossessionCameraRequest] Sender = {friendCode}", LogMode.Console);
-        await possessionCameraHandler.Handle(friendCode, request, Clients);
+        return await possessionCameraHandler.Handle(friendCode, request, Clients);
     }
     
     [HubMethodName(HubMethod.Possession.Movement)]
-    public async Task PossessionMovement(PossessionMovementRequest request)
+    public async Task<PossessionResponse> PossessionMovement(PossessionMovementRequest request)
     {
         logger.LogInformation("{Request}", request);
         var friendCode = FriendCode;
         LogWithBehavior($"[PossessionMovementRequest] Sender = {friendCode}", LogMode.Console);
-        await possessionMovementHandler.Handle(friendCode, request, Clients);
+        return await possessionMovementHandler.Handle(friendCode, request, Clients);
     }
     
     [HubMethodName(HubMethod.Possession.End)]

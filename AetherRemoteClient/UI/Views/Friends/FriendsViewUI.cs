@@ -156,8 +156,7 @@ public class FriendsViewUi(
             }
         });
         
-        // TODO: Change includeEndPadding once elevated permissions are back
-        SharedUserInterfaces.ContentBox("FriendsCharacterAttributesOptions", AetherRemoteStyle.PanelBackground, false, () =>
+        SharedUserInterfaces.ContentBox("FriendsCharacterAttributesOptions", AetherRemoteStyle.PanelBackground, true, () =>
         {
             ImGui.TextUnformatted("Character Attributes");
             if (ImGui.BeginTable("CharacterAttributesPermissionsTable", 2))
@@ -183,7 +182,7 @@ public class FriendsViewUi(
             }
         });
         
-        /*
+        
         SharedUserInterfaces.ContentBox("FriendsElevatedOptions", AetherRemoteStyle.ElevatedBackground, false, () =>
         {
             ImGui.TextUnformatted("Elevated Permissions");
@@ -194,16 +193,26 @@ public class FriendsViewUi(
             if (ImGui.BeginTable("CharacterAttributesPermissionsTable", 2))
             {
                 ImGui.TableNextColumn();
-                ImGui.Checkbox("Permanent Transformations", ref controller.EditingUserPermissions.PermanentTransformation);
+                ImGui.BeginDisabled();
+                ImGui.Checkbox("Permanent Transformation", ref controller.EditingUserPermissions.PermanentTransformation);
+                ImGui.EndDisabled();
                 SharedUserInterfaces.Tooltip(
                     [
                         "Allows this friend to lock your appearance, preventing changes until you enter the PIN they created", 
                         "You can unlock it from the Status tab or by using the safeword command or safe mode"
                     ]);
+                
+                ImGui.TableNextColumn();
+                ImGui.Checkbox("Possession", ref controller.EditingUserPermissions.Possession);
+                SharedUserInterfaces.Tooltip(
+                [
+                    "TODO"
+                ]);
+                
+                
                 ImGui.EndTable();
             }
         });
-        */
 
         // Pending Changes
         if (controller.PendingChanges())
