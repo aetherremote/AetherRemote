@@ -14,7 +14,7 @@ public unsafe class CameraInputHook : IDisposable
     private const string Signature = "48 8B C4 53 48 81 EC ?? ?? ?? ?? 44 0F 29 50 ??";
     private delegate void Delegate(ClientStructsCameraExtended* camera, int mode, float horizontal, float vertical);
     private readonly Hook<Delegate> _hook;
-    //
+
     // Timer for a periodic check of the camera's position so we know where to move it to if any
     private readonly Timer _cameraPeriodicCheckTimer = new(2000);
     private bool _shouldCheckCamera;

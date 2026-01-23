@@ -111,6 +111,7 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<PenumbraService>();
         
         // Hooks
+        services.AddSingleton<CameraHook>();
         services.AddSingleton<CameraInputHook>();
         services.AddSingleton<CameraTargetHook>();
         services.AddSingleton<MovementInputHook>();

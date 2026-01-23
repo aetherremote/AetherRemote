@@ -75,6 +75,45 @@ public class PossessionManager(
     }
 
     /// <summary>
+    ///     Attempts to become possessed by a "Ghost"
+    /// </summary>
+    public void TryBecomePossessed()
+    {
+        if (Type is not PossessionSessionType.None)
+        {
+            Plugin.Log.Warning("[PossessionManager.TryBecomePossessed] Cannot become possessed if you are already in a session");
+            return;
+        }
+        
+        // Set your type as host, meaning you are being possessed
+        Type = PossessionSessionType.Host;
+        
+        // Enable hooks to lock you out of moving or controlling your camera
+        movementHook.Enable();
+        cameraHook.Enable();
+    }
+
+    public void SetCameraDestination(float horizontal, float vertical, float zoom)
+    {
+        if (Type is not PossessionSessionType.Host)
+        {
+            Plugin.Log.Warning("[PossessionManager.SetCameraDestination] Cannot set destination if you are not possessed");
+            return;
+        }
+
+        cameraHook.SetTarget(horizontal, vertical, zoom);
+    }
+
+    public void SetMovementDirection()
+    {
+        if (Type is not PossessionSessionType.Host)
+        {
+            Plugin.Log.Warning("[PossessionManager.SetMovementDirection] Cannot set direction if you are not possessed");
+            return;
+        }
+    }
+
+    /// <summary>
     ///     Attempts to end a possession session
     /// </summary>
     public async Task TryEndPossession()
