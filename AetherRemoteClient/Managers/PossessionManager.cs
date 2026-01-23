@@ -104,13 +104,15 @@ public class PossessionManager(
         cameraHook.SetTarget(horizontal, vertical, zoom);
     }
 
-    public void SetMovementDirection()
+    public void SetMovementDirection(float horizontal, float vertical, float turn, byte backwards)
     {
         if (Type is not PossessionSessionType.Host)
         {
             Plugin.Log.Warning("[PossessionManager.SetMovementDirection] Cannot set direction if you are not possessed");
             return;
         }
+        
+        movementHook.SetInput(horizontal, vertical, turn, backwards);
     }
 
     /// <summary>
