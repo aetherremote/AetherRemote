@@ -210,6 +210,8 @@ public class PossessionManager(
 
     private void DisableAll()
     {
+        cameraHook.Disable();
+        movementHook.Disable();
         cameraTargetHook.Clear();
         movementLockHook.Disable();
         cameraInputHook.Disable();
@@ -221,6 +223,7 @@ public class PossessionManager(
     public void EndPossessing()
     {
         DisableAll();
+        Type = PossessionSessionType.None;
     }
 
     public void Dispose()
