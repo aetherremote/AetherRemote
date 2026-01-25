@@ -1,5 +1,3 @@
-using AetherRemoteServer.Services;
-
 namespace AetherRemoteServer.Domain.Interfaces;
 
 public interface IPresenceService
@@ -11,4 +9,6 @@ public interface IPresenceService
     public void Remove(string friendCode);
 
     public bool IsUserExceedingCooldown(string friendCode);
+    
+    public bool IsUserExceedingPossession(string friendCode);
 }

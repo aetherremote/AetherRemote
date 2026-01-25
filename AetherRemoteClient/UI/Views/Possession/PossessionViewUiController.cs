@@ -2,14 +2,18 @@ using System;
 using System.Linq;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Possession;
 using AetherRemoteCommon.Domain.Network.Possession.End;
+using Dalamud.Utility;
 
 namespace AetherRemoteClient.UI.Views.Possession;
 
 public class PossessionViewUiController(NetworkService network, PossessionManager possessions, SelectionManager selectionManager)
 {
+    public static void OpenFeedbackLink() => Util.OpenLink("https://tenor.com/view/%E3%83%95%E3%83%AD%E3%83%BC%E3%83%A9%E3%82%A4%E3%83%88-flow-endfield-gif-12757389959336405366");
+    
     public async void Possess()
     {
         try
@@ -56,5 +60,14 @@ public class PossessionViewUiController(NetworkService network, PossessionManage
         {
             // Ignore
         }
+    }
+
+    public bool MissingPermissionsForATarget()
+    {
+        foreach (var friend in selectionManager.Selected)
+            if ((friend.PermissionsGrantedByFriend.Elevated & ElevatedPermissions.Possession) is not ElevatedPermissions.Possession)
+                return true;
+
+        return false;
     }
 }

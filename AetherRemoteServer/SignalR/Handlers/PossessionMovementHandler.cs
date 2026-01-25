@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.SignalR;
 namespace AetherRemoteServer.SignalR.Handlers;
 
 public class PossessionMovementHandler(
+    IPresenceService presences,
     IForwardedRequestManager forwarder,
     IPossessionManager possessionManager,
     ILogger<PossessionMovementHandler> logger)
@@ -18,8 +19,8 @@ public class PossessionMovementHandler(
     
     public async Task<PossessionResponse> Handle(string senderFriendCode, PossessionMovementRequest request, IHubCallerClients clients)
     {
-        // TODO: Decide how to handle cases like this, because all of these should never execute code, but if any of them are incorrect
-        //          then the session probably should be canceled. Some of them can be graceful, but not all of them.
+        if (presences.IsUserExceedingPossession(senderFriendCode))
+            return new PossessionResponse(PossessionResponseEc.TooManyRequests, PossessionResultEc.Uninitialized);
         
         // Check if the sender is in a session
         if (possessionManager.TryGetSession(senderFriendCode) is not { } session)
