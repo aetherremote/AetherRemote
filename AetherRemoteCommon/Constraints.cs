@@ -60,4 +60,22 @@ public static class Constraints
         public const int TextWordsMin = 0;
         public const int TextWordsMax = 2024;
     }
+
+    /// <summary>
+    ///     Constraints relating to possession
+    /// </summary>
+    public static class Possession
+    {
+        public const float VerticalRotationMax = 45 * MathF.PI / 180f;
+        public const float VerticalRotationMin = -85 * MathF.PI / 180f;
+        public const float VerticalRotationDelta = VerticalRotationMax - VerticalRotationMin;
+
+        public const float ZoomMax = 20f;
+        public const float ZoomMin = 1.5f;
+        public const float ZoomDelta = ZoomMax - ZoomMin;
+
+        public const float HorizontalMax = MathF.PI;
+        public const float HorizontalMin = -MathF.PI;
+        public const float HorizontalDelta = HorizontalMax - HorizontalMin;
+    }
 }

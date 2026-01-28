@@ -129,7 +129,7 @@ public class PauseViewUi(
             });
 
             // TODO: Change includeEndPadding once elevated permissions are back
-            SharedUserInterfaces.ContentBox("PauseAttributes", AetherRemoteStyle.PanelBackground, false, () =>
+            SharedUserInterfaces.ContentBox("PauseAttributes", AetherRemoteStyle.PanelBackground, true, () =>
             {
                 ImGui.TextUnformatted("Character Attributes");
                 if (ImGui.BeginTable("CharacterAttributes", 2))
@@ -155,7 +155,6 @@ public class PauseViewUi(
                 }
             });
             
-            /*
             SharedUserInterfaces.ContentBox("TransformationElevatedPermissions", AetherRemoteStyle.ElevatedBackground, false, () =>
             {
                 ImGui.TextUnformatted("Character Attributes");
@@ -163,11 +162,10 @@ public class PauseViewUi(
                     return;
 
                 ImGui.TableNextColumn();
-                BuildPauseButtonForElevatedFeature(ElevatedPermissions.PermanentTransformation);
+                BuildPauseButtonForElevatedFeature(ElevatedPermissions.Possession);
 
                 ImGui.EndTable();
             });
-            */
             
             ImGui.EndChild();
         }
@@ -257,8 +255,6 @@ public class PauseViewUi(
         ImGui.TextUnformatted(permissions.ToString());
     }
     
-    // TODO: Re-Enable when a new Mare solution is made
-    /*
     private void BuildPauseButtonForElevatedFeature(ElevatedPermissions permissions)
     {
         if (pauseService.IsFeaturePaused(permissions))
@@ -277,5 +273,4 @@ public class PauseViewUi(
         ImGui.SameLine();
         ImGui.TextUnformatted(permissions.ToString());
     }
-    */
 }

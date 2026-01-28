@@ -14,5 +14,5 @@ public class Presence(string connectionId, string characterName, string characte
     /// <summary>
     ///     Token bucket used for possession features
     /// </summary>
-    public readonly TokenBucket PossessionBucket = new(10);
+    public readonly TokenBucket PossessionBucket = new(6);
 }

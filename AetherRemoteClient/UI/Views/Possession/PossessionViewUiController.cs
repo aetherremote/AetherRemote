@@ -1,65 +1,32 @@
-using System;
 using System.Linq;
+using System.Threading.Tasks;
 using AetherRemoteClient.Managers;
-using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain.Enums.Permissions;
-using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Domain.Network.Possession;
-using AetherRemoteCommon.Domain.Network.Possession.End;
 using Dalamud.Utility;
 
 namespace AetherRemoteClient.UI.Views.Possession;
 
-public class PossessionViewUiController(NetworkService network, PossessionManager possessions, SelectionManager selectionManager)
+public class PossessionViewUiController(PossessionManager possessions, SelectionManager selectionManager)
 {
     public static void OpenFeedbackLink() => Util.OpenLink("https://tenor.com/view/%E3%83%95%E3%83%AD%E3%83%BC%E3%83%A9%E3%82%A4%E3%83%88-flow-endfield-gif-12757389959336405366");
     
-    public async void Possess()
+    public async Task Possess()
     {
-        try
-        {
-            if (selectionManager.Selected.FirstOrDefault() is not { } friend)
-                return;
+        if (selectionManager.Selected.FirstOrDefault() is not { } friend)
+            return;
             
-            await possessions.TryBeginPossession(friend.FriendCode);
-
-            // TODO: Better notification
-        }
-        catch (Exception)
-        {
-            // Ignore
-        }
+        await possessions.TryBeginPossession(friend.FriendCode).ConfigureAwait(false);
     }
 
-    public async void Unpossess()
+    public async Task Unpossess()
     {
-        try
-        {
-            var selected = selectionManager.Selected;
+        await possessions.TryEndPossession().ConfigureAwait(false);
+    }
 
-            if (selected.Count is not 1)
-                return;
-            
-            var request = new PossessionEndRequest();
-            var response = await network.InvokeAsync<PossessionResponse>(HubMethod.Possession.End, request).ConfigureAwait(false);
-
-            if (response.Response is not PossessionResponseEc.Success || response.Result is not PossessionResultEc.Success)
-            {
-                Plugin.Log.Warning($"[PossessionViewUiController.Unpossess] Possession end failed with codes {response.Response} - {response.Result}");
-                
-                // TODO: Better notification
-                
-                return;
-            }
-
-            possessions.EndPossessing();
-            
-            // TODO: Better notification
-        }
-        catch (Exception)
-        {
-            // Ignore
-        }
+    public static async Task AcceptPossessionTermsOfService()
+    {
+        Plugin.Configuration.AcceptedPossessionAgreement = true;
+        await Plugin.Configuration.Save().ConfigureAwait(false);
     }
 
     public bool MissingPermissionsForATarget()

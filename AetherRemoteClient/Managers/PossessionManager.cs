@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using AetherRemoteClient.Hooks;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Possession;
 using AetherRemoteCommon.Domain.Network.Possession.Begin;
@@ -11,15 +12,36 @@ using AetherRemoteCommon.Domain.Network.Possession.Movement;
 
 namespace AetherRemoteClient.Managers;
 
-public class PossessionManager(
-    CameraHook cameraHook,
-    CameraInputHook cameraInputHook, 
-    CameraTargetHook cameraTargetHook, 
-    MovementHook movementHook, 
-    MovementInputHook movementInputHook,
-    MovementLockHook movementLockHook, 
-    NetworkService network) : IDisposable
+public class PossessionManager : IDisposable
 {
+    private readonly CameraHook _cameraHook;
+    private readonly CameraInputHook _cameraInputHook;
+    private readonly CameraTargetHook _cameraTargetHook;
+    private readonly MovementHook _movementHook;
+    private readonly MovementInputHook _movementInputHook;
+    private readonly MovementLockHook _movementLockHook;
+    private readonly NetworkService _network;
+    
+    public PossessionManager(
+        CameraHook cameraHook,
+        CameraInputHook cameraInputHook,
+        CameraTargetHook cameraTargetHook,
+        MovementHook movementHook,
+        MovementInputHook movementInputHook,
+        MovementLockHook movementLockHook,
+        NetworkService network)
+    {
+        _cameraHook = cameraHook;
+        _cameraInputHook = cameraInputHook;
+        _movementHook = movementHook;
+        _movementInputHook = movementInputHook;
+        _cameraTargetHook = cameraTargetHook;
+        _movementLockHook = movementLockHook;
+        _network = network;
+
+        _network.Disconnected += OnDisconnect;
+    }
+
     public PossessionSessionType Type { get; private set; } = PossessionSessionType.None;
     public enum PossessionSessionType
     {
@@ -42,10 +64,11 @@ public class PossessionManager(
         var request = new PossessionBeginRequest(friendCode);
         try
         {
-            var response = await network.InvokeAsync<PossessionBeginResponse>(HubMethod.Possession.Begin, request).ConfigureAwait(false);
+            var response = await _network.InvokeAsync<PossessionBeginResponse>(HubMethod.Possession.Begin, request).ConfigureAwait(false);
             if (response.Response is not PossessionResponseEc.Success || response.Result is not PossessionResultEc.Success)
             {
                 Plugin.Log.Warning($"[PossessionManager.TryBeginPossession] Could not start a new session, {response.Response} {response.Result}");
+                NotificationHelper.Warning("Unable to possess", $"Attempting to possess was {response.Response} and client's result was {response.Result}");
                 return;
             }
 
@@ -58,14 +81,17 @@ public class PossessionManager(
                 return;
             
             // Enable the hooks we want to, which are locking us in place, changing our target, and reading out inputs via "Listen Mode"
-            cameraTargetHook.Target(address);
-            movementLockHook.Enable();
+            _cameraTargetHook.Target(address);
+            _movementLockHook.Enable();
             
             // Enable listening to the input events
-            cameraInputHook.Enable();
-            cameraInputHook.CameraInputValueChanged += OnCameraInputValueChanged;
-            movementInputHook.Enable();
-            movementInputHook.MovementInputValueChanged += OnMovementInputValueChanged;
+            _cameraInputHook.Enable();
+            _cameraInputHook.CameraInputValueChanged += OnCameraInputValueChanged;
+            _movementInputHook.Enable();
+            _movementInputHook.MovementInputValueChanged += OnMovementInputValueChanged;
+            
+            // Notification
+            NotificationHelper.Info("You are possessing someone!", "You are now controlling your friend's movement and camera. To exit, visit the possession tab, or use /ar unpossess or /ar safeword.");
         }
         catch (Exception e)
         {
@@ -77,20 +103,25 @@ public class PossessionManager(
     /// <summary>
     ///     Attempts to become possessed by a "Ghost"
     /// </summary>
-    public void TryBecomePossessed()
+    public PossessionResultEc TryBecomePossessed()
     {
         if (Type is not PossessionSessionType.None)
         {
             Plugin.Log.Warning("[PossessionManager.TryBecomePossessed] Cannot become possessed if you are already in a session");
-            return;
+            return PossessionResultEc.AlreadyBeingPossessedOrPossessing;
         }
         
         // Set your type as host, meaning you are being possessed
         Type = PossessionSessionType.Host;
         
         // Enable hooks to lock you out of moving or controlling your camera
-        movementHook.Enable();
-        cameraHook.Enable();
+        _movementHook.Enable();
+        _cameraHook.Enable();
+        
+        // Notification
+        NotificationHelper.Info("You have been possessed!", "One of your friends is possessing you, and you are no longer able to control your movements or camera. To stop being possessed, go to the status menu or use /ar unpossess or /ar safeword");
+        
+        return PossessionResultEc.Success;
     }
 
     public void SetCameraDestination(float horizontal, float vertical, float zoom)
@@ -101,7 +132,7 @@ public class PossessionManager(
             return;
         }
 
-        cameraHook.SetTarget(horizontal, vertical, zoom);
+        _cameraHook.SetTarget(horizontal, vertical, zoom);
     }
 
     public void SetMovementDirection(float horizontal, float vertical, float turn, byte backwards)
@@ -112,7 +143,7 @@ public class PossessionManager(
             return;
         }
         
-        movementHook.SetInput(horizontal, vertical, turn, backwards);
+        _movementHook.SetInput(horizontal, vertical, turn, backwards);
     }
 
     /// <summary>
@@ -125,22 +156,25 @@ public class PossessionManager(
             Plugin.Log.Warning("[PossessionManager.TryEndPossession] Cannot end a session while you're not in one");
             return;
         }
+        
+        // Disable all the hooks for possessing (both ghost and host)
+        DisableAll();
+        
+        // Mark that we are no longer in a session
+        Type = PossessionSessionType.None;
 
         var request = new PossessionEndRequest();
         try
         {
-            var response = await network.InvokeAsync<PossessionResponse>(HubMethod.Possession.Begin, request).ConfigureAwait(false);
+            var response = await _network.InvokeAsync<PossessionResponse>(HubMethod.Possession.End, request).ConfigureAwait(false);
             if (response.Response is not PossessionResponseEc.Success || response.Result is not PossessionResultEc.Success)
             {
                 Plugin.Log.Warning($"[PossessionManager.TryEndPossession] Could not end session {response.Response} {response.Result}");
                 return;
             }
             
-            // Disable all the hooks for possessing (both ghost and host)
-            DisableAll();
-            
-            // Mark that we are no longer in a session
-            Type = PossessionSessionType.None;
+            // Notification
+            NotificationHelper.Info("Possession ended", string.Empty);
         }
         catch (Exception e)
         {
@@ -168,7 +202,7 @@ public class PossessionManager(
         var request = new PossessionCameraRequest(horizontalRotation, verticalRotation, zoom);
         try
         {
-            var response = await network.InvokeAsync<PossessionResponse>(HubMethod.Possession.Camera, request).ConfigureAwait(false);
+            var response = await _network.InvokeAsync<PossessionResponse>(HubMethod.Possession.Camera, request).ConfigureAwait(false);
             if (response.Response is not PossessionResponseEc.Success || response.Result is not PossessionResultEc.Success)
                 Plugin.Log.Warning($"[PossessionManager.SendCameraToServer] {response.Response} {response.Result}");
         }
@@ -198,9 +232,13 @@ public class PossessionManager(
         var request = new PossessionMovementRequest(horizontal, vertical, turn, backwards);
         try
         {
-            var response = await network.InvokeAsync<PossessionResponse>(HubMethod.Possession.Movement, request).ConfigureAwait(false);
+            var response = await _network.InvokeAsync<PossessionResponse>(HubMethod.Possession.Movement, request).ConfigureAwait(false);
             if (response.Response is not PossessionResponseEc.Success || response.Result is not PossessionResultEc.Success)
+            {
                 Plugin.Log.Warning($"[PossessionManager.SendMovementToServer] {response.Response} {response.Result}");
+                if (response.Response is PossessionResponseEc.TooManyRequests)
+                    NotificationHelper.Warning("Slow down!", "You're sending too many inputs!!");
+            }
         }
         catch (Exception e)
         {
@@ -210,24 +248,34 @@ public class PossessionManager(
 
     private void DisableAll()
     {
-        cameraHook.Disable();
-        movementHook.Disable();
-        cameraTargetHook.Clear();
-        movementLockHook.Disable();
-        cameraInputHook.Disable();
-        cameraInputHook.CameraInputValueChanged -= OnCameraInputValueChanged;
-        movementInputHook.Disable();
-        movementInputHook.MovementInputValueChanged -= OnMovementInputValueChanged;
+        _cameraHook.Disable();
+        _movementHook.Disable();
+        _cameraTargetHook.Clear();
+        _movementLockHook.Disable();
+        _cameraInputHook.Disable();
+        _cameraInputHook.CameraInputValueChanged -= OnCameraInputValueChanged;
+        _movementInputHook.Disable();
+        _movementInputHook.MovementInputValueChanged -= OnMovementInputValueChanged;
     }
 
     public void EndPossessing()
     {
         DisableAll();
         Type = PossessionSessionType.None;
+        
+        // Notification
+        NotificationHelper.Info("Possession ended", string.Empty);
+    }
+    
+    private Task OnDisconnect()
+    {
+        EndPossessing();
+        return Task.CompletedTask;
     }
 
     public void Dispose()
     {
+        _network.Disconnected -= OnDisconnect;
         DisableAll();
         GC.SuppressFinalize(this);
     }

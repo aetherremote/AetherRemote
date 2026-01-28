@@ -19,21 +19,25 @@ public class ChatCommandHandler : IDisposable
     private const string StopArg = "stop";
     private const string SafeMode = "safemode";
     private const string SafeWord = "safeword";
+    private const string Unpossess = "unpossess";
     
     // Injected
     private readonly ActionQueueService _actionQueueService;
     private readonly HypnosisManager _hypnosisManager;
+    private readonly PossessionManager _possessionManager;
     private readonly PermanentTransformationHandler _permanentTransformationHandler;
     private readonly MainWindow _mainWindow;
     
     public ChatCommandHandler(
         ActionQueueService actionQueueService,
         HypnosisManager hypnosisManager,
+        PossessionManager possessionManager,
         PermanentTransformationHandler permanentTransformationHandler,
         MainWindow mainWindow)
     {
         _actionQueueService = actionQueueService;
         _hypnosisManager = hypnosisManager;
+        _possessionManager = possessionManager;
         _permanentTransformationHandler = permanentTransformationHandler;
         _mainWindow = mainWindow;
         
@@ -44,6 +48,7 @@ public class ChatCommandHandler : IDisposable
                            /ar {StopArg} - Stops all current spirals
                            /ar {SafeMode} - Put the plugin into safe mode
                            /ar {SafeWord} - Put the plugin into safe mode
+                           /ar {Unpossess} - Stops possessing or being possessed
                            """
         });
         
@@ -82,10 +87,14 @@ public class ChatCommandHandler : IDisposable
                 
                 case SafeMode:
                 case SafeWord:
+                    // Remove permanent transformations
                     _permanentTransformationHandler.ForceClearPermanentTransformation();
                     
                     // Stop any spirals
                     _hypnosisManager.Wake();
+                    
+                    // Stops possessing or being possessed
+                    await _possessionManager.TryEndPossession().ConfigureAwait(false);
                     
                     // Clear pending chat commands
                     _actionQueueService.Clear();
@@ -101,6 +110,15 @@ public class ChatCommandHandler : IDisposable
                     payloads.Add(new UIForegroundPayload(AetherRemoteStyle.TextColorGreen));
                     payloads.Add(new TextPayload("safe mode"));
                     payloads.Add(UIForegroundPayload.UIForegroundOff);
+                    break;
+                
+                case Unpossess:
+                    await _possessionManager.TryEndPossession().ConfigureAwait(false);
+                    
+                    payloads.Add(new UIForegroundPayload(AetherRemoteStyle.TextColorPurple));
+                    payloads.Add(new TextPayload("[AetherRemote] "));
+                    payloads.Add(UIForegroundPayload.UIForegroundOff);
+                    payloads.Add(new TextPayload("Stopped all possession activities."));
                     break;
                 
                 default:

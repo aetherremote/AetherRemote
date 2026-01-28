@@ -22,18 +22,18 @@ public partial class PrimaryHub
     [HubMethodName(HubMethod.Possession.Camera)]
     public async Task<PossessionResponse> PossessionCamera(PossessionCameraRequest request)
     {
-        logger.LogInformation("{Request}", request);
+        // logger.LogInformation("{Request}", request);
         var friendCode = FriendCode;
-        LogWithBehavior($"[PossessionCameraRequest] Sender = {friendCode}", LogMode.Console);
+        // LogWithBehavior($"[PossessionCameraRequest] Sender = {friendCode}", LogMode.Console);
         return await possessionCameraHandler.Handle(friendCode, request, Clients);
     }
     
     [HubMethodName(HubMethod.Possession.Movement)]
     public async Task<PossessionResponse> PossessionMovement(PossessionMovementRequest request)
     {
-        logger.LogInformation("{Request}", request);
+        // logger.LogInformation("{Request}", request);
         var friendCode = FriendCode;
-        LogWithBehavior($"[PossessionMovementRequest] Sender = {friendCode}", LogMode.Console);
+        // LogWithBehavior($"[PossessionMovementRequest] Sender = {friendCode}", LogMode.Console);
         return await possessionMovementHandler.Handle(friendCode, request, Clients);
     }
     

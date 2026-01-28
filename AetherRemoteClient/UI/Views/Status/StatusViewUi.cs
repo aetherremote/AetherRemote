@@ -16,7 +16,8 @@ public class StatusViewUi(
     PermanentTransformationLockService permanentTransformationLockService,
     IdentityService identityService,
     TipService tipService,
-    HypnosisManager hypnosisManager) : IDrawable
+    HypnosisManager hypnosisManager,
+    PossessionManager possessionManager) : IDrawable
 {
     public void Draw()
     {
@@ -81,6 +82,9 @@ public class StatusViewUi(
 
         if (hypnosisManager.IsBeingHypnotized)
             RenderHypnosisComponent(windowPadding, windowWidth);
+        
+        if (possessionManager.Type is not PossessionManager.PossessionSessionType.None)
+            RenderPossessionComponent(windowPadding, windowWidth);
         
         SharedUserInterfaces.ContentBox("OmniTool", AetherRemoteStyle.PanelBackground, false, () =>
         {
@@ -171,5 +175,17 @@ public class StatusViewUi(
         
         if (SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.Square, windowPadding, windowWidth))
             hypnosisManager.Wake();
+    }
+
+    private void RenderPossessionComponent(Vector2 windowPadding, float windowWidth)
+    {
+        SharedUserInterfaces.ContentBox("StatusPossession", AetherRemoteStyle.PanelBackground, true, () =>
+        {
+            SharedUserInterfaces.MediumText("Possession");
+            ImGui.TextUnformatted($"There is paranormal activity afoot...");
+        });
+        
+        if (SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.Ghost, windowPadding, windowWidth, "Click to end possession", "PossessionId"))
+            _ = possessionManager.TryEndPossession();
     }
 }

@@ -2,21 +2,20 @@ using System;
 using System.Numerics;
 using AetherRemoteClient.Dependencies.Honorific.Domain;
 using AetherRemoteClient.Dependencies.Honorific.Services;
+using AetherRemoteClient.Hooks;
 using AetherRemoteClient.Managers;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Newtonsoft.Json;
 
 namespace AetherRemoteClient.UI.Views.Debug;
 
-public class DebugViewUiController(HonorificService honorific, PossessionManager  possessionManager)
+public class DebugViewUiController(MovementHook movement)
 {
     public async void Debug()
     {
         try
         {
-            //
-            possessionManager.TryBecomePossessed();
-            possessionManager.SetMovementDirection(1.0f, 0, 1.0f, 0);
+            movement.Enable();
         }
         catch (Exception e)
         {
@@ -28,7 +27,7 @@ public class DebugViewUiController(HonorificService honorific, PossessionManager
     {
         try
         {
-            possessionManager.SetMovementDirection(0, 0,0 ,0);
+            movement.Disable();
         }
         catch (Exception e)
         {

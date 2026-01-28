@@ -1,5 +1,6 @@
 using System;
 using AetherRemoteClient.Domain.Hooks;
+using AetherRemoteCommon;
 using Dalamud.Hooking;
 using FFXIVClientStructs.FFXIV.Client.Game.Control;
 
@@ -8,16 +9,6 @@ namespace AetherRemoteClient.Hooks;
 public unsafe class CameraHook : IDisposable
 {
     // Const
-    private const float HorizontalRange = MathF.PI;
-    
-    private const float MinimumVerticalRotation = -85 * MathF.PI / 180f;
-    private const float MaximumVerticalRotation = 45 * MathF.PI / 180f;
-    private const float VerticalRange = MaximumVerticalRotation - MinimumVerticalRotation;
-    
-    private const float MinimumZoom = 1.5f;
-    private const float MaximumZoom = 20f;
-    private const float ZoomRange = MaximumZoom - MinimumZoom;
-    
     private const float FloatTolerance = 0.0001F;
     private const float MaxSpeed = 0.01f;
     
@@ -77,24 +68,24 @@ public unsafe class CameraHook : IDisposable
             return;
 
         // Normalize all the values
-        var deltaH = DeltaHorizontal(h, _targetHorizontal) / HorizontalRange;
-        var deltaV = (_targetVertical - v) / VerticalRange;
-        var deltaZ = (_targetZoom - z) / ZoomRange;
+        var deltaH = ShortestHorizontalPath(h, _targetHorizontal) / Constraints.Possession.HorizontalDelta;
+        var deltaV = (_targetVertical - v) / Constraints.Possession.VerticalRotationDelta;
+        var deltaZ = (_targetZoom - z) / Constraints.Possession.ZoomDelta;
         
         var length = MathF.Sqrt(deltaH * deltaH + deltaV * deltaV + deltaZ * deltaZ);
         if (length < FloatTolerance)
             return;
         
         var scale = MathF.Min(1f, MaxSpeed / length);
-        camera->CurrentHRotation += deltaH * scale * HorizontalRange;
-        camera->CurrentVRotation += deltaV * scale * VerticalRange;
-        camera->Zoom += deltaZ * scale * ZoomRange;
+        camera->CurrentHRotation += deltaH * scale * Constraints.Possession.HorizontalDelta;
+        camera->CurrentVRotation += deltaV * scale * Constraints.Possession.VerticalRotationDelta;
+        camera->Zoom += deltaZ * scale * Constraints.Possession.ZoomDelta;
     }
 
     /// <summary>
     ///     Handles the nearest horizontal factoring in the 'wrapping' around the cube
     /// </summary>
-    private static float DeltaHorizontal(float current, float target)
+    private static float ShortestHorizontalPath(float current, float target)
     {
         var delta = (target - current + MathF.PI) % (2f * MathF.PI);
         if (delta < 0f)

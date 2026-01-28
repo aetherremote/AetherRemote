@@ -46,12 +46,12 @@ public unsafe class MovementHook : IDisposable
     
     private void Detour(void* self, float* horizontal, float* vertical, float* turn, byte* backwards, byte* a6, byte unknown)
     {
+        _hook.Original(self, horizontal, vertical, turn, backwards, a6, unknown);
+     
         *horizontal = _h;
         *vertical = _v;
         *turn = _t;
         *backwards = _b;
-        
-        _hook.Original(self, horizontal, vertical, turn, backwards, a6, unknown);
     }
 
     public void Dispose()

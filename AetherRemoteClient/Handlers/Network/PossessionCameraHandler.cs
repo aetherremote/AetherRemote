@@ -2,6 +2,10 @@ using System;
 using AetherRemoteClient.Handlers.Network.Base;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteCommon;
+using AetherRemoteCommon.Domain;
+using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Possession;
 using AetherRemoteCommon.Domain.Network.Possession.Camera;
@@ -11,6 +15,10 @@ namespace AetherRemoteClient.Handlers.Network;
 
 public class PossessionCameraHandler : AbstractNetworkHandler, IDisposable
 {
+    // Const
+    private const string Operation = "PossessionCamera";
+    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.Hypnosis, SpeakPermissions2.None, ElevatedPermissions.Possession);
+    
     // Instantiated
     private readonly IDisposable _handler;
     private readonly PossessionManager _manager;
@@ -23,6 +31,32 @@ public class PossessionCameraHandler : AbstractNetworkHandler, IDisposable
 
     private PossessionResultEc Handle(PossessionCameraCommand command)
     {
+        Plugin.Log.Verbose($"{command}");
+        var sender = TryGetFriendWithCorrectPermissions(Operation, command.SenderFriendCode, Permissions);
+        if (sender.Result is not ActionResultEc.Success)
+        {
+            Plugin.Log.Warning($"[PossessionCameraHandler.Handle] {sender.Result}");
+            return sender.Result switch
+            {
+                ActionResultEc.ClientNotFriends => PossessionResultEc.NotFriends,
+                ActionResultEc.ClientInSafeMode => PossessionResultEc.SafeMode,
+                ActionResultEc.ClientHasSenderPaused => PossessionResultEc.Paused,
+                ActionResultEc.ClientHasFeaturePaused => PossessionResultEc.FeaturePaused,
+                ActionResultEc.ClientHasNotGrantedSenderPermissions => PossessionResultEc.LackingPermissions,
+                _ => PossessionResultEc.Unknown
+            };
+        }
+        
+        // Data validation
+        if (command.HorizontalRotation is < Constraints.Possession.HorizontalMin or > Constraints.Possession.HorizontalMax)
+            return PossessionResultEc.BadData;
+
+        if (command.VerticalRotation is < Constraints.Possession.VerticalRotationMin or > Constraints.Possession.VerticalRotationMax)
+            return PossessionResultEc.BadData;
+        
+        if (command.Zoom is < Constraints.Possession.ZoomMin or > Constraints.Possession.ZoomMax)
+            return PossessionResultEc.BadData;
+        
         _manager.SetCameraDestination(command.HorizontalRotation, command.VerticalRotation, command.Zoom);
         return PossessionResultEc.Success;
     }

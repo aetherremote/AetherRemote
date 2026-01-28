@@ -21,6 +21,11 @@ public class Configuration
     ///     Is the plugin in safe mode
     /// </summary>
     public bool SafeMode = false;
+    
+    /// <summary>
+    ///     Did the user accept the risks of utilizing the possession feature
+    /// </summary>
+    public bool AcceptedPossessionAgreement = false;
 
     /// <summary>
     ///     Map of friend code to note

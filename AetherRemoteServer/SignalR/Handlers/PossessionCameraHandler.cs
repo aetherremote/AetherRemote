@@ -1,3 +1,4 @@
+using AetherRemoteCommon;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
@@ -19,8 +20,12 @@ public class PossessionCameraHandler(
     
     public async Task<PossessionResponse> Handle(string senderFriendCode, PossessionCameraRequest request, IHubCallerClients clients)
     {
-        if (presences.IsUserExceedingPossession(senderFriendCode))
-            return new PossessionResponse(PossessionResponseEc.TooManyRequests, PossessionResultEc.Uninitialized);
+        // General validation on the values
+        if (ValidatePossessionCameraRequest(senderFriendCode, request) is { } error)
+        {
+            logger.LogWarning("{Sender} sent invalid possess camera request {Error}", senderFriendCode, error);
+            return new PossessionResponse(error, PossessionResultEc.Uninitialized);
+        }
         
         // Check if the sender is in a session
         if (possessionManager.TryGetSession(senderFriendCode) is not { } session)
@@ -36,10 +41,24 @@ public class PossessionCameraHandler(
             return new PossessionResponse(PossessionResponseEc.SenderNotGhost, PossessionResultEc.Uninitialized);
         }
         
-        // TODO: There are more things we can test here, such as if the target is still online,
-        //          if the sender's session matches the friend code of the target's session, etc...
-
         var command = new PossessionCameraCommand(senderFriendCode, request.HorizontalRotation, request.VerticalRotation, request.Zoom);
         return await forwarder.CheckPossessionAndInvoke(senderFriendCode, session.HostFriendCode, Method, Required, command, clients);
+    }
+    
+    private PossessionResponseEc? ValidatePossessionCameraRequest(string senderFriendCode, PossessionCameraRequest request)
+    {
+        if (presences.IsUserExceedingPossession(senderFriendCode))
+            return PossessionResponseEc.TooManyRequests;
+
+        if (request.HorizontalRotation is < Constraints.Possession.HorizontalMin or > Constraints.Possession.HorizontalMax)
+            return PossessionResponseEc.BadDataInRequest;
+
+        if (request.VerticalRotation is < Constraints.Possession.VerticalRotationMin or > Constraints.Possession.VerticalRotationMax)
+            return PossessionResponseEc.BadDataInRequest;
+        
+        if (request.Zoom is < Constraints.Possession.ZoomMin or > Constraints.Possession.ZoomMax)
+            return PossessionResponseEc.BadDataInRequest;
+        
+        return null;
     }
 }

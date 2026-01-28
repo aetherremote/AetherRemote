@@ -192,6 +192,7 @@ public class FriendsViewUi(
             
             if (ImGui.BeginTable("CharacterAttributesPermissionsTable", 2))
             {
+                /*
                 ImGui.TableNextColumn();
                 ImGui.BeginDisabled();
                 ImGui.Checkbox("Permanent Transformation", ref controller.EditingUserPermissions.PermanentTransformation);
@@ -201,14 +202,21 @@ public class FriendsViewUi(
                         "Allows this friend to lock your appearance, preventing changes until you enter the PIN they created", 
                         "You can unlock it from the Status tab or by using the safeword command or safe mode"
                     ]);
+                */
                 
                 ImGui.TableNextColumn();
-                ImGui.Checkbox("Possession", ref controller.EditingUserPermissions.Possession);
-                SharedUserInterfaces.Tooltip(
-                [
-                    "TODO"
-                ]);
-                
+
+                if (Plugin.Configuration.AcceptedPossessionAgreement)
+                {
+                    ImGui.Checkbox("Possession", ref controller.EditingUserPermissions.Possession);
+                    SharedUserInterfaces.Tooltip("Allows another player to take control of your character's movement and camera");
+                }
+                else
+                {
+                    var dummy = false;
+                    ImGui.Checkbox("Possession", ref dummy);
+                    SharedUserInterfaces.Tooltip("You must visit the Possession tab and accept the risks before being able to grant this permissions");
+                }
                 
                 ImGui.EndTable();
             }

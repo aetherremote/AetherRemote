@@ -42,7 +42,7 @@ public class NavigationBarComponentUi(NetworkService networkService, ViewService
                 NavBarButton(FontAwesomeIcon.Crown, "Honorific", View.Honorific, size, offset, spacing);
                 NavBarButton(FontAwesomeIcon.Stopwatch, "Hypnosis", View.Hypnosis, size, offset, spacing);
                 NavBarButton(FontAwesomeIcon.Icons, "Moodles", View.Moodles, size, offset, spacing);
-                NavBarButton(FontAwesomeIcon.Ghost, "Possession", View.Possession, size, offset, spacing);
+                NavBarButton(FontAwesomeIcon.Ghost, "(Beta) Possession", View.Possession, size, offset, spacing);
                 NavBarButton(FontAwesomeIcon.Comments, "Speak", View.Speak, size, offset, spacing);
                 NavBarButton(FontAwesomeIcon.WandMagicSparkles, "Transformation", View.Transformation, size, offset, spacing);
                 NavBarButton(FontAwesomeIcon.PeopleGroup, "Twinning", View.Twinning, size, offset, spacing);

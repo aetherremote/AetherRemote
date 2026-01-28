@@ -198,7 +198,7 @@ public static class SharedUserInterfaces
     /// <summary>
     ///     Creates a button the size of a <see cref="ContentBox"/> on the right
     /// </summary>
-    public static bool ContextBoxButton(FontAwesomeIcon icon, Vector2 padding, float windowWidth)
+    public static bool ContextBoxButton(FontAwesomeIcon icon, Vector2 padding, float windowWidth, string? tooltip = null, string? id = null)
     {
         var previousRectSize = ImGui.GetItemRectSize();
         var returnPoint = ImGui.GetCursorPosY();
@@ -208,7 +208,7 @@ public static class SharedUserInterfaces
         var size = new Vector2(x, begin);
         
         ImGui.SetCursorPos(size);
-        var clicked = IconButton(icon, new Vector2(previousRectSize.Y));
+        var clicked = IconButton(icon, new Vector2(previousRectSize.Y), tooltip, id);
         ImGui.SetCursorPosY(returnPoint);
         return clicked;
     }

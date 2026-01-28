@@ -19,8 +19,12 @@ public class PossessionMovementHandler(
     
     public async Task<PossessionResponse> Handle(string senderFriendCode, PossessionMovementRequest request, IHubCallerClients clients)
     {
-        if (presences.IsUserExceedingPossession(senderFriendCode))
-            return new PossessionResponse(PossessionResponseEc.TooManyRequests, PossessionResultEc.Uninitialized);
+        // General validation on the values
+        if (ValidatePossessionMovementRequest(senderFriendCode, request) is { } error)
+        {
+            logger.LogWarning("{Sender} sent invalid possess movement request {Error}", senderFriendCode, error);
+            return new PossessionResponse(error, PossessionResultEc.Uninitialized);
+        }
         
         // Check if the sender is in a session
         if (possessionManager.TryGetSession(senderFriendCode) is not { } session)
@@ -36,10 +40,27 @@ public class PossessionMovementHandler(
             return new PossessionResponse(PossessionResponseEc.SenderNotGhost, PossessionResultEc.Uninitialized);
         }
         
-        // TODO: There are more things we can test here, such as if the target is still online,
-        //          if the sender's session matches the friend code of the target's session, etc...
-
         var command = new PossessionMovementCommand(senderFriendCode, request.Horizontal, request.Vertical, request.Turn, request.Backwards);
         return await forwarder.CheckPossessionAndInvoke(senderFriendCode, session.HostFriendCode, Method, Required, command, clients);
+    }
+    
+    private PossessionResponseEc? ValidatePossessionMovementRequest(string senderFriendCode, PossessionMovementRequest request)
+    {
+        if (presences.IsUserExceedingPossession(senderFriendCode))
+            return PossessionResponseEc.TooManyRequests;
+
+        if (request.Horizontal is < -1 or > 1)
+            return PossessionResponseEc.BadDataInRequest;
+        
+        if (request.Vertical is < -1 or > 1)
+            return PossessionResponseEc.BadDataInRequest;
+        
+        if (request.Turn is < -1 or > 1)
+            return PossessionResponseEc.BadDataInRequest;
+        
+        if (request.Backwards > 1)
+            return PossessionResponseEc.BadDataInRequest;
+        
+        return null;
     }
 }

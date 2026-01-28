@@ -239,6 +239,7 @@ public sealed class Plugin : IDalamudPlugin
         _services.GetRequiredService<DependencyManager>();
         _services.GetRequiredService<HypnosisManager>();
         _services.GetRequiredService<LoginManager>();
+        _services.GetRequiredService<PossessionManager>();
         
         // Services
         _services.GetRequiredService<ActionQueueService>();

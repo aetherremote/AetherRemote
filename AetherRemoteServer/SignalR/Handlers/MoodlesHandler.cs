@@ -40,10 +40,7 @@ public class MoodlesHandler(IPresenceService presenceService, IForwardedRequestM
         
         if (VerificationUtilities.ValidFriendCodes(request.TargetFriendCodes) is false)
             return ActionResponseEc.BadDataInRequest;
-
-        if (request.TargetFriendCodes.Count > Constraints.MaximumTargetsForInGameOperations)
-            return ActionResponseEc.TooManyTargets;
-
+        
         return null;
     }
 }
