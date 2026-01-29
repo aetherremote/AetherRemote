@@ -1,6 +1,6 @@
 using System;
 using AetherRemoteClient.Handlers.Network.Base;
-using AetherRemoteClient.Managers;
+using AetherRemoteClient.Managers.Possession;
 using AetherRemoteClient.Services;
 using AetherRemoteCommon;
 using AetherRemoteCommon.Domain;
@@ -17,7 +17,7 @@ public class PossessionCameraHandler : AbstractNetworkHandler, IDisposable
 {
     // Const
     private const string Operation = "PossessionCamera";
-    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.Hypnosis, SpeakPermissions2.None, ElevatedPermissions.Possession);
+    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.Possession);
     
     // Instantiated
     private readonly IDisposable _handler;
@@ -57,8 +57,7 @@ public class PossessionCameraHandler : AbstractNetworkHandler, IDisposable
         if (command.Zoom is < Constraints.Possession.ZoomMin or > Constraints.Possession.ZoomMax)
             return PossessionResultEc.BadData;
         
-        _manager.SetCameraDestination(command.HorizontalRotation, command.VerticalRotation, command.Zoom);
-        return PossessionResultEc.Success;
+        return _manager.SetCameraDestination(command.HorizontalRotation, command.VerticalRotation, command.Zoom);
     }
     
     public void Dispose()

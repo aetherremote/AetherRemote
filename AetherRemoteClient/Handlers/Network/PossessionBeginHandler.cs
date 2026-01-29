@@ -1,6 +1,6 @@
 using System;
 using AetherRemoteClient.Handlers.Network.Base;
-using AetherRemoteClient.Managers;
+using AetherRemoteClient.Managers.Possession;
 using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
@@ -16,7 +16,7 @@ public class PossessionBeginHandler : AbstractNetworkHandler, IDisposable
 {
     // Const
     private const string Operation = "PossessionBegin";
-    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.Hypnosis, SpeakPermissions2.None, ElevatedPermissions.Possession);
+    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.Possession);
     
     // Instantiated
     private readonly IDisposable _handler;
@@ -47,8 +47,8 @@ public class PossessionBeginHandler : AbstractNetworkHandler, IDisposable
                 _ => PossessionResultEc.Unknown
             };
         }
-        
-        var result = _manager.TryBecomePossessed();
+
+        var result = _manager.BecomePossessed();
         if (result is PossessionResultEc.Success)
             _log.Custom($"You were possessed by {sender.Value?.FriendCode ?? string.Empty}");
 

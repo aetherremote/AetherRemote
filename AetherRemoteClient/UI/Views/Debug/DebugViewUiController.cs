@@ -9,13 +9,13 @@ using Newtonsoft.Json;
 
 namespace AetherRemoteClient.UI.Views.Debug;
 
-public class DebugViewUiController(MovementHook movement)
+public class DebugViewUiController()
 {
     public async void Debug()
     {
         try
         {
-            movement.Enable();
+            
         }
         catch (Exception e)
         {
@@ -27,7 +27,7 @@ public class DebugViewUiController(MovementHook movement)
     {
         try
         {
-            movement.Disable();
+            
         }
         catch (Exception e)
         {

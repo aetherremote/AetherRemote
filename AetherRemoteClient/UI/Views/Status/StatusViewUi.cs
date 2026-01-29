@@ -2,6 +2,7 @@ using System.Numerics;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
+using AetherRemoteClient.Managers.Possession;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.Input;
 using AetherRemoteClient.Utils;
@@ -83,7 +84,7 @@ public class StatusViewUi(
         if (hypnosisManager.IsBeingHypnotized)
             RenderHypnosisComponent(windowPadding, windowWidth);
         
-        if (possessionManager.Type is not PossessionManager.PossessionSessionType.None)
+        if (possessionManager.Possessed)
             RenderPossessionComponent(windowPadding, windowWidth);
         
         SharedUserInterfaces.ContentBox("OmniTool", AetherRemoteStyle.PanelBackground, false, () =>
@@ -186,6 +187,6 @@ public class StatusViewUi(
         });
         
         if (SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.Ghost, windowPadding, windowWidth, "Click to end possession", "PossessionId"))
-            _ = possessionManager.TryEndPossession();
+            _ = possessionManager.Expel(false);
     }
 }

@@ -1,6 +1,7 @@
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
+using AetherRemoteClient.Managers.Possession;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Style;
 using AetherRemoteClient.UI.Components.Friends;
@@ -105,7 +106,7 @@ public class PossessionViewUi(
             }
             else
             {
-                if (possessionManager.Type is PossessionManager.PossessionSessionType.Ghost)
+                if (possessionManager.Possessing)
                 {
                     if (commandLockoutService.IsLocked)
                     {
@@ -118,6 +119,12 @@ public class PossessionViewUi(
                         if (ImGui.Button("Unpossess", size))
                             _ = controller.Unpossess();
                     }
+                }
+                else if (possessionManager.Possessed)
+                {
+                    ImGui.BeginDisabled();
+                    ImGui.Button("You are being possessed", size);
+                    ImGui.EndDisabled();
                 }
                 else
                 {

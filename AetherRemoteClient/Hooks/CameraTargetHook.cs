@@ -30,13 +30,13 @@ public unsafe class CameraTargetHook : IDisposable
         _hook = Plugin.GameInteropProvider.HookFromAddress<Delegate>(address, Detour);
     }
 
-    public void Target(nint address)
+    public void Enable(nint address)
     {
         _target = address;
         _hook.Enable();
     }
 
-    public void Clear()
+    public void Disable()
     {
         _target = null;
         _hook.Disable();

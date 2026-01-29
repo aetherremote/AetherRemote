@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using System.Timers;
 using AetherRemoteClient.Domain.Hooks;
 using Dalamud.Hooking;
@@ -22,7 +23,7 @@ public unsafe class CameraInputHook : IDisposable
     /// <summary>
     ///     Event fired when hook function is invoked
     /// </summary>
-    public event Action<float, float, float>? CameraInputValueChanged;
+    public event Func<float, float, float, Task>? CameraInputValueChanged;
     
     /// <summary>
     ///     <inheritdoc cref="CameraInputHook"/>

@@ -41,5 +41,6 @@
 
     <ItemGroup>
       <Folder Include="Dependencies\CustomizePlus\" />
+      <Folder Include="Hooks\Domain\" />
     </ItemGroup>
 </Project>

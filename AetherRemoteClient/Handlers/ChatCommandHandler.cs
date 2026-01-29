@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using AetherRemoteClient.Managers;
+using AetherRemoteClient.Managers.Possession;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI;
 using AetherRemoteClient.Utils;
@@ -94,7 +95,7 @@ public class ChatCommandHandler : IDisposable
                     _hypnosisManager.Wake();
                     
                     // Stops possessing or being possessed
-                    await _possessionManager.TryEndPossession().ConfigureAwait(false);
+                    await _possessionManager.EndAllParanormalActivity(false).ConfigureAwait(false);
                     
                     // Clear pending chat commands
                     _actionQueueService.Clear();
@@ -113,7 +114,7 @@ public class ChatCommandHandler : IDisposable
                     break;
                 
                 case Unpossess:
-                    await _possessionManager.TryEndPossession().ConfigureAwait(false);
+                    await _possessionManager.EndAllParanormalActivity(false).ConfigureAwait(false);
                     
                     payloads.Add(new UIForegroundPayload(AetherRemoteStyle.TextColorPurple));
                     payloads.Add(new TextPayload("[AetherRemote] "));

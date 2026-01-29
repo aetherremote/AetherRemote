@@ -11,6 +11,7 @@ using AetherRemoteClient.Handlers;
 using AetherRemoteClient.Handlers.Network;
 using AetherRemoteClient.Hooks;
 using AetherRemoteClient.Managers;
+using AetherRemoteClient.Managers.Possession;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI;
 using AetherRemoteClient.UI.Components.Friends;
@@ -58,6 +59,7 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static ITextureProvider TextureProvider { get; private set; } = null!;
     [PluginService] internal static IGameInteropProvider GameInteropProvider { get; private set; } = null!;
     [PluginService] internal static ISigScanner SigScanner { get; private set; } = null!;
+    [PluginService] internal static IGameConfig GameConfig { get; private set; } = null!;
     internal static Configuration Configuration { get; private set; } = null!;
     internal static CharacterConfiguration? CharacterConfiguration { get; set; }
     internal static LegacyConfiguration? LegacyConfiguration { get; private set; }
@@ -94,6 +96,7 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<CommandLockoutService>();
         services.AddSingleton<EmoteService>();
         services.AddSingleton<FriendsListService>();
+        services.AddSingleton<GameSettingsService>();
         services.AddSingleton<IdentityService>();
         services.AddSingleton<LogService>();
         services.AddSingleton<NetworkService>();

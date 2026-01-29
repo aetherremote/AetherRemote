@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using Dalamud.Hooking;
 
 namespace AetherRemoteClient.Hooks;
@@ -20,7 +21,7 @@ public unsafe class MovementInputHook : IDisposable
     /// <summary>
     ///     Event fired when transitioning from one input value to another
     /// </summary>
-    public event Action<float, float, float, byte>? MovementInputValueChanged;
+    public event Func<float, float, float, byte, Task>? MovementInputValueChanged;
     
     /// <summary>
     ///     <inheritdoc cref="MovementInputHook"/>

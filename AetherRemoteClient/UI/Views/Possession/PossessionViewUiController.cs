@@ -1,6 +1,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using AetherRemoteClient.Managers;
+using AetherRemoteClient.Managers.Possession;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using Dalamud.Utility;
 
@@ -15,12 +16,12 @@ public class PossessionViewUiController(PossessionManager possessions, Selection
         if (selectionManager.Selected.FirstOrDefault() is not { } friend)
             return;
             
-        await possessions.TryBeginPossession(friend.FriendCode).ConfigureAwait(false);
+        await possessions.Possess(friend).ConfigureAwait(false);
     }
 
     public async Task Unpossess()
     {
-        await possessions.TryEndPossession().ConfigureAwait(false);
+        await possessions.Unpossess(false).ConfigureAwait(false);
     }
 
     public static async Task AcceptPossessionTermsOfService()

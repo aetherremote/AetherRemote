@@ -1,6 +1,7 @@
 using System;
+using System.Threading.Tasks;
 using AetherRemoteClient.Handlers.Network.Base;
-using AetherRemoteClient.Managers;
+using AetherRemoteClient.Managers.Possession;
 using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
@@ -16,7 +17,7 @@ public class PossessionEndHandler : AbstractNetworkHandler, IDisposable
 {
     // Const
     private const string Operation = "PossessionEnd";
-    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.Hypnosis, SpeakPermissions2.None, ElevatedPermissions.Possession);
+    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.Possession);
     
     // Instantiated
     private readonly IDisposable _handler;
@@ -30,7 +31,7 @@ public class PossessionEndHandler : AbstractNetworkHandler, IDisposable
         _manager = manager;
     }
 
-    private PossessionResultEc Handle(PossessionEndCommand command)
+    private async Task<PossessionResultEc> Handle(PossessionEndCommand command)
     {
         Plugin.Log.Verbose($"{command}");
         var sender = TryGetFriendWithCorrectPermissions(Operation, command.SenderFriendCode, Permissions);
@@ -47,9 +48,19 @@ public class PossessionEndHandler : AbstractNetworkHandler, IDisposable
                 _ => PossessionResultEc.Unknown
             };
         }
-        
-        _manager.EndPossessing();
-        _log.Custom($"{sender.Value?.FriendCode ?? string.Empty} stopped possessing you");
+
+        if (_manager.Possessed)
+        {
+            await _manager.Expel(true).ConfigureAwait(false);
+            _log.Custom($"{sender.Value?.FriendCode ?? string.Empty} stopped possessing you");
+        }
+
+        if (_manager.Possessing)
+        {
+            await _manager.Unpossess(true).ConfigureAwait(false);
+            _log.Custom($"{sender.Value?.FriendCode ?? string.Empty} expelled you from their body");
+        }
+
         return PossessionResultEc.Success;
     }
     

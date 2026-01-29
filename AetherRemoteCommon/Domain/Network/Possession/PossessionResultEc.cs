@@ -16,6 +16,11 @@ public enum PossessionResultEc
     
     AlreadyBeingPossessedOrPossessing,
     
+    /// <summary>
+    ///     When the target of a possession command reports that they are no longer possessed (desync)
+    /// </summary>
+    PossessionDesynchronization,
+    
     BadData,
     
     Success,
