@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using AetherRemoteClient.Handlers.Network.Base;
 using AetherRemoteClient.Managers.Possession;
 using AetherRemoteClient.Services;
@@ -30,7 +31,7 @@ public class PossessionBeginHandler : AbstractNetworkHandler, IDisposable
         _manager = manager;
     }
 
-    private PossessionResultEc Handle(PossessionBeginCommand command)
+    private async Task<PossessionResultEc> Handle(PossessionBeginCommand command)
     {
         Plugin.Log.Verbose($"{command}");
         var sender = TryGetFriendWithCorrectPermissions(Operation, command.SenderFriendCode, Permissions);
@@ -52,7 +53,7 @@ public class PossessionBeginHandler : AbstractNetworkHandler, IDisposable
         if (command.MoveMode > 1)
             return PossessionResultEc.BadData;
 
-        var result = _manager.BecomePossessed(command.MoveMode);
+        var result = await _manager.BecomePossessed(command.MoveMode).ConfigureAwait(false);
         if (result is PossessionResultEc.Success)
             _log.Custom($"You were possessed by {sender.Value?.FriendCode ?? string.Empty}");
 

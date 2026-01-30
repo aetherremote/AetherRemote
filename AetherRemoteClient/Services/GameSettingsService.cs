@@ -1,3 +1,5 @@
+using System.Threading.Tasks;
+
 namespace AetherRemoteClient.Services;
 
 /// <summary>
@@ -8,16 +10,16 @@ public class GameSettingsService
     /// <summary>
     ///     Sets the camera configuration value
     /// </summary>
-    public static void SetMoveMode(uint moveMode)
+    public static async Task SetMoveMode(uint moveMode)
     {
-        Plugin.GameConfig.UiControl.Set("MoveMode", moveMode);
+        await Plugin.RunOnFramework(() => Plugin.GameConfig.UiControl.Set("MoveMode", moveMode)).ConfigureAwait(false);
     }
 
     /// <summary>
     ///     Gets the control type for this input
     /// </summary>
-    public static uint? TryGetMoveMode()
+    public static async Task<uint?> TryGetMoveMode()
     {
-        return Plugin.GameConfig.UiControl.TryGet("MoveMode", out uint mode) ? mode : null;
+        return await Plugin.RunOnFramework<uint?>(() => Plugin.GameConfig.UiControl.TryGetUInt("MoveMode", out var moveMode) ? moveMode : null).ConfigureAwait(false);
     }
 }

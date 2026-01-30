@@ -27,7 +27,7 @@ public partial class PossessionManager
             return false;
 
         // Get our current control scheme values
-        if (GameSettingsService.TryGetMoveMode() is not { } moveMode)
+        if (await GameSettingsService.TryGetMoveMode().ConfigureAwait(false) is not { } moveMode)
             return false;
         
         // 'Lock' our state while we attempt to possess someone

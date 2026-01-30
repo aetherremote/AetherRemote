@@ -15,7 +15,7 @@ public partial class PossessionManager
     /// <summary>
     ///     Become possessed by a friend
     /// </summary>
-    public PossessionResultEc BecomePossessed(uint moveMode)
+    public async Task<PossessionResultEc> BecomePossessed(uint moveMode)
     {
         // Don't become possessed if you are already possessing or being possessed by someone else
         if (Possessing || Possessed)
@@ -26,14 +26,14 @@ public partial class PossessionManager
             return PossessionResultEc.AlreadyBeingPossessedOrPossessing;
         
         // Get our current move mode
-        if (GameSettingsService.TryGetMoveMode() is not { } currentMoveMode)
+        if (await GameSettingsService.TryGetMoveMode().ConfigureAwait(false) is not { } currentMoveMode)
             return PossessionResultEc.FailedToReadCharacterConfiguration;
         
         // Save our previous move mode
         _previousMoveMode = currentMoveMode;
         
         // Set to our possessor's move mode
-        GameSettingsService.SetMoveMode(moveMode);
+        await GameSettingsService.SetMoveMode(moveMode).ConfigureAwait(false);
         
         // Enable hooks to lock you out of moving or controlling your camera
         _movementHook.Enable();
@@ -68,7 +68,7 @@ public partial class PossessionManager
         if (_previousMoveMode is not null)
         {
             // Revert
-            GameSettingsService.SetMoveMode(_previousMoveMode.Value);
+            await GameSettingsService.SetMoveMode(_previousMoveMode.Value).ConfigureAwait(false);
             
             // Clear the previous move mode now that we are no longer being possessed
             _previousMoveMode = null;
