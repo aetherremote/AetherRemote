@@ -6,20 +6,18 @@ namespace AetherRemoteClient.Services;
 public class GameSettingsService
 {
     /// <summary>
-    ///     Sets the camera configuration value to use the standard camera
+    ///     Sets the camera configuration value
     /// </summary>
-    public static void SetToStandard()
+    public static void SetMoveMode(uint moveMode)
     {
-        Plugin.GameConfig.UiControl.Set("MoveMode", 0);
+        Plugin.GameConfig.UiControl.Set("MoveMode", moveMode);
     }
-    
+
     /// <summary>
-    ///     Sets the camera configuration value ot use the legacy camera
+    ///     Gets the control type for this input
     /// </summary>
-    /// <param name="disableCameraPivot">A sub option to disable camera turning while mosting</param>
-    public static void SetToLegacy(bool disableCameraPivot)
+    public static uint? TryGetMoveMode()
     {
-        Plugin.GameConfig.UiControl.Set("MoveMode", 1);
-        Plugin.GameConfig.UiControl.Set("LegacyCameraCorrectionFix", disableCameraPivot);
+        return Plugin.GameConfig.UiControl.TryGet("MoveMode", out uint mode) ? mode : null;
     }
 }

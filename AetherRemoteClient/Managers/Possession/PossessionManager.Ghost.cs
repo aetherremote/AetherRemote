@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain;
+using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Possession;
@@ -25,11 +26,15 @@ public partial class PossessionManager
         if (Possessing || Possessed)
             return false;
 
+        // Get our current control scheme values
+        if (GameSettingsService.TryGetMoveMode() is not { } moveMode)
+            return false;
+        
         // 'Lock' our state while we attempt to possess someone
         _attemptingPossession = true;
         
         // Begin network requesting
-        var request = new PossessionBeginRequest(friend.FriendCode);
+        var request = new PossessionBeginRequest(friend.FriendCode, moveMode);
         var response = await _network.InvokeAsync<PossessionBeginResponse>(HubMethod.Possession.Begin, request).ConfigureAwait(false);
         
         // Handle failures

@@ -48,7 +48,11 @@ public class PossessionBeginHandler : AbstractNetworkHandler, IDisposable
             };
         }
 
-        var result = _manager.BecomePossessed();
+        // They sent us a move mode that doesn't exist
+        if (command.MoveMode > 1)
+            return PossessionResultEc.BadData;
+
+        var result = _manager.BecomePossessed(command.MoveMode);
         if (result is PossessionResultEc.Success)
             _log.Custom($"You were possessed by {sender.Value?.FriendCode ?? string.Empty}");
 

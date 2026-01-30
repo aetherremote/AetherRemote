@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Possession;
@@ -8,10 +9,13 @@ namespace AetherRemoteClient.Managers.Possession;
 
 public partial class PossessionManager
 {
+    // Store the original movement configuration values
+    private uint? _previousMoveMode;
+    
     /// <summary>
     ///     Become possessed by a friend
     /// </summary>
-    public PossessionResultEc BecomePossessed()
+    public PossessionResultEc BecomePossessed(uint moveMode)
     {
         // Don't become possessed if you are already possessing or being possessed by someone else
         if (Possessing || Possessed)
@@ -20,6 +24,16 @@ public partial class PossessionManager
         // Don't become possessed if we are attempting to possess someone else
         if (_attemptingPossession)
             return PossessionResultEc.AlreadyBeingPossessedOrPossessing;
+        
+        // Get our current move mode
+        if (GameSettingsService.TryGetMoveMode() is not { } currentMoveMode)
+            return PossessionResultEc.FailedToReadCharacterConfiguration;
+        
+        // Save our previous move mode
+        _previousMoveMode = currentMoveMode;
+        
+        // Set to our possessor's move mode
+        GameSettingsService.SetMoveMode(moveMode);
         
         // Enable hooks to lock you out of moving or controlling your camera
         _movementHook.Enable();
@@ -49,6 +63,16 @@ public partial class PossessionManager
         // Disable all hooks
         _cameraHook.Disable();
         _movementHook.Disable();
+
+        // Revert the control scheme back to the original if a value is present
+        if (_previousMoveMode is not null)
+        {
+            // Revert
+            GameSettingsService.SetMoveMode(_previousMoveMode.Value);
+            
+            // Clear the previous move mode now that we are no longer being possessed
+            _previousMoveMode = null;
+        }
         
         // Always mark ourselves as free now, even if network event fails for whatever reason
         _possessionMode = PossessionMode.None;

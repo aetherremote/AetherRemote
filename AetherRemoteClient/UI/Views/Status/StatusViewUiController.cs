@@ -101,7 +101,7 @@ public class StatusViewUiController(
 
     public async Task Unpossess()
     {
-        if (await possessionManager.Expel(false).ConfigureAwait(false))
+        if (await possessionManager.Expel(true).ConfigureAwait(false))
             NotificationHelper.Success("Unpossess Successful", string.Empty);
     }
 }

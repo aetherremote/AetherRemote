@@ -21,6 +21,11 @@ public enum PossessionResultEc
     /// </summary>
     PossessionDesynchronization,
     
+    /// <summary>
+    ///     When the plugin fails to find the MoveMode configuration value
+    /// </summary>
+    FailedToReadCharacterConfiguration,
+    
     BadData,
     
     Success,

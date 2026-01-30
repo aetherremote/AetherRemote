@@ -4,5 +4,6 @@ namespace AetherRemoteCommon.Domain.Network.Possession.Begin;
 
 [MessagePackObject]
 public record PossessionBeginCommand(
-    string SenderFriendCode
+    string SenderFriendCode,
+    [property: Key(1)] uint MoveMode
 ) : ActionCommand(SenderFriendCode);

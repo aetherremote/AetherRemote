@@ -8,8 +8,6 @@ using AetherRemoteServer.Managers;
 using AetherRemoteServer.Utilities;
 using Microsoft.AspNetCore.SignalR;
 
-// ReSharper disable RedundantBoolCompare
-
 namespace AetherRemoteServer.SignalR.Handlers;
 
 // TODO: Documentation
@@ -30,7 +28,7 @@ public class PossessionBeginHandler(
             return new PossessionBeginResponse(error, PossessionResultEc.Uninitialized, string.Empty, string.Empty);
         }
         
-        var command = new PossessionBeginCommand(senderFriendCode);
+        var command = new PossessionBeginCommand(senderFriendCode, request.MoveMode);
         var response = await forwarder.CheckPossessionAndInvoke(senderFriendCode, request.TargetFriendCode, Method, Required, command, clients);
 
         // If the response or the result is not success, just return the response object
@@ -58,6 +56,9 @@ public class PossessionBeginHandler(
         
         if (possessionManager.TryGetSession(request.TargetFriendCode) is not null)
             return  PossessionResponseEc.TargetAlreadyInSession;
+
+        if (request.MoveMode > 1)
+            return PossessionResponseEc.BadDataInRequest;
 
         return null;
     }

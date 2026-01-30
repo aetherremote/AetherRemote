@@ -95,7 +95,7 @@ public class ChatCommandHandler : IDisposable
                     _hypnosisManager.Wake();
                     
                     // Stops possessing or being possessed
-                    await _possessionManager.EndAllParanormalActivity(false).ConfigureAwait(false);
+                    await _possessionManager.EndAllParanormalActivity(true).ConfigureAwait(false);
                     
                     // Clear pending chat commands
                     _actionQueueService.Clear();
@@ -114,7 +114,7 @@ public class ChatCommandHandler : IDisposable
                     break;
                 
                 case Unpossess:
-                    await _possessionManager.EndAllParanormalActivity(false).ConfigureAwait(false);
+                    await _possessionManager.EndAllParanormalActivity(true).ConfigureAwait(false);
                     
                     payloads.Add(new UIForegroundPayload(AetherRemoteStyle.TextColorPurple));
                     payloads.Add(new TextPayload("[AetherRemote] "));
