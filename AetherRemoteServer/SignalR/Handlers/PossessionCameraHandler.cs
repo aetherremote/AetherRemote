@@ -20,7 +20,7 @@ public class PossessionCameraHandler(IPresenceService presences, IForwardedReque
             return new PossessionResponse(PossessionResponseEc.TooManyRequests, PossessionResultEc.Uninitialized);
 
         // TODO: Remove after invalid data is discovered from common client use
-        if (request.HorizontalRotation is <= Constraints.Possession.HorizontalMin or >= Constraints.Possession.HorizontalMax || request.VerticalRotation is <= Constraints.Possession.VerticalMin or >= Constraints.Possession.VerticalMax || request.Zoom is <= Constraints.Possession.ZoomMin or >= Constraints.Possession.ZoomMax)
+        if (request.HorizontalRotation is < Constraints.Possession.HorizontalMin or > Constraints.Possession.HorizontalMax || request.VerticalRotation is < Constraints.Possession.VerticalMin or > Constraints.Possession.VerticalMax || request.Zoom is < Constraints.Possession.ZoomMin or > Constraints.Possession.ZoomMax)
         {
             logger.LogWarning("{Sender} sent invalid camera request data {Data}", senderFriendCode, request);
             return new PossessionResponse(PossessionResponseEc.BadDataInRequest, PossessionResultEc.Uninitialized);
