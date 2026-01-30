@@ -19,11 +19,11 @@ public partial class PossessionManager
     /// <summary>
     ///     Possesses a target friend code
     /// </summary>
-    public async Task Possess(Friend friend)
+    public async Task<bool> Possess(Friend friend)
     {
         // Only start a new session if we aren't possessing or being possessed
         if (Possessing || Possessed)
-            return;
+            return false;
 
         // 'Lock' our state while we attempt to possess someone
         _attemptingPossession = true;
@@ -38,7 +38,7 @@ public partial class PossessionManager
             Plugin.Log.Warning($"[PossessionManager.Possess] {response.Response} {response.Result}");
             NotificationHelper.Error("Possession Failed", $"Attempting to possess was {response.Response} and client's result was {response.Result}");
             _attemptingPossession = false;
-            return;
+            return false;
         }
         
         // Listen to events emitted by our hooks
@@ -53,9 +53,6 @@ public partial class PossessionManager
         // Set our mode to be the Ghost mode, signifying we are possessing someone
         _possessionMode = PossessionMode.Ghost;
         
-        // Notify of the success
-        NotificationHelper.Success("Possession Successful", "Enjoy your new body!");
-        
         // Reset our lock
         _attemptingPossession = false;
         
@@ -63,26 +60,29 @@ public partial class PossessionManager
         var address = await Plugin.TryFindAddressByCharacter(response.CharacterName, response.CharacterWorld).ConfigureAwait(false);
         if (address == IntPtr.Zero)
         {
-            // We found the target, set the hooks to move our camera to them
-            _cameraTargetHook.Enable(address);
-        }
-        else
-        {
             // If we didn't find the target, display a notification that you're possessing without them nearby
             NotificationHelper.Info("Remote Possession", "The person you are possessing is not nearby you, controlling them may be difficult.");
         }
+        else
+        {
+            // We found the target, set the hooks to move our camera to them
+            _cameraTargetHook.Enable(address);
+        }
+
+        // Send a success back
+        return true;
     }
     
     /// <summary>
     ///     Unpossess from the previous target friend's body
     /// </summary>
-    /// <param name="silent">If the other person should be notified or not.</param>
+    /// <param name="notifyOther">If the other person should be notified or not.</param>
     /// <remarks>Only call if you are the person possessing</remarks>
-    public async Task Unpossess(bool silent)
+    public async Task<bool> Unpossess(bool notifyOther)
     {
         // Only handle cases where you are the possessor
         if (Possessing is false)
-            return;
+            return false;
         
         // Stop listening to events
         _cameraInputHook.CameraInputValueChanged -= OnCameraInputValueChanged;
@@ -96,27 +96,22 @@ public partial class PossessionManager
         
         // Always mark ourselves as free now, even if network event fails for whatever reason
         _possessionMode = PossessionMode.None;
+
+        // If we don't have to notify the other person, exit early
+        if (notifyOther is false)
+            return true;
         
-        // If we have silent expel turned on, just display a message instead of notifying the other person
-        if (silent)
-        {
-            NotificationHelper.Success("Unpossess Successful", string.Empty);
-            return;
-        }
+        // NotificationHelper.Success("Unpossess Successful", string.Empty);
         
         // Notify the person we are possessing they are now free
         var request = new PossessionEndRequest();
         var response = await _network.InvokeAsync<PossessionResponse>(HubMethod.Possession.End, request).ConfigureAwait(false);
-        if (response.Response is not PossessionResponseEc.Success || response.Result is not PossessionResultEc.Success)
-        {
-            // If there was a problem, just display a success with some info
-            NotificationHelper.Info("Unpossess Partially Successful", $"You are no longer possessing your friend, but there were complications of the type {response.Response} {response.Result}");
-        }
-        else
-        {
-            // Otherwise, just display the success
-            NotificationHelper.Success("Unpossess Successful", string.Empty);
-        }
+        if (response.Response is PossessionResponseEc.Success && response.Result is PossessionResultEc.Success)
+            return true;
+        
+        // If there was a problem, just display a success with some info
+        NotificationHelper.Info("Unpossess Partially Successful", $"You are no longer possessing your friend, but there were complications of the type {response.Response} {response.Result}");
+        return false;
     }
     
     /// <summary>
@@ -127,7 +122,12 @@ public partial class PossessionManager
         var request = new PossessionCameraRequest(horizontalRotation, verticalRotation, zoom);
         var response = await _network.InvokeAsync<PossessionResponse>(HubMethod.Possession.Camera, request).ConfigureAwait(false);
         if (response.Response is not PossessionResponseEc.Success || response.Result is not PossessionResultEc.Success)
+        {
             Plugin.Log.Warning($"[PossessionManager.OnCameraInputValueChanged] {response.Response} {response.Result}");
+            if (response.Result is PossessionResultEc.PossessionDesynchronization)
+                if (await Unpossess(false).ConfigureAwait(false))
+                    NotificationHelper.Info("Possession Ended - Desynchronization", string.Empty);
+        }
     }
     
     /// <summary>
@@ -142,6 +142,10 @@ public partial class PossessionManager
             Plugin.Log.Warning($"[PossessionManager.OnMovementInputValueChanged] {response.Response} {response.Result}");
             if (response.Response is PossessionResponseEc.TooManyRequests)
                 NotificationHelper.Warning("Slow down!", "You're sending too many inputs!!");
+            
+            if (response.Result is PossessionResultEc.PossessionDesynchronization)
+                if (await Unpossess(false).ConfigureAwait(false))
+                    NotificationHelper.Info("Possession Ended - Desynchronization", string.Empty);
         }
     }
 }

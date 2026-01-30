@@ -51,7 +51,7 @@ public class PossessionCameraHandler : AbstractNetworkHandler, IDisposable
         if (command.HorizontalRotation is < Constraints.Possession.HorizontalMin or > Constraints.Possession.HorizontalMax)
             return PossessionResultEc.BadData;
 
-        if (command.VerticalRotation is < Constraints.Possession.VerticalRotationMin or > Constraints.Possession.VerticalRotationMax)
+        if (command.VerticalRotation is < Constraints.Possession.VerticalMin or > Constraints.Possession.VerticalMax)
             return PossessionResultEc.BadData;
         
         if (command.Zoom is < Constraints.Possession.ZoomMin or > Constraints.Possession.ZoomMax)

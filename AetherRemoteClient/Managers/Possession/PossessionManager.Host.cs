@@ -38,13 +38,13 @@ public partial class PossessionManager
     /// <summary>
     ///     Removes a ghost from your body
     /// </summary>
-    /// <param name="silent">If the other person should be notified or not.</param>
+    /// <param name="notifyOther">If the other person should be notified or not.</param>
     /// <remarks>Only call if you are the person being possessed</remarks>
-    public async Task Expel(bool silent)
+    public async Task<bool> Expel(bool notifyOther)
     {
         // Only handle cases where you are the possessed
         if (Possessed is false)
-            return;
+            return false;
         
         // Disable all hooks
         _cameraHook.Disable();
@@ -53,26 +53,19 @@ public partial class PossessionManager
         // Always mark ourselves as free now, even if network event fails for whatever reason
         _possessionMode = PossessionMode.None;
 
-        // If we have silent expel turned on, just display a message instead of notifying the other person
-        if (silent)
-        {
-            NotificationHelper.Success("Unpossessed Successful", string.Empty);
-            return;
-        }
+        // If we don't have to notify the other person, exit early
+        if (notifyOther is false)
+            return true;
         
         // Notify the person we are possessing they are now free
         var request = new PossessionEndRequest();
         var response = await _network.InvokeAsync<PossessionResponse>(HubMethod.Possession.End, request).ConfigureAwait(false);
-        if (response.Response is not PossessionResponseEc.Success || response.Result is not PossessionResultEc.Success)
-        {
-            // If there was a problem, just display a success with some info
-            NotificationHelper.Info("Unpossessed Successful", $"You are no longer possessed by your friend, but there were complications of the type {response.Response} {response.Result}");
-        }
-        else
-        {
-            // Otherwise, just display the success
-            NotificationHelper.Success("Unpossessed Successful", string.Empty);
-        }
+        if (response.Response is PossessionResponseEc.Success && response.Result is PossessionResultEc.Success)
+            return true;
+        
+        // If there was a problem, just display a success with some info
+        NotificationHelper.Info("Unpossessed Successful", $"You are no longer possessed by your friend, but there were complications of the type {response.Response} {response.Result}");
+        return false;
     }
     
     /// <summary>

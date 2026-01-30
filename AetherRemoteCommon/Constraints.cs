@@ -66,9 +66,9 @@ public static class Constraints
     /// </summary>
     public static class Possession
     {
-        public const float VerticalRotationMax = 45 * MathF.PI / 180f;
-        public const float VerticalRotationMin = -85 * MathF.PI / 180f;
-        public const float VerticalRotationDelta = VerticalRotationMax - VerticalRotationMin;
+        public const float VerticalMax = 45 * MathF.PI / 180f;
+        public const float VerticalMin = -85 * MathF.PI / 180f;
+        public const float VerticalDelta = VerticalMax - VerticalMin;
 
         public const float ZoomMax = 20f;
         public const float ZoomMin = 1.5f;

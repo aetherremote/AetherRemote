@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using AetherRemoteClient.Handlers.Network.Base;
 using AetherRemoteClient.Managers.Possession;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
@@ -51,13 +52,17 @@ public class PossessionEndHandler : AbstractNetworkHandler, IDisposable
 
         if (_manager.Possessed)
         {
-            await _manager.Expel(true).ConfigureAwait(false);
+            if (await _manager.Expel(false).ConfigureAwait(false))
+                NotificationHelper.Success("Possession Ended", string.Empty);
+            
             _log.Custom($"{sender.Value?.FriendCode ?? string.Empty} stopped possessing you");
         }
 
         if (_manager.Possessing)
         {
-            await _manager.Unpossess(true).ConfigureAwait(false);
+            if (await _manager.Unpossess(false).ConfigureAwait(false))
+                NotificationHelper.Success("Possession Ended", string.Empty);
+            
             _log.Custom($"{sender.Value?.FriendCode ?? string.Empty} expelled you from their body");
         }
 

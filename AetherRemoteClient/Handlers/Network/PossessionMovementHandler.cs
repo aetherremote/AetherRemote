@@ -59,8 +59,7 @@ public class PossessionMovementHandler : AbstractNetworkHandler, IDisposable
         if (command.Backwards > 1)
             return PossessionResultEc.BadData;
         
-        _manager.SetMovementDirection(command.Horizontal, command.Vertical, command.Turn, command.Backwards);
-        return PossessionResultEc.Success;
+        return _manager.SetMovementDirection(command.Horizontal, command.Vertical, command.Turn, command.Backwards);
     }
     
     public void Dispose()

@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using AetherRemoteClient.Hooks;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Utils;
 
 namespace AetherRemoteClient.Managers.Possession;
 
@@ -58,14 +59,16 @@ public partial class PossessionManager : IDisposable
     /// <summary>
     ///     Helper method to determine how the possession should be stopped
     /// </summary>
-    /// <param name="silent">If the other person should be notified or not.</param>
-    public async Task EndAllParanormalActivity(bool silent)
+    /// <param name="notifyOther">If the other person should be notified or not.</param>
+    public async Task EndAllParanormalActivity(bool notifyOther)
     {
         if (Possessed)
-            await Expel(silent).ConfigureAwait(false);
+            if (await Expel(notifyOther).ConfigureAwait(false))
+                NotificationHelper.Success("Possession Ended", string.Empty);
         
         if (Possessing)
-            await Unpossess(silent).ConfigureAwait(false);
+            if (await Unpossess(notifyOther).ConfigureAwait(false))
+                NotificationHelper.Success("Possession Ended", string.Empty);
     }
     
     /// <summary>
@@ -73,7 +76,7 @@ public partial class PossessionManager : IDisposable
     /// </summary>
     private async Task OnDisconnect()
     {
-        await EndAllParanormalActivity(true).ConfigureAwait(false);
+        await EndAllParanormalActivity(false).ConfigureAwait(false);
     }
 
     /// <summary>

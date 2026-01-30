@@ -69,7 +69,7 @@ public unsafe class CameraHook : IDisposable
 
         // Normalize all the values
         var deltaH = ShortestHorizontalPath(h, _targetHorizontal) / Constraints.Possession.HorizontalDelta;
-        var deltaV = (_targetVertical - v) / Constraints.Possession.VerticalRotationDelta;
+        var deltaV = (_targetVertical - v) / Constraints.Possession.VerticalDelta;
         var deltaZ = (_targetZoom - z) / Constraints.Possession.ZoomDelta;
         
         var length = MathF.Sqrt(deltaH * deltaH + deltaV * deltaV + deltaZ * deltaZ);
@@ -78,7 +78,7 @@ public unsafe class CameraHook : IDisposable
         
         var scale = MathF.Min(1f, MaxSpeed / length);
         camera->CurrentHRotation += deltaH * scale * Constraints.Possession.HorizontalDelta;
-        camera->CurrentVRotation += deltaV * scale * Constraints.Possession.VerticalRotationDelta;
+        camera->CurrentVRotation += deltaV * scale * Constraints.Possession.VerticalDelta;
         camera->Zoom += deltaZ * scale * Constraints.Possession.ZoomDelta;
     }
 

@@ -1,11 +1,14 @@
 using System;
+using System.Threading.Tasks;
 using AetherRemoteClient.Dependencies.CustomizePlus.Services;
 using AetherRemoteClient.Dependencies.Glamourer.Services;
 using AetherRemoteClient.Dependencies.Honorific.Services;
 using AetherRemoteClient.Dependencies.Penumbra.Services;
 using AetherRemoteClient.Handlers;
+using AetherRemoteClient.Managers.Possession;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.Input;
+using AetherRemoteClient.Utils;
 
 namespace AetherRemoteClient.UI.Views.Status;
 
@@ -16,6 +19,7 @@ public class StatusViewUiController(
     CustomizePlusService customizePlus,
     HonorificService honorific,
     PenumbraService penumbra,
+    PossessionManager possessionManager,
     PermanentTransformationHandler permanentTransformationHandler)
 {
     public readonly FourDigitInput PinInput = new("StatusInput");
@@ -93,5 +97,11 @@ public class StatusViewUiController(
         {
             // Ignored
         }
+    }
+
+    public async Task Unpossess()
+    {
+        if (await possessionManager.Expel(false).ConfigureAwait(false))
+            NotificationHelper.Success("Unpossess Successful", string.Empty);
     }
 }

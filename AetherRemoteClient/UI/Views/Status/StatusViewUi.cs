@@ -185,8 +185,8 @@ public class StatusViewUi(
             SharedUserInterfaces.MediumText("Possession");
             ImGui.TextUnformatted($"There is paranormal activity afoot...");
         });
-        
+
         if (SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.Ghost, windowPadding, windowWidth, "Click to end possession", "PossessionId"))
-            _ = possessionManager.Expel(false);
+            _ = controller.Unpossess();
     }
 }
