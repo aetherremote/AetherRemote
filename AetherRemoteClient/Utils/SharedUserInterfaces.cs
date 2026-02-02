@@ -194,6 +194,8 @@ public static class SharedUserInterfaces
     public static void PopMassiveFont() => _massiveFont?.Pop();
     public static void PushBigFont() => _bigFont?.Push();
     public static void PopBigFont() => _bigFont?.Pop();
+    public static void PushMediumFont() => _mediumFont?.Push();
+    public static void PopMediumFont() => _mediumFont?.Pop();
     
     /// <summary>
     ///     Creates a button the size of a <see cref="ContentBox"/> on the right

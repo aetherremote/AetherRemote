@@ -1,3 +1,4 @@
+using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.SyncPermissions;
@@ -22,9 +23,15 @@ public class UpdateFriendHandler(IPresenceService presenceService, IDatabaseServ
         if (presenceService.TryGet(request.TargetFriendCode) is not { } connectedClient)
             return new UpdateFriendResponse(result);
         
+        // TODO: Update failure state. This is not an expected state
+        if (await database.GetGlobalPermissions(friendCode) is not { } global)
+            return new UpdateFriendResponse(result);
+        
         try
         {
-            var sync = new SyncPermissionsCommand(friendCode, request.Permissions);
+            // Resolve
+            var resolved = Resolve(global, request.Permissions);
+            var sync = new SyncPermissionsCommand(friendCode, resolved);
             await clients.Client(connectedClient.ConnectionId).SendAsync(HubMethod.SyncPermissions, sync);
         }
         catch (Exception e)
@@ -33,5 +40,13 @@ public class UpdateFriendHandler(IPresenceService presenceService, IDatabaseServ
         }
 
         return new UpdateFriendResponse(result);
+    }
+
+    private static ResolvedPermissions Resolve(ResolvedPermissions global, RawPermissions raw)
+    {
+        var effectivePrimary = (global.Primary | raw.PrimaryAllow) & ~raw.PrimaryDeny;
+        var effectiveSpeak = (global.Speak | raw.SpeakAllow) & ~raw.SpeakDeny;
+        var effectiveElevated = (global.Elevated | raw.ElevatedAllow) & ~raw.ElevatedDeny;
+        return new ResolvedPermissions(effectivePrimary, effectiveSpeak, effectiveElevated);
     }
 }

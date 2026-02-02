@@ -22,7 +22,7 @@ public interface IDatabaseService
     /// <summary>
     ///     Updates a permission set between two users
     /// </summary>
-    public Task<DatabaseResultEc> UpdatePermissions(string senderFriendCode, string targetFriendCode, UserPermissions permissions);
+    public Task<DatabaseResultEc> UpdatePermissions(string senderFriendCode, string targetFriendCode, RawPermissions permissions);
 
     /// <summary>
     ///     Returns the permissions a friend has granted another, if they exists
@@ -39,6 +39,16 @@ public interface IDatabaseService
     /// </summary>
     public Task<DatabaseResultEc> DeletePermissions(string senderFriendCode, string targetFriendCode);
 
+    /// <summary>
+    ///     Updates a user's global permissions
+    /// </summary>
+    public Task<DatabaseResultEc> UpdateGlobalPermissions(string senderFriendCode, ResolvedPermissions permissions);
+    
+    /// <summary>
+    ///     Gets a user's global permissions
+    /// </summary>
+    public Task<ResolvedPermissions?> GetGlobalPermissions(string senderFriendCode);
+    
     /// <summary>
     ///     Admin function to add a new account to the database
     /// </summary>

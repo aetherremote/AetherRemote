@@ -40,4 +40,14 @@ public record UserPermissions
         Speak = speak;
         Elevated = elevated;
     }
+
+    public static UserPermissions From(ResolvedPermissions permissions)
+    {
+        return new UserPermissions
+        {
+            Primary = permissions.Primary,
+            Speak = permissions.Speak,
+            Elevated = permissions.Elevated
+        };
+    }
 }

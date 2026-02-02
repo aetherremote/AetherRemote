@@ -87,17 +87,14 @@ public class DatabaseService : IDatabaseService
             command.Transaction = transaction;
             command.CommandText = 
                  """
-                    INSERT INTO Permissions (FriendCode, TargetFriendCode, PrimaryPermissions, SpeakPermissions, ElevatedPermissions)
-                    SELECT @friendCode, @targetFriendCode, @primary, @speak, @elevated
+                    INSERT INTO Permissions_New (FriendCode, TargetFriendCode, PrimaryAllowMask, PrimaryDenyMask, SpeakAllowMask, SpeakDenyMask, ElevatedAllowMask, ElevatedDenyMask)
+                    SELECT @friendCode, @targetFriendCode, 0, 0, 0, 0, 0, 0
                     WHERE EXISTS (
                         SELECT 1 FROM Accounts WHERE FriendCode = @targetFriendCode
                     )
                  """;
             command.Parameters.AddWithValue("@friendCode", senderFriendCode);
             command.Parameters.AddWithValue("@targetFriendCode", targetFriendCode);
-            command.Parameters.AddWithValue("@primary", PrimaryPermissions2.None);
-            command.Parameters.AddWithValue("@speak", SpeakPermissions2.None);
-            command.Parameters.AddWithValue("@elevated", ElevatedPermissions.None);
             
             // If nothing was added, that means we're already friends or friend code doesn't exist
             if (await command.ExecuteNonQueryAsync() is 0)
@@ -135,15 +132,29 @@ public class DatabaseService : IDatabaseService
     /// <summary>
     ///     Updates a set of permissions between sender and target friend codes
     /// </summary>
-    public async Task<DatabaseResultEc> UpdatePermissions(string senderFriendCode, string targetFriendCode, UserPermissions permissions)
+    public async Task<DatabaseResultEc> UpdatePermissions(string senderFriendCode, string targetFriendCode, RawPermissions permissions)
     {
         await using var command = _database.CreateCommand();
-        command.CommandText = "UPDATE Permissions SET PrimaryPermissions = @primary, SpeakPermissions = @speak, ElevatedPermissions = @elevated WHERE FriendCode = @friendCode AND TargetFriendCode = @targetFriendCode";
-        command.Parameters.AddWithValue("@primary", permissions.Primary);
-        command.Parameters.AddWithValue("@speak", permissions.Speak);
-        command.Parameters.AddWithValue("@elevated", permissions.Elevated);
-        command.Parameters.AddWithValue("@friendCode", senderFriendCode);
+        command.CommandText = 
+            """
+                UPDATE Permissions 
+                SET 
+                    PrimaryAllowMask = @primaryAllow, 
+                    PrimaryDenyMask = @primaryDeny, 
+                    SpeakAllowMask = @speakAllow, 
+                    SpeakDenyMask = @speakDeny, 
+                    ElevatedAllowMask = @elevatedAllow, 
+                    ElevatedDenyMask = @elevatedDeny
+                WHERE FriendCode = @senderFriendCode AND TargetFriendCode = @targetFriendCode
+            """;
+        command.Parameters.AddWithValue("@senderFriendCode", senderFriendCode);
         command.Parameters.AddWithValue("@targetFriendCode", targetFriendCode);
+        command.Parameters.AddWithValue("@primaryAllow", permissions.PrimaryAllow);
+        command.Parameters.AddWithValue("@primaryDeny", permissions.PrimaryDeny);
+        command.Parameters.AddWithValue("@speakAllow", permissions.SpeakAllow);
+        command.Parameters.AddWithValue("@speakDeny", permissions.SpeakDeny);
+        command.Parameters.AddWithValue("@elevatedAllow", permissions.ElevatedAllow);
+        command.Parameters.AddWithValue("@elevatedDeny", permissions.ElevatedDeny);
 
         try
         {
@@ -268,7 +279,73 @@ public class DatabaseService : IDatabaseService
             return DatabaseResultEc.Unknown;
         }
     }
-    
+
+    /// <summary>
+    ///     <inheritdoc cref="IDatabaseService.UpdateGlobalPermissions"/>
+    /// </summary>
+    public async Task<DatabaseResultEc> UpdateGlobalPermissions(string senderFriendCode, ResolvedPermissions permissions)
+    {
+        await using var command = _database.CreateCommand();
+        command.CommandText = 
+            """
+                INSERT INTO GlobalPermissions (FriendCode, PrimaryPermissions, SpeakPermissions, ElevatedPermissions)
+                VALUES (@friendCode, @primary, @speak, @elevated)
+                ON CONFLICT(FriendCode) DO UPDATE SET PrimaryPermissions = excluded.PrimaryPermissions, SpeakPermissions = excluded.SpeakPermissions, ElevatedPermissions = excluded.ElevatedPermissions;
+            """;
+        
+        command.Parameters.AddWithValue("@friendCode", senderFriendCode);
+        command.Parameters.AddWithValue("@primary", permissions.Primary);
+        command.Parameters.AddWithValue("@speak", permissions.Speak);
+        command.Parameters.AddWithValue("@elevated", permissions.Elevated);
+
+        try
+        {
+            return await command.ExecuteNonQueryAsync() is 1 ? DatabaseResultEc.Success : DatabaseResultEc.NoOp;
+        }
+        catch (Exception e)
+        {
+            _logger.LogWarning("[UpdateGlobalPermissions] {Error}", e);
+            return DatabaseResultEc.Unknown;
+        }
+    }
+
+    /// <summary>
+    ///     <inheritdoc cref="IDatabaseService.GetGlobalPermissions"/>
+    /// </summary>
+    public async Task<ResolvedPermissions?> GetGlobalPermissions(string senderFriendCode)
+    {
+        await using var command = _database.CreateCommand();
+        command.CommandText = 
+            """
+                INSERT INTO GlobalPermissions (FriendCode, PrimaryPermissions, SpeakPermissions, ElevatedPermissions)
+                VALUES (@friendCode, 0, 0, 0)
+                ON CONFLICT(FriendCode) DO UPDATE SET FriendCode = FriendCode
+                RETURNING PrimaryPermissions, SpeakPermissions, ElevatedPermissions;
+            """;
+        
+        command.Parameters.AddWithValue("@friendCode", senderFriendCode);
+
+        try
+        {
+            await using var reader = await command.ExecuteReaderAsync();
+            if (await reader.ReadAsync())
+            {
+                var primary = (PrimaryPermissions2)reader.GetInt32(0);
+                var speak = (SpeakPermissions2)reader.GetInt32(1);
+                var elevated = (ElevatedPermissions)reader.GetInt32(2);
+                return new ResolvedPermissions(primary, speak, elevated);
+            }
+            
+            _logger.LogWarning("[GetGlobalPermissions] Command did not return any rows");
+            return null;
+        }
+        catch (Exception e)
+        {
+            _logger.LogError("[GetGlobalPermissions] {Error}", e);
+            return null;
+        }
+    }
+
     /// <summary>
     ///     <inheritdoc cref="IDatabaseService.AdminCreateAccount"/>
     /// </summary>

@@ -1,5 +1,6 @@
 using System;
 using AetherRemoteClient.Services;
+using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.SyncOnlineStatus;
 using AetherRemoteCommon.Domain.Network.SyncPermissions;
@@ -35,8 +36,8 @@ public class SyncPermissionsHandler : IDisposable
     {
         if (_friends.Get(command.SenderFriendCode) is not { } friend)
             return;
-
-        friend.PermissionsGrantedByFriend = command.PermissionsGrantedBySender;
+        
+        friend.PermissionsGrantedByFriend = UserPermissions.From(command.PermissionsGrantedBySender);
     }
 
     public void Dispose()
