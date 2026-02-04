@@ -5,6 +5,7 @@ using AetherRemoteClient.Style;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
 using Dalamud.Interface.Colors;
 using FFXIVClientStructs.FFXIV.Client.UI.Info;
 
@@ -28,6 +29,34 @@ public partial class FriendsViewUi(FriendsListComponentUi friendsList, FriendsVi
             SharedUserInterfaces.PushMediumFont();
             SharedUserInterfaces.TextCentered("Permissions");
             SharedUserInterfaces.PopMediumFont();
+            
+            ImGui.SameLine(width - ImGui.GetFontSize() - AetherRemoteImGui.WindowPadding.X * 2);
+            SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
+
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.SetNextWindowSize(AetherRemoteDimensions.Tooltip);
+                ImGui.BeginTooltip();
+                
+                SharedUserInterfaces.MediumText("Tutorial");
+
+                ImGui.Separator();
+                ImGui.TextWrapped("When you set permissions for someone, either individual or global, YOU are setting the functionality that THEY can do to YOU.");
+                
+                ImGui.Separator();
+                ImGui.TextWrapped("Global Permissions, or Default Permissions, are a set of permissions granted to everyone on your friends list. Enabling a permission via the checkmark allows everyone to do that feature to you.");
+                
+                ImGui.Separator();
+                ImGui.TextWrapped("Individual Permissions are a set of permissions granted to one single person. Individual permissions can be:");
+                ImGui.BulletText("Deny, overwriting a global permission");
+                ImGui.BulletText("Default, use whatever the global permission is set to");
+                ImGui.BulletText("Allow, grant this permission even if not selected in global permissions");
+                
+                ImGui.Separator();
+                ImGui.TextWrapped("Make sure you save your permissions at the bottom of individual or global permission menus. Saving only saves the current permissions you are editing, or make sure if you intend to change both at once, you save on both menus.");
+                
+                ImGui.EndTooltip();
+            }
             
             if (_drawIndividuals)
             {
@@ -74,7 +103,7 @@ public partial class FriendsViewUi(FriendsListComponentUi friendsList, FriendsVi
             var textSize = ImGui.CalcTextSize("Unsaved Changes");
             var pos = ImGui.GetWindowPos();
             var size = ImGui.GetWindowSize();
-            var final = new Vector2(pos.X + (size.X - textSize.X) * 0.5f, pos.Y + size.Y - textSize.Y - AetherRemoteImGui.WindowPadding.Y * 2);
+            var final = new Vector2(pos.X + (size.X - textSize.X) * 0.5f, pos.Y + textSize.Y + AetherRemoteImGui.WindowPadding.Y);
             drawList.AddText(final, ImGui.ColorConvertFloat4ToU32(Vector4.One), "Unsaved Changes");
 
             drawList.ChannelsSetCurrent(0);

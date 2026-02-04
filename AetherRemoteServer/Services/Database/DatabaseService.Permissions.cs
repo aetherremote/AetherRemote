@@ -20,7 +20,7 @@ public partial class DatabaseService
         command.CommandText = 
             """
                 SELECT PrimaryAllowMask, PrimaryDenyMask, SpeakAllowMask, SpeakDenyMask, ElevatedAllowMask, ElevatedDenyMask 
-                FROM Permissions_New 
+                FROM Permissions 
                 WHERE FriendCode = @friendCode AND TargetFriendCode = @targetFriendCode LIMIT 1
             """;
         command.Parameters.AddWithValue("@friendCode", friendCode);
@@ -80,9 +80,9 @@ public partial class DatabaseService
                 g_other.SpeakPermissions        AS Other_GlobalSpeakPermissions,
                 g_other.ElevatedPermissions     AS Other_GlobalElevatedPermissions
                 
-                FROM Permissions_New AS p 
+                FROM Permissions AS p 
                 
-                LEFT JOIN Permissions_New AS r 
+                LEFT JOIN Permissions AS r 
                     ON r.FriendCode = p.TargetFriendCode 
                     AND r.TargetFriendCode = p.FriendCode
                     
@@ -179,7 +179,7 @@ public partial class DatabaseService
             command.Transaction = transaction;
             command.CommandText = 
                  """
-                    INSERT INTO Permissions_New (FriendCode, TargetFriendCode, PrimaryAllowMask, PrimaryDenyMask, SpeakAllowMask, SpeakDenyMask, ElevatedAllowMask, ElevatedDenyMask)
+                    INSERT INTO Permissions (FriendCode, TargetFriendCode, PrimaryAllowMask, PrimaryDenyMask, SpeakAllowMask, SpeakDenyMask, ElevatedAllowMask, ElevatedDenyMask)
                     SELECT @friendCode, @targetFriendCode, 0, 0, 0, 0, 0, 0
                     WHERE EXISTS (
                         SELECT 1 FROM Accounts WHERE FriendCode = @targetFriendCode
@@ -203,7 +203,7 @@ public partial class DatabaseService
                 // Otherwise, check to see if they added us back
                 var pair = _database.CreateCommand();
                 pair.Transaction = transaction;
-                pair.CommandText = "SELECT 1 FROM Permissions_New WHERE FriendCode = @targetFriendCode AND TargetFriendCode = @senderFriendCode LIMIT 1";
+                pair.CommandText = "SELECT 1 FROM Permissions WHERE FriendCode = @targetFriendCode AND TargetFriendCode = @senderFriendCode LIMIT 1";
                 pair.Parameters.AddWithValue("@senderFriendCode", senderFriendCode);
                 pair.Parameters.AddWithValue("@targetFriendCode", targetFriendCode);
                 result = await pair.ExecuteScalarAsync() is null ? DatabaseResultEc.Pending : DatabaseResultEc.Success;
@@ -229,7 +229,7 @@ public partial class DatabaseService
         await using var command = _database.CreateCommand();
         command.CommandText = 
             """
-                UPDATE Permissions_New 
+                UPDATE Permissions 
                 SET 
                     PrimaryAllowMask = @primaryAllow, 
                     PrimaryDenyMask = @primaryDeny, 
@@ -265,7 +265,7 @@ public partial class DatabaseService
     public async Task<DatabaseResultEc> DeletePermissions(string senderFriendCode, string targetFriendCode)
     {
         await using var command = _database.CreateCommand();
-        command.CommandText = "DELETE FROM Permissions_New WHERE FriendCode = @friendCode AND TargetFriendCode = @targetFriendCode";
+        command.CommandText = "DELETE FROM Permissions WHERE FriendCode = @friendCode AND TargetFriendCode = @targetFriendCode";
         command.Parameters.AddWithValue("@friendCode", senderFriendCode);
         command.Parameters.AddWithValue("@targetFriendCode", targetFriendCode);
 

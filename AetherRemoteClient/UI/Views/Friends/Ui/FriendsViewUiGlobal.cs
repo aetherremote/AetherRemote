@@ -11,15 +11,6 @@ public partial class FriendsViewUi
     {
         var half = width * 0.5f;
         
-        SharedUserInterfaces.ContentBox("PermissionsGlobalSave", AetherRemoteStyle.PanelBackground, true, () =>
-        {
-            if (ImGui.Button("Save Changes", new Vector2(width - AetherRemoteImGui.WindowPadding.X * 2, AetherRemoteDimensions.SendCommandButtonHeight)))
-                _ = controller.SaveGlobalPermissions().ConfigureAwait(false);
-            
-            if (ImGui.IsItemHovered())
-                ImGui.SetTooltip("Save your global permissions");
-        });
-        
         SharedUserInterfaces.ContentBox("PermissionsGlobalPrimary", AetherRemoteStyle.PanelBackground, true, () =>
         {
             ImGui.TextUnformatted("Primary Permissions");
@@ -66,11 +57,20 @@ public partial class FriendsViewUi
             ImGui.EndGroup();
         });
 
-        SharedUserInterfaces.ContentBox("PermissionsGlobalElevated", AetherRemoteStyle.ElevatedBackground, false, () =>
+        SharedUserInterfaces.ContentBox("PermissionsGlobalElevated", AetherRemoteStyle.ElevatedBackground, true, () =>
         {
             ImGui.TextUnformatted("Elevated Permissions");
             ImGui.Checkbox("Permanent Transformations", ref controller.Global.PermanentTransformationValue); ImGui.SameLine(half);
             ImGui.Checkbox("Possession", ref controller.Global.PossessionValue);
+        });
+        
+        SharedUserInterfaces.ContentBox("PermissionsGlobalSave", AetherRemoteStyle.PanelBackground, false, () =>
+        {
+            if (ImGui.Button("Save Changes", new Vector2(width - AetherRemoteImGui.WindowPadding.X * 2, AetherRemoteDimensions.SendCommandButtonHeight)))
+                _ = controller.SaveGlobalPermissions().ConfigureAwait(false);
+            
+            if (ImGui.IsItemHovered())
+                ImGui.SetTooltip("Save your global permissions");
         });
     }
 }

@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Numerics;
 using AetherRemoteClient.Domain.Enums;
 using AetherRemoteClient.Style;
@@ -32,27 +33,10 @@ public partial class FriendsViewUi
                 });
                 return;
         }
-
-        SharedUserInterfaces.ContentBox("PermissionsIndividualSave", AetherRemoteStyle.PanelBackground, true, () =>
-        {
-            if (ImGui.Button("Save Changes", new Vector2(width - AetherRemoteImGui.WindowPadding.X * 3 - AetherRemoteDimensions.SendCommandButtonHeight, AetherRemoteDimensions.SendCommandButtonHeight)))
-                _ = controller.SaveIndividualPermissions().ConfigureAwait(false);
-            
-            if (ImGui.IsItemHovered())
-                ImGui.SetTooltip("Save changes for this friend");
-            
-            ImGui.SameLine();
-
-            if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Trash, new Vector2(AetherRemoteDimensions.SendCommandButtonHeight)))
-                _ = controller.DeleteIndividualPermissions().ConfigureAwait(false);
-            
-            if (ImGui.IsItemHovered())
-                ImGui.SetTooltip("Remove this friend");
-        });
         
         SharedUserInterfaces.ContentBox("PermissionsIndividualNote", AetherRemoteStyle.PanelBackground, true, () =>
         {
-            SharedUserInterfaces.MediumText("Note");
+            SharedUserInterfaces.MediumText(selection.Selected.FirstOrDefault() is not { } friend ? "Note" : $"Note for {friend.FriendCode}");
             ImGui.SetNextItemWidth(width - AetherRemoteImGui.WindowPadding.X * 2);
             ImGui.InputText("##Note", ref controller.Individual.Note, 32);
         });
@@ -115,7 +99,7 @@ public partial class FriendsViewUi
                 DrawIndividualPermissionButton($"[{i + 1}]: {GetCrossWorldLinkshellName(i)}", denyPosition, inheritPosition, allowPosition, ref controller.Individual.CrossWorldLinkshellValues[i]);
         });
         
-        SharedUserInterfaces.ContentBox("PermissionsIndividualElevated", AetherRemoteStyle.ElevatedBackground, false, () =>
+        SharedUserInterfaces.ContentBox("PermissionsIndividualElevated", AetherRemoteStyle.ElevatedBackground, true, () =>
         {
             ImGui.AlignTextToFramePadding();
             
@@ -127,6 +111,23 @@ public partial class FriendsViewUi
             
             DrawIndividualPermissionButton("Permanent Transformations", denyPosition, inheritPosition, allowPosition, ref controller.Individual.PermanentTransformationValue);
             DrawIndividualPermissionButton("Possession", denyPosition, inheritPosition, allowPosition, ref controller.Individual.PossessionValue);
+        });
+        
+        SharedUserInterfaces.ContentBox("PermissionsIndividualSave", AetherRemoteStyle.PanelBackground, false, () =>
+        {
+            if (ImGui.Button("Save Changes", new Vector2(width - AetherRemoteImGui.WindowPadding.X * 3 - AetherRemoteDimensions.SendCommandButtonHeight, AetherRemoteDimensions.SendCommandButtonHeight)))
+                _ = controller.SaveIndividualPermissions().ConfigureAwait(false);
+            
+            if (ImGui.IsItemHovered())
+                ImGui.SetTooltip("Save changes for this friend");
+            
+            ImGui.SameLine();
+
+            if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Trash, new Vector2(AetherRemoteDimensions.SendCommandButtonHeight)))
+                _ = controller.DeleteIndividualPermissions().ConfigureAwait(false);
+            
+            if (ImGui.IsItemHovered())
+                ImGui.SetTooltip("Remove this friend");
         });
     }
     
