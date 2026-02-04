@@ -135,7 +135,8 @@ public partial class DatabaseService
                 if (reader.IsDBNull(13))
                 {
                     // Just assign it as empties
-                    otherResolvedPermissions = new ResolvedPermissions(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.None);
+                    var otherGlobalPermissions = new ResolvedPermissions(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.None);
+                    otherResolvedPermissions = PermissionResolver.Resolve(otherGlobalPermissions, otherRawPermissions);
                 }
                 else
                 {

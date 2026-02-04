@@ -81,7 +81,19 @@ public class FriendsViewUiController : IDisposable
             return;
 
         // Set the note
-        friend.Note = Individual.Note == string.Empty ? null : Individual.Note;
+        if (Individual.Note == string.Empty)
+        {
+            friend.Note = null;
+            Plugin.Configuration.Notes.Remove(friend.FriendCode);
+        }
+        else
+        {
+            friend.Note = Individual.Note;
+            Plugin.Configuration.Notes[friend.FriendCode] = friend.Note;
+        }
+        
+        // Make sure to save
+        await Plugin.Configuration.Save();
 
         // Construct the request and send it
         var raw = IndividualPermissions.To(Individual);
