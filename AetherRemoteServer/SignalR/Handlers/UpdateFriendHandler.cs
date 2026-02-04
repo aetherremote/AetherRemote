@@ -1,14 +1,15 @@
-using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.SyncPermissions;
 using AetherRemoteCommon.Domain.Network.UpdateFriend;
-using AetherRemoteServer.Domain.Interfaces;
+using AetherRemoteCommon.Util;
+using AetherRemoteServer.Services;
+using AetherRemoteServer.Services.Database;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AetherRemoteServer.SignalR.Handlers;
 
-public class UpdateFriendHandler(IPresenceService presenceService, IDatabaseService database, ILogger<UpdateFriendHandler> logger)
+public class UpdateFriendHandler(DatabaseService database, PresenceService presenceService, ILogger<UpdateFriendHandler> logger)
 {
     public async Task<UpdateFriendResponse> Handle(string friendCode, UpdateFriendRequest request, IHubCallerClients clients)
     {
@@ -30,7 +31,7 @@ public class UpdateFriendHandler(IPresenceService presenceService, IDatabaseServ
         try
         {
             // Resolve
-            var resolved = Resolve(global, request.Permissions);
+            var resolved = PermissionResolver.Resolve(global, request.Permissions);
             var sync = new SyncPermissionsCommand(friendCode, resolved);
             await clients.Client(connectedClient.ConnectionId).SendAsync(HubMethod.SyncPermissions, sync);
         }
@@ -40,13 +41,5 @@ public class UpdateFriendHandler(IPresenceService presenceService, IDatabaseServ
         }
 
         return new UpdateFriendResponse(result);
-    }
-
-    private static ResolvedPermissions Resolve(ResolvedPermissions global, RawPermissions raw)
-    {
-        var effectivePrimary = (global.Primary | raw.PrimaryAllow) & ~raw.PrimaryDeny;
-        var effectiveSpeak = (global.Speak | raw.SpeakAllow) & ~raw.SpeakDeny;
-        var effectiveElevated = (global.Elevated | raw.ElevatedAllow) & ~raw.ElevatedDeny;
-        return new ResolvedPermissions(effectivePrimary, effectiveSpeak, effectiveElevated);
     }
 }

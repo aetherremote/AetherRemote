@@ -39,9 +39,19 @@ public class NavigationBarComponentUi(NetworkService networkService, ViewService
                 NavBarButton(FontAwesomeIcon.PeopleArrows, "Body Swap", View.BodySwap, size, offset, spacing);
                 NavBarButton(FontAwesomeIcon.Plus, "Customize+", View.CustomizePlus, size, offset, spacing);
                 NavBarButton(FontAwesomeIcon.Smile, "Emote", View.Emote, size, offset, spacing);
-                NavBarButton(FontAwesomeIcon.Crown, "Honorific", View.Honorific, size, offset, spacing);
+                
+                // TODO: Disable when Honorific is stable for work again
+                ImGui.BeginDisabled();
+                NavBarButton(FontAwesomeIcon.Crown, "(Disabled) Honorific", View.Honorific, size, offset, spacing);
+                ImGui.EndDisabled();
+                
                 NavBarButton(FontAwesomeIcon.Stopwatch, "Hypnosis", View.Hypnosis, size, offset, spacing);
-                NavBarButton(FontAwesomeIcon.Icons, "Moodles", View.Moodles, size, offset, spacing);
+                
+                // TODO: Remove when Moodles are stable for work again
+                ImGui.BeginDisabled();
+                NavBarButton(FontAwesomeIcon.Icons, "(Disabled) Moodles", View.Moodles, size, offset, spacing);
+                ImGui.EndDisabled();
+                
                 NavBarButton(FontAwesomeIcon.Ghost, "(Beta) Possession", View.Possession, size, offset, spacing);
                 NavBarButton(FontAwesomeIcon.Comments, "Speak", View.Speak, size, offset, spacing);
                 NavBarButton(FontAwesomeIcon.WandMagicSparkles, "Transformation", View.Transformation, size, offset, spacing);

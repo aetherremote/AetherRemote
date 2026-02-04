@@ -40,6 +40,7 @@ using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using Microsoft.Extensions.DependencyInjection;
+using FriendsViewUi = AetherRemoteClient.UI.Views.Friends.Ui.FriendsViewUi;
 
 namespace AetherRemoteClient;
 
@@ -92,6 +93,7 @@ public sealed class Plugin : IDalamudPlugin
         var services = new ServiceCollection();
         
         // Services
+        services.AddSingleton<AccountService>();
         services.AddSingleton<ActionQueueService>();
         services.AddSingleton<CommandLockoutService>();
         services.AddSingleton<EmoteService>();

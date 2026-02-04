@@ -34,7 +34,14 @@ public class TwinningHandler : AbstractNetworkHandler, IDisposable
     /// <summary>
     ///     <inheritdoc cref="TwinningHandler"/>
     /// </summary>
-    public TwinningHandler(FriendsListService friends, IdentityService identity, LogService log, NetworkService network, PauseService pause, CharacterTransformationManager characterTransformation) : base(friends, log, pause)
+    public TwinningHandler(
+        AccountService account, 
+        FriendsListService friends,
+        IdentityService identity, 
+        LogService log, 
+        NetworkService network,
+        PauseService pause, 
+        CharacterTransformationManager characterTransformation) : base(account, friends, log, pause)
     {
         _identity = identity;
         _log = log;
@@ -55,7 +62,7 @@ public class TwinningHandler : AbstractNetworkHandler, IDisposable
             ? ElevatedPermissions.None 
             : ElevatedPermissions.PermanentTransformation;
         
-        var permissions = new UserPermissions(primary, SpeakPermissions2.None, elevated);
+        var permissions = new ResolvedPermissions(primary, SpeakPermissions2.None, elevated);
         
         var sender = TryGetFriendWithCorrectPermissions(Operation, request.SenderFriendCode, permissions);
         if (sender.Result is not ActionResultEc.Success)

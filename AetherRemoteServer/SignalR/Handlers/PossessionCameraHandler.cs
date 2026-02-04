@@ -4,15 +4,16 @@ using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Possession;
 using AetherRemoteCommon.Domain.Network.Possession.Camera;
-using AetherRemoteServer.Domain.Interfaces;
+using AetherRemoteServer.Managers;
+using AetherRemoteServer.Services;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AetherRemoteServer.SignalR.Handlers;
 
-public class PossessionCameraHandler(IPresenceService presences, IForwardedRequestManager forwarder, IPossessionManager possessionManager, ILogger<PossessionCameraHandler> logger)
+public class PossessionCameraHandler(PresenceService presences, ForwardedRequestManager forwarder, PossessionManager possessionManager, ILogger<PossessionCameraHandler> logger)
 {
     private const string Method = HubMethod.Possession.Camera;
-    private static readonly UserPermissions Required = new(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.Possession);
+    private static readonly ResolvedPermissions Required = new(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.Possession);
     
     public async Task<PossessionResponse> Handle(string senderFriendCode, PossessionCameraRequest request, IHubCallerClients clients)
     {

@@ -105,7 +105,7 @@ public class SpeakViewUiController
             
             var request = new SpeakRequest(_selectionManager.GetSelectedFriendCodes(), Message, ChannelSelect, extra);
             var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.Speak, request);
-            if (response.Result is ActionResponseEc.Success)
+            if (response.Result is ActionResponseEc.Success && response.Results.All(kvp => kvp.Value == ActionResultEc.Success))
             {
                 Message = string.Empty;
                 
@@ -124,10 +124,13 @@ public class SpeakViewUiController
 
     public List<string> GetFriendsLackingPermissions()
     {
-        var permissions = ChannelSelect.ToSpeakPermissions();
+        var permissions = ChannelSelect.ToSpeakPermissions((LinkshellSelection + 1).ToString());
         var thoseWhoYouLackPermissionsFor = new List<string>();
         foreach (var selected in _selectionManager.Selected)
         {
+            if (selected.PermissionsGrantedByFriend is null)
+                continue;
+            
             if ((selected.PermissionsGrantedByFriend.Speak & permissions) != permissions)
                 thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
         }

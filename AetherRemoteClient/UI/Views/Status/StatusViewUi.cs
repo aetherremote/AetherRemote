@@ -14,6 +14,7 @@ namespace AetherRemoteClient.UI.Views.Status;
 
 public class StatusViewUi(
     StatusViewUiController controller,
+    AccountService account,
     PermanentTransformationLockService permanentTransformationLockService,
     IdentityService identityService,
     TipService tipService,
@@ -32,13 +33,11 @@ public class StatusViewUi(
         SharedUserInterfaces.ContentBox("StatusHeader", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.PushBigFont();
-
-            var friendCode = identityService.FriendCode;
-            var size = ImGui.CalcTextSize(friendCode);
-
+            
+            var size = ImGui.CalcTextSize(account.FriendCode);
             ImGui.SetCursorPosX((windowWidth - size.X) * 0.5f);
-            if (ImGui.Selectable(friendCode, false, ImGuiSelectableFlags.None, size))
-                ImGui.SetClipboardText(friendCode);
+            if (ImGui.Selectable(account.FriendCode, false, ImGuiSelectableFlags.None, size))
+                ImGui.SetClipboardText(account.FriendCode);
 
             SharedUserInterfaces.PopBigFont();
             SharedUserInterfaces.TextCentered("(click friend code to copy)", ImGuiColors.DalamudGrey);

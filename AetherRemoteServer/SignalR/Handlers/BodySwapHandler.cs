@@ -4,8 +4,9 @@ using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.BodySwap;
 using AetherRemoteCommon.Util;
-using AetherRemoteServer.Domain.Interfaces;
 using AetherRemoteServer.Managers;
+using AetherRemoteServer.Services;
+using AetherRemoteServer.Services.Database;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AetherRemoteServer.SignalR.Handlers;
@@ -13,7 +14,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 /// <summary>
 ///     Handles the logic for fulfilling a <see cref="BodySwapRequest"/>
 /// </summary>
-public class BodySwapHandler(IDatabaseService database, IPresenceService presenceService, ILogger<BodySwapHandler> logger)
+public class BodySwapHandler(DatabaseService database, PresenceService presenceService, ILogger<BodySwapHandler> logger)
 {
     /// <summary>
     ///     Handles the request
@@ -43,11 +44,15 @@ public class BodySwapHandler(IDatabaseService database, IPresenceService presenc
                 return new BodySwapResponse(ActionResponseEc.TargetOffline, [], null, null);
 
             // Get the target's permissions for the sender
-            if (await database.GetPermissions(targetFriendCode, senderFriendCode) is not { } targetPermissions)
+            if (await database.GetSinglePermissions(targetFriendCode, senderFriendCode) is not { } targetPermissions)
                 return new BodySwapResponse(ActionResponseEc.TargetBodySwapIsNotFriends, [], null, null);
 
+            // Get and resolve their permissions
+            var global = await database.GetGlobalPermissions(targetFriendCode);
+            var resolved = PermissionResolver.Resolve(global, targetPermissions);
+            
             // Body swap will only every make use of primary and elevated permissions
-            if ((targetPermissions.Primary & primary) != primary || (targetPermissions.Elevated & elevated) != elevated)
+            if ((resolved.Primary & primary) != primary || (resolved.Elevated & elevated) != elevated)
                 return new BodySwapResponse(ActionResponseEc.TargetBodySwapLacksPermissions, [], null, null);
             
             characters.Add(new Character(target.CharacterName, target.CharacterName));

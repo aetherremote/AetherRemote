@@ -118,8 +118,13 @@ public class MoodlesViewUiController : IDisposable
     public bool MissingPermissionsForATarget()
     {
         foreach (var friend in _selectionManager.Selected)
+        {
+            if (friend.PermissionsGrantedByFriend is null)
+                continue;
+            
             if ((friend.PermissionsGrantedByFriend.Primary & PrimaryPermissions2.Moodles) is not PrimaryPermissions2.Moodles)
                 return true;
+        }
 
         return false;
     }

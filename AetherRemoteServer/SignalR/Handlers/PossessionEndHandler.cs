@@ -3,15 +3,15 @@ using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Possession;
 using AetherRemoteCommon.Domain.Network.Possession.End;
-using AetherRemoteServer.Domain.Interfaces;
+using AetherRemoteServer.Managers;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AetherRemoteServer.SignalR.Handlers;
 
-public class PossessionEndHandler(IForwardedRequestManager forwarder, IPossessionManager possessionManager)
+public class PossessionEndHandler(ForwardedRequestManager forwarder, PossessionManager possessionManager)
 {
     private const string Method = HubMethod.Possession.End;
-    private static readonly UserPermissions Required = new(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.Possession);
+    private static readonly ResolvedPermissions Required = new(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.Possession);
     
     public async Task<PossessionResponse> Handle(string senderFriendCode, IHubCallerClients clients)
     {

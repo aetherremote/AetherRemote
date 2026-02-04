@@ -7,5 +7,5 @@ namespace AetherRemoteCommon.Domain.Network.SyncOnlineStatus;
 public record SyncOnlineStatusCommand(
     string SenderFriendCode,
     [property: Key(1)] FriendOnlineStatus Status,
-    [property: Key(2)] UserPermissions? Permissions
+    [property: Key(2)] ResolvedPermissions? Permissions
 ) : ActionCommand(SenderFriendCode);

@@ -1,56 +1,45 @@
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Enums.Permissions;
 
 namespace AetherRemoteClient.Domain;
 
 /// <summary>
 ///     Represents a friend you have granted permissions to
 /// </summary>
-public class Friend
+public class Friend(string friendCode, FriendOnlineStatus status, string? note, RawPermissions permissionsGrantedToFriend, ResolvedPermissions? permissionsGrantedByFriend)
 {
     /// <summary>
     ///     Do not use this constructor, it is a placeholder for possession functions
     /// </summary>
-    public Friend()
+    public Friend() : this(string.Empty, FriendOnlineStatus.Online, null, new RawPermissions(PrimaryPermissions2.None, PrimaryPermissions2.None, SpeakPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.None, ElevatedPermissions.None), new ResolvedPermissions(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.None))
     {
-        FriendCode = string.Empty;
-        PermissionsGrantedToFriend = new UserPermissions();
-        PermissionsGrantedByFriend = new UserPermissions();
-    }
-
-    public Friend(string friendCode, FriendOnlineStatus status, string? note = null, UserPermissions? permissionsGrantedToFriend = null, UserPermissions? permissionsGrantedByFriend = null)
-    {
-        FriendCode = friendCode;
-        Status = status;
-        Note = note;
-        PermissionsGrantedToFriend = permissionsGrantedToFriend ?? new UserPermissions();
-        PermissionsGrantedByFriend = permissionsGrantedByFriend ?? new UserPermissions();
     }
 
     /// <summary>
     ///     Unique identifier representing a friend
     /// </summary>
-    public readonly string FriendCode;
+    public readonly string FriendCode = friendCode;
     
     /// <summary>
     ///     A note to help more easily identify a friend
     /// </summary>
-    public string? Note;
+    public string? Note = note;
     
     /// <summary>
     ///     If a friend is online or not
     /// </summary>
-    public FriendOnlineStatus Status;
+    public FriendOnlineStatus Status = status;
     
     /// <summary>
     ///     The permissions you have granted to a friend
     /// </summary>
-    public UserPermissions PermissionsGrantedToFriend;
+    public RawPermissions PermissionsGrantedToFriend = permissionsGrantedToFriend;
     
     /// <summary>
     ///     The permissions a friend has granted you
     /// </summary>
-    public UserPermissions PermissionsGrantedByFriend;
+    public ResolvedPermissions? PermissionsGrantedByFriend = permissionsGrantedByFriend;
 
     /// <summary>
     ///     The last time a command was sent to this user

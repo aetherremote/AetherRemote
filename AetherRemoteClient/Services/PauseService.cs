@@ -19,7 +19,7 @@ public class PauseService
             _pausedFriendCodes.Remove(friendCode);
     }
 
-    public bool IsFeaturePaused(UserPermissions permissions)
+    public bool IsFeaturePaused(ResolvedPermissions permissions)
         => IsFeaturePaused(permissions.Primary) || IsFeaturePaused(permissions.Speak) || IsFeaturePaused(permissions.Elevated);
     
     public bool IsFeaturePaused(PrimaryPermissions2 permissions) 

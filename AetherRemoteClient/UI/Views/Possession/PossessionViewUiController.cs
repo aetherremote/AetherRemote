@@ -36,8 +36,13 @@ public class PossessionViewUiController(PossessionManager possessions, Selection
     public bool MissingPermissionsForATarget()
     {
         foreach (var friend in selectionManager.Selected)
+        {
+            if (friend.PermissionsGrantedByFriend is null)
+                continue;
+            
             if ((friend.PermissionsGrantedByFriend.Elevated & ElevatedPermissions.Possession) is not ElevatedPermissions.Possession)
                 return true;
+        }
 
         return false;
     }

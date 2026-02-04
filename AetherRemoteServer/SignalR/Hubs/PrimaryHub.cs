@@ -1,5 +1,5 @@
 using AetherRemoteServer.Domain;
-using AetherRemoteServer.Domain.Interfaces;
+using AetherRemoteServer.Services;
 using AetherRemoteServer.SignalR.Handlers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
@@ -9,7 +9,7 @@ namespace AetherRemoteServer.SignalR.Hubs;
 [Authorize]
 public partial class PrimaryHub(
     // Services
-    IRequestLoggingService requestLoggingService,
+    RequestLoggingService requestLoggingService,
     
     // Handlers
     AddFriendHandler addFriendHandler,
@@ -31,6 +31,7 @@ public partial class PrimaryHub(
     TransformHandler transformHandler,
     TwinningHandler twinningHandler,
     UpdateFriendHandler updateFriendHandler,
+    UpdateGlobalPermissionsHandler updateGlobalPermissionsHandler,
 
     // Logger
     ILogger<PrimaryHub> logger) : Hub

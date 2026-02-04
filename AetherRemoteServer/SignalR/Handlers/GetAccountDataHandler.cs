@@ -1,15 +1,16 @@
-using AetherRemoteCommon;
+using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network.GetAccountData;
 using AetherRemoteServer.Domain;
-using AetherRemoteServer.Domain.Interfaces;
+using AetherRemoteServer.Services;
+using AetherRemoteServer.Services.Database;
 
 namespace AetherRemoteServer.SignalR.Handlers;
 
 /// <summary>
 ///     Handles the logic for fulfilling a <see cref="GetAccountDataRequest"/>
 /// </summary>
-public class GetAccountDataHandler(IDatabaseService database, IPresenceService presenceService)
+public class GetAccountDataHandler(DatabaseService database, PresenceService presenceService)
 {
     /// <summary>
     ///     Handles the request
@@ -19,7 +20,8 @@ public class GetAccountDataHandler(IDatabaseService database, IPresenceService p
         var presence = new Presence(connectionId, request.CharacterName, request.CharacterWorld);
         presenceService.Add(friendCode, presence);
         
-        var results = new List<FriendRelationship>();
+        var results = new List<FriendDto>();
+        var global = await database.GetGlobalPermissions(friendCode);
         var permissions = await database.GetAllPermissions(friendCode);
         foreach (var permission in permissions)
         {
@@ -29,9 +31,9 @@ public class GetAccountDataHandler(IDatabaseService database, IPresenceService p
                     ? FriendOnlineStatus.Offline
                     : FriendOnlineStatus.Online;
             
-            results.Add(new FriendRelationship(permission.TargetFriendCode, online, permission.PermissionsGrantedTo, permission.PermissionsGrantedBy));
+            results.Add(new FriendDto(permission.TargetFriendCode, online, permission.PermissionsGrantedTo, permission.PermissionsGrantedBy));
         } 
 
-        return new GetAccountDataResponse(GetAccountDataEc.Success, friendCode, results);
+        return new GetAccountDataResponse(GetAccountDataEc.Success, friendCode, global, results);
     }
 }

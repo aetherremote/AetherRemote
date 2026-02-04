@@ -25,6 +25,8 @@ public static class HubMethod
     public const string Hypnosis = "Hypnosis";
     public const string HypnosisStop = "HypnosisStop";
     public const string Honorific = "Honorific";
+    
+    public const string UpdateGlobalPermissions = "UpdateGlobalPermissions";
 
     public static class Possession
     {

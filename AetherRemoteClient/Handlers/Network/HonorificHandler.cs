@@ -20,7 +20,7 @@ public class HonorificHandler : AbstractNetworkHandler, IDisposable
 {
     // Const
     private const string Operation = "Honorific";
-    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.Honorific, SpeakPermissions2.None, ElevatedPermissions.None);
+    private static readonly ResolvedPermissions Permissions = new(PrimaryPermissions2.Honorific, SpeakPermissions2.None, ElevatedPermissions.None);
     
     // Injected
     private readonly HonorificService _honorific;
@@ -32,7 +32,13 @@ public class HonorificHandler : AbstractNetworkHandler, IDisposable
     /// <summary>
     ///     <inheritdoc cref="HonorificHandler"/>
     /// </summary>
-    public HonorificHandler(FriendsListService friends, HonorificService honorific, LogService log, NetworkService network, PauseService pause) : base(friends, log, pause)
+    public HonorificHandler(
+        AccountService account, 
+        FriendsListService friends, 
+        HonorificService honorific, 
+        LogService log, 
+        NetworkService network, 
+        PauseService pause) : base(account, friends, log, pause)
     {
         _honorific = honorific;
         _log = log;

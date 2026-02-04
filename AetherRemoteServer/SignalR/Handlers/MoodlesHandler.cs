@@ -1,10 +1,10 @@
-using AetherRemoteCommon;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Moodles;
-using AetherRemoteServer.Domain.Interfaces;
+using AetherRemoteServer.Managers;
+using AetherRemoteServer.Services;
 using AetherRemoteServer.Utilities;
 using Microsoft.AspNetCore.SignalR;
 
@@ -13,10 +13,10 @@ namespace AetherRemoteServer.SignalR.Handlers;
 /// <summary>
 ///     Handles the logic for fulling a <see cref="MoodlesRequest"/>
 /// </summary>
-public class MoodlesHandler(IPresenceService presenceService, IForwardedRequestManager forwardedRequestManager, ILogger<MoodlesHandler> logger)
+public class MoodlesHandler(PresenceService presenceService, ForwardedRequestManager forwardedRequestManager, ILogger<MoodlesHandler> logger)
 {
     private const string Method = HubMethod.Moodles;
-    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.Moodles, SpeakPermissions2.None, ElevatedPermissions.None);
+    private static readonly ResolvedPermissions Permissions = new(PrimaryPermissions2.Moodles, SpeakPermissions2.None, ElevatedPermissions.None);
     
     /// <summary>
     ///     Handles the request

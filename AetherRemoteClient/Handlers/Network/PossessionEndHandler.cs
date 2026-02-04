@@ -18,14 +18,20 @@ public class PossessionEndHandler : AbstractNetworkHandler, IDisposable
 {
     // Const
     private const string Operation = "PossessionEnd";
-    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.Possession);
+    private static readonly ResolvedPermissions Permissions = new(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.Possession);
     
     // Instantiated
     private readonly IDisposable _handler;
     private readonly LogService _log;
     private readonly PossessionManager _manager;
     
-    public PossessionEndHandler(FriendsListService friends, LogService log, NetworkService network, PauseService pause, PossessionManager manager) : base(friends, log, pause)
+    public PossessionEndHandler(
+        AccountService account, 
+        FriendsListService friends, 
+        LogService log, 
+        NetworkService network, 
+        PauseService pause, 
+        PossessionManager manager) : base(account, friends, log, pause)
     {
         _handler = network.Connection.On<PossessionEndCommand, PossessionResultEc>(HubMethod.Possession.End, Handle);
         _log = log;

@@ -18,7 +18,7 @@ public class EmoteHandler : AbstractNetworkHandler, IDisposable
 {
     // Const
     private const string Operation = "Emote";
-    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.Emote, SpeakPermissions2.None, ElevatedPermissions.None);
+    private static readonly ResolvedPermissions Permissions = new(PrimaryPermissions2.Emote, SpeakPermissions2.None, ElevatedPermissions.None);
     
     // Injected
     private readonly EmoteService _emote;
@@ -30,7 +30,13 @@ public class EmoteHandler : AbstractNetworkHandler, IDisposable
     /// <summary>
     ///     <inheritdoc cref="EmoteHandler"/>
     /// </summary>
-    public EmoteHandler(EmoteService emote, FriendsListService friends, LogService log, NetworkService network, PauseService pause) : base(friends, log, pause)
+    public EmoteHandler(
+        AccountService account, 
+        EmoteService emote, 
+        FriendsListService friends, 
+        LogService log, 
+        NetworkService network, 
+        PauseService pause) : base(account, friends, log, pause)
     {
         _emote = emote;
         _log = log;

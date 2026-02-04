@@ -4,7 +4,8 @@ using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Hypnosis;
-using AetherRemoteServer.Domain.Interfaces;
+using AetherRemoteServer.Managers;
+using AetherRemoteServer.Services;
 using AetherRemoteServer.Utilities;
 using Microsoft.AspNetCore.SignalR;
 
@@ -13,10 +14,10 @@ namespace AetherRemoteServer.SignalR.Handlers;
 /// <summary>
 ///     Handles the logic for fulling a <see cref="HypnosisRequest"/>
 /// </summary>
-public class HypnosisHandler(IPresenceService presenceService, IForwardedRequestManager forwardedRequestManager, ILogger<HypnosisHandler> logger)
+public class HypnosisHandler(PresenceService presenceService, ForwardedRequestManager forwardedRequestManager, ILogger<HypnosisHandler> logger)
 {
     private const string Method = HubMethod.Hypnosis;
-    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.Hypnosis, SpeakPermissions2.None, ElevatedPermissions.None);
+    private static readonly ResolvedPermissions Permissions = new(PrimaryPermissions2.Hypnosis, SpeakPermissions2.None, ElevatedPermissions.None);
 
     /// <summary>
     ///     Handles the request

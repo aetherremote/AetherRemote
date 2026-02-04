@@ -36,7 +36,14 @@ public class TransformHandler : AbstractNetworkHandler, IDisposable
     /// <summary>
     ///     <inheritdoc cref="TransformHandler"/>
     /// </summary>
-    public TransformHandler(FriendsListService friends, IdentityService identity, LogService log, NetworkService network, PauseService pause, CharacterTransformationManager characterTransformation) : base(friends, log, pause)
+    public TransformHandler(
+        AccountService account,
+        FriendsListService friends,
+        IdentityService identity,
+        LogService log, 
+        NetworkService network, 
+        PauseService pause, 
+        CharacterTransformationManager characterTransformation) : base(account, friends, log, pause)
     {
        _identity = identity;
        _log = log;
@@ -59,7 +66,7 @@ public class TransformHandler : AbstractNetworkHandler, IDisposable
             : ElevatedPermissions.PermanentTransformation;
         
         // Build permissions
-        var permissions = new UserPermissions(primary, SpeakPermissions2.None, elevated);
+        var permissions = new ResolvedPermissions(primary, SpeakPermissions2.None, elevated);
         
         var sender = TryGetFriendWithCorrectPermissions(Operation, request.SenderFriendCode, permissions);
         if (sender.Result is not ActionResultEc.Success)

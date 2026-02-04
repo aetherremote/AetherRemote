@@ -16,13 +16,19 @@ public class PossessionMovementHandler : AbstractNetworkHandler, IDisposable
 {
     // Const
     private const string Operation = "PossessionMovement";
-    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.Possession);
+    private static readonly ResolvedPermissions Permissions = new(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.Possession);
     
     // Instantiated
     private readonly IDisposable _handler;
     private readonly PossessionManager _manager;
     
-    public PossessionMovementHandler(FriendsListService friends, LogService log, NetworkService network, PauseService pause, PossessionManager manager) : base(friends, log, pause)
+    public PossessionMovementHandler(
+        AccountService account, 
+        FriendsListService friends, 
+        LogService log, 
+        NetworkService network, 
+        PauseService pause, 
+        PossessionManager manager) : base(account, friends, log, pause)
     {
         _handler = network.Connection.On<PossessionMovementCommand, PossessionResultEc>(HubMethod.Possession.Movement, Handle);
         _manager = manager;

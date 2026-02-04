@@ -119,8 +119,13 @@ public class BodySwapViewUiController(
         if (SwapHonorific) attributes |= PrimaryPermissions2.Honorific;
         
         foreach (var friend in selectionManager.Selected)
+        {
+            if (friend.PermissionsGrantedByFriend is null)
+                continue;
+            
             if ((friend.PermissionsGrantedByFriend.Primary & attributes) != attributes)
                 return true;
+        }
 
         return false;
     }

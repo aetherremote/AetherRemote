@@ -2,7 +2,8 @@ using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.RemoveFriend;
 using AetherRemoteCommon.Domain.Network.SyncOnlineStatus;
-using AetherRemoteServer.Domain.Interfaces;
+using AetherRemoteServer.Services;
+using AetherRemoteServer.Services.Database;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AetherRemoteServer.SignalR.Handlers;
@@ -10,7 +11,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 /// <summary>
 ///     Handles the logic for fulfilling a <see cref="RemoveFriendRequest"/>
 /// </summary>
-public class RemoveFriendHandler(IPresenceService presenceService, IDatabaseService databaseService, ILogger<RemoveFriendHandler> logger)
+public class RemoveFriendHandler(DatabaseService databaseService, PresenceService presenceService, ILogger<RemoveFriendHandler> logger)
 {
     /// <summary>
     ///     Handles the request
@@ -33,7 +34,7 @@ public class RemoveFriendHandler(IPresenceService presenceService, IDatabaseServ
             return new RemoveFriendResponse(result);
         
         // If the target is online, but they don't have us added
-        if (await databaseService.GetPermissions(request.TargetFriendCode, senderFriendCode) is null)
+        if (await databaseService.GetSinglePermissions(request.TargetFriendCode, senderFriendCode) is null)
             return new RemoveFriendResponse(result);
         
         try

@@ -3,19 +3,21 @@ using AetherRemoteClient.Style;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
 
-namespace AetherRemoteClient.UI.Views.Friends;
+namespace AetherRemoteClient.UI.Views.Friends.Ui;
 
 public partial class FriendsViewUi
 {
     private void DrawGlobalPermissions(float width)
     {
         var half = width * 0.5f;
-        var quarter = width * 0.25f;
-        var third = width * 0.75f;
         
         SharedUserInterfaces.ContentBox("PermissionsGlobalSave", AetherRemoteStyle.PanelBackground, true, () =>
         {
-            ImGui.Button("Save Changes", new Vector2(width - AetherRemoteImGui.WindowPadding.X * 2,  AetherRemoteDimensions.SendCommandButtonHeight));
+            if (ImGui.Button("Save Changes", new Vector2(width - AetherRemoteImGui.WindowPadding.X * 2, AetherRemoteDimensions.SendCommandButtonHeight)))
+                _ = controller.SaveGlobalPermissions().ConfigureAwait(false);
+            
+            if (ImGui.IsItemHovered())
+                ImGui.SetTooltip("Save your global permissions");
         });
         
         SharedUserInterfaces.ContentBox("PermissionsGlobalPrimary", AetherRemoteStyle.PanelBackground, true, () =>
@@ -49,27 +51,19 @@ public partial class FriendsViewUi
             
             ImGui.Spacing();
             
+            ImGui.BeginGroup();
             ImGui.TextUnformatted("Linkshell Permissions");
-            ImGui.Checkbox("Ls1", ref controller.Global.LinkshellValues[0]); ImGui.SameLine(quarter);
-            ImGui.Checkbox("Ls2", ref controller.Global.LinkshellValues[1]); ImGui.SameLine(half);
-            ImGui.Checkbox("Ls3", ref controller.Global.LinkshellValues[2]); ImGui.SameLine(third);
-            ImGui.Checkbox("Ls4", ref controller.Global.LinkshellValues[3]); 
-            ImGui.Checkbox("Ls5", ref controller.Global.LinkshellValues[4]); ImGui.SameLine(quarter);
-            ImGui.Checkbox("Ls6", ref controller.Global.LinkshellValues[5]); ImGui.SameLine(half);
-            ImGui.Checkbox("Ls7", ref controller.Global.LinkshellValues[6]); ImGui.SameLine(third);
-            ImGui.Checkbox("Ls8", ref controller.Global.LinkshellValues[7]);
+            for (uint i = 0; i < 8; i++)
+                ImGui.Checkbox($"[{i + 1}]: {GetLinkshellName(i)}##Ls", ref controller.Global.LinkshellValues[i]);
+            ImGui.EndGroup();
             
-            ImGui.Spacing();
+            ImGui.SameLine(half);
             
-            ImGui.TextUnformatted("Cross-world Linkshell Permissions");
-            ImGui.Checkbox("Cwls1", ref controller.Global.CrossWorldLinkshellValues[0]); ImGui.SameLine(quarter);
-            ImGui.Checkbox("Cwls2", ref controller.Global.CrossWorldLinkshellValues[1]); ImGui.SameLine(half);
-            ImGui.Checkbox("Cwls3", ref controller.Global.CrossWorldLinkshellValues[2]); ImGui.SameLine(third);
-            ImGui.Checkbox("Cwls4", ref controller.Global.CrossWorldLinkshellValues[3]);
-            ImGui.Checkbox("Cwls5", ref controller.Global.CrossWorldLinkshellValues[4]); ImGui.SameLine(quarter);
-            ImGui.Checkbox("Cwls6", ref controller.Global.CrossWorldLinkshellValues[5]); ImGui.SameLine(half);
-            ImGui.Checkbox("Cwls7", ref controller.Global.CrossWorldLinkshellValues[6]); ImGui.SameLine(third);
-            ImGui.Checkbox("Cwls8", ref controller.Global.CrossWorldLinkshellValues[7]);
+            ImGui.BeginGroup();
+            ImGui.TextUnformatted("Cross-World Permissions");
+            for (uint i = 0; i < 8; i++)
+                ImGui.Checkbox($"[{i + 1}]: {GetCrossWorldLinkshellName(i)}##Cwls", ref controller.Global.CrossWorldLinkshellValues[i]);
+            ImGui.EndGroup();
         });
 
         SharedUserInterfaces.ContentBox("PermissionsGlobalElevated", AetherRemoteStyle.ElevatedBackground, false, () =>

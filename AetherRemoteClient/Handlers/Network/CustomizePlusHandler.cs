@@ -20,7 +20,7 @@ public class CustomizePlusHandler : AbstractNetworkHandler, IDisposable
 {
     // Const
     private const string Operation = "Customize+";
-    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.CustomizePlus, SpeakPermissions2.None, ElevatedPermissions.None);
+    private static readonly ResolvedPermissions Permissions = new(PrimaryPermissions2.CustomizePlus, SpeakPermissions2.None, ElevatedPermissions.None);
     
     // Injected
     private readonly CustomizePlusService _customize;
@@ -32,7 +32,13 @@ public class CustomizePlusHandler : AbstractNetworkHandler, IDisposable
     /// <summary>
     ///     <inheritdoc cref="CustomizePlusHandler"/>
     /// </summary>
-    public CustomizePlusHandler(CustomizePlusService customize, FriendsListService friends, LogService log, NetworkService network, PauseService pause) : base(friends, log, pause)
+    public CustomizePlusHandler(
+        AccountService account, 
+        CustomizePlusService customize, 
+        FriendsListService friends, 
+        LogService log, 
+        NetworkService network, 
+        PauseService pause) : base(account, friends, log, pause)
     {
         _customize = customize;
         _log = log;

@@ -3,22 +3,29 @@ using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Possession;
 using AetherRemoteCommon.Domain.Network.Possession.Begin;
-using AetherRemoteServer.Domain.Interfaces;
+using AetherRemoteServer.Domain;
 using AetherRemoteServer.Managers;
+using AetherRemoteServer.Services;
 using AetherRemoteServer.Utilities;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AetherRemoteServer.SignalR.Handlers;
 
-// TODO: Documentation
+/// <summary>
+///     Processes entering into a possession session
+/// </summary>
+/// <param name="presences"></param>
+/// <param name="forwarder"></param>
+/// <param name="possessionManager"></param>
+/// <param name="logger"></param>
 public class PossessionBeginHandler(
-    IPresenceService presences, 
-    IForwardedRequestManager forwarder, 
-    IPossessionManager possessionManager, 
+    PresenceService presences, 
+    ForwardedRequestManager forwarder, 
+    PossessionManager possessionManager, 
     ILogger<PossessionBeginHandler> logger)
 {
     private const string Method = HubMethod.Possession.Begin;
-    private static readonly UserPermissions Required = new(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.Possession);
+    private static readonly ResolvedPermissions Required = new(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.Possession);
     
     public async Task<PossessionBeginResponse> Handle(string senderFriendCode, PossessionBeginRequest request, IHubCallerClients clients)
     {

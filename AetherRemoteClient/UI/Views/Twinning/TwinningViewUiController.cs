@@ -68,10 +68,15 @@ public class TwinningViewUiController(CommandLockoutService commandLockout, Netw
         if (SwapMoodles) attributes |= PrimaryPermissions2.Moodles;
         if (SwapCustomizePlus) attributes |= PrimaryPermissions2.CustomizePlus;
         if (SwapHonorific) attributes |= PrimaryPermissions2.Honorific;
-        
+
         foreach (var friend in selection.Selected)
+        {
+            if (friend.PermissionsGrantedByFriend is null)
+                continue;
+            
             if ((friend.PermissionsGrantedByFriend.Primary & attributes) != attributes)
                 return true;
+        }
 
         return false;
     }

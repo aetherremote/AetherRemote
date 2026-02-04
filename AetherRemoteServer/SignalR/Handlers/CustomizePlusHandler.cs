@@ -3,16 +3,17 @@ using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Customize;
-using AetherRemoteServer.Domain.Interfaces;
+using AetherRemoteServer.Managers;
+using AetherRemoteServer.Services;
 using AetherRemoteServer.Utilities;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AetherRemoteServer.SignalR.Handlers;
 
-public class CustomizePlusHandler(IPresenceService presenceService, IForwardedRequestManager forwardedRequestManager, ILogger<CustomizePlusHandler> logger)
+public class CustomizePlusHandler(PresenceService presenceService, ForwardedRequestManager forwardedRequestManager, ILogger<CustomizePlusHandler> logger)
 {
     private const string Method = HubMethod.CustomizePlus;
-    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.CustomizePlus, SpeakPermissions2.None, ElevatedPermissions.None);
+    private static readonly ResolvedPermissions Permissions = new(PrimaryPermissions2.CustomizePlus, SpeakPermissions2.None, ElevatedPermissions.None);
 
     /// <summary>
     ///     Handles the request

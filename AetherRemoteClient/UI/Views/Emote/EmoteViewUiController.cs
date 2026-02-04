@@ -54,6 +54,9 @@ public class EmoteViewUiController(EmoteService emoteService, NetworkService net
         var thoseWhoYouLackPermissionsFor = new List<string>();
         foreach (var selected in selectionManager.Selected)
         {
+            if (selected.PermissionsGrantedByFriend is null)
+                continue;
+            
             if ((selected.PermissionsGrantedByFriend.Primary & PrimaryPermissions2.Emote) != PrimaryPermissions2.Emote)
                 thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
         }

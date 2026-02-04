@@ -7,6 +7,8 @@ using AetherRemoteClient.Domain.Filters;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
+using AetherRemoteCommon.Domain;
+using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.AddFriend;
 
@@ -78,7 +80,7 @@ public class FriendsListComponentUiController : IDisposable
                 Plugin.Configuration.Notes.TryGetValue(request.TargetFriendCode, out var note);
                 
                 // Create the new object with notes
-                var friend = new Friend(request.TargetFriendCode, response.Status, note);
+                var friend = new Friend(request.TargetFriendCode, response.Status, note, new RawPermissions(PrimaryPermissions2.None, PrimaryPermissions2.None, SpeakPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.None, ElevatedPermissions.None), null);
                 
                 // Add to the friends list
                 _friendsListService.Add(friend);

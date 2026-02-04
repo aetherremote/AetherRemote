@@ -3,7 +3,8 @@ using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Emote;
-using AetherRemoteServer.Domain.Interfaces;
+using AetherRemoteServer.Managers;
+using AetherRemoteServer.Services;
 using AetherRemoteServer.Utilities;
 using Microsoft.AspNetCore.SignalR;
 using Constraints = AetherRemoteCommon.Constraints;
@@ -13,10 +14,10 @@ namespace AetherRemoteServer.SignalR.Handlers;
 /// <summary>
 ///     Handles the logic for fulfilling a <see cref="EmoteRequest"/>
 /// </summary>
-public class EmoteHandler(IPresenceService presenceService, IForwardedRequestManager forwardedRequestManager, ILogger<EmoteHandler> logger)
+public class EmoteHandler(PresenceService presenceService, ForwardedRequestManager forwardedRequestManager, ILogger<EmoteHandler> logger)
 {
     private const string Method = HubMethod.Emote;
-    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.Emote, SpeakPermissions2.None, ElevatedPermissions.None);
+    private static readonly ResolvedPermissions Permissions = new(PrimaryPermissions2.Emote, SpeakPermissions2.None, ElevatedPermissions.None);
     
     /// <summary>
     ///     Handles the request

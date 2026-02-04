@@ -3,15 +3,16 @@ using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Possession;
 using AetherRemoteCommon.Domain.Network.Possession.Movement;
-using AetherRemoteServer.Domain.Interfaces;
+using AetherRemoteServer.Managers;
+using AetherRemoteServer.Services;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AetherRemoteServer.SignalR.Handlers;
 
-public class PossessionMovementHandler(IPresenceService presences, IForwardedRequestManager forwarder, IPossessionManager possessionManager, ILogger<PossessionMovementHandler> logger)
+public class PossessionMovementHandler(PresenceService presences, ForwardedRequestManager forwarder, PossessionManager possessionManager, ILogger<PossessionMovementHandler> logger)
 {
     private const string Method = HubMethod.Possession.Movement;
-    private static readonly UserPermissions Required = new(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.Possession);
+    private static readonly ResolvedPermissions Required = new(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.Possession);
     
     public async Task<PossessionResponse> Handle(string senderFriendCode, PossessionMovementRequest request, IHubCallerClients clients)
     {

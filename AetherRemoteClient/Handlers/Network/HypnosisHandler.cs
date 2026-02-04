@@ -19,7 +19,7 @@ public class HypnosisHandler : AbstractNetworkHandler, IDisposable
 {
     // Const
     private const string Operation = "Hypnosis";
-    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.Hypnosis, SpeakPermissions2.None, ElevatedPermissions.None);
+    private static readonly ResolvedPermissions Permissions = new(PrimaryPermissions2.Hypnosis, SpeakPermissions2.None, ElevatedPermissions.None);
     
     // Injected
     private readonly LogService _log;
@@ -31,7 +31,13 @@ public class HypnosisHandler : AbstractNetworkHandler, IDisposable
     /// <summary>
     ///     <inheritdoc cref="HypnosisHandler"/>
     /// </summary>
-    public HypnosisHandler(FriendsListService friends, LogService log, NetworkService network, PauseService pause, HypnosisManager hypnosis) : base(friends, log, pause)
+    public HypnosisHandler(
+        AccountService account, 
+        FriendsListService friends, 
+        LogService log, 
+        NetworkService network, 
+        PauseService pause, 
+        HypnosisManager hypnosis) : base(account, friends, log, pause)
     {
         _log = log;
         _hypnosis = hypnosis;

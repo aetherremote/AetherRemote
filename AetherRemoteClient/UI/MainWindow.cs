@@ -22,6 +22,7 @@ using AetherRemoteClient.UI.Views.Transformation;
 using AetherRemoteClient.UI.Views.Twinning;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Windowing;
+using FriendsViewUi = AetherRemoteClient.UI.Views.Friends.Ui.FriendsViewUi;
 
 namespace AetherRemoteClient.UI;
 

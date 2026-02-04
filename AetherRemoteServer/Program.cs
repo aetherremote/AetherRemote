@@ -1,9 +1,9 @@
 using System.Net;
 using System.Text;
 using AetherRemoteServer.Domain;
-using AetherRemoteServer.Domain.Interfaces;
 using AetherRemoteServer.Managers;
 using AetherRemoteServer.Services;
+using AetherRemoteServer.Services.Database;
 using AetherRemoteServer.SignalR.Handlers;
 using AetherRemoteServer.SignalR.Hubs;
 using MessagePack;
@@ -38,13 +38,13 @@ public class Program
         builder.Services.AddSingleton(configuration);
 
         // Services
-        builder.Services.AddSingleton<IDatabaseService, DatabaseService>();
-        builder.Services.AddSingleton<IPresenceService, PresenceService>();
-        builder.Services.AddSingleton<IRequestLoggingService, RequestLoggingService>();
+        builder.Services.AddSingleton<DatabaseService>();
+        builder.Services.AddSingleton<PresenceService>();
+        builder.Services.AddSingleton<RequestLoggingService>();
         
         // Managers
-        builder.Services.AddSingleton<IForwardedRequestManager, ForwardedRequestManager>();
-        builder.Services.AddSingleton<IPossessionManager, PossessionManager>();
+        builder.Services.AddSingleton<ForwardedRequestManager>();
+        builder.Services.AddSingleton<PossessionManager>();
 
         // Handles
         builder.Services.AddSingleton<OnlineStatusUpdateHandler>();
@@ -62,6 +62,7 @@ public class Program
         builder.Services.AddSingleton<TransformHandler>();
         builder.Services.AddSingleton<TwinningHandler>();
         builder.Services.AddSingleton<UpdateFriendHandler>();
+        builder.Services.AddSingleton<UpdateGlobalPermissionsHandler>();
         builder.Services.AddSingleton<PossessionBeginHandler>();
         builder.Services.AddSingleton<PossessionCameraHandler>();
         builder.Services.AddSingleton<PossessionEndHandler>();

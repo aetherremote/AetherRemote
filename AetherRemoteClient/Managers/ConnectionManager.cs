@@ -12,18 +12,18 @@ namespace AetherRemoteClient.Managers;
 /// </summary>
 public class ConnectionManager : IDisposable
 {
+    private readonly AccountService _accountService;
     private readonly FriendsListService _friendsListService;
-    private readonly IdentityService _identityService;
     private readonly NetworkService _networkService;
     private readonly ViewService _viewService;
     
     /// <summary>
     ///     <inheritdoc cref="ConnectionManager"/>
     /// </summary>
-    public ConnectionManager(FriendsListService friendsListService, IdentityService identityService, NetworkService networkService, ViewService viewService)
+    public ConnectionManager(AccountService accountService, FriendsListService friendsListService, NetworkService networkService, ViewService viewService)
     {
+        _accountService = accountService;
         _friendsListService = friendsListService;
-        _identityService = identityService;
         _networkService = networkService;
         _viewService = viewService;
 
@@ -47,21 +47,22 @@ public class ConnectionManager : IDisposable
             await _networkService.StopAsync().ConfigureAwait(false);
             return;
         }
-
-        // Set the friend code
-        _identityService.SetFriendCode(response.FriendCode);
+        
+        // Set our account information
+        _accountService.SetFriendCode(response.AccountFriendCode);
+        _accountService.SetGlobalPermissions(response.AccountGlobalPermissions);
         
         // Clear the friend list in preparation for adding friends returned from the server
         _friendsListService.Clear();
 
         // Iterate over all the relationships to transform them into domain models
-        foreach (var relationship in response.Relationships)
+        foreach (var friend in response.AccountFriends)
         {
             // Try to extract the note
-            Plugin.Configuration.Notes.TryGetValue(relationship.TargetFriendCode, out var note);
+            Plugin.Configuration.Notes.TryGetValue(friend.TargetFriendCode, out var note);
             
             // Add the new friend with all the data required
-            _friendsListService.Add(new Friend(relationship.TargetFriendCode, relationship.Status, note, relationship.PermissionsGrantedTo, relationship.PermissionsGrantedBy));
+            _friendsListService.Add(new Friend(friend.TargetFriendCode, friend.Status, note, friend.PermissionsGrantedTo, friend.PermissionsGrantedBy));
         }
 
         // Set the view to the 'home screen'

@@ -4,7 +4,8 @@ using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Transform;
 using AetherRemoteCommon.Util;
-using AetherRemoteServer.Domain.Interfaces;
+using AetherRemoteServer.Managers;
+using AetherRemoteServer.Services;
 using AetherRemoteServer.Utilities;
 using Microsoft.AspNetCore.SignalR;
 
@@ -13,7 +14,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 /// <summary>
 ///     Handles the logic for fulfilling a <see cref="TransformRequest"/>
 /// </summary>
-public class TransformHandler(IPresenceService presenceService, IForwardedRequestManager forwardedRequestManager, ILogger<AddFriendHandler> logger)
+public class TransformHandler(PresenceService presenceService, ForwardedRequestManager forwardedRequestManager, ILogger<AddFriendHandler> logger)
 {
     private const string Method = HubMethod.Transform;
 
@@ -36,7 +37,7 @@ public class TransformHandler(IPresenceService presenceService, IForwardedReques
         if (request.LockCode is not null)
             elevated = ElevatedPermissions.PermanentTransformation;
 
-        var permissions = new UserPermissions(primary, SpeakPermissions2.None, elevated);
+        var permissions = new ResolvedPermissions(primary, SpeakPermissions2.None, elevated);
         var command = new TransformCommand(senderFriendCode, request.GlamourerData, request.GlamourerApplyType, request.LockCode);
         return await forwardedRequestManager.CheckPermissionsAndSend(senderFriendCode, request.TargetFriendCodes, Method, permissions, command, clients);
     }

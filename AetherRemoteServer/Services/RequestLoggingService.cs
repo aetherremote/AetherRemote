@@ -1,12 +1,9 @@
 using System.Timers;
-using AetherRemoteServer.Domain.Interfaces;
 using Timer = System.Timers.Timer;
 
 namespace AetherRemoteServer.Services;
 
-// ReSharper disable RedundantBoolCompare
-
-public class RequestLoggingService : IDisposable, IRequestLoggingService
+public class RequestLoggingService : IDisposable
 {
     private const string LogDirectory = "Logs";
     private static readonly string LogsPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Logs");

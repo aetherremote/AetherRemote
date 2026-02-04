@@ -2,26 +2,28 @@ using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Possession;
-using AetherRemoteServer.Domain.Interfaces;
+using AetherRemoteCommon.Util;
+using AetherRemoteServer.Services;
+using AetherRemoteServer.Services.Database;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AetherRemoteServer.Managers;
 
 /// <summary>
-///     <inheritdoc cref="IForwardedRequestManager"/>
+///     TODO
 /// </summary>
-public class ForwardedRequestManager(IDatabaseService database, IPresenceService presence, ILogger<ForwardedRequestManager> logger) : IForwardedRequestManager
+public class ForwardedRequestManager(DatabaseService database, PresenceService presence, ILogger<ForwardedRequestManager> logger)
 {
     private static readonly TimeSpan TimeOutDuration = TimeSpan.FromSeconds(8);
 
     /// <summary>
-    ///     <inheritdoc cref="IForwardedRequestManager.CheckPermissionsAndSend"/>
+    ///     TODO
     /// </summary>
     public async Task<ActionResponse> CheckPermissionsAndSend(
         string senderFriendCode, 
         List<string> targetFriendCodes, 
         string method, 
-        UserPermissions required, 
+        ResolvedPermissions required, 
         ActionCommand request, 
         IHubCallerClients clients)
     {
@@ -46,23 +48,26 @@ public class ForwardedRequestManager(IDatabaseService database, IPresenceService
     }
     
     /// <summary>
-    ///     <inheritdoc cref="IForwardedRequestManager.CheckPossessionAndInvoke"/>
+    ///     TODO
     /// </summary>
     public async Task<PossessionResponse> CheckPossessionAndInvoke(
         string senderFriendCode, 
         string targetFriendCode, 
         string method, 
-        UserPermissions required, 
+        ResolvedPermissions required, 
         ActionCommand request, 
         IHubCallerClients clients)
     {
         if (presence.TryGet(targetFriendCode) is not { } target)
             return new PossessionResponse(PossessionResponseEc.TargetOffline, PossessionResultEc.Uninitialized);
         
-        if (await database.GetPermissions(targetFriendCode, senderFriendCode) is not { } permissions)
+        if (await database.GetSinglePermissions(targetFriendCode, senderFriendCode) is not { } permissions)
             return new PossessionResponse(PossessionResponseEc.TargetNotFriends, PossessionResultEc.Uninitialized);
 
-        if (HasRequiredPermissions(permissions, required) is false)
+        var global = await database.GetGlobalPermissions(targetFriendCode);
+        var resolved = PermissionResolver.Resolve(global, permissions);
+        
+        if (HasRequiredPermissions(resolved, required) is false)
             return new PossessionResponse(PossessionResponseEc.LacksPermissions, PossessionResultEc.Uninitialized);
 
         var client = clients.Client(target.ConnectionId);
@@ -83,21 +88,24 @@ public class ForwardedRequestManager(IDatabaseService database, IPresenceService
         }
     }
     
-    private async Task<(ISingleClientProxy client, ActionResult<Unit>? result)> EvaluateTargetAsync(string senderFriendCode, string targetFriendCode, UserPermissions required, IHubCallerClients clients)
+    private async Task<(ISingleClientProxy client, ActionResult<Unit>? result)> EvaluateTargetAsync(string senderFriendCode, string targetFriendCode, ResolvedPermissions required, IHubCallerClients clients)
     {
         if (presence.TryGet(targetFriendCode) is not { } target)
             return (null!, ActionResultBuilder.Fail(ActionResultEc.TargetOffline));
         
-        if (await database.GetPermissions(targetFriendCode, senderFriendCode) is not { } permissions)
+        if (await database.GetSinglePermissions(targetFriendCode, senderFriendCode) is not { } permissions)
             return (null!, ActionResultBuilder.Fail(ActionResultEc.TargetNotFriends));
 
-        if (HasRequiredPermissions(permissions, required) is false)
+        var global = await database.GetGlobalPermissions(targetFriendCode);
+        var resolved = PermissionResolver.Resolve(global, permissions);
+        
+        if (HasRequiredPermissions(resolved, required) is false)
             return  (null!, ActionResultBuilder.Fail(ActionResultEc.TargetHasNotGrantedSenderPermissions));
 
         return (clients.Client(target.ConnectionId), null);
     }
 
-    private static bool HasRequiredPermissions(UserPermissions granted, UserPermissions required)
+    private static bool HasRequiredPermissions(ResolvedPermissions granted, ResolvedPermissions required)
     {
         return (granted.Primary & required.Primary) == required.Primary
                && (granted.Speak & required.Speak) == required.Speak

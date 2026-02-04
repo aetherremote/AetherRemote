@@ -4,7 +4,10 @@ using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Possession.End;
 using AetherRemoteCommon.Domain.Network.SyncOnlineStatus;
-using AetherRemoteServer.Domain.Interfaces;
+using AetherRemoteCommon.Util;
+using AetherRemoteServer.Managers;
+using AetherRemoteServer.Services;
+using AetherRemoteServer.Services.Database;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AetherRemoteServer.SignalR.Handlers;
@@ -13,14 +16,14 @@ namespace AetherRemoteServer.SignalR.Handlers;
 ///     Processes clients connecting and disconnecting from the server
 /// </summary>
 public class OnlineStatusUpdateHandler(
-    IDatabaseService database, 
-    IPresenceService presences, 
-    IForwardedRequestManager forwarder,
-    IPossessionManager possessions,
+    DatabaseService database, 
+    PresenceService presences, 
+    ForwardedRequestManager forwarder,
+    PossessionManager possessions,
     ILogger<OnlineStatusUpdateHandler> logger)
 {
     private const string Method = HubMethod.Possession.End;
-    private static readonly UserPermissions Required = new(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.Possession);
+    private static readonly ResolvedPermissions Required = new(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.Possession);
     
     /// <summary>
     ///     Handle the event, removing or adding from the current client list, and updating all the user's friends who are online
@@ -30,6 +33,7 @@ public class OnlineStatusUpdateHandler(
         if (online is false)
             await HandleOffline(friendCode, clients);
         
+        var global = await database.GetGlobalPermissions(friendCode);
         var permissions = await database.GetAllPermissions(friendCode);
         foreach (var permission in permissions)
         {
@@ -45,7 +49,8 @@ public class OnlineStatusUpdateHandler(
             {
                 if (online)
                 {
-                    var request = new SyncOnlineStatusCommand(friendCode, FriendOnlineStatus.Online, permission.PermissionsGrantedTo);
+                    var resolved = PermissionResolver.Resolve(global, permission.PermissionsGrantedTo);
+                    var request = new SyncOnlineStatusCommand(friendCode, FriendOnlineStatus.Online, resolved);
                     await clients.Client(target.ConnectionId).SendAsync(HubMethod.SyncOnlineStatus, request);
                 }
                 else

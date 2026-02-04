@@ -1,9 +1,11 @@
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.AddFriend;
 using AetherRemoteCommon.Domain.Network.SyncOnlineStatus;
-using AetherRemoteServer.Domain.Interfaces;
+using AetherRemoteServer.Services;
+using AetherRemoteServer.Services.Database;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AetherRemoteServer.SignalR.Handlers;
@@ -11,7 +13,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 /// <summary>
 ///     Handles the logic for fulfilling a <see cref="AddFriendRequest"/>
 /// </summary>
-public class AddFriendHandler(IPresenceService presenceService, IDatabaseService database, ILogger<AddFriendHandler> logger)
+public class AddFriendHandler(DatabaseService database, PresenceService presenceService, ILogger<AddFriendHandler> logger)
 {
     /// <summary>
     ///     Handles the request
@@ -46,7 +48,7 @@ public class AddFriendHandler(IPresenceService presenceService, IDatabaseService
         try
         {
             // Try to send an update to that client that we've accepted the friend request
-            var sync = new SyncOnlineStatusCommand(friendCode, FriendOnlineStatus.Online, new UserPermissions());
+            var sync = new SyncOnlineStatusCommand(friendCode, FriendOnlineStatus.Online, new ResolvedPermissions(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.None));
             await clients.Client(target.ConnectionId).SendAsync(HubMethod.SyncOnlineStatus, sync);
         }
         catch (Exception e)

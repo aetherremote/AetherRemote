@@ -37,7 +37,7 @@ public class SyncPermissionsHandler : IDisposable
         if (_friends.Get(command.SenderFriendCode) is not { } friend)
             return;
         
-        friend.PermissionsGrantedByFriend = UserPermissions.From(command.PermissionsGrantedBySender);
+        friend.PermissionsGrantedByFriend = command.PermissionsGrantedBySender;
     }
 
     public void Dispose()

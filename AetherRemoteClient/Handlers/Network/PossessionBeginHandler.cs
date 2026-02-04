@@ -17,14 +17,20 @@ public class PossessionBeginHandler : AbstractNetworkHandler, IDisposable
 {
     // Const
     private const string Operation = "PossessionBegin";
-    private static readonly UserPermissions Permissions = new(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.Possession);
+    private static readonly ResolvedPermissions Permissions = new(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.Possession);
     
     // Instantiated
     private readonly IDisposable _handler;
     private readonly LogService _log;
     private readonly PossessionManager _manager;
     
-    public PossessionBeginHandler(FriendsListService friends, LogService log, NetworkService network, PauseService pause, PossessionManager manager) : base(friends, log, pause)
+    public PossessionBeginHandler(
+        AccountService account, 
+        FriendsListService friends, 
+        LogService log, 
+        NetworkService network, 
+        PauseService pause, 
+        PossessionManager manager) : base(account, friends, log, pause)
     {
         _handler = network.Connection.On<PossessionBeginCommand, PossessionResultEc>(HubMethod.Possession.Begin, Handle);
         _log = log;

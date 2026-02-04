@@ -4,7 +4,8 @@ using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Twinning;
 using AetherRemoteCommon.Util;
-using AetherRemoteServer.Domain.Interfaces;
+using AetherRemoteServer.Managers;
+using AetherRemoteServer.Services;
 using AetherRemoteServer.Utilities;
 using Microsoft.AspNetCore.SignalR;
 
@@ -13,7 +14,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 /// <summary>
 ///     Handles the logic for fulfilling a <see cref="TwinningRequest"/>
 /// </summary>
-public class TwinningHandler(IPresenceService presenceService, IForwardedRequestManager forwardedRequestManager, ILogger<AddFriendHandler> logger)
+public class TwinningHandler(PresenceService presenceService, ForwardedRequestManager forwardedRequestManager, ILogger<AddFriendHandler> logger)
 {
     private const string Method = HubMethod.Twinning;
 
@@ -35,7 +36,7 @@ public class TwinningHandler(IPresenceService presenceService, IForwardedRequest
         if (request.LockCode is not null)
             elevated = ElevatedPermissions.PermanentTransformation;
         
-        var permissions = new UserPermissions(primary, SpeakPermissions2.None, elevated);
+        var permissions = new ResolvedPermissions(primary, SpeakPermissions2.None, elevated);
         var command = new TwinningCommand(senderFriendCode, request.CharacterName, request.CharacterWorld, request.SwapAttributes, request.LockCode);
         return await forwardedRequestManager.CheckPermissionsAndSend(senderFriendCode, request.TargetFriendCodes, Method, permissions, command, clients);
     }
