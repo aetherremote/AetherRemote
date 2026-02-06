@@ -98,54 +98,36 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
     /// <summary>
     ///     Gets a list of all the customize plus profile identifiers
     /// </summary>
-    public async Task<List<Folder<Profile>>> GetProfiles()
+    public async Task<FolderNode<Profile>?> GetProfiles()
     {
-        try
+        if (ApiAvailable is false)
+            return null;
+        
+        var result = await Plugin.RunOnFramework(() => _getProfileList.InvokeFunc()).ConfigureAwait(false);
+        var root = new FolderNode<Profile>("Root", null, null);
+        foreach (var path in result)
         {
-            if (ApiAvailable is false)
-                return [];
-            
-            var result = await Plugin.RunOnFramework(() => _getProfileList.InvokeFunc()).ConfigureAwait(false);
+            var parts = path.Path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            var current = root;
 
-            var folders = new Dictionary<string, List<Profile>>();
-            foreach (var data in result)
+            for (var i = 0; i < parts.Length; i++)
             {
-                var profile = new Profile(data.Id, data.Name, data.Path);
-                var span = data.Path.AsSpan();
-                var index = span.LastIndexOf('/');
+                var isLast = i == parts.Length - 1;
+                var part = parts[i];
 
-                var folderPathSpan = index is -1
-                    ? Uncategorized.AsSpan()
-                    : span[..index];
-
-                var folderPath = folderPathSpan.ToString();
-
-                if (folders.TryGetValue(folderPath, out var list))
+                if (current.Children.TryGetValue(part, out var node) is false)
                 {
-                    list.Add(profile);
+                    node = new FolderNode<Profile>(part, isLast ? new Profile(path.Id, path.Name) : null, null);
+                    current.Children[part] = node;
                 }
-                else
-                {
-                    folders[folderPath] = [profile];
-                }
+                
+                current = node;
             }
-
-            foreach (var list in folders.Values)
-                list.Sort((x, y) => string.Compare(x.Name, y.Name, StringComparison.OrdinalIgnoreCase));
-
-            return folders
-                .Select(x => new Folder<Profile>(x.Key, x.Value))
-                .OrderBy(x => x.Path, StringComparer.OrdinalIgnoreCase)
-                .ThenBy(x => x.Path.Equals(Uncategorized, StringComparison.OrdinalIgnoreCase))
-                .ToList();
         }
-        catch (Exception e)
-        {
-            Plugin.Log.Warning($"[CustomizePlusService.GetProfiles] An error occurred, {e}");
-            return [];
-        }
+
+        return root;
     }
-
+    
     /// <summary>
     ///     Gets a customize plus profile by guid
     /// </summary>

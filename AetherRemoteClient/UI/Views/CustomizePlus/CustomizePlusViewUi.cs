@@ -1,4 +1,7 @@
+using System.Collections.Generic;
 using System.Numerics;
+using AetherRemoteClient.Dependencies.CustomizePlus.Domain;
+using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
@@ -31,44 +34,21 @@ public class CustomizePlusViewUi(
             SharedUserInterfaces.MediumText("Select Profile");
 
             ImGui.SetNextItemWidth(width - padding.X * 4 - ImGui.GetFontSize());
-            ImGui.InputTextWithHint("##ProfileSearchBar", "Search", ref controller.SearchTerm, 32);
+            if (ImGui.InputTextWithHint("##ProfileSearchBar", "Search", ref controller.SearchTerm, 32))
+                controller.FilterProfilesBySearchTerm();
 
             ImGui.SameLine();
 
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Sync, null, "Refresh Profiles"))
-                controller.RefreshCustomizeProfiles();
+                _ = controller.RefreshCustomizeProfiles();
         });
 
         var headerHeight = ImGui.GetCursorPosY() - begin;
         var profilesContextBoxSize = new Vector2(0, ImGui.GetWindowHeight() - headerHeight - padding.X * 3 - SendProfileButtonHeight);
         if (ImGui.BeginChild("##ProfilesContextBoxDisplay", profilesContextBoxSize, true, ImGuiWindowFlags.NoScrollbar))
         {
-            var half = ImGui.GetWindowWidth() * 0.5f;
-            foreach (var folder in controller.FilteredProfiles)
-            {
-                if (folder.Content.Count is 0)
-                    continue;
-                
-                if (ImGui.CollapsingHeader(folder.Path))
-                {
-                    ImGui.PushStyleColor(ImGuiCol.Header, AetherRemoteStyle.PrimaryColor);
-                    for (var i = 0; i < folder.Content.Count; i++)
-                    {
-                        var profile = folder.Content[i];
-                        var size = i % 2 is 0
-                            ? new Vector2(half - padding.X * 2, 0)
-                            : new Vector2(half - padding.X, 0);
-                        
-                        if (ImGui.Selectable( profile.Name, profile.Guid == controller.SelectedProfileId, ImGuiSelectableFlags.None, size))
-                            controller.SelectedProfileId =  profile.Guid;
-                        
-                        if (i % 2 is 0 && i < folder.Content.Count - 1)
-                            ImGui.SameLine(half);
-                    }
-                    
-                    ImGui.PopStyleColor();
-                }
-            }
+            if (controller.Profiles is { } profiles)
+                DrawTree(profiles);
             
             ImGui.EndChild();
         }
@@ -100,7 +80,7 @@ public class CustomizePlusViewUi(
                 else
                 {
                     if (ImGui.Button("Send Customize Profile", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendProfileButtonHeight)))
-                        controller.SendCustomizeProfile();
+                        _ = controller.SendCustomizeProfile().ConfigureAwait(false);
                 }
             }
         });
@@ -108,5 +88,45 @@ public class CustomizePlusViewUi(
         ImGui.EndChild();
         ImGui.SameLine();
         friendsList.Draw();
+    }
+
+    /// <summary>
+    ///     Renders a recursive tree view of the Customize+ profiles
+    /// </summary>
+    private void DrawTree(IEnumerable<FolderNode<Profile>> nodes)
+    {
+        foreach (var node in nodes)
+        {
+            // Folder node
+            if (node.Content is null)
+            {
+                // Create the node
+                // ReSharper disable once InvertIf
+                if (ImGui.TreeNodeEx(node.Name, ImGuiTreeNodeFlags.SpanAvailWidth | ImGuiTreeNodeFlags.Framed))
+                {
+                    // Recursively draw the children inside the tree node
+                    DrawTree(node.Children.Values);
+                    
+                    // Close the tree
+                    ImGui.TreePop();
+                }
+            }
+            // Leaf node, that contains the actual content
+            else
+            {
+                if (controller.SelectedProfileId == node.Content?.Guid)
+                {
+                    ImGui.PushStyleColor(ImGuiCol.Header, AetherRemoteStyle.PrimaryColor);
+                    ImGui.Selectable(node.Name, true);
+                    ImGui.PopStyleColor();
+                }
+                else
+                {
+                    if (ImGui.Selectable(node.Name))
+                        if (node.Content is { } profile)
+                            controller.SelectedProfileId = profile.Guid;
+                }
+            }
+        }
     }
 }

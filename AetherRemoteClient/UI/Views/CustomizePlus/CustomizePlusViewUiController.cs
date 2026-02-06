@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 using AetherRemoteClient.Dependencies.CustomizePlus.Domain;
 using AetherRemoteClient.Dependencies.CustomizePlus.Services;
 using AetherRemoteClient.Domain;
@@ -34,11 +35,21 @@ public class CustomizePlusViewUiController : IDisposable
     ///     The currently selected Guid of the Profile to send
     /// </summary>
     public Guid SelectedProfileId = Guid.Empty;
-
-    private List<Folder<Profile>> _profiles = [];
-    public List<Folder<Profile>> FilteredProfiles => SearchTerm == string.Empty
-        ? _profiles.ToList()
-        : _profiles.Select(folder => new Folder<Profile>(folder.Path, folder.Content.Where(design => design.Name.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)).ToList())).ToList();
+    
+    /// <summary>
+    ///     Cached list of profiles
+    /// </summary>
+    private List<FolderNode<Profile>>? _sorted;
+    
+    /// <summary>
+    ///     Filtered cached list of profiles
+    /// </summary>
+    private List<FolderNode<Profile>>? _filtered;
+    
+    /// <summary>
+    ///     The profiles to display in the Ui
+    /// </summary>
+    public List<FolderNode<Profile>>? Profiles => SearchTerm == string.Empty ? _sorted : _filtered;
     
     /// <summary>
     ///     <inheritdoc cref="CustomizePlusViewUiController"/>
@@ -52,27 +63,63 @@ public class CustomizePlusViewUiController : IDisposable
 
         _customizePlusService.IpcReady += OnIpcReady;
         if (_customizePlusService.ApiAvailable)
-            RefreshCustomizeProfiles();
+            _ = RefreshCustomizeProfiles();
+    }
+    
+    /// <summary>
+    ///     Filters the sorted profile list by search term
+    /// </summary>
+    public void FilterProfilesBySearchTerm()
+    {
+        _filtered = _sorted is not null 
+            ? FilterFolderNodes(_sorted, SearchTerm).ToList() 
+            : null;
     }
 
-    public async void RefreshCustomizeProfiles()
+    /// <summary>
+    ///     Recursive method to filter nodes based on both folders and content names
+    /// </summary>
+    private List<FolderNode<Profile>> FilterFolderNodes(IEnumerable<FolderNode<Profile>> nodes, string searchTerms)
     {
-        try
+        // Reset the selected so possibly unselected profiles aren't stored
+        SelectedProfileId = Guid.Empty;
+        
+        // Iterate to determine what stays and what goes
+        var results = new List<FolderNode<Profile>>();
+        foreach (var node in nodes)
         {
-            SelectedProfileId = Guid.Empty;
-            
-            _profiles = await _customizePlusService.GetProfiles().ConfigureAwait(false);
+            // The recursive part, filtering on the children to see if there were any matches
+            var children = FilterFolderNodes(node.Children.Values, searchTerms).ToDictionary(n => n.Name);
+
+            // Check this node to see if it matches too
+            var matches = node.Name.Contains(searchTerms, StringComparison.OrdinalIgnoreCase);
+
+            // If this node does not match and has no matching children, skip it
+            if (matches is false && children.Count is 0)
+                continue;
+
+            // Add
+            results.Add(new FolderNode<Profile>(node.Name, node.Content, children));
         }
-        catch (Exception)
-        {
-            // Ignored
-        }
+        
+        return results;
+    }
+
+    /// <summary>
+    ///     Refresh the cache of available profiles
+    /// </summary>
+    public async Task RefreshCustomizeProfiles()
+    {
+        SelectedProfileId = Guid.Empty;
+
+        _sorted = await _customizePlusService.GetProfiles().ConfigureAwait(false) is { } unsorted
+            ? unsorted.Children.Values.ToList().OrderBy(node => node.Content is not null).ThenBy(node => node.Name).ToList()
+            : null;
     }
     
     /// <summary>
     ///     Calculates the friends who you lack correct permissions to send to
     /// </summary>
-    /// <returns></returns>
     public bool MissingPermissionsForATarget()
     {
         foreach (var friend in _selectionManager.Selected)
@@ -87,33 +134,29 @@ public class CustomizePlusViewUiController : IDisposable
         return false;
     }
     
-    public async void SendCustomizeProfile()
+    /// <summary>
+    ///     Sends a request to the server
+    /// </summary>
+    public async Task SendCustomizeProfile()
     {
-        try
-        {
-            if (SelectedProfileId == Guid.Empty)
-                return;
+        if (SelectedProfileId == Guid.Empty)
+            return;
 
-            _commandLockoutService.Lock();
+        _commandLockoutService.Lock();
         
-            if (await _customizePlusService.GetProfile(SelectedProfileId).ConfigureAwait(false) is not { } profile)
-                return;
+        if (await _customizePlusService.GetProfile(SelectedProfileId).ConfigureAwait(false) is not { } profile)
+            return;
 
-            var bytes = Encoding.UTF8.GetBytes(profile);
-            var request = new CustomizeRequest(_selectionManager.GetSelectedFriendCodes(), bytes);
-            var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.CustomizePlus, request).ConfigureAwait(false);
+        var bytes = Encoding.UTF8.GetBytes(profile);
+        var request = new CustomizeRequest(_selectionManager.GetSelectedFriendCodes(), bytes);
+        var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.CustomizePlus, request).ConfigureAwait(false);
 
-            ActionResponseParser.Parse("Customize+", response);
-        }
-        catch (Exception)
-        {
-            // Ignored
-        }
+        ActionResponseParser.Parse("Customize+", response);
     }
     
     private void OnIpcReady(object? sender, EventArgs e)
     {
-        RefreshCustomizeProfiles();
+        _ = RefreshCustomizeProfiles();
     }
 
     public void Dispose()
