@@ -109,7 +109,7 @@ public partial class FriendsViewUi
             ImGui.TextUnformatted("Allow");
             ImGui.Separator();
             
-            DrawIndividualPermissionButton("Permanent Transformations", denyPosition, inheritPosition, allowPosition, ref controller.Individual.PermanentTransformationValue);
+            // DrawIndividualPermissionButton("Permanent Transformations", denyPosition, inheritPosition, allowPosition, ref controller.Individual.PermanentTransformationValue);
             DrawIndividualPermissionButton("Possession", denyPosition, inheritPosition, allowPosition, ref controller.Individual.PossessionValue);
         });
         

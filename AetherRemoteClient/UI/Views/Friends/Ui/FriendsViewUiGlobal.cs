@@ -2,6 +2,7 @@ using System.Numerics;
 using AetherRemoteClient.Style;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface.Colors;
 
 namespace AetherRemoteClient.UI.Views.Friends.Ui;
 
@@ -9,59 +10,76 @@ public partial class FriendsViewUi
 {
     private void DrawGlobalPermissions(float width)
     {
-        var half = width * 0.5f;
+        var offPosition = width * 0.65f;
+        var onPosition = width * 0.8f;
         
         SharedUserInterfaces.ContentBox("PermissionsGlobalPrimary", AetherRemoteStyle.PanelBackground, true, () =>
         {
-            ImGui.TextUnformatted("Primary Permissions");
-            ImGui.Checkbox("Body Swap", ref controller.Global.BodySwapValue); ImGui.SameLine(half);
-            ImGui.Checkbox("Customize+", ref controller.Global.CustomizePlusValue);
-            ImGui.Checkbox("Emote", ref controller.Global.EmoteValue); ImGui.SameLine(half);
-            ImGui.Checkbox("Glamourer Customizations", ref controller.Global.GlamourerCustomizationsValue);
-            ImGui.Checkbox("Glamourer Equipment", ref controller.Global.GlamourerEquipmentValue); ImGui.SameLine(half);
-            ImGui.Checkbox("Honorific", ref controller.Global.HonorificValue);
-            ImGui.Checkbox("Hypnosis", ref controller.Global.HypnosisValue); ImGui.SameLine(half);
-            ImGui.Checkbox("Moodles", ref controller.Global.MoodlesValue);
-            ImGui.Checkbox("Penumbra Mods", ref controller.Global.PenumbraModsValue); ImGui.SameLine(half);
-            ImGui.Checkbox("Twinning", ref controller.Global.TwinningValue);
+            ImGui.AlignTextToFramePadding();
+            
+            ImGui.TextUnformatted("Primary Permissions"); ImGui.SameLine(offPosition);
+            ImGui.TextUnformatted("Off"); ImGui.SameLine(onPosition);
+            ImGui.TextUnformatted("On");
+            ImGui.Separator();
+
+            DrawGlobalPermissionButton("Body Swap", offPosition, onPosition, ref controller.Global.BodySwapValue);
+            DrawGlobalPermissionButton("Customize+", offPosition, onPosition, ref controller.Global.CustomizePlusValue);
+            DrawGlobalPermissionButton("Emote", offPosition, onPosition, ref controller.Global.EmoteValue);
+            DrawGlobalPermissionButton("Glamourer Customizations", offPosition, onPosition, ref controller.Global.GlamourerCustomizationsValue);
+            DrawGlobalPermissionButton("Glamourer Equipment", offPosition, onPosition, ref controller.Global.GlamourerEquipmentValue);
+            DrawGlobalPermissionButton("Honorific", offPosition, onPosition, ref controller.Global.HonorificValue);
+            DrawGlobalPermissionButton("Hypnosis", offPosition, onPosition, ref controller.Global.HypnosisValue);
+            DrawGlobalPermissionButton("Moodles", offPosition, onPosition, ref controller.Global.MoodlesValue);
+            DrawGlobalPermissionButton("Penumbra Mods", offPosition, onPosition, ref controller.Global.PenumbraModsValue);
+            DrawGlobalPermissionButton("Twinning", offPosition, onPosition, ref controller.Global.TwinningValue);
         });
         
         SharedUserInterfaces.ContentBox("PermissionsGlobalSpeak", AetherRemoteStyle.PanelBackground, true, () =>
         {
-            ImGui.TextUnformatted("Speak Permissions");
-            ImGui.Checkbox("Alliance", ref controller.Global.AllianceValue); ImGui.SameLine(half);
-            ImGui.Checkbox("Echo", ref controller.Global.EchoValue);
-            ImGui.Checkbox("Free Company", ref controller.Global.FreeCompanyValue); ImGui.SameLine(half);
-            ImGui.Checkbox("Party", ref controller.Global.PartyValue);
-            ImGui.Checkbox("PvP Team", ref controller.Global.PvPTeamValue); ImGui.SameLine(half);
-            ImGui.Checkbox("Roleplay", ref controller.Global.RoleplayValue);
-            ImGui.Checkbox("Say", ref controller.Global.SayValue); ImGui.SameLine(half);
-            ImGui.Checkbox("Shout", ref controller.Global.ShoutValue);
-            ImGui.Checkbox("Tell", ref controller.Global.TellValue); ImGui.SameLine(half);
-            ImGui.Checkbox("Yell", ref controller.Global.YellValue);
+            ImGui.AlignTextToFramePadding();
+            
+            ImGui.TextUnformatted("Speak Permissions"); ImGui.SameLine(offPosition);
+            ImGui.TextUnformatted("Off"); ImGui.SameLine(onPosition);
+            ImGui.TextUnformatted("On");
+            ImGui.Separator();
+
+            DrawGlobalPermissionButton("Alliance", offPosition, onPosition, ref controller.Global.AllianceValue);
+            DrawGlobalPermissionButton("Echo", offPosition, onPosition, ref controller.Global.EchoValue);
+            DrawGlobalPermissionButton("Free Company", offPosition, onPosition, ref controller.Global.FreeCompanyValue);
+            DrawGlobalPermissionButton("Party", offPosition, onPosition, ref controller.Global.PartyValue);
+            DrawGlobalPermissionButton("PvP Team", offPosition, onPosition, ref controller.Global.PvPTeamValue);
+            DrawGlobalPermissionButton("Roleplay", offPosition, onPosition, ref controller.Global.RoleplayValue);
+            DrawGlobalPermissionButton("Say", offPosition, onPosition, ref controller.Global.SayValue);
+            DrawGlobalPermissionButton("Shout", offPosition, onPosition, ref controller.Global.ShoutValue);
+            DrawGlobalPermissionButton("Tell", offPosition, onPosition, ref controller.Global.TellValue);
+            DrawGlobalPermissionButton("Yell", offPosition, onPosition, ref controller.Global.YellValue);
             
             ImGui.Spacing();
             
-            ImGui.BeginGroup();
             ImGui.TextUnformatted("Linkshell Permissions");
+            ImGui.Separator();
             for (uint i = 0; i < 8; i++)
-                ImGui.Checkbox($"[{i + 1}]: {GetLinkshellName(i)}##Ls", ref controller.Global.LinkshellValues[i]);
-            ImGui.EndGroup();
+                DrawGlobalPermissionButton($"[{i + 1}]: {GetLinkshellName(i)}", offPosition, onPosition, ref controller.Global.LinkshellValues[i]);
             
-            ImGui.SameLine(half);
+            ImGui.Spacing();
             
-            ImGui.BeginGroup();
-            ImGui.TextUnformatted("Cross-World Permissions");
+            ImGui.TextUnformatted("Cross-world Linkshell Permissions");
+            ImGui.Separator();
             for (uint i = 0; i < 8; i++)
-                ImGui.Checkbox($"[{i + 1}]: {GetCrossWorldLinkshellName(i)}##Cwls", ref controller.Global.CrossWorldLinkshellValues[i]);
-            ImGui.EndGroup();
+                DrawGlobalPermissionButton($"[{i + 1}]: {GetCrossWorldLinkshellName(i)}", offPosition, onPosition, ref controller.Global.CrossWorldLinkshellValues[i]);
         });
 
         SharedUserInterfaces.ContentBox("PermissionsGlobalElevated", AetherRemoteStyle.ElevatedBackground, true, () =>
         {
-            ImGui.TextUnformatted("Elevated Permissions");
-            ImGui.Checkbox("Permanent Transformations", ref controller.Global.PermanentTransformationValue); ImGui.SameLine(half);
-            ImGui.Checkbox("Possession", ref controller.Global.PossessionValue);
+            ImGui.AlignTextToFramePadding();
+            
+            ImGui.TextUnformatted("Elevated Permissions"); ImGui.SameLine(offPosition);
+            ImGui.TextUnformatted("Off"); ImGui.SameLine(onPosition);
+            ImGui.TextUnformatted("On");
+            ImGui.Separator();
+            
+            // DrawGlobalPermissionButton("Permanent Transformations", offPosition, onPosition, ref controller.Global.PermanentTransformationValue);
+            DrawGlobalPermissionButton("Possession", offPosition, onPosition, ref controller.Global.PossessionValue);
         });
         
         SharedUserInterfaces.ContentBox("PermissionsGlobalSave", AetherRemoteStyle.PanelBackground, false, () =>
@@ -72,5 +90,34 @@ public partial class FriendsViewUi
             if (ImGui.IsItemHovered())
                 ImGui.SetTooltip("Save your global permissions");
         });
+    }
+    
+    /// <summary>
+    ///     Draws the radio buttons to make up the three options for an individual permission
+    /// </summary>
+    private static void DrawGlobalPermissionButton(string permission, float offPosition, float onPosition, ref bool value)
+    {
+        ImGui.TextUnformatted(permission); ImGui.SameLine(offPosition);
+
+        if (value)
+        {
+            if (ImGui.RadioButton($"##Off{permission}", false))
+                value = false;
+            
+            ImGui.SameLine(onPosition);
+            
+            ImGui.PushStyleColor(ImGuiCol.CheckMark, ImGuiColors.HealerGreen);
+            ImGui.RadioButton($"##On{permission}", true);
+            ImGui.PopStyleColor();
+        }
+        else
+        {
+            ImGui.RadioButton($"##Off{permission}", true);
+            
+            ImGui.SameLine(onPosition);
+
+            if (ImGui.RadioButton($"##On{permission}", false))
+                value = true;
+        }
     }
 }
