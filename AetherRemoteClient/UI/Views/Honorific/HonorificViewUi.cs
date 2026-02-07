@@ -2,6 +2,7 @@ using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Style;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Dependencies.Honorific.Domain;
@@ -11,28 +12,22 @@ using Dalamud.Interface.ImGuiSeStringRenderer;
 using Dalamud.Interface.Utility;
 using Lumina.Text;
 
-// ReSharper disable RedundantBoolCompare
-
 namespace AetherRemoteClient.UI.Views.Honorific;
 
 public class HonorificViewUi(HonorificViewUiController controller, FriendsListComponentUi friendsList, CommandLockoutService commandLockoutService, SelectionManager selectionManager) : IDrawable
 {
-    // Const
-    private const int SendHonorificButtonHeight = 40;
-    
     public void Draw()
     {
         ImGui.BeginChild("HonorificContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
 
         var width = ImGui.GetWindowWidth();
-        var padding = new Vector2(ImGui.GetStyle().WindowPadding.X, 0);
 
         var begin = ImGui.GetCursorPosY();
         SharedUserInterfaces.ContentBox("TitleSearch", AetherRemoteStyle.PanelBackground, true, () =>
         {
             SharedUserInterfaces.MediumText("Select Title");
 
-            ImGui.SetNextItemWidth(width - padding.X * 4 - ImGui.GetFontSize());
+            ImGui.SetNextItemWidth(width - AetherRemoteImGui.WindowPadding.X * 4 - ImGui.GetFontSize());
             ImGui.InputTextWithHint("##TitleSearchBar", "Search", ref controller.SearchTerm, 32);
 
             ImGui.SameLine();
@@ -42,15 +37,14 @@ public class HonorificViewUi(HonorificViewUiController controller, FriendsListCo
         });
         
         var headerHeight = ImGui.GetCursorPosY() - begin;
-        var honorificContextBoxSize = new Vector2(0, ImGui.GetWindowHeight() - headerHeight - padding.X * 3 - SendHonorificButtonHeight);
+        var honorificContextBoxSize = new Vector2(0, ImGui.GetWindowHeight() - headerHeight - AetherRemoteImGui.WindowPadding.X * 3 - AetherRemoteDimensions.SendCommandButtonHeight);
         if (ImGui.BeginChild("##HonorificContextBoxDisplay", honorificContextBoxSize, true, ImGuiWindowFlags.NoScrollbar))
         {
-            var draw = ImGui.GetWindowDrawList();
             var parameters = new SeStringDrawParams
             {
                 Color = 0xFFFFFFFF,
                 WrapWidth = float.MaxValue,
-                TargetDrawList = draw,
+                TargetDrawList = ImGui.GetWindowDrawList(),
                 Font = UiBuilder.DefaultFont,
                 FontSize = UiBuilder.DefaultFontSizePx
             };
@@ -62,7 +56,7 @@ public class HonorificViewUi(HonorificViewUiController controller, FriendsListCo
                 
                 ImGui.PushStyleColor(ImGuiCol.Header, AetherRemoteStyle.PrimaryColor);
                 foreach (var title in titles)
-                    DrawTitleOption(draw, parameters, title);
+                    DrawTitleOption(parameters, title);
                 
                 ImGui.PopStyleColor();
             }
@@ -74,22 +68,23 @@ public class HonorificViewUi(HonorificViewUiController controller, FriendsListCo
         
         SharedUserInterfaces.ContentBox("HonorificSend", AetherRemoteStyle.PanelBackground, false, () =>
         {
+            var size = new Vector2(ImGui.GetWindowWidth() - AetherRemoteImGui.WindowPadding.X * 2, AetherRemoteDimensions.SendCommandButtonHeight);
             if (selectionManager.Selected.Count is 0)
             {
                 ImGui.BeginDisabled();
-                ImGui.Button("You must select at least one friend", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendHonorificButtonHeight));
+                ImGui.Button("You must select at least one friend", size);
                 ImGui.EndDisabled();
             }
             else if (controller.MissingPermissionsForATarget())
             {
                 ImGui.BeginDisabled();
-                ImGui.Button("You lack permissions for one or more of your targets", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendHonorificButtonHeight));
+                ImGui.Button("You lack permissions for one or more of your targets", size);
                 ImGui.EndDisabled();
             }
             else if (controller.SelectedTitle is null)
             {
                 ImGui.BeginDisabled();
-                ImGui.Button("Select an Honorific", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendHonorificButtonHeight));
+                ImGui.Button("Select an Honorific", size);
                 ImGui.EndDisabled();
             }
             else
@@ -97,12 +92,12 @@ public class HonorificViewUi(HonorificViewUiController controller, FriendsListCo
                 if (commandLockoutService.IsLocked)
                 {
                     ImGui.BeginDisabled();
-                    ImGui.Button("Send Honorific", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendHonorificButtonHeight));
+                    ImGui.Button("Send Honorific", size);
                     ImGui.EndDisabled();
                 }
                 else
                 {
-                    if (ImGui.Button("Send Honorific", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendHonorificButtonHeight)))
+                    if (ImGui.Button("Send Honorific", size))
                         controller.SendHonorific();
                 }
             }
@@ -113,28 +108,22 @@ public class HonorificViewUi(HonorificViewUiController controller, FriendsListCo
         friendsList.Draw();
     }
 
-    private void DrawTitleOption(ImDrawListPtr draw, SeStringDrawParams parameters, HonorificInfo honorific)
+    private void DrawTitleOption(SeStringDrawParams parameters, HonorificInfo honorific)
     {
         var builder = new SeStringBuilder();
 
-        if (honorific.Color is not null) builder.PushColorRgba(new Vector4(honorific.Color.Value, 1f));
-        if (honorific.Glow is not null) builder.PushEdgeColorRgba(new Vector4(honorific.Glow.Value, 1f));
+        if (honorific.Color is not null) builder.PushColorRgba(new Vector4(honorific.Color, 1f));
+        if (honorific.Glow is not null) builder.PushEdgeColorRgba(new Vector4(honorific.Glow, 1f));
         builder.Append(honorific.Title == string.Empty ? "[Blank Title]" : honorific.Title);
         if (honorific.Glow is not null) builder.PopEdgeColor();
         if (honorific.Color is not null) builder.PopColor();
-
-        draw.ChannelsSplit(2);
-        draw.ChannelsSetCurrent(1);
         
         parameters.ScreenOffset = ImGui.GetCursorScreenPos();
         
-        var bytes = Dalamud.Game.Text.SeStringHandling.SeString.Parse(builder.GetViewAsSpan()).Encode();
-        ImGuiHelpers.SeStringWrapped(bytes, parameters);
-        
-        draw.ChannelsSetCurrent(0);
         if (ImGui.Selectable($"##{honorific.Title}", controller.SelectedTitle == honorific))
             controller.SelectedTitle = honorific;
         
-        draw.ChannelsMerge();
+        var bytes = Dalamud.Game.Text.SeStringHandling.SeString.Parse(builder.GetViewAsSpan()).Encode();
+        ImGuiHelpers.SeStringWrapped(bytes, parameters);
     }
 }

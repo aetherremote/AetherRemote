@@ -62,12 +62,8 @@ public class HonorificHandler : AbstractNetworkHandler, IDisposable
         
         try
         {
-            if (await Plugin.RunOnFramework(() => Plugin.ObjectTable.LocalPlayer?.ObjectIndex).ConfigureAwait(false) is not { } index)
-                return ActionResultBuilder.Fail(ActionResultEc.ClientNoLocalPlayer);
-
-            if (await _honorific.SetCharacterTitle(index, request.Honorific).ConfigureAwait(false))
+            if (await _honorific.SetCharacterTitle(request.Honorific).ConfigureAwait(false))
             {
-                NotificationHelper.Honorific();
                 _log.Custom($"{friend.NoteOrFriendCode} applied the {request.Honorific.Title} honorific to you");
                 return ActionResultBuilder.Ok();
             }

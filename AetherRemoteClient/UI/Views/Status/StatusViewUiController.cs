@@ -62,16 +62,9 @@ public class StatusViewUiController(
         }
     }
 
-    public async void ResetHonorific()
+    public void ResetHonorific()
     {
-        try
-        {
-            await honorific.ClearCharacterTitle(0).ConfigureAwait(false);
-        }
-        catch (Exception)
-        {
-            // Ignored
-        }
+        honorific.ClearCharacterTitle();
     }
     
     public async void ResetCollection()

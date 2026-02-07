@@ -17,6 +17,11 @@ public class HonorificTitle
     ///     The title of this honorific
     /// </summary>
     public string? Title = string.Empty;
+
+    /// <summary>
+    ///     If this honorific is a prefix or not
+    /// </summary>
+    public bool IsPrefix;
     
     /// <summary>
     ///     The color of this honorific, if one exists
@@ -37,6 +42,7 @@ public class HonorificTitle
         return new HonorificInfo
         {
             Title = Title,
+            IsPrefix = IsPrefix,
             Color = Color,
             Glow = Glow
         };

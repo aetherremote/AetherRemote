@@ -19,9 +19,6 @@ public partial class PrimaryHub
     [HubMethodName(HubMethod.Honorific)]
     public async Task<ActionResponse> Honorific(HonorificRequest request)
     {
-        // TODO Remove when Honorifics are stable
-        return new ActionResponse(ActionResponseEc.Disabled, []);
-        
         var friendCode = FriendCode;
         LogWithBehavior($"[HonorificRequest] Sender = {friendCode}, Targets = {string.Join(", ", request.TargetFriendCodes)}, Honorific = {request.Honorific}", LogMode.Console);
         return await honorificHandler.Handle(friendCode, request, Clients);

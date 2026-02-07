@@ -8,6 +8,7 @@ using AetherRemoteClient.Domain;
 using AetherRemoteClient.Hooks;
 using AetherRemoteClient.Managers;
 using Dalamud.Game.ClientState.Objects.Enums;
+using Dalamud.Game.Command;
 using Newtonsoft.Json;
 
 namespace AetherRemoteClient.UI.Views.Debug;
@@ -20,11 +21,7 @@ public class DebugViewUiController(CustomizePlusService c)
     {
         try
         {
-            var s = await c.GetProfiles().ConfigureAwait(false);
-            if (s is null)
-                return;
-
-            _node = s;
+            Plugin.CommandManager.ProcessCommand("/honorific force set title Hello");
         }
         catch (Exception e)
         {

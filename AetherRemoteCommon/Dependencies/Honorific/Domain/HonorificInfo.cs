@@ -7,6 +7,7 @@ namespace AetherRemoteCommon.Dependencies.Honorific.Domain;
 public record HonorificInfo
 {
     public string? Title { get; set; }
+    public bool IsPrefix { get; set; }
     public SerializableVector3? Color { get; set; }
     public SerializableVector3? Glow { get; set; }
 }

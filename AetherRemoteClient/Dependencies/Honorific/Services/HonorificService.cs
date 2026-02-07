@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Numerics;
+using System.Text;
 using System.Threading.Tasks;
 using AetherRemoteClient.Dependencies.Honorific.Domain;
 using AetherRemoteClient.Domain.Interfaces;
@@ -11,13 +13,20 @@ using Newtonsoft.Json;
 
 namespace AetherRemoteClient.Dependencies.Honorific.Services;
 
-// ReSharper disable RedundantBoolCompare
-
 /// <summary>
 ///     Provides access to Honorific
 /// </summary>
 public class HonorificService : IExternalPlugin
 {
+    /* =========================================================================
+     *                               READ ME
+     * =========================================================================
+     * There are issues with syncing services and applying
+     * temporary honorifics to the local player, causing crashes on re-loading.
+     * To get around this, some of the IPCs have been replaced with
+     * functionality to call using the command handler.
+     */
+    
     // Const
     private const int ExpectedMajor = 3;
     private const int ExpectedMinor = 2;
@@ -25,10 +34,7 @@ public class HonorificService : IExternalPlugin
     
     // Instantiated
     private readonly ICallGateSubscriber<(uint, uint)> _apiVersion;
-    private readonly ICallGateSubscriber<int, object> _clearCharacterTitle;
     private readonly ICallGateSubscriber<int, string> _getCharacterTitle;
-    private readonly ICallGateSubscriber<string> _getLocalCharacterTitle;
-    private readonly ICallGateSubscriber<int, string, object> _setCharacterTitle;
     
     /// <summary>
     ///     Is Honorific available for use?
@@ -47,9 +53,6 @@ public class HonorificService : IExternalPlugin
     {
         _apiVersion = Plugin.PluginInterface.GetIpcSubscriber<(uint, uint)>("Honorific.ApiVersion");
         _getCharacterTitle = Plugin.PluginInterface.GetIpcSubscriber<int, string>("Honorific.GetCharacterTitle");
-        _getLocalCharacterTitle = Plugin.PluginInterface.GetIpcSubscriber<string>("Honorific.GetLocalCharacterTitle");
-        _clearCharacterTitle = Plugin.PluginInterface.GetIpcSubscriber<int, object>("Honorific.ClearCharacterTitle");
-        _setCharacterTitle = Plugin.PluginInterface.GetIpcSubscriber<int, string, object>("Honorific.SetCharacterTitle");
     }
     
     /// <summary>
@@ -58,33 +61,31 @@ public class HonorificService : IExternalPlugin
     public async Task<bool> TestIpcAvailability()
     {
         ApiAvailable = false;
-
-        var (major, minor) = await Plugin.RunOnFrameworkSafely(() => _apiVersion.InvokeFunc()).ConfigureAwait(false);
-
-        if (major is not ExpectedMajor || minor < ExpectedMinor)
+        
+        try
+        {
+            var (major, minor) = await Plugin.RunOnFramework(() => _apiVersion.InvokeFunc()).ConfigureAwait(false);
+            if (major is not ExpectedMajor || minor < ExpectedMinor)
+                return false;
+        
+            ApiAvailable = true;
+        
+            IpcReady?.Invoke(this, EventArgs.Empty);
+            return true;
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error($"[HonorificService.TestIpcAvailability] {e}");
             return false;
-        
-        ApiAvailable = true;
-        
-        IpcReady?.Invoke(this, EventArgs.Empty);
-        return true;
+        }
     }
     
     /// <summary>
     ///     Clears the local character's title. Honorific does not allow clients to change their honorifics if set by another plugin
     /// </summary>
-    public async Task<bool> ClearCharacterTitle(int index)
+    public bool ClearCharacterTitle()
     {
-        try
-        {
-            await Plugin.RunOnFramework(() => _clearCharacterTitle.InvokeAction(index)).ConfigureAwait(false);
-            return true;
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Error($"[HonorificService.ClearTitle] {e}");
-            return false;
-        }
+        return Plugin.CommandManager.ProcessCommand("/honorific force clear");
     }
 
     /// <summary>
@@ -147,38 +148,45 @@ public class HonorificService : IExternalPlugin
             return [];
         }
     }
-
-    /// <summary>
-    ///     Gets the local player's title
-    /// </summary>
-    public async Task<string?> GetLocalCharacterTitle()
-    {
-        try
-        {
-            return await Plugin.RunOnFramework(() => _getLocalCharacterTitle.InvokeFunc()).ConfigureAwait(false);
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Error($"[HonorificService.GetLocalCharacterTitle] {e}");
-            return null;
-        }
-    }
     
     /// <summary>
     ///     Sets a title
     /// </summary>
-    public async Task<bool> SetCharacterTitle(int index, HonorificInfo title)
+    public async Task<bool> SetCharacterTitle(HonorificInfo honorific)
     {
-        try
+        var sb = new StringBuilder();
+        sb.Append("/honorific force set ");
+        sb.Append(honorific.Title);
+        sb.Append(" | ");
+        sb.Append(honorific.IsPrefix ? "prefix" : "suffix");
+
+        if (honorific.Color is not null)
         {
-            var json = JsonConvert.SerializeObject(title);
-            await Plugin.RunOnFramework(() => _setCharacterTitle.InvokeAction(index, json)).ConfigureAwait(false);
-            return true;
+            sb.Append(" | ");
+            sb.Append(ToHex(honorific.Color));
         }
-        catch (Exception e)
+
+        if (honorific.Glow is not null)
         {
-            Plugin.Log.Error($"[HonorificService.SetTitle] {e}");
-            return false;
+            // The command function doesn't let us skip syntax, so we need to include a generic white
+            if (honorific.Color is null)
+            {
+                sb.Append(" | ");
+                sb.Append("#FFFFFF");
+            }
+            
+            sb.Append(" | ");
+            sb.Append(ToHex(honorific.Glow));
         }
+
+        return await Plugin.RunOnFramework(() => Plugin.CommandManager.ProcessCommand(sb.ToString())).ConfigureAwait(false);
+    }
+    
+    private static string ToHex(Vector3 color)
+    {
+        var r = (byte)Math.Clamp(color.X * byte.MaxValue, byte.MinValue, byte.MaxValue);
+        var g = (byte)Math.Clamp(color.Y * byte.MaxValue, byte.MinValue, byte.MaxValue);
+        var b = (byte)Math.Clamp(color.Z * byte.MaxValue, byte.MinValue, byte.MaxValue);
+        return $"#{r:X2}{g:X2}{b:X2}";
     }
 }

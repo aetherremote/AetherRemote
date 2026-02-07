@@ -62,22 +62,16 @@ public class BodySwapViewUi(FriendsListComponentUi friendsList, BodySwapViewUiCo
                 controller.SwapMods = !controller.SwapMods;
             ImGui.SameLine();
             
-            // TODO: Remove when Moodles is fixed
-            ImGui.BeginDisabled();
             if (DrawAttributeButton(FontAwesomeIcon.Icons, rowTwoButtonWidth,"Moodles", controller.SwapMoodles, RequiresMoodles))
                 controller.SwapMoodles = !controller.SwapMoodles;
-            ImGui.EndDisabled();
             
             ImGui.SameLine();
             if (DrawAttributeButton(FontAwesomeIcon.Plus, rowTwoButtonWidth,"Customize+", controller.SwapCustomizePlus, RequiresCustomize))
                 controller.SwapCustomizePlus = !controller.SwapCustomizePlus;
             ImGui.Spacing();
             
-            // TODO: Remove when Honorific is fixed
-            ImGui.BeginDisabled();
             if (DrawAttributeButton(FontAwesomeIcon.Crown, rowTwoButtonWidth,"Honorific", controller.SwapHonorific, RequiresHonorific))
                 controller.SwapHonorific = !controller.SwapHonorific;
-            ImGui.EndDisabled();
             
             ImGui.EndChild();
         }
