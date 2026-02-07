@@ -26,6 +26,11 @@ public enum PossessionResultEc
     /// </summary>
     FailedToReadCharacterConfiguration,
     
+    /// <summary>
+    ///     An agreement has not been accepted
+    /// </summary>
+    HasNotAcceptedAgreement,
+    
     BadData,
     
     Success,

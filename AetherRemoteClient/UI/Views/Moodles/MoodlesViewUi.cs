@@ -6,6 +6,7 @@ using AetherRemoteClient.Dependencies.Moodles.Domain;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Style;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Dependencies.Moodles.Enums;
@@ -22,7 +23,6 @@ public class MoodlesViewUi(
 {
     // Const
     private const int DefaultLinesPerMoodleTitle = 3;
-    private const int SendMoodleButtonHeight = 40;
     private const float IconSizeMultiplier = 0.5f;
     private const float DefaultMoodleIconSizeOffset = 8f * IconSizeMultiplier; // Debuffs have more spacing at the top
     private static readonly Vector2 DefaultMoodleButtonSize = new(94, 97);
@@ -32,8 +32,20 @@ public class MoodlesViewUi(
     {
         ImGui.BeginChild("MoodlesContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
 
+        if (AgreementsService.HasAgreedTo(AgreementsService.Agreements.MoodlesWarning))
+            DrawContent();
+        else
+            DrawWarning();
+
+        ImGui.EndChild();
+        ImGui.SameLine();
+        friendsList.Draw();
+    }
+
+    private void DrawContent()
+    {
         var width = ImGui.GetWindowWidth();
-        var padding = new Vector2(ImGui.GetStyle().WindowPadding.X, 0);
+        var padding = new Vector2(AetherRemoteImGui.WindowPadding.X, 0);
 
         var begin = ImGui.GetCursorPosY();
         SharedUserInterfaces.ContentBox("MoodlesFromMoodles", AetherRemoteStyle.PanelBackground, true, () =>
@@ -50,7 +62,7 @@ public class MoodlesViewUi(
         });
         
         var headerHeight = ImGui.GetCursorPosY() - begin;
-        var moodlesContextBoxSize = new Vector2(0, ImGui.GetWindowHeight() - headerHeight - padding.X * 3 - SendMoodleButtonHeight);
+        var moodlesContextBoxSize = new Vector2(0, ImGui.GetWindowHeight() - headerHeight - padding.X * 3 - AetherRemoteDimensions.SendCommandButtonHeight);
         if (ImGui.BeginChild("##MoodlesContextBoxDisplay", moodlesContextBoxSize, true, ImGuiWindowFlags.NoScrollbar))
         {
             var maxMoodleButtonWidth = width - padding.X;
@@ -83,16 +95,17 @@ public class MoodlesViewUi(
         
         SharedUserInterfaces.ContentBox("MoodlesSend", AetherRemoteStyle.PanelBackground, false, () =>
         {
+            var size = new Vector2(ImGui.GetWindowWidth() - padding.X * 2, AetherRemoteDimensions.SendCommandButtonHeight);
             if (selectionManager.Selected.Count is 0)
             {
                 ImGui.BeginDisabled();
-                ImGui.Button("You must select at least one friend", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendMoodleButtonHeight));
+                ImGui.Button("You must select at least one friend", size);
                 ImGui.EndDisabled();
             }
             else if (controller.MissingPermissionsForATarget())
             {
                 ImGui.BeginDisabled();
-                ImGui.Button("You lack permissions for one or more of your targets", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendMoodleButtonHeight));
+                ImGui.Button("You lack permissions for one or more of your targets", size);
                 ImGui.EndDisabled();
             }
             else
@@ -100,20 +113,41 @@ public class MoodlesViewUi(
                 if (commandLockoutService.IsLocked)
                 {
                     ImGui.BeginDisabled();
-                    ImGui.Button("Send Moodle", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendMoodleButtonHeight));
+                    ImGui.Button("Send Moodle", size);
                     ImGui.EndDisabled();
                 }
                 else
                 {
-                    if (ImGui.Button("Send Moodle", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendMoodleButtonHeight)))
+                    if (ImGui.Button("Send Moodle", size))
                         controller.SendMoodle();
                 }
             }
         });
+    }
 
-        ImGui.EndChild();
-        ImGui.SameLine();
-        friendsList.Draw();
+    private void DrawWarning()
+    {
+        SharedUserInterfaces.ContentBox("MoodlesWarning", AetherRemoteColors.PrimaryColor, true, () =>
+        {
+            SharedUserInterfaces.BigTextCentered("Warning");
+        });
+        
+        SharedUserInterfaces.ContentBox("MoodlesWarningText", AetherRemoteColors.PanelColor, true, () =>
+        {
+            ImGui.PushTextWrapPos(ImGui.GetWindowWidth() - AetherRemoteImGui.WindowPadding.X);
+            ImGui.TextWrapped("There is currently an issue in Moodles preventing syncing services from properly updating. This most commonly results is Moodles being shown to other players despite them being right-clicked off.");
+            ImGui.Spacing();
+            ImGui.TextWrapped("There is nothing I can do about this, and it seemingly happens at random.");
+            ImGui.Spacing();
+            ImGui.TextWrapped("If you suspect a Moodle is there that shouldn't be, visit the Cleanup Tab inside of Moodles by enabling Debug Mode in the Settings. Otherwise, you need to acknowledge the possibility that this may happen.");
+            ImGui.PopTextWrapPos();
+        });
+        
+        SharedUserInterfaces.ContentBox("MoodlesWarningAccept", AetherRemoteColors.PanelColor, false, () =>
+        {
+            if (ImGui.Button("I understand the risks", new Vector2(ImGui.GetWindowWidth() - AetherRemoteImGui.WindowPadding.X * 2, AetherRemoteDimensions.SendCommandButtonHeight)))
+                MoodlesViewUiController.AcceptMoodlesTermsOfService();
+        });
     }
     
     private void DrawDisplayMoodleButton(Moodle moodle, int index, Vector2 padding, ImFontPtr font, float fontSize)
@@ -143,7 +177,7 @@ public class MoodlesViewUi(
             ImGui.Image(icon.Handle, DefaultMoodleIconSize);
 
             var screenPosition = ImGui.GetCursorScreenPos();
-            CenterWrapTextAndRender(screenPosition + padding, screenPosition + new Vector2(DefaultMoodleButtonSize.X, ImGui.GetFontSize() * 3) - padding, font, fontSize, moodle.PrettyTitle);
+            CenterWrapTextAndRender(screenPosition + padding, screenPosition + new Vector2(DefaultMoodleButtonSize.X, fontSize * 3) - padding, font, fontSize, moodle.PrettyTitle);
         }
         
         ImGui.EndGroup();

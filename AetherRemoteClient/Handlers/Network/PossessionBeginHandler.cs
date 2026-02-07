@@ -40,6 +40,11 @@ public class PossessionBeginHandler : AbstractNetworkHandler, IDisposable
     private async Task<PossessionResultEc> Handle(PossessionBeginCommand command)
     {
         Plugin.Log.Verbose($"{command}");
+        
+        // If the client has not accepted the agreement
+        if (AgreementsService.HasAgreedTo(AgreementsService.Agreements.MoodlesWarning) is false)
+            return PossessionResultEc.HasNotAcceptedAgreement;
+        
         var sender = TryGetFriendWithCorrectPermissions(Operation, command.SenderFriendCode, Permissions);
         if (sender.Result is not ActionResultEc.Success)
         {

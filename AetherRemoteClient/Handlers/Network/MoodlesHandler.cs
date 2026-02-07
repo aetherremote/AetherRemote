@@ -51,6 +51,10 @@ public class MoodlesHandler : AbstractNetworkHandler, IDisposable
     private async Task<ActionResult<Unit>> Handle(MoodlesCommand request)
     {
         Plugin.Log.Verbose($"{request}");
+
+        // If the client has not accepted the agreement
+        if (AgreementsService.HasAgreedTo(AgreementsService.Agreements.MoodlesWarning) is false)
+            return ActionResultBuilder.Fail(ActionResultEc.HasNotAcceptedAgreement);
         
         var sender = TryGetFriendWithCorrectPermissions(Operation, request.SenderFriendCode, Permissions);
         if (sender.Result is not ActionResultEc.Success)

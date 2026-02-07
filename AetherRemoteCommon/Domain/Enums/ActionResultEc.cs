@@ -81,6 +81,11 @@ public enum ActionResultEc
     TargetTimeout,
     
     /// <summary>
+    ///     An agreement has not been accepted
+    /// </summary>
+    HasNotAcceptedAgreement,
+    
+    /// <summary>
     ///     Action was successful
     /// </summary>
     Success,

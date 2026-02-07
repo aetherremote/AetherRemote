@@ -22,7 +22,7 @@ public class PossessionViewUi(
     {
         ImGui.BeginChild("PossessionContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
         
-        if (Plugin.Configuration.AcceptedPossessionAgreement)
+        if (AgreementsService.HasAgreedTo(AgreementsService.Agreements.Possession))
             DrawContent();
         else
             DrawWarning();
@@ -163,7 +163,7 @@ public class PossessionViewUi(
         SharedUserInterfaces.ContentBox("PossessionWarningAccept", AetherRemoteColors.PanelColor, false, () =>
         {
             if (ImGui.Button("I understand the risks", new Vector2(ImGui.GetWindowWidth() - AetherRemoteImGui.WindowPadding.X * 2, AetherRemoteDimensions.SendCommandButtonHeight)))
-                _ = PossessionViewUiController.AcceptPossessionTermsOfService();
+                PossessionViewUiController.AcceptPossessionTermsOfService();
         });
     }
 }

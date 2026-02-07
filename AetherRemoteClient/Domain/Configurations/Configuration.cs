@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 
 namespace AetherRemoteClient.Domain.Configurations;
@@ -23,9 +22,9 @@ public class Configuration
     public bool SafeMode = false;
     
     /// <summary>
-    ///     Did the user accept the risks of utilizing the possession feature
+    ///     A dictionary of agreements a client must accept
     /// </summary>
-    public bool AcceptedPossessionAgreement = false;
+    public Dictionary<string, bool> Agreements = [];
 
     /// <summary>
     ///     Map of friend code to note

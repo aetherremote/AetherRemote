@@ -129,6 +129,11 @@ public class MoodlesViewUiController : IDisposable
         return false;
     }
     
+    public static void AcceptMoodlesTermsOfService()
+    {
+        AgreementsService.AgreeTo(AgreementsService.Agreements.MoodlesWarning);
+    }
+    
     private void OnIpcReady(object? sender, EventArgs e)
     {
         RefreshMoodles();

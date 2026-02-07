@@ -2,6 +2,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Managers.Possession;
+using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using Dalamud.Utility;
@@ -27,10 +28,9 @@ public class PossessionViewUiController(PossessionManager possessions, Selection
             NotificationHelper.Success("Unpossess Successful", string.Empty);
     }
 
-    public static async Task AcceptPossessionTermsOfService()
+    public static void AcceptPossessionTermsOfService()
     {
-        Plugin.Configuration.AcceptedPossessionAgreement = true;
-        await Plugin.Configuration.Save().ConfigureAwait(false);
+        AgreementsService.AgreeTo(AgreementsService.Agreements.Possession);
     }
 
     public bool MissingPermissionsForATarget()
