@@ -43,6 +43,7 @@ public class CustomizePlusViewUi(
                 _ = controller.RefreshCustomizeProfiles();
         });
 
+        // TODO: Factor out ImGui calls -> AetherRemoteImGui
         var headerHeight = ImGui.GetCursorPosY() - begin;
         var profilesContextBoxSize = new Vector2(0, ImGui.GetWindowHeight() - headerHeight - padding.X * 3 - SendProfileButtonHeight);
         if (ImGui.BeginChild("##ProfilesContextBoxDisplay", profilesContextBoxSize, true, ImGuiWindowFlags.NoScrollbar))

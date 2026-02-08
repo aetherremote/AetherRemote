@@ -27,7 +27,7 @@ public class CustomizePlusViewUiController : IDisposable
     private readonly SelectionManager _selectionManager;
     
     /// <summary>
-    ///     Customize+ data to send
+    ///     Search for the profile we'd like to send
     /// </summary>
     public string SearchTerm = string.Empty;
     
@@ -90,14 +90,14 @@ public class CustomizePlusViewUiController : IDisposable
         {
             // The recursive part, filtering on the children to see if there were any matches
             var children = FilterFolderNodes(node.Children.Values, searchTerms).ToDictionary(n => n.Name);
-
-            // Check this node to see if it matches too
-            var matches = node.Name.Contains(searchTerms, StringComparison.OrdinalIgnoreCase);
-
-            // If this node does not match and has no matching children, skip it
+            
+            // Check if the item inside the folder's name matches
+            var matches = node.Content is not null && node.Content.Name.Contains(searchTerms, StringComparison.OrdinalIgnoreCase);
+            
+            // If this is a folder with no children, exclude it
             if (matches is false && children.Count is 0)
                 continue;
-
+            
             // Add
             results.Add(new FolderNode<Profile>(node.Name, node.Content, children));
         }
@@ -113,7 +113,7 @@ public class CustomizePlusViewUiController : IDisposable
         SelectedProfileId = Guid.Empty;
 
         _sorted = await _customizePlusService.GetProfiles().ConfigureAwait(false) is { } unsorted
-            ? unsorted.Children.Values.ToList().OrderBy(node => node.Content is not null).ThenBy(node => node.Name).ToList()
+            ? unsorted.Children.Values.ToList()
             : null;
     }
     

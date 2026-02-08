@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using AetherRemoteClient.Dependencies.Glamourer.Domain;
 using AetherRemoteClient.Dependencies.Glamourer.Services;
 using AetherRemoteClient.Domain;
@@ -25,19 +26,37 @@ public class TransformationViewUiController : IDisposable
     private readonly NetworkService _networkService;
     private readonly SelectionManager _selectionManager;
     
-    // TODO: More commenting
-    
+    /// <summary>
+    ///     Search for the design we'd like to send
+    /// </summary>
     public string SearchTerm = string.Empty;
     
-    private List<Folder<Design>> _designs = [];
-    public List<Folder<Design>> FilteredDesigns => SearchTerm == string.Empty 
-        ? _designs.ToList()
-        : _designs.Select(folder => new Folder<Design>(folder.Path, folder.Content.Where(design => design.Name.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase)).ToList())).ToList();
-    
+    /// <summary>
+    ///     The currently selected Guid of the Design to send
+    /// </summary>
     public Guid SelectedDesignId = Guid.Empty;
+    
+    /// <summary>
+    ///     Cached list of designs
+    /// </summary>
+    private List<FolderNode<Design>>? _sorted;
+    
+    /// <summary>
+    ///     Filtered cached list of designs
+    /// </summary>
+    private List<FolderNode<Design>>? _filtered;
+    
+    /// <summary>
+    ///     The designs to display in the Ui
+    /// </summary>
+    public List<FolderNode<Design>>? Designs => SearchTerm == string.Empty ? _sorted : _filtered;
+    
     public bool ShouldApplyCustomization = true;
     public bool ShouldApplyEquipment = true;
 
+    /// <summary>
+    ///     <inheritdoc cref="TransformationViewUiController"/>
+    /// </summary>
     public TransformationViewUiController(CommandLockoutService commandLockoutService, GlamourerService glamourer, NetworkService networkService, SelectionManager selectionManager)
     {
         _commandLockoutService = commandLockoutService;
@@ -47,21 +66,55 @@ public class TransformationViewUiController : IDisposable
 
         _glamourerService.IpcReady += OnIpcReady;
         if (_glamourerService.ApiAvailable)
-            RefreshDesigns();
+            _ = RefreshGlamourerDesigns();
     }
     
-    public async void RefreshDesigns()
+    /// <summary>
+    ///     Filters the sorted design list by search term
+    /// </summary>
+    public void FilterDesignsBySearchTerm()
     {
-        try
+        _filtered = _sorted is not null 
+            ? FilterFolderNodes(_sorted, SearchTerm).ToList() 
+            : null;
+    }
+    
+    /// <summary>
+    ///     Recursive method to filter nodes based on both folders and content names
+    /// </summary>
+    private List<FolderNode<Design>> FilterFolderNodes(IEnumerable<FolderNode<Design>> nodes, string searchTerms)
+    {
+        // Reset the selected so possibly unselected designs aren't stored
+        SelectedDesignId = Guid.Empty;
+        
+        // Iterate to determine what stays and what goes
+        var results = new List<FolderNode<Design>>();
+        foreach (var node in nodes)
         {
-            SelectedDesignId = Guid.Empty;
+            // The recursive part, filtering on the children to see if there were any matches
+            var children = FilterFolderNodes(node.Children.Values, searchTerms).ToDictionary(n => n.Name);
 
-            _designs = await _glamourerService.GetDesignList().ConfigureAwait(false);
+            // Check if the item inside the folder's name matches
+            var matches = node.Content is not null && node.Content.Name.Contains(searchTerms, StringComparison.OrdinalIgnoreCase);
+            
+            // If this is a folder with no children, exclude it
+            if (matches is false && children.Count is 0)
+                continue;
+            
+            // Add
+            results.Add(new FolderNode<Design>(node.Name, node.Content, children));
         }
-        catch (Exception)
-        {
-            // Ignored
-        }
+        
+        return results;
+    }
+    
+    public async Task RefreshGlamourerDesigns()
+    {
+        SelectedDesignId = Guid.Empty;
+
+        _sorted = await _glamourerService.GetDesignList2().ConfigureAwait(false) is { } unsorted
+            ? unsorted.Children.Values.ToList()
+            : null;
     }
     
     public bool MissingPermissionsForATarget()
@@ -83,42 +136,35 @@ public class TransformationViewUiController : IDisposable
         return false;
     }
 
-    public async void SendDesign()
+    public async Task SendDesign()
     {
-        try
-        {
-            if (SelectedDesignId == Guid.Empty)
-                return;
+        if (SelectedDesignId == Guid.Empty)
+            return;
             
-            if (await _glamourerService.GetDesignAsync(SelectedDesignId).ConfigureAwait(false) is not { } design)
-                return;
+        if (await _glamourerService.GetDesignAsync(SelectedDesignId).ConfigureAwait(false) is not { } design)
+            return;
             
-            _commandLockoutService.Lock();
+        _commandLockoutService.Lock();
 
-            var flags = GlamourerApplyFlags.Once;
-            if (ShouldApplyCustomization)
-                flags |= GlamourerApplyFlags.Customization;
-            if (ShouldApplyEquipment)
-                flags |= GlamourerApplyFlags.Equipment;
+        var flags = GlamourerApplyFlags.Once;
+        if (ShouldApplyCustomization)
+            flags |= GlamourerApplyFlags.Customization;
+        if (ShouldApplyEquipment)
+            flags |= GlamourerApplyFlags.Equipment;
 
-            // Don't send one with nothing
-            if (flags is GlamourerApplyFlags.Once)
-                return;
+        // Don't send one with nothing
+        if (flags is GlamourerApplyFlags.Once)
+            return;
             
-            var request = new TransformRequest(_selectionManager.GetSelectedFriendCodes(), design, flags, null);
-            var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.Transform, request).ConfigureAwait(false);
+        var request = new TransformRequest(_selectionManager.GetSelectedFriendCodes(), design, flags, null);
+        var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.Transform, request).ConfigureAwait(false);
             
-            ActionResponseParser.Parse("Transformation", response);
-        }
-        catch (Exception)
-        {
-            // Ignored
-        }
+        ActionResponseParser.Parse("Transformation", response);
     }
     
     private void OnIpcReady(object? sender, EventArgs e)
     {
-        RefreshDesigns();
+        _ = RefreshGlamourerDesigns();
     }
 
     public void Dispose()

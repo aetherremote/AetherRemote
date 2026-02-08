@@ -104,7 +104,7 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
             return null;
         
         var result = await Plugin.RunOnFramework(() => _getProfileList.InvokeFunc()).ConfigureAwait(false);
-        var root = new FolderNode<Profile>("Root", null, null);
+        var root = new FolderNode<Profile>("Root", null);
         foreach (var path in result)
         {
             var parts = path.Path.Split('/', StringSplitOptions.RemoveEmptyEntries);
@@ -112,12 +112,14 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
 
             for (var i = 0; i < parts.Length; i++)
             {
-                var isLast = i == parts.Length - 1;
                 var part = parts[i];
-
                 if (current.Children.TryGetValue(part, out var node) is false)
                 {
-                    node = new FolderNode<Profile>(part, isLast ? new Profile(path.Id, path.Name) : null, null);
+                    var design = i == parts.Length - 1
+                        ? new Profile(path.Id, path.Name)
+                        : null;
+                    
+                    node = new FolderNode<Profile>(part, design);
                     current.Children[part] = node;
                 }
                 
@@ -125,7 +127,32 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
             }
         }
 
+        SortTree(root);
+        
         return root;
+    }
+    
+    /// <summary>
+    ///     The dictionary returned by glamourer is not sorted, so we will recursively go through and sort the children
+    /// </summary>
+    private static void SortTree<T>(FolderNode<T> root)
+    {
+        // Copy all the children from this node and sort them by folder, then name
+        var sorted = root.Children.Values
+            .OrderByDescending(node => node.IsFolder)
+            .ThenBy(node => node.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        
+        // Clear all the children with the values sorted and copied
+        root.Children.Clear();
+
+        // Reintroduce because dictionaries preserve insertion order
+        foreach (var node in sorted)
+            root.Children[node.Name] = node;
+        
+        // Recursively sort the remaining children
+        foreach (var child in root.Children.Values)
+            SortTree(child);
     }
     
     /// <summary>

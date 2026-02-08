@@ -128,6 +128,65 @@ public class GlamourerService : IExternalPlugin, IDisposable
     {
         return await Task.Run(GetDesignListExtended).ConfigureAwait(false);
     }
+
+    public async Task<FolderNode<Design>?> GetDesignList2()
+    {
+        if (ApiAvailable is false)
+            return null;
+        
+        var result = await Plugin.RunOnFramework(() => _getDesignListExtended.Invoke()).ConfigureAwait(false);
+        var root = new FolderNode<Design>("Root", null);
+        foreach (var (id, info) in result)
+        {
+            var parts = info.FullPath.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            var current = root;
+
+            for (var i = 0; i < parts.Length; i++)
+            {
+                var part = parts[i];
+                if (current.Children.TryGetValue(part, out var node) is false)
+                {
+                    var design = i == parts.Length - 1
+                        ? new Design(id, info.DisplayName, info.DisplayColor)
+                        : null;
+                    
+                    node = new FolderNode<Design>(part, design);
+                    current.Children[part] = node;
+                }
+
+                current = node;
+            }
+        }
+
+        // The dictionary provided by glamourer is not sorted
+        SortTree(root);
+        
+        // Return the sorted roots
+        return root;
+    }
+
+    /// <summary>
+    ///     The dictionary returned by glamourer is not sorted, so we will recursively go through and sort the children
+    /// </summary>
+    private static void SortTree<T>(FolderNode<T> root)
+    {
+        // Copy all the children from this node and sort them by folder, then name
+        var sorted = root.Children.Values
+            .OrderByDescending(node => node.IsFolder)
+            .ThenBy(node => node.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        
+        // Clear all the children with the values sorted and copied
+        root.Children.Clear();
+
+        // Reintroduce because dictionaries preserve insertion order
+        foreach (var node in sorted)
+            root.Children[node.Name] = node;
+        
+        // Recursively sort the remaining children
+        foreach (var child in root.Children.Values)
+            SortTree(child);
+    }
     
     private async Task<List<Folder<Design>>> GetDesignListExtended()
     {

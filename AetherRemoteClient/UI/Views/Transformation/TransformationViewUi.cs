@@ -1,5 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.Numerics;
+using AetherRemoteClient.Dependencies.Glamourer.Domain;
+using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
@@ -32,55 +35,22 @@ public class TransformationViewUi(
             SharedUserInterfaces.MediumText("Select Design");
 
             ImGui.SetNextItemWidth(width - padding.X * 4 - ImGui.GetFontSize());
-            ImGui.InputTextWithHint("##DesignSearchBar", "Search", ref controller.SearchTerm, 32);
+            if (ImGui.InputTextWithHint("##DesignSearchBar", "Search", ref controller.SearchTerm, 32))
+                controller.FilterDesignsBySearchTerm();
 
             ImGui.SameLine();
 
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Sync, null, "Refresh Designs"))
-                controller.RefreshDesigns();
+                _ = controller.RefreshGlamourerDesigns();
         });
         
+        // TODO: Factor out ImGui calls -> AetherRemoteImGui
         var headerHeight = ImGui.GetCursorPosY() - begin;
         var designContextBoxSize = new Vector2(0, ImGui.GetWindowHeight() - headerHeight - padding.X * 6 - SendDesignButtonHeight * 2);
-        
         if (ImGui.BeginChild("##DesignsDisplayBox", designContextBoxSize, true, ImGuiWindowFlags.NoScrollbar))
         {
-            var half = ImGui.GetWindowWidth() * 0.5f;
-            foreach (var folder in controller.FilteredDesigns)
-            {
-                if (folder.Content.Count is 0)
-                    continue;
-                
-                if (ImGui.CollapsingHeader(folder.Path))
-                {
-                    ImGui.PushStyleColor(ImGuiCol.Header, AetherRemoteStyle.PrimaryColor);
-                    for (var i = 0; i < folder.Content.Count; i++)
-                    {
-                        var design = folder.Content[i];
-                        var size = i % 2 is 0
-                            ? new Vector2(half - padding.X * 2, 0)
-                            : new Vector2(half - padding.X, 0);
-                        
-                        if (design.Color is uint.MaxValue)
-                        {
-                            if (ImGui.Selectable(design.Name, controller.SelectedDesignId == design.Id, ImGuiSelectableFlags.None, size))
-                                controller.SelectedDesignId = design.Id;
-                        }
-                        else
-                        {
-                            ImGui.PushStyleColor(ImGuiCol.Text, design.Color);
-                            if (ImGui.Selectable(design.Name, controller.SelectedDesignId == design.Id, ImGuiSelectableFlags.None, size))
-                                controller.SelectedDesignId = design.Id;
-                            ImGui.PopStyleColor();
-                        }
-                        
-                        if (i % 2 is 0 && i < folder.Content.Count - 1)
-                            ImGui.SameLine(half);
-                    }
-                    
-                    ImGui.PopStyleColor();
-                }
-            }
+            if (controller.Designs is { } designs)
+                DrawTree(designs);
             
             ImGui.EndChild();
         }
@@ -161,7 +131,7 @@ public class TransformationViewUi(
                 else
                 {
                     if (ImGui.Button("Transform", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendDesignButtonHeight)))
-                        controller.SendDesign();
+                        _ = controller.SendDesign().ConfigureAwait(false);
                 }
             }
         });
@@ -169,5 +139,45 @@ public class TransformationViewUi(
         ImGui.EndChild();
         ImGui.SameLine();
         friendsList.Draw();
+    }
+    
+    /// <summary>
+    ///     Renders a recursive tree view of the Glamourer designs
+    /// </summary>
+    private void DrawTree(IEnumerable<FolderNode<Design>> nodes)
+    {
+        foreach (var node in nodes)
+        {
+            // Folder node
+            if (node.Content is null)
+            {
+                // Create the node
+                // ReSharper disable once InvertIf
+                if (ImGui.TreeNodeEx(node.Name, ImGuiTreeNodeFlags.SpanAvailWidth | ImGuiTreeNodeFlags.Framed))
+                {
+                    // Recursively draw the children inside the tree node
+                    DrawTree(node.Children.Values);
+                    
+                    // Close the tree
+                    ImGui.TreePop();
+                }
+            }
+            // Leaf node, that contains the actual content
+            else
+            {
+                if (controller.SelectedDesignId == node.Content.Id)
+                {
+                    ImGui.PushStyleColor(ImGuiCol.Header, AetherRemoteStyle.PrimaryColor);
+                    ImGui.Selectable(node.Name, true);
+                    ImGui.PopStyleColor();
+                }
+                else
+                {
+                    if (ImGui.Selectable(node.Name))
+                        if (node.Content is { } design)
+                            controller.SelectedDesignId = design.Id;
+                }
+            }
+        }
     }
 }
