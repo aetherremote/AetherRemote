@@ -88,15 +88,15 @@ public partial class FriendsViewUi
             
             ImGui.TextUnformatted("Linkshell Permissions");
             ImGui.Separator();
-            for (uint i = 0; i < 8; i++)
-                DrawIndividualPermissionButton($"[{i + 1}]: {GetLinkshellName(i)}", denyPosition, inheritPosition, allowPosition, ref controller.Individual.LinkshellValues[i]);
+            for (uint index = 0; index < 8; index++)
+                DrawIndividualLinkshellButton(index, true, denyPosition, inheritPosition, allowPosition, ref controller.Individual.LinkshellValues[index]);
             
             ImGui.Spacing();
             
             ImGui.TextUnformatted("Cross-world Linkshell Permissions");
             ImGui.Separator();
-            for (uint i = 0; i < 8; i++)
-                DrawIndividualPermissionButton($"[{i + 1}]: {GetCrossWorldLinkshellName(i)}", denyPosition, inheritPosition, allowPosition, ref controller.Individual.CrossWorldLinkshellValues[i]);
+            for (uint index = 0; index < 8; index++)
+                DrawIndividualLinkshellButton(index, false, denyPosition, inheritPosition, allowPosition, ref controller.Individual.CrossWorldLinkshellValues[index]);
         });
         
         SharedUserInterfaces.ContentBox("PermissionsIndividualElevated", AetherRemoteStyle.ElevatedBackground, true, () =>
@@ -177,6 +177,63 @@ public partial class FriendsViewUi
         
                 ImGui.PushStyleColor(ImGuiCol.CheckMark, ImGuiColors.HealerGreen);
                 ImGui.RadioButton($"##Allow{permission}", true);
+                ImGui.PopStyleColor();
+                break;
+            
+            default:
+                ImGui.TextUnformatted("Unknown PermissionValue");
+                break;
+        }
+    }
+    
+    /// <summary>
+    ///     Draws the radio buttons to make up the three options for an individual permission
+    /// </summary>
+    private static void DrawIndividualLinkshellButton(uint index, bool linkshell, float denyPosition, float inheritPosition, float allowPosition, ref PermissionValue value)
+    {
+        var name = linkshell ? GetLinkshellName(index) : GetCrossWorldLinkshellName(index);
+        ImGui.TextUnformatted($"[{index + 1}]: {name}"); ImGui.SameLine(denyPosition);
+
+        var prefix = linkshell ? "Ls" : "Cwls";
+        switch (value)
+        {
+            case PermissionValue.Deny:
+                ImGui.PushStyleColor(ImGuiCol.CheckMark, ImGuiColors.DalamudRed);
+                ImGui.RadioButton($"##Deny{prefix}{index}", true);
+                ImGui.PopStyleColor();
+                ImGui.SameLine(inheritPosition);
+
+                if (ImGui.RadioButton($"##Inherit{prefix}{index}", false))
+                    value = PermissionValue.Inherit;
+                ImGui.SameLine(allowPosition);
+        
+                if (ImGui.RadioButton($"##Allow{prefix}{index}", false))
+                    value = PermissionValue.Allow;
+                break;
+            
+            case PermissionValue.Inherit:
+                if (ImGui.RadioButton($"##Deny{prefix}{index}", false))
+                    value = PermissionValue.Deny;
+                ImGui.SameLine(inheritPosition);
+                
+                ImGui.RadioButton($"##Inherit{prefix}{index}", true);
+                ImGui.SameLine(allowPosition);
+                
+                if (ImGui.RadioButton($"##Allow{prefix}{index}", false))
+                    value = PermissionValue.Allow;
+                break;
+            
+            case PermissionValue.Allow:
+                if (ImGui.RadioButton($"##Deny{prefix}{index}", false))
+                    value = PermissionValue.Deny;
+                ImGui.SameLine(inheritPosition);
+        
+                if (ImGui.RadioButton($"##Inherit{prefix}{index}", false))
+                    value = PermissionValue.Inherit;
+                ImGui.SameLine(allowPosition);
+        
+                ImGui.PushStyleColor(ImGuiCol.CheckMark, ImGuiColors.HealerGreen);
+                ImGui.RadioButton($"##Allow{prefix}{index}", true);
                 ImGui.PopStyleColor();
                 break;
             

@@ -58,15 +58,15 @@ public partial class FriendsViewUi
             
             ImGui.TextUnformatted("Linkshell Permissions");
             ImGui.Separator();
-            for (uint i = 0; i < 8; i++)
-                DrawGlobalPermissionButton($"[{i + 1}]: {GetLinkshellName(i)}", offPosition, onPosition, ref controller.Global.LinkshellValues[i]);
+            for (uint index = 0; index < 8; index++)
+                DrawGlobalLinkshellButton(index, true, offPosition, onPosition, ref controller.Global.LinkshellValues[index]);
             
             ImGui.Spacing();
             
             ImGui.TextUnformatted("Cross-world Linkshell Permissions");
             ImGui.Separator();
-            for (uint i = 0; i < 8; i++)
-                DrawGlobalPermissionButton($"[{i + 1}]: {GetCrossWorldLinkshellName(i)}", offPosition, onPosition, ref controller.Global.CrossWorldLinkshellValues[i]);
+            for (uint index = 0; index < 8; index++)
+                DrawGlobalLinkshellButton(index, false, offPosition, onPosition, ref controller.Global.CrossWorldLinkshellValues[index]);
         });
 
         SharedUserInterfaces.ContentBox("PermissionsGlobalElevated", AetherRemoteStyle.ElevatedBackground, true, () =>
@@ -117,6 +117,34 @@ public partial class FriendsViewUi
             ImGui.SameLine(onPosition);
 
             if (ImGui.RadioButton($"##On{permission}", false))
+                value = true;
+        }
+    }
+    
+    private static void DrawGlobalLinkshellButton(uint index, bool linkshell, float offPosition, float onPosition, ref bool value)
+    {
+        var name = linkshell ? GetLinkshellName(index) : GetCrossWorldLinkshellName(index);
+        ImGui.TextUnformatted($"[{index + 1}]: {name}"); ImGui.SameLine(offPosition);
+
+        var prefix = linkshell ? "Ls" : "Cwls";
+        if (value)
+        {
+            if (ImGui.RadioButton($"##{prefix}{index}Off", false))
+                value = false;
+            
+            ImGui.SameLine(onPosition);
+            
+            ImGui.PushStyleColor(ImGuiCol.CheckMark, ImGuiColors.HealerGreen);
+            ImGui.RadioButton($"##{prefix}{index}On", true);
+            ImGui.PopStyleColor();
+        }
+        else
+        {
+            ImGui.RadioButton($"##{prefix}{index}Off", true);
+            
+            ImGui.SameLine(onPosition);
+
+            if (ImGui.RadioButton($"##{prefix}{index}On", false))
                 value = true;
         }
     }
