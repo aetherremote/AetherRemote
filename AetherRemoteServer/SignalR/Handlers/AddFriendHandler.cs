@@ -48,7 +48,7 @@ public class AddFriendHandler(DatabaseService database, PresenceService presence
         try
         {
             // Try to send an update to that client that we've accepted the friend request
-            var sync = new SyncOnlineStatusCommand(friendCode, FriendOnlineStatus.Online, new ResolvedPermissions(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.None));
+            var sync = new SyncOnlineStatusCommand(friendCode, FriendOnlineStatus.Online, new ResolvedPermissions(PrimaryPermissions.None, SpeakPermissions.None, ElevatedPermissions.None));
             await clients.Client(target.ConnectionId).SendAsync(HubMethod.SyncOnlineStatus, sync);
         }
         catch (Exception e)

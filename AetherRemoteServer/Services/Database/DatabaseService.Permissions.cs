@@ -32,10 +32,10 @@ public partial class DatabaseService
             if (await reader.ReadAsync() is false)
                 return null;
             
-            var otherPrimaryAllow = (PrimaryPermissions2)reader.GetInt32(0);
-            var otherPrimaryDeny = (PrimaryPermissions2)reader.GetInt32(1);
-            var otherSpeakAllow = (SpeakPermissions2)reader.GetInt32(2);
-            var otherSpeakDeny = (SpeakPermissions2)reader.GetInt32(3);
+            var otherPrimaryAllow = (PrimaryPermissions)reader.GetInt32(0);
+            var otherPrimaryDeny = (PrimaryPermissions)reader.GetInt32(1);
+            var otherSpeakAllow = (SpeakPermissions)reader.GetInt32(2);
+            var otherSpeakDeny = (SpeakPermissions)reader.GetInt32(3);
             var otherElevatedAllow = (ElevatedPermissions)reader.GetInt32(4);
             var otherElevatedDeny = (ElevatedPermissions)reader.GetInt32(5);
             return new RawPermissions(otherPrimaryAllow, otherPrimaryDeny, otherSpeakAllow, otherSpeakDeny, otherElevatedAllow, otherElevatedDeny);
@@ -104,10 +104,10 @@ public partial class DatabaseService
                 var targetFriendCode = reader.GetString(0);
                 
                 // Get the raw permissions we have granted
-                var selfPrimaryAllow = (PrimaryPermissions2)reader.GetInt32(1);
-                var selfPrimaryDeny = (PrimaryPermissions2)reader.GetInt32(2);
-                var selfSpeakAllow = (SpeakPermissions2)reader.GetInt32(3);
-                var selfSpeakDeny = (SpeakPermissions2)reader.GetInt32(4);
+                var selfPrimaryAllow = (PrimaryPermissions)reader.GetInt32(1);
+                var selfPrimaryDeny = (PrimaryPermissions)reader.GetInt32(2);
+                var selfSpeakAllow = (SpeakPermissions)reader.GetInt32(3);
+                var selfSpeakDeny = (SpeakPermissions)reader.GetInt32(4);
                 var selfElevatedAllow = (ElevatedPermissions)reader.GetInt32(5);
                 var selfElevatedDeny = (ElevatedPermissions)reader.GetInt32(6);
                 var selfRawPermissions = new RawPermissions(selfPrimaryAllow, selfPrimaryDeny, selfSpeakAllow, selfSpeakDeny, selfElevatedAllow, selfElevatedDeny);
@@ -120,10 +120,10 @@ public partial class DatabaseService
                 }
                 
                 // Their permissions they have granted to us
-                var otherPrimaryAllow = (PrimaryPermissions2)reader.GetInt32(7);
-                var otherPrimaryDeny = (PrimaryPermissions2)reader.GetInt32(8);
-                var otherSpeakAllow = (SpeakPermissions2)reader.GetInt32(9);
-                var otherSpeakDeny = (SpeakPermissions2)reader.GetInt32(10);
+                var otherPrimaryAllow = (PrimaryPermissions)reader.GetInt32(7);
+                var otherPrimaryDeny = (PrimaryPermissions)reader.GetInt32(8);
+                var otherSpeakAllow = (SpeakPermissions)reader.GetInt32(9);
+                var otherSpeakDeny = (SpeakPermissions)reader.GetInt32(10);
                 var otherElevatedAllow = (ElevatedPermissions)reader.GetInt32(11);
                 var otherElevatedDeny = (ElevatedPermissions)reader.GetInt32(12);
                 var otherRawPermissions = new RawPermissions(otherPrimaryAllow, otherPrimaryDeny, otherSpeakAllow, otherSpeakDeny, otherElevatedAllow, otherElevatedDeny);
@@ -135,14 +135,14 @@ public partial class DatabaseService
                 if (reader.IsDBNull(13))
                 {
                     // Just assign it as empties
-                    var otherGlobalPermissions = new ResolvedPermissions(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.None);
+                    var otherGlobalPermissions = new ResolvedPermissions(PrimaryPermissions.None, SpeakPermissions.None, ElevatedPermissions.None);
                     otherResolvedPermissions = PermissionResolver.Resolve(otherGlobalPermissions, otherRawPermissions);
                 }
                 else
                 {
                     // Read from the rest of the rows
-                    var otherGlobalPrimary = (PrimaryPermissions2)reader.GetInt32(13);
-                    var otherGlobalSpeak = (SpeakPermissions2)reader.GetInt32(14);
+                    var otherGlobalPrimary = (PrimaryPermissions)reader.GetInt32(13);
+                    var otherGlobalSpeak = (SpeakPermissions)reader.GetInt32(14);
                     var otherGlobalElevated = (ElevatedPermissions)reader.GetInt32(15);
                     var otherGlobalPermissions = new ResolvedPermissions(otherGlobalPrimary, otherGlobalSpeak, otherGlobalElevated);
                 

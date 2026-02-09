@@ -57,7 +57,7 @@ public class EmoteViewUiController(EmoteService emoteService, NetworkService net
             if (selected.PermissionsGrantedByFriend is null)
                 continue;
             
-            if ((selected.PermissionsGrantedByFriend.Primary & PrimaryPermissions2.Emote) != PrimaryPermissions2.Emote)
+            if ((selected.PermissionsGrantedByFriend.Primary & PrimaryPermissions.Emote) != PrimaryPermissions.Emote)
                 thoseWhoYouLackPermissionsFor.Add(selected.NoteOrFriendCode);
         }
         return thoseWhoYouLackPermissionsFor;

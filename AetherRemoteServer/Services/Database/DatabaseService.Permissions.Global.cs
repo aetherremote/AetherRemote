@@ -24,17 +24,17 @@ public partial class DatabaseService
         {
             await using var reader = await command.ExecuteReaderAsync();
             if (await reader.ReadAsync() is false)
-                return new ResolvedPermissions(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.None);
+                return new ResolvedPermissions(PrimaryPermissions.None, SpeakPermissions.None, ElevatedPermissions.None);
             
-            var primary = (PrimaryPermissions2)reader.GetInt32(0);
-            var speak = (SpeakPermissions2)reader.GetInt32(1);
+            var primary = (PrimaryPermissions)reader.GetInt32(0);
+            var speak = (SpeakPermissions)reader.GetInt32(1);
             var elevated = (ElevatedPermissions)reader.GetInt32(2);
             return new ResolvedPermissions(primary, speak, elevated);
         }
         catch (Exception e)
         {
             _logger.LogError("[GetGlobalPermissions] {Error}", e);
-            return new ResolvedPermissions(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.None);
+            return new ResolvedPermissions(PrimaryPermissions.None, SpeakPermissions.None, ElevatedPermissions.None);
         }
     }
     

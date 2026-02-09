@@ -17,7 +17,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 public class HypnosisHandler(PresenceService presenceService, ForwardedRequestManager forwardedRequestManager, ILogger<HypnosisHandler> logger)
 {
     private const string Method = HubMethod.Hypnosis;
-    private static readonly ResolvedPermissions Permissions = new(PrimaryPermissions2.Hypnosis, SpeakPermissions2.None, ElevatedPermissions.None);
+    private static readonly ResolvedPermissions Permissions = new(PrimaryPermissions.Hypnosis, SpeakPermissions.None, ElevatedPermissions.None);
 
     /// <summary>
     ///     Handles the request

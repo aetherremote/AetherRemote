@@ -13,7 +13,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 public class PossessionCameraHandler(PresenceService presences, ForwardedRequestManager forwarder, PossessionManager possessionManager, ILogger<PossessionCameraHandler> logger)
 {
     private const string Method = HubMethod.Possession.Camera;
-    private static readonly ResolvedPermissions Required = new(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.Possession);
+    private static readonly ResolvedPermissions Required = new(PrimaryPermissions.None, SpeakPermissions.None, ElevatedPermissions.Possession);
     
     public async Task<PossessionResponse> Handle(string senderFriendCode, PossessionCameraRequest request, IHubCallerClients clients)
     {

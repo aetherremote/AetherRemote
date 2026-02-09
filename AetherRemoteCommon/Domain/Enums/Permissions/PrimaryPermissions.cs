@@ -1,7 +1,7 @@
 namespace AetherRemoteCommon.Domain.Enums.Permissions;
 
 [Flags]
-public enum PrimaryPermissions2
+public enum PrimaryPermissions
 {
     // No Permissions
     None = 0,

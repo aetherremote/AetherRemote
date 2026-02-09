@@ -17,7 +17,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 public class EmoteHandler(PresenceService presenceService, ForwardedRequestManager forwardedRequestManager, ILogger<EmoteHandler> logger)
 {
     private const string Method = HubMethod.Emote;
-    private static readonly ResolvedPermissions Permissions = new(PrimaryPermissions2.Emote, SpeakPermissions2.None, ElevatedPermissions.None);
+    private static readonly ResolvedPermissions Permissions = new(PrimaryPermissions.Emote, SpeakPermissions.None, ElevatedPermissions.None);
     
     /// <summary>
     ///     Handles the request

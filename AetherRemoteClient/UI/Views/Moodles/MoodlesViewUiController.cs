@@ -122,7 +122,7 @@ public class MoodlesViewUiController : IDisposable
             if (friend.PermissionsGrantedByFriend is null)
                 continue;
             
-            if ((friend.PermissionsGrantedByFriend.Primary & PrimaryPermissions2.Moodles) is not PrimaryPermissions2.Moodles)
+            if ((friend.PermissionsGrantedByFriend.Primary & PrimaryPermissions.Moodles) is not PrimaryPermissions.Moodles)
                 return true;
         }
 

@@ -16,7 +16,7 @@ public class PossessionMovementHandler : AbstractNetworkHandler, IDisposable
 {
     // Const
     private const string Operation = "PossessionMovement";
-    private static readonly ResolvedPermissions Permissions = new(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.Possession);
+    private static readonly ResolvedPermissions Permissions = new(PrimaryPermissions.None, SpeakPermissions.None, ElevatedPermissions.Possession);
     
     // Instantiated
     private readonly IDisposable _handler;

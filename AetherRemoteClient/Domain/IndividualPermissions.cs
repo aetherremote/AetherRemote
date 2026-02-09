@@ -117,53 +117,53 @@ public class IndividualPermissions
         return new IndividualPermissions
         {
             // Primary Permissions
-            BodySwapValue = ResolveFlag(PrimaryPermissions2.BodySwap, permissions.PrimaryAllow, permissions.PrimaryDeny),
-            CustomizePlusValue = ResolveFlag(PrimaryPermissions2.CustomizePlus, permissions.PrimaryAllow, permissions.PrimaryDeny),
-            EmoteValue = ResolveFlag(PrimaryPermissions2.Emote, permissions.PrimaryAllow, permissions.PrimaryDeny),
-            GlamourerCustomizationsValue = ResolveFlag(PrimaryPermissions2.GlamourerCustomization, permissions.PrimaryAllow, permissions.PrimaryDeny),
-            GlamourerEquipmentValue = ResolveFlag(PrimaryPermissions2.GlamourerEquipment, permissions.PrimaryAllow, permissions.PrimaryDeny),
-            HonorificValue = ResolveFlag(PrimaryPermissions2.Honorific, permissions.PrimaryAllow, permissions.PrimaryDeny),
-            HypnosisValue = ResolveFlag(PrimaryPermissions2.Hypnosis, permissions.PrimaryAllow, permissions.PrimaryDeny),
-            MoodlesValue = ResolveFlag(PrimaryPermissions2.Moodles, permissions.PrimaryAllow, permissions.PrimaryDeny),
-            PenumbraModsValue = ResolveFlag(PrimaryPermissions2.Mods, permissions.PrimaryAllow, permissions.PrimaryDeny),
-            TwinningValue = ResolveFlag(PrimaryPermissions2.Twinning, permissions.PrimaryAllow, permissions.PrimaryDeny),
+            BodySwapValue = ResolveFlag(PrimaryPermissions.BodySwap, permissions.PrimaryAllow, permissions.PrimaryDeny),
+            CustomizePlusValue = ResolveFlag(PrimaryPermissions.CustomizePlus, permissions.PrimaryAllow, permissions.PrimaryDeny),
+            EmoteValue = ResolveFlag(PrimaryPermissions.Emote, permissions.PrimaryAllow, permissions.PrimaryDeny),
+            GlamourerCustomizationsValue = ResolveFlag(PrimaryPermissions.GlamourerCustomization, permissions.PrimaryAllow, permissions.PrimaryDeny),
+            GlamourerEquipmentValue = ResolveFlag(PrimaryPermissions.GlamourerEquipment, permissions.PrimaryAllow, permissions.PrimaryDeny),
+            HonorificValue = ResolveFlag(PrimaryPermissions.Honorific, permissions.PrimaryAllow, permissions.PrimaryDeny),
+            HypnosisValue = ResolveFlag(PrimaryPermissions.Hypnosis, permissions.PrimaryAllow, permissions.PrimaryDeny),
+            MoodlesValue = ResolveFlag(PrimaryPermissions.Moodles, permissions.PrimaryAllow, permissions.PrimaryDeny),
+            PenumbraModsValue = ResolveFlag(PrimaryPermissions.Mods, permissions.PrimaryAllow, permissions.PrimaryDeny),
+            TwinningValue = ResolveFlag(PrimaryPermissions.Twinning, permissions.PrimaryAllow, permissions.PrimaryDeny),
 
             // Speak Permissions
-            AllianceValue = ResolveFlag(SpeakPermissions2.Alliance, permissions.SpeakAllow, permissions.SpeakDeny),
-            EchoValue = ResolveFlag(SpeakPermissions2.Echo, permissions.SpeakAllow, permissions.SpeakDeny),
-            FreeCompanyValue = ResolveFlag(SpeakPermissions2.FreeCompany, permissions.SpeakAllow, permissions.SpeakDeny),
-            PartyValue = ResolveFlag(SpeakPermissions2.Party, permissions.SpeakAllow, permissions.SpeakDeny),
-            PvPTeamValue = ResolveFlag(SpeakPermissions2.PvPTeam, permissions.SpeakAllow, permissions.SpeakDeny),
-            RoleplayValue = ResolveFlag(SpeakPermissions2.Roleplay, permissions.SpeakAllow, permissions.SpeakDeny),
-            SayValue = ResolveFlag(SpeakPermissions2.Say, permissions.SpeakAllow, permissions.SpeakDeny),
-            ShoutValue = ResolveFlag(SpeakPermissions2.Shout, permissions.SpeakAllow, permissions.SpeakDeny),
-            TellValue = ResolveFlag(SpeakPermissions2.Tell, permissions.SpeakAllow, permissions.SpeakDeny),
-            YellValue = ResolveFlag(SpeakPermissions2.Yell, permissions.SpeakAllow, permissions.SpeakDeny),
+            AllianceValue = ResolveFlag(SpeakPermissions.Alliance, permissions.SpeakAllow, permissions.SpeakDeny),
+            EchoValue = ResolveFlag(SpeakPermissions.Echo, permissions.SpeakAllow, permissions.SpeakDeny),
+            FreeCompanyValue = ResolveFlag(SpeakPermissions.FreeCompany, permissions.SpeakAllow, permissions.SpeakDeny),
+            PartyValue = ResolveFlag(SpeakPermissions.Party, permissions.SpeakAllow, permissions.SpeakDeny),
+            PvPTeamValue = ResolveFlag(SpeakPermissions.PvPTeam, permissions.SpeakAllow, permissions.SpeakDeny),
+            RoleplayValue = ResolveFlag(SpeakPermissions.Roleplay, permissions.SpeakAllow, permissions.SpeakDeny),
+            SayValue = ResolveFlag(SpeakPermissions.Say, permissions.SpeakAllow, permissions.SpeakDeny),
+            ShoutValue = ResolveFlag(SpeakPermissions.Shout, permissions.SpeakAllow, permissions.SpeakDeny),
+            TellValue = ResolveFlag(SpeakPermissions.Tell, permissions.SpeakAllow, permissions.SpeakDeny),
+            YellValue = ResolveFlag(SpeakPermissions.Yell, permissions.SpeakAllow, permissions.SpeakDeny),
 
             // Linkshell
             LinkshellValues =
             {
-                [0] = ResolveFlag(SpeakPermissions2.Ls1, permissions.SpeakAllow, permissions.SpeakDeny),
-                [1] = ResolveFlag(SpeakPermissions2.Ls2, permissions.SpeakAllow, permissions.SpeakDeny),
-                [2] = ResolveFlag(SpeakPermissions2.Ls3, permissions.SpeakAllow, permissions.SpeakDeny),
-                [3] = ResolveFlag(SpeakPermissions2.Ls4, permissions.SpeakAllow, permissions.SpeakDeny),
-                [4] = ResolveFlag(SpeakPermissions2.Ls5, permissions.SpeakAllow, permissions.SpeakDeny),
-                [5] = ResolveFlag(SpeakPermissions2.Ls6, permissions.SpeakAllow, permissions.SpeakDeny),
-                [6] = ResolveFlag(SpeakPermissions2.Ls7, permissions.SpeakAllow, permissions.SpeakDeny),
-                [7] = ResolveFlag(SpeakPermissions2.Ls8, permissions.SpeakAllow, permissions.SpeakDeny)
+                [0] = ResolveFlag(SpeakPermissions.Ls1, permissions.SpeakAllow, permissions.SpeakDeny),
+                [1] = ResolveFlag(SpeakPermissions.Ls2, permissions.SpeakAllow, permissions.SpeakDeny),
+                [2] = ResolveFlag(SpeakPermissions.Ls3, permissions.SpeakAllow, permissions.SpeakDeny),
+                [3] = ResolveFlag(SpeakPermissions.Ls4, permissions.SpeakAllow, permissions.SpeakDeny),
+                [4] = ResolveFlag(SpeakPermissions.Ls5, permissions.SpeakAllow, permissions.SpeakDeny),
+                [5] = ResolveFlag(SpeakPermissions.Ls6, permissions.SpeakAllow, permissions.SpeakDeny),
+                [6] = ResolveFlag(SpeakPermissions.Ls7, permissions.SpeakAllow, permissions.SpeakDeny),
+                [7] = ResolveFlag(SpeakPermissions.Ls8, permissions.SpeakAllow, permissions.SpeakDeny)
             },
 
             // Cross-world Linkshell
             CrossWorldLinkshellValues =
             {
-                [0] = ResolveFlag(SpeakPermissions2.Cwl1, permissions.SpeakAllow, permissions.SpeakDeny),
-                [1] = ResolveFlag(SpeakPermissions2.Cwl2, permissions.SpeakAllow, permissions.SpeakDeny),
-                [2] = ResolveFlag(SpeakPermissions2.Cwl3, permissions.SpeakAllow, permissions.SpeakDeny),
-                [3] = ResolveFlag(SpeakPermissions2.Cwl4, permissions.SpeakAllow, permissions.SpeakDeny),
-                [4] = ResolveFlag(SpeakPermissions2.Cwl5, permissions.SpeakAllow, permissions.SpeakDeny),
-                [5] = ResolveFlag(SpeakPermissions2.Cwl6, permissions.SpeakAllow, permissions.SpeakDeny),
-                [6] = ResolveFlag(SpeakPermissions2.Cwl7, permissions.SpeakAllow, permissions.SpeakDeny),
-                [7] = ResolveFlag(SpeakPermissions2.Cwl8, permissions.SpeakAllow, permissions.SpeakDeny)
+                [0] = ResolveFlag(SpeakPermissions.Cwl1, permissions.SpeakAllow, permissions.SpeakDeny),
+                [1] = ResolveFlag(SpeakPermissions.Cwl2, permissions.SpeakAllow, permissions.SpeakDeny),
+                [2] = ResolveFlag(SpeakPermissions.Cwl3, permissions.SpeakAllow, permissions.SpeakDeny),
+                [3] = ResolveFlag(SpeakPermissions.Cwl4, permissions.SpeakAllow, permissions.SpeakDeny),
+                [4] = ResolveFlag(SpeakPermissions.Cwl5, permissions.SpeakAllow, permissions.SpeakDeny),
+                [5] = ResolveFlag(SpeakPermissions.Cwl6, permissions.SpeakAllow, permissions.SpeakDeny),
+                [6] = ResolveFlag(SpeakPermissions.Cwl7, permissions.SpeakAllow, permissions.SpeakDeny),
+                [7] = ResolveFlag(SpeakPermissions.Cwl8, permissions.SpeakAllow, permissions.SpeakDeny)
             },
 
             // Elevated
@@ -178,56 +178,56 @@ public class IndividualPermissions
     public static RawPermissions To(IndividualPermissions permissions)
     {
         // Masks
-        var primaryAllowMask = PrimaryPermissions2.None;
-        var primaryDenyMask = PrimaryPermissions2.None;
-        var speakAllowMask = SpeakPermissions2.None;
-        var speakDenyMask = SpeakPermissions2.None;
+        var primaryAllowMask = PrimaryPermissions.None;
+        var primaryDenyMask = PrimaryPermissions.None;
+        var speakAllowMask = SpeakPermissions.None;
+        var speakDenyMask = SpeakPermissions.None;
         var elevatedAllowMask = ElevatedPermissions.None;
         var elevatedDenyMask = ElevatedPermissions.None;
         
         // Primary Permissions
-        Apply(PrimaryPermissions2.BodySwap, permissions.BodySwapValue, ref primaryAllowMask, ref primaryDenyMask);
-        Apply(PrimaryPermissions2.CustomizePlus, permissions.CustomizePlusValue, ref primaryAllowMask, ref primaryDenyMask);
-        Apply(PrimaryPermissions2.Emote, permissions.EmoteValue, ref primaryAllowMask, ref primaryDenyMask);
-        Apply(PrimaryPermissions2.GlamourerCustomization, permissions.GlamourerCustomizationsValue, ref primaryAllowMask, ref primaryDenyMask);
-        Apply(PrimaryPermissions2.GlamourerEquipment, permissions.GlamourerEquipmentValue, ref primaryAllowMask, ref primaryDenyMask);
-        Apply(PrimaryPermissions2.Honorific, permissions.HonorificValue, ref primaryAllowMask, ref primaryDenyMask);
-        Apply(PrimaryPermissions2.Hypnosis, permissions.HypnosisValue, ref primaryAllowMask, ref primaryDenyMask);
-        Apply(PrimaryPermissions2.Moodles, permissions.MoodlesValue, ref primaryAllowMask, ref primaryDenyMask);
-        Apply(PrimaryPermissions2.Mods, permissions.PenumbraModsValue, ref primaryAllowMask, ref primaryDenyMask);
-        Apply(PrimaryPermissions2.Twinning, permissions.TwinningValue, ref primaryAllowMask, ref primaryDenyMask);
+        Apply(PrimaryPermissions.BodySwap, permissions.BodySwapValue, ref primaryAllowMask, ref primaryDenyMask);
+        Apply(PrimaryPermissions.CustomizePlus, permissions.CustomizePlusValue, ref primaryAllowMask, ref primaryDenyMask);
+        Apply(PrimaryPermissions.Emote, permissions.EmoteValue, ref primaryAllowMask, ref primaryDenyMask);
+        Apply(PrimaryPermissions.GlamourerCustomization, permissions.GlamourerCustomizationsValue, ref primaryAllowMask, ref primaryDenyMask);
+        Apply(PrimaryPermissions.GlamourerEquipment, permissions.GlamourerEquipmentValue, ref primaryAllowMask, ref primaryDenyMask);
+        Apply(PrimaryPermissions.Honorific, permissions.HonorificValue, ref primaryAllowMask, ref primaryDenyMask);
+        Apply(PrimaryPermissions.Hypnosis, permissions.HypnosisValue, ref primaryAllowMask, ref primaryDenyMask);
+        Apply(PrimaryPermissions.Moodles, permissions.MoodlesValue, ref primaryAllowMask, ref primaryDenyMask);
+        Apply(PrimaryPermissions.Mods, permissions.PenumbraModsValue, ref primaryAllowMask, ref primaryDenyMask);
+        Apply(PrimaryPermissions.Twinning, permissions.TwinningValue, ref primaryAllowMask, ref primaryDenyMask);
         
         // Speak Permissions
-        Apply(SpeakPermissions2.Alliance, permissions.AllianceValue, ref speakAllowMask, ref speakDenyMask);
-        Apply(SpeakPermissions2.Echo, permissions.EchoValue, ref speakAllowMask, ref speakDenyMask);
-        Apply(SpeakPermissions2.FreeCompany, permissions.FreeCompanyValue, ref speakAllowMask, ref speakDenyMask);
-        Apply(SpeakPermissions2.Party, permissions.PartyValue, ref speakAllowMask, ref speakDenyMask);
-        Apply(SpeakPermissions2.PvPTeam, permissions.PvPTeamValue, ref speakAllowMask, ref speakDenyMask);
-        Apply(SpeakPermissions2.Roleplay, permissions.RoleplayValue, ref speakAllowMask, ref speakDenyMask);
-        Apply(SpeakPermissions2.Say, permissions.SayValue, ref speakAllowMask, ref speakDenyMask);
-        Apply(SpeakPermissions2.Shout, permissions.ShoutValue, ref speakAllowMask, ref speakDenyMask);
-        Apply(SpeakPermissions2.Tell, permissions.TellValue, ref speakAllowMask, ref speakDenyMask);
-        Apply(SpeakPermissions2.Yell, permissions.YellValue, ref speakAllowMask, ref speakDenyMask);
+        Apply(SpeakPermissions.Alliance, permissions.AllianceValue, ref speakAllowMask, ref speakDenyMask);
+        Apply(SpeakPermissions.Echo, permissions.EchoValue, ref speakAllowMask, ref speakDenyMask);
+        Apply(SpeakPermissions.FreeCompany, permissions.FreeCompanyValue, ref speakAllowMask, ref speakDenyMask);
+        Apply(SpeakPermissions.Party, permissions.PartyValue, ref speakAllowMask, ref speakDenyMask);
+        Apply(SpeakPermissions.PvPTeam, permissions.PvPTeamValue, ref speakAllowMask, ref speakDenyMask);
+        Apply(SpeakPermissions.Roleplay, permissions.RoleplayValue, ref speakAllowMask, ref speakDenyMask);
+        Apply(SpeakPermissions.Say, permissions.SayValue, ref speakAllowMask, ref speakDenyMask);
+        Apply(SpeakPermissions.Shout, permissions.ShoutValue, ref speakAllowMask, ref speakDenyMask);
+        Apply(SpeakPermissions.Tell, permissions.TellValue, ref speakAllowMask, ref speakDenyMask);
+        Apply(SpeakPermissions.Yell, permissions.YellValue, ref speakAllowMask, ref speakDenyMask);
         
         // Linkshell
-        Apply(SpeakPermissions2.Ls1, permissions.LinkshellValues[0], ref speakAllowMask, ref speakDenyMask);
-        Apply(SpeakPermissions2.Ls2, permissions.LinkshellValues[1], ref speakAllowMask, ref speakDenyMask);
-        Apply(SpeakPermissions2.Ls3, permissions.LinkshellValues[2], ref speakAllowMask, ref speakDenyMask);
-        Apply(SpeakPermissions2.Ls4, permissions.LinkshellValues[3], ref speakAllowMask, ref speakDenyMask);
-        Apply(SpeakPermissions2.Ls5, permissions.LinkshellValues[4], ref speakAllowMask, ref speakDenyMask);
-        Apply(SpeakPermissions2.Ls6, permissions.LinkshellValues[5], ref speakAllowMask, ref speakDenyMask);
-        Apply(SpeakPermissions2.Ls7, permissions.LinkshellValues[6], ref speakAllowMask, ref speakDenyMask);
-        Apply(SpeakPermissions2.Ls8, permissions.LinkshellValues[7], ref speakAllowMask, ref speakDenyMask);
+        Apply(SpeakPermissions.Ls1, permissions.LinkshellValues[0], ref speakAllowMask, ref speakDenyMask);
+        Apply(SpeakPermissions.Ls2, permissions.LinkshellValues[1], ref speakAllowMask, ref speakDenyMask);
+        Apply(SpeakPermissions.Ls3, permissions.LinkshellValues[2], ref speakAllowMask, ref speakDenyMask);
+        Apply(SpeakPermissions.Ls4, permissions.LinkshellValues[3], ref speakAllowMask, ref speakDenyMask);
+        Apply(SpeakPermissions.Ls5, permissions.LinkshellValues[4], ref speakAllowMask, ref speakDenyMask);
+        Apply(SpeakPermissions.Ls6, permissions.LinkshellValues[5], ref speakAllowMask, ref speakDenyMask);
+        Apply(SpeakPermissions.Ls7, permissions.LinkshellValues[6], ref speakAllowMask, ref speakDenyMask);
+        Apply(SpeakPermissions.Ls8, permissions.LinkshellValues[7], ref speakAllowMask, ref speakDenyMask);
         
         // Cross-world Linkshell
-        Apply(SpeakPermissions2.Cwl1, permissions.CrossWorldLinkshellValues[0], ref speakAllowMask, ref speakDenyMask);
-        Apply(SpeakPermissions2.Cwl2, permissions.CrossWorldLinkshellValues[1], ref speakAllowMask, ref speakDenyMask);
-        Apply(SpeakPermissions2.Cwl3, permissions.CrossWorldLinkshellValues[2], ref speakAllowMask, ref speakDenyMask);
-        Apply(SpeakPermissions2.Cwl4, permissions.CrossWorldLinkshellValues[3], ref speakAllowMask, ref speakDenyMask);
-        Apply(SpeakPermissions2.Cwl5, permissions.CrossWorldLinkshellValues[4], ref speakAllowMask, ref speakDenyMask);
-        Apply(SpeakPermissions2.Cwl6, permissions.CrossWorldLinkshellValues[5], ref speakAllowMask, ref speakDenyMask);
-        Apply(SpeakPermissions2.Cwl7, permissions.CrossWorldLinkshellValues[6], ref speakAllowMask, ref speakDenyMask);
-        Apply(SpeakPermissions2.Cwl8, permissions.CrossWorldLinkshellValues[7], ref speakAllowMask, ref speakDenyMask);
+        Apply(SpeakPermissions.Cwl1, permissions.CrossWorldLinkshellValues[0], ref speakAllowMask, ref speakDenyMask);
+        Apply(SpeakPermissions.Cwl2, permissions.CrossWorldLinkshellValues[1], ref speakAllowMask, ref speakDenyMask);
+        Apply(SpeakPermissions.Cwl3, permissions.CrossWorldLinkshellValues[2], ref speakAllowMask, ref speakDenyMask);
+        Apply(SpeakPermissions.Cwl4, permissions.CrossWorldLinkshellValues[3], ref speakAllowMask, ref speakDenyMask);
+        Apply(SpeakPermissions.Cwl5, permissions.CrossWorldLinkshellValues[4], ref speakAllowMask, ref speakDenyMask);
+        Apply(SpeakPermissions.Cwl6, permissions.CrossWorldLinkshellValues[5], ref speakAllowMask, ref speakDenyMask);
+        Apply(SpeakPermissions.Cwl7, permissions.CrossWorldLinkshellValues[6], ref speakAllowMask, ref speakDenyMask);
+        Apply(SpeakPermissions.Cwl8, permissions.CrossWorldLinkshellValues[7], ref speakAllowMask, ref speakDenyMask);
         
         // Elevated
         Apply(ElevatedPermissions.PermanentTransformation, permissions.PermanentTransformationValue, ref elevatedAllowMask, ref elevatedDenyMask);

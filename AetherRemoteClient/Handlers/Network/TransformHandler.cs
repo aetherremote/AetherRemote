@@ -66,7 +66,7 @@ public class TransformHandler : AbstractNetworkHandler, IDisposable
             : ElevatedPermissions.PermanentTransformation;
         
         // Build permissions
-        var permissions = new ResolvedPermissions(primary, SpeakPermissions2.None, elevated);
+        var permissions = new ResolvedPermissions(primary, SpeakPermissions.None, elevated);
         
         var sender = TryGetFriendWithCorrectPermissions(Operation, request.SenderFriendCode, permissions);
         if (sender.Result is not ActionResultEc.Success)

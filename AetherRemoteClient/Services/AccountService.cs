@@ -12,7 +12,7 @@ public class AccountService
 {
     public string FriendCode { get; private set; } = "Unknown Friend Code";
 
-    public ResolvedPermissions GlobalPermissions { get; private set; } = new(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.None);
+    public ResolvedPermissions GlobalPermissions { get; private set; } = new(PrimaryPermissions.None, SpeakPermissions.None, ElevatedPermissions.None);
 
     /// <summary>
     ///     Event fired when the global permissions are updated

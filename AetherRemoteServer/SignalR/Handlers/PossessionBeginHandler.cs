@@ -25,7 +25,7 @@ public class PossessionBeginHandler(
     ILogger<PossessionBeginHandler> logger)
 {
     private const string Method = HubMethod.Possession.Begin;
-    private static readonly ResolvedPermissions Required = new(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.Possession);
+    private static readonly ResolvedPermissions Required = new(PrimaryPermissions.None, SpeakPermissions.None, ElevatedPermissions.Possession);
     
     public async Task<PossessionBeginResponse> Handle(string senderFriendCode, PossessionBeginRequest request, IHubCallerClients clients)
     {

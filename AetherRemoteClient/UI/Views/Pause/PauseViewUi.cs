@@ -36,28 +36,28 @@ public class PauseViewUi(
                 if (ImGui.BeginTable("GeneralSpeakPermissions", 4) is false)
                     return;
                 
-                BuildPauseButtonForSpeakFeature(SpeakPermissions2.None);
+                BuildPauseButtonForSpeakFeature(SpeakPermissions.None);
                 
                 ImGui.TableNextColumn();
-                BuildPauseButtonForSpeakFeature(SpeakPermissions2.Say);
+                BuildPauseButtonForSpeakFeature(SpeakPermissions.Say);
                 ImGui.TableNextColumn();
-                BuildPauseButtonForSpeakFeature(SpeakPermissions2.Yell);
+                BuildPauseButtonForSpeakFeature(SpeakPermissions.Yell);
                 ImGui.TableNextColumn();
-                BuildPauseButtonForSpeakFeature(SpeakPermissions2.Shout);
+                BuildPauseButtonForSpeakFeature(SpeakPermissions.Shout);
                 ImGui.TableNextColumn();
-                BuildPauseButtonForSpeakFeature(SpeakPermissions2.Tell);
+                BuildPauseButtonForSpeakFeature(SpeakPermissions.Tell);
                 ImGui.TableNextColumn();
-                BuildPauseButtonForSpeakFeature(SpeakPermissions2.Party);
+                BuildPauseButtonForSpeakFeature(SpeakPermissions.Party);
                 ImGui.TableNextColumn();
-                BuildPauseButtonForSpeakFeature(SpeakPermissions2.Alliance);
+                BuildPauseButtonForSpeakFeature(SpeakPermissions.Alliance);
                 ImGui.TableNextColumn();
-                BuildPauseButtonForSpeakFeature(SpeakPermissions2.FreeCompany);
+                BuildPauseButtonForSpeakFeature(SpeakPermissions.FreeCompany);
                 ImGui.TableNextColumn();
-                BuildPauseButtonForSpeakFeature(SpeakPermissions2.PvPTeam);
+                BuildPauseButtonForSpeakFeature(SpeakPermissions.PvPTeam);
                 ImGui.TableNextColumn();
-                BuildPauseButtonForSpeakFeature(SpeakPermissions2.Echo);
+                BuildPauseButtonForSpeakFeature(SpeakPermissions.Echo);
                 ImGui.TableNextColumn();
-                BuildPauseButtonForSpeakFeature(SpeakPermissions2.Roleplay);
+                BuildPauseButtonForSpeakFeature(SpeakPermissions.Roleplay);
                     
                 ImGui.EndTable();
             });
@@ -69,21 +69,21 @@ public class PauseViewUi(
                     return;
                 
                 ImGui.TableNextColumn();
-                BuildPauseButtonForSpeakFeature(SpeakPermissions2.Ls1);
+                BuildPauseButtonForSpeakFeature(SpeakPermissions.Ls1);
                 ImGui.TableNextColumn();
-                BuildPauseButtonForSpeakFeature(SpeakPermissions2.Ls2);
+                BuildPauseButtonForSpeakFeature(SpeakPermissions.Ls2);
                 ImGui.TableNextColumn();
-                BuildPauseButtonForSpeakFeature(SpeakPermissions2.Ls3);
+                BuildPauseButtonForSpeakFeature(SpeakPermissions.Ls3);
                 ImGui.TableNextColumn();
-                BuildPauseButtonForSpeakFeature(SpeakPermissions2.Ls4);
+                BuildPauseButtonForSpeakFeature(SpeakPermissions.Ls4);
                 ImGui.TableNextColumn();
-                BuildPauseButtonForSpeakFeature(SpeakPermissions2.Ls5);
+                BuildPauseButtonForSpeakFeature(SpeakPermissions.Ls5);
                 ImGui.TableNextColumn();
-                BuildPauseButtonForSpeakFeature(SpeakPermissions2.Ls6);
+                BuildPauseButtonForSpeakFeature(SpeakPermissions.Ls6);
                 ImGui.TableNextColumn();
-                BuildPauseButtonForSpeakFeature(SpeakPermissions2.Ls7);
+                BuildPauseButtonForSpeakFeature(SpeakPermissions.Ls7);
                 ImGui.TableNextColumn();
-                BuildPauseButtonForSpeakFeature(SpeakPermissions2.Ls8);
+                BuildPauseButtonForSpeakFeature(SpeakPermissions.Ls8);
                 
                 ImGui.EndTable();
             });
@@ -95,21 +95,21 @@ public class PauseViewUi(
                     return;
                 
                 ImGui.TableNextColumn();
-                BuildPauseButtonForSpeakFeature(SpeakPermissions2.Cwl1);
+                BuildPauseButtonForSpeakFeature(SpeakPermissions.Cwl1);
                 ImGui.TableNextColumn();
-                BuildPauseButtonForSpeakFeature(SpeakPermissions2.Cwl2);
+                BuildPauseButtonForSpeakFeature(SpeakPermissions.Cwl2);
                 ImGui.TableNextColumn();
-                BuildPauseButtonForSpeakFeature(SpeakPermissions2.Cwl3);
+                BuildPauseButtonForSpeakFeature(SpeakPermissions.Cwl3);
                 ImGui.TableNextColumn();
-                BuildPauseButtonForSpeakFeature(SpeakPermissions2.Cwl4);
+                BuildPauseButtonForSpeakFeature(SpeakPermissions.Cwl4);
                 ImGui.TableNextColumn();
-                BuildPauseButtonForSpeakFeature(SpeakPermissions2.Cwl5);
+                BuildPauseButtonForSpeakFeature(SpeakPermissions.Cwl5);
                 ImGui.TableNextColumn();
-                BuildPauseButtonForSpeakFeature(SpeakPermissions2.Cwl6);
+                BuildPauseButtonForSpeakFeature(SpeakPermissions.Cwl6);
                 ImGui.TableNextColumn();
-                BuildPauseButtonForSpeakFeature(SpeakPermissions2.Cwl7);
+                BuildPauseButtonForSpeakFeature(SpeakPermissions.Cwl7);
                 ImGui.TableNextColumn();
-                BuildPauseButtonForSpeakFeature(SpeakPermissions2.Cwl8);
+                BuildPauseButtonForSpeakFeature(SpeakPermissions.Cwl8);
                     
                 ImGui.EndTable();
             });
@@ -121,9 +121,9 @@ public class PauseViewUi(
                     return;
                 
                 ImGui.TableNextColumn();
-                BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.Emote);
+                BuildPauseButtonForPrimaryFeature(PrimaryPermissions.Emote);
                 ImGui.TableNextColumn();
-                BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.Hypnosis);
+                BuildPauseButtonForPrimaryFeature(PrimaryPermissions.Hypnosis);
                     
                 ImGui.EndTable();
             });
@@ -135,21 +135,21 @@ public class PauseViewUi(
                 if (ImGui.BeginTable("CharacterAttributes", 2))
                 {
                     ImGui.TableNextColumn();
-                    BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.GlamourerCustomization);
+                    BuildPauseButtonForPrimaryFeature(PrimaryPermissions.GlamourerCustomization);
                     ImGui.TableNextColumn();
-                    BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.GlamourerEquipment);
+                    BuildPauseButtonForPrimaryFeature(PrimaryPermissions.GlamourerEquipment);
                     ImGui.TableNextColumn();
-                    BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.Mods);
+                    BuildPauseButtonForPrimaryFeature(PrimaryPermissions.Mods);
                     ImGui.TableNextColumn();
-                    BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.BodySwap);
+                    BuildPauseButtonForPrimaryFeature(PrimaryPermissions.BodySwap);
                     ImGui.TableNextColumn();
-                    BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.Twinning);
+                    BuildPauseButtonForPrimaryFeature(PrimaryPermissions.Twinning);
                     ImGui.TableNextColumn();
-                    BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.Moodles);
+                    BuildPauseButtonForPrimaryFeature(PrimaryPermissions.Moodles);
                     ImGui.TableNextColumn();
-                    BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.CustomizePlus);
+                    BuildPauseButtonForPrimaryFeature(PrimaryPermissions.CustomizePlus);
                     ImGui.TableNextColumn();
-                    BuildPauseButtonForPrimaryFeature(PrimaryPermissions2.Honorific);
+                    BuildPauseButtonForPrimaryFeature(PrimaryPermissions.Honorific);
                     
                     ImGui.EndTable();
                 }
@@ -217,7 +217,7 @@ public class PauseViewUi(
         ImGui.TextUnformatted(friend.NoteOrFriendCode);
     }
     
-    private void BuildPauseButtonForSpeakFeature(SpeakPermissions2 permissions)
+    private void BuildPauseButtonForSpeakFeature(SpeakPermissions permissions)
     {
         if (pauseService.IsFeaturePaused(permissions))
         {
@@ -236,7 +236,7 @@ public class PauseViewUi(
         ImGui.TextUnformatted(permissions.ToString());
     }
 
-    private void BuildPauseButtonForPrimaryFeature(PrimaryPermissions2 permissions)
+    private void BuildPauseButtonForPrimaryFeature(PrimaryPermissions permissions)
     {
         if (pauseService.IsFeaturePaused(permissions))
         {

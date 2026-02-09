@@ -12,7 +12,7 @@ public class Friend(string friendCode, FriendOnlineStatus status, string? note, 
     /// <summary>
     ///     Do not use this constructor, it is a placeholder for possession functions
     /// </summary>
-    public Friend() : this(string.Empty, FriendOnlineStatus.Online, null, new RawPermissions(PrimaryPermissions2.None, PrimaryPermissions2.None, SpeakPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.None, ElevatedPermissions.None), new ResolvedPermissions(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.None))
+    public Friend() : this(string.Empty, FriendOnlineStatus.Online, null, new RawPermissions(PrimaryPermissions.None, PrimaryPermissions.None, SpeakPermissions.None, SpeakPermissions.None, ElevatedPermissions.None, ElevatedPermissions.None), new ResolvedPermissions(PrimaryPermissions.None, SpeakPermissions.None, ElevatedPermissions.None))
     {
     }
 

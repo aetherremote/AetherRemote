@@ -29,7 +29,7 @@ public class BodySwapHandler(DatabaseService database, PresenceService presenceS
         
         // Convert the swap attributes to primary permissions
         var primary = request.SwapAttributes.ToPrimaryPermission();
-        primary |= PrimaryPermissions2.BodySwap;
+        primary |= PrimaryPermissions.BodySwap;
 
         // Check elevated
         var elevated = ElevatedPermissions.None;

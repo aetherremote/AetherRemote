@@ -11,14 +11,14 @@ public static class GlamourerApplyFlagsExtensions
     /// <summary>
     ///     Converts glamourer apply flags to the corresponding required permissions
     /// </summary>
-    public static PrimaryPermissions2 ToPrimaryPermission(this GlamourerApplyFlags applyFlags)
+    public static PrimaryPermissions ToPrimaryPermission(this GlamourerApplyFlags applyFlags)
     {
-        var permissions = PrimaryPermissions2.None;
+        var permissions = PrimaryPermissions.None;
         if ((applyFlags & GlamourerApplyFlags.Customization) == GlamourerApplyFlags.Customization)
-            permissions |= PrimaryPermissions2.GlamourerCustomization;
+            permissions |= PrimaryPermissions.GlamourerCustomization;
 
         if ((applyFlags & GlamourerApplyFlags.Equipment) == GlamourerApplyFlags.Equipment)
-            permissions |= PrimaryPermissions2.GlamourerEquipment;
+            permissions |= PrimaryPermissions.GlamourerEquipment;
 
         return permissions;
     }

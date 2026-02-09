@@ -16,7 +16,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 public class MoodlesHandler(PresenceService presenceService, ForwardedRequestManager forwardedRequestManager, ILogger<MoodlesHandler> logger)
 {
     private const string Method = HubMethod.Moodles;
-    private static readonly ResolvedPermissions Permissions = new(PrimaryPermissions2.Moodles, SpeakPermissions2.None, ElevatedPermissions.None);
+    private static readonly ResolvedPermissions Permissions = new(PrimaryPermissions.Moodles, SpeakPermissions.None, ElevatedPermissions.None);
     
     /// <summary>
     ///     Handles the request

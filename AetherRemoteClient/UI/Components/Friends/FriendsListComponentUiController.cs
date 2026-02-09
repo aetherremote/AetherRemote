@@ -80,7 +80,7 @@ public class FriendsListComponentUiController : IDisposable
                 Plugin.Configuration.Notes.TryGetValue(request.TargetFriendCode, out var note);
                 
                 // Create the new object with notes
-                var friend = new Friend(request.TargetFriendCode, response.Status, note, new RawPermissions(PrimaryPermissions2.None, PrimaryPermissions2.None, SpeakPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.None, ElevatedPermissions.None), null);
+                var friend = new Friend(request.TargetFriendCode, response.Status, note, new RawPermissions(PrimaryPermissions.None, PrimaryPermissions.None, SpeakPermissions.None, SpeakPermissions.None, ElevatedPermissions.None, ElevatedPermissions.None), null);
                 
                 // Add to the friends list
                 _friendsListService.Add(friend);

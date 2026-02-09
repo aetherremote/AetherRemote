@@ -112,11 +112,11 @@ public class BodySwapViewUiController(
     /// </summary>
     public bool MissingPermissionsForATarget()
     {
-        var attributes = PrimaryPermissions2.BodySwap;
-        if (SwapMods) attributes |= PrimaryPermissions2.Mods;
-        if (SwapMoodles) attributes |= PrimaryPermissions2.Moodles;
-        if (SwapCustomizePlus) attributes |= PrimaryPermissions2.CustomizePlus;
-        if (SwapHonorific) attributes |= PrimaryPermissions2.Honorific;
+        var attributes = PrimaryPermissions.BodySwap;
+        if (SwapMods) attributes |= PrimaryPermissions.Mods;
+        if (SwapMoodles) attributes |= PrimaryPermissions.Moodles;
+        if (SwapCustomizePlus) attributes |= PrimaryPermissions.CustomizePlus;
+        if (SwapHonorific) attributes |= PrimaryPermissions.Honorific;
         
         foreach (var friend in selectionManager.Selected)
         {

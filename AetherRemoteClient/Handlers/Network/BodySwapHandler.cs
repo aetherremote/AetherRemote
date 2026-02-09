@@ -57,12 +57,12 @@ public class BodySwapHandler : AbstractNetworkHandler, IDisposable
     {
         Plugin.Log.Verbose($"{request}");
         
-        var primary = request.SwapAttributes.ToPrimaryPermission() | PrimaryPermissions2.BodySwap;
+        var primary = request.SwapAttributes.ToPrimaryPermission() | PrimaryPermissions.BodySwap;
         var elevated = request.LockCode is null 
             ? ElevatedPermissions.None 
             : ElevatedPermissions.PermanentTransformation;
 
-        var permissions = new ResolvedPermissions(primary, SpeakPermissions2.None, elevated);
+        var permissions = new ResolvedPermissions(primary, SpeakPermissions.None, elevated);
 
         var sender = TryGetFriendWithCorrectPermissions(Operation, request.SenderFriendCode, permissions);
         if (sender.Result is not ActionResultEc.Success)

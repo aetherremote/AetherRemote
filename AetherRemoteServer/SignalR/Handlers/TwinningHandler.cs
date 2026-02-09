@@ -30,13 +30,13 @@ public class TwinningHandler(PresenceService presenceService, ForwardedRequestMa
         }
         
         var primary = request.SwapAttributes.ToPrimaryPermission();
-        primary |= PrimaryPermissions2.Twinning;
+        primary |= PrimaryPermissions.Twinning;
         
         var elevated = ElevatedPermissions.None;
         if (request.LockCode is not null)
             elevated = ElevatedPermissions.PermanentTransformation;
         
-        var permissions = new ResolvedPermissions(primary, SpeakPermissions2.None, elevated);
+        var permissions = new ResolvedPermissions(primary, SpeakPermissions.None, elevated);
         var command = new TwinningCommand(senderFriendCode, request.CharacterName, request.CharacterWorld, request.SwapAttributes, request.LockCode);
         return await forwardedRequestManager.CheckPermissionsAndSend(senderFriendCode, request.TargetFriendCodes, Method, permissions, command, clients);
     }

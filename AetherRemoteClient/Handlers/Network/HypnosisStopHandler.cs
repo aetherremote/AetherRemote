@@ -19,7 +19,7 @@ public class HypnosisStopHandler : AbstractNetworkHandler, IDisposable
 {
     // Const
     private const string Operation = "Hypnosis Stop";
-    private static readonly ResolvedPermissions Permissions = new(PrimaryPermissions2.Hypnosis, SpeakPermissions2.None, ElevatedPermissions.None);
+    private static readonly ResolvedPermissions Permissions = new(PrimaryPermissions.Hypnosis, SpeakPermissions.None, ElevatedPermissions.None);
 
     // Injected
     private readonly LogService _log;

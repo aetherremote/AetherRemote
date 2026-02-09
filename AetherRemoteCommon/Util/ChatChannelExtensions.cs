@@ -50,30 +50,30 @@ public static class ChatChannelExtensions
     /// <summary>
     ///     Convert a chat channel to speak permissions
     /// </summary>
-    public static SpeakPermissions2 ToSpeakPermissions(this ChatChannel chatChannel, string? extra = null)
+    public static SpeakPermissions ToSpeakPermissions(this ChatChannel chatChannel, string? extra = null)
     {
         return chatChannel switch
         {
-            ChatChannel.Say => SpeakPermissions2.Say,
-            ChatChannel.Roleplay => SpeakPermissions2.Roleplay,
-            ChatChannel.Echo => SpeakPermissions2.Echo,
-            ChatChannel.Yell => SpeakPermissions2.Yell,
-            ChatChannel.Shout => SpeakPermissions2.Shout,
-            ChatChannel.Tell => SpeakPermissions2.Tell,
-            ChatChannel.Party => SpeakPermissions2.Party,
-            ChatChannel.Alliance => SpeakPermissions2.Alliance,
-            ChatChannel.FreeCompany => SpeakPermissions2.FreeCompany,
-            ChatChannel.PvPTeam => SpeakPermissions2.PvPTeam,
-            ChatChannel.Linkshell => ConvertToLinkshell(SpeakPermissions2.Ls1, extra),
-            ChatChannel.CrossWorldLinkshell => ConvertToLinkshell(SpeakPermissions2.Cwl1, extra),
-            _ => SpeakPermissions2.None
+            ChatChannel.Say => SpeakPermissions.Say,
+            ChatChannel.Roleplay => SpeakPermissions.Roleplay,
+            ChatChannel.Echo => SpeakPermissions.Echo,
+            ChatChannel.Yell => SpeakPermissions.Yell,
+            ChatChannel.Shout => SpeakPermissions.Shout,
+            ChatChannel.Tell => SpeakPermissions.Tell,
+            ChatChannel.Party => SpeakPermissions.Party,
+            ChatChannel.Alliance => SpeakPermissions.Alliance,
+            ChatChannel.FreeCompany => SpeakPermissions.FreeCompany,
+            ChatChannel.PvPTeam => SpeakPermissions.PvPTeam,
+            ChatChannel.Linkshell => ConvertToLinkshell(SpeakPermissions.Ls1, extra),
+            ChatChannel.CrossWorldLinkshell => ConvertToLinkshell(SpeakPermissions.Cwl1, extra),
+            _ => SpeakPermissions.None
         };
     }
     
-    private static SpeakPermissions2 ConvertToLinkshell(SpeakPermissions2 starting, string? extra)
+    private static SpeakPermissions ConvertToLinkshell(SpeakPermissions starting, string? extra)
     {
         return int.TryParse(extra, out var number)
-            ? (SpeakPermissions2)((int)starting << (number - 1))
-            : SpeakPermissions2.None;
+            ? (SpeakPermissions)((int)starting << (number - 1))
+            : SpeakPermissions.None;
     }
 }

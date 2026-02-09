@@ -18,28 +18,28 @@ namespace AetherRemoteClient.UI.Components.Friends;
 public class FriendsListComponentUi(FriendsListComponentUiController controller, SelectionManager selectionManager)
 {
     // Const
-    private const SpeakPermissions2 LinkshellMask =
-        SpeakPermissions2.Ls1 |
-        SpeakPermissions2.Ls2 |
-        SpeakPermissions2.Ls3 |
-        SpeakPermissions2.Ls4 |
-        SpeakPermissions2.Ls5 |
-        SpeakPermissions2.Ls6 |
-        SpeakPermissions2.Ls7 |
-        SpeakPermissions2.Ls8;
+    private const SpeakPermissions LinkshellMask =
+        SpeakPermissions.Ls1 |
+        SpeakPermissions.Ls2 |
+        SpeakPermissions.Ls3 |
+        SpeakPermissions.Ls4 |
+        SpeakPermissions.Ls5 |
+        SpeakPermissions.Ls6 |
+        SpeakPermissions.Ls7 |
+        SpeakPermissions.Ls8;
     
-    private const SpeakPermissions2 CrossWorldLinkshellMask =
-        SpeakPermissions2.Cwl1 |
-        SpeakPermissions2.Cwl2 |
-        SpeakPermissions2.Cwl3 |
-        SpeakPermissions2.Cwl4 |
-        SpeakPermissions2.Cwl5 |
-        SpeakPermissions2.Cwl6 |
-        SpeakPermissions2.Cwl7 |
-        SpeakPermissions2.Cwl8;
+    private const SpeakPermissions CrossWorldLinkshellMask =
+        SpeakPermissions.Cwl1 |
+        SpeakPermissions.Cwl2 |
+        SpeakPermissions.Cwl3 |
+        SpeakPermissions.Cwl4 |
+        SpeakPermissions.Cwl5 |
+        SpeakPermissions.Cwl6 |
+        SpeakPermissions.Cwl7 |
+        SpeakPermissions.Cwl8;
     
-    private static readonly PrimaryPermissions2 AllPrimaryPermissionsMask = GetAllFlags<PrimaryPermissions2>();
-    private static readonly SpeakPermissions2 AllSpeakPermissionsMask = GetAllFlags<SpeakPermissions2>();
+    private static readonly PrimaryPermissions AllPrimaryPermissionsMask = GetAllFlags<PrimaryPermissions>();
+    private static readonly SpeakPermissions AllSpeakPermissionsMask = GetAllFlags<SpeakPermissions>();
     private static readonly ElevatedPermissions AllElevatedPermissionsMask = GetAllFlags<ElevatedPermissions>();
     
     public void Draw(bool displayAddFriendsBox = false, bool displayOfflineFriends = false)
@@ -169,8 +169,8 @@ public class FriendsListComponentUi(FriendsListComponentUiController controller,
                 SharedUserInterfaces.PushMediumFont();
                 SharedUserInterfaces.TextCentered("Permissions Granted by Friend");
                 SharedUserInterfaces.PopMediumFont();
-                DisplayPermissions("Primary permissions", permissions.Primary, PrimaryPermissions2.None, AllPrimaryPermissionsMask);
-                DisplayPermissions("Speak permissions", permissions.Speak, SpeakPermissions2.None, AllSpeakPermissionsMask);
+                DisplayPermissions("Primary permissions", permissions.Primary, PrimaryPermissions.None, AllPrimaryPermissionsMask);
+                DisplayPermissions("Speak permissions", permissions.Speak, SpeakPermissions.None, AllSpeakPermissionsMask);
                 DisplayPermissions("Elevated permissions", permissions.Elevated, ElevatedPermissions.None, AllElevatedPermissionsMask);
                 ImGui.EndTooltip();
             }

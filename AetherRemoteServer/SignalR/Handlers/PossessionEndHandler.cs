@@ -11,7 +11,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 public class PossessionEndHandler(ForwardedRequestManager forwarder, PossessionManager possessionManager)
 {
     private const string Method = HubMethod.Possession.End;
-    private static readonly ResolvedPermissions Required = new(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.Possession);
+    private static readonly ResolvedPermissions Required = new(PrimaryPermissions.None, SpeakPermissions.None, ElevatedPermissions.Possession);
     
     public async Task<PossessionResponse> Handle(string senderFriendCode, IHubCallerClients clients)
     {

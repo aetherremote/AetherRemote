@@ -23,7 +23,7 @@ public class OnlineStatusUpdateHandler(
     ILogger<OnlineStatusUpdateHandler> logger)
 {
     private const string Method = HubMethod.Possession.End;
-    private static readonly ResolvedPermissions Required = new(PrimaryPermissions2.None, SpeakPermissions2.None, ElevatedPermissions.Possession);
+    private static readonly ResolvedPermissions Required = new(PrimaryPermissions.None, SpeakPermissions.None, ElevatedPermissions.Possession);
     
     /// <summary>
     ///     Handle the event, removing or adding from the current client list, and updating all the user's friends who are online

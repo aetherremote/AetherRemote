@@ -1,7 +1,7 @@
 namespace AetherRemoteCommon.Domain.Enums.Permissions;
 
 [Flags]
-public enum SpeakPermissions2
+public enum SpeakPermissions
 {
     // No Permissions
     None = 0,

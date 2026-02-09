@@ -19,7 +19,7 @@ public class MoodlesHandler : AbstractNetworkHandler, IDisposable
 {
     // Const
     private const string Operation = "Moodles";
-    private static readonly ResolvedPermissions Permissions = new(PrimaryPermissions2.Moodles, SpeakPermissions2.None, ElevatedPermissions.None);
+    private static readonly ResolvedPermissions Permissions = new(PrimaryPermissions.Moodles, SpeakPermissions.None, ElevatedPermissions.None);
 
     // Injected
     private readonly LogService _log;

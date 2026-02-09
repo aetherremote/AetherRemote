@@ -30,14 +30,14 @@ public class TransformHandler(PresenceService presenceService, ForwardedRequestM
         }
 
         var primary = request.GlamourerApplyType.ToPrimaryPermission();
-        if (primary is PrimaryPermissions2.None)
+        if (primary is PrimaryPermissions.None)
             logger.LogWarning("{Sender} tried to request with empty permissions {Request}", senderFriendCode, request);
 
         var elevated = ElevatedPermissions.None;
         if (request.LockCode is not null)
             elevated = ElevatedPermissions.PermanentTransformation;
 
-        var permissions = new ResolvedPermissions(primary, SpeakPermissions2.None, elevated);
+        var permissions = new ResolvedPermissions(primary, SpeakPermissions.None, elevated);
         var command = new TransformCommand(senderFriendCode, request.GlamourerData, request.GlamourerApplyType, request.LockCode);
         return await forwardedRequestManager.CheckPermissionsAndSend(senderFriendCode, request.TargetFriendCodes, Method, permissions, command, clients);
     }

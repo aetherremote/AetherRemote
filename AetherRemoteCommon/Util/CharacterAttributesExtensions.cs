@@ -9,19 +9,19 @@ namespace AetherRemoteCommon.Util;
 public static class CharacterAttributesExtensions
 {
     /// <summary>
-    ///     Converts <see cref="CharacterAttributes"/> to <see cref="PrimaryPermissions2"/>
+    ///     Converts <see cref="CharacterAttributes"/> to <see cref="PrimaryPermissions"/>
     /// </summary>
-    public static PrimaryPermissions2 ToPrimaryPermission(this CharacterAttributes attributes)
+    public static PrimaryPermissions ToPrimaryPermission(this CharacterAttributes attributes)
     {
-        var permissions = PrimaryPermissions2.None;
+        var permissions = PrimaryPermissions.None;
         if ((attributes & CharacterAttributes.Mods) == CharacterAttributes.Mods)
-            permissions |= PrimaryPermissions2.Mods;
+            permissions |= PrimaryPermissions.Mods;
 
         if ((attributes & CharacterAttributes.Moodles) == CharacterAttributes.Moodles)
-            permissions |= PrimaryPermissions2.Moodles;
+            permissions |= PrimaryPermissions.Moodles;
 
         if ((attributes & CharacterAttributes.CustomizePlus) == CharacterAttributes.CustomizePlus)
-            permissions |= PrimaryPermissions2.CustomizePlus;
+            permissions |= PrimaryPermissions.CustomizePlus;
 
         return permissions;
     }

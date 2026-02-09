@@ -76,7 +76,7 @@ public class HonorificViewUiController : IDisposable
             if (friend.PermissionsGrantedByFriend is null)
                 continue;
             
-            if ((friend.PermissionsGrantedByFriend.Primary & PrimaryPermissions2.Honorific) is not PrimaryPermissions2.Honorific)
+            if ((friend.PermissionsGrantedByFriend.Primary & PrimaryPermissions.Honorific) is not PrimaryPermissions.Honorific)
                 return true;
         }
         

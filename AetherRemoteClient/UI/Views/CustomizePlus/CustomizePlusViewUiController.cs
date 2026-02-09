@@ -127,7 +127,7 @@ public class CustomizePlusViewUiController : IDisposable
             if (friend.PermissionsGrantedByFriend is null)
                 continue;
             
-            if ((friend.PermissionsGrantedByFriend.Primary & PrimaryPermissions2.CustomizePlus) is not PrimaryPermissions2.CustomizePlus)
+            if ((friend.PermissionsGrantedByFriend.Primary & PrimaryPermissions.CustomizePlus) is not PrimaryPermissions.CustomizePlus)
                 return true;
         }
 
