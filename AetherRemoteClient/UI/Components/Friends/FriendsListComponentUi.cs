@@ -158,7 +158,6 @@ public class FriendsListComponentUi(FriendsListComponentUiController controller,
         {
             ImGui.SetNextWindowSize(AetherRemoteDimensions.Tooltip);
             
-            
             if (friend.PermissionsGrantedByFriend is not { } permissions)
             {
                 ImGui.SetTooltip("Your friend has not added you back yet.");
