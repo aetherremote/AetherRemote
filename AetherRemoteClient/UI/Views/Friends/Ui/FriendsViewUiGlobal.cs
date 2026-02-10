@@ -95,57 +95,55 @@ public partial class FriendsViewUi
     /// <summary>
     ///     Draws the radio buttons to make up the three options for an individual permission
     /// </summary>
-    private static void DrawGlobalPermissionButton(string permission, float offPosition, float onPosition, ref bool value)
+    private static void DrawGlobalPermissionButton(string label, float offPosition, float onPosition, ref bool value)
     {
-        ImGui.TextUnformatted(permission); ImGui.SameLine(offPosition);
+        ImGui.TextUnformatted(label); 
+        ImGui.SameLine(offPosition);
+        
+        ImGui.PushID(label);
+        
+        // Off button
+        if (ImGui.RadioButton($"##Off", value is false))
+            value = false;
 
-        if (value)
-        {
-            if (ImGui.RadioButton($"##Off{permission}", false))
-                value = false;
-            
-            ImGui.SameLine(onPosition);
-            
+        ImGui.SameLine(onPosition);
+        
+        // On button
+        var selected = value;
+        if (selected)
             ImGui.PushStyleColor(ImGuiCol.CheckMark, ImGuiColors.HealerGreen);
-            ImGui.RadioButton($"##On{permission}", true);
+        
+        if (ImGui.RadioButton($"##On", value))
+            value = true;
+        
+        if (selected)
             ImGui.PopStyleColor();
-        }
-        else
-        {
-            ImGui.RadioButton($"##Off{permission}", true);
-            
-            ImGui.SameLine(onPosition);
-
-            if (ImGui.RadioButton($"##On{permission}", false))
-                value = true;
-        }
+        
+        ImGui.PopID();
     }
     
     private static void DrawGlobalLinkshellButton(uint index, bool linkshell, float offPosition, float onPosition, ref bool value)
     {
-        var name = linkshell ? GetLinkshellName(index) : GetCrossWorldLinkshellName(index);
-        ImGui.TextUnformatted($"[{index + 1}]: {name}"); ImGui.SameLine(offPosition);
-
-        var prefix = linkshell ? "Ls" : "Cwls";
-        if (value)
-        {
-            if (ImGui.RadioButton($"##{prefix}{index}Off", false))
-                value = false;
-            
-            ImGui.SameLine(onPosition);
-            
+        ImGui.TextUnformatted(linkshell ? GetLinkshellName(index) : GetCrossWorldLinkshellName(index));
+        ImGui.SameLine(offPosition);
+        
+        ImGui.PushID(linkshell ? LinkshellLabels[index] : CrossWorldLabels[index]);
+        
+        if (ImGui.RadioButton($"##Off", value is false))
+            value = false;
+        
+        ImGui.SameLine(onPosition);
+        
+        var selected = value;
+        if (selected)
             ImGui.PushStyleColor(ImGuiCol.CheckMark, ImGuiColors.HealerGreen);
-            ImGui.RadioButton($"##{prefix}{index}On", true);
+        
+        if (ImGui.RadioButton($"##On", value))
+            value = true;
+        
+        if (selected)
             ImGui.PopStyleColor();
-        }
-        else
-        {
-            ImGui.RadioButton($"##{prefix}{index}Off", true);
-            
-            ImGui.SameLine(onPosition);
-
-            if (ImGui.RadioButton($"##{prefix}{index}On", false))
-                value = true;
-        }
+        
+        ImGui.PopID();
     }
 }

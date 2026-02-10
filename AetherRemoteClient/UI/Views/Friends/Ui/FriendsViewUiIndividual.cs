@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using AetherRemoteClient.Domain.Enums;
@@ -11,29 +12,57 @@ namespace AetherRemoteClient.UI.Views.Friends.Ui;
 
 public partial class FriendsViewUi
 {
+    private static readonly Dictionary<uint, string> LinkshellLabels = new()
+    {
+        { 0, "Ls1" },
+        { 1, "Ls2" },
+        { 2, "Ls3" },
+        { 3, "Ls4" },
+        { 4, "Ls5" },
+        { 5, "Ls6" },
+        { 6, "Ls7" },
+        { 7, "Ls8" }
+    };
+    
+    private static readonly Dictionary<uint, string> CrossWorldLabels = new()
+    {
+        { 0, "Cwl1" },
+        { 1, "Cwl2" },
+        { 2, "Cwl3" },
+        { 3, "Cwl4" },
+        { 4, "Cwl5" },
+        { 5, "Cwl6" },
+        { 6, "Cwl7" },
+        { 7, "Cwl8" }
+    };
+    
     private void DrawIndividualPermissions(float width)
     {
         var denyPosition = width * 0.5f;
         var inheritPosition = width * 0.65f;
         var allowPosition = width * 0.8f;
 
-        switch (selection.Selected.Count)
-        {
-            case 0:
-                SharedUserInterfaces.ContentBox("PermissionsIndividualSelectOne", AetherRemoteColors.PanelColor, true, () =>
-                {
-                    SharedUserInterfaces.TextCentered("You must select a friend");
-                });
-                return;
-            
-            case >1:
-                SharedUserInterfaces.ContentBox("PermissionsIndividualOnlyOne", AetherRemoteColors.PanelColor, true, () =>
-                {
-                    SharedUserInterfaces.TextCentered("You may only edit one friend at a time");
-                });
-                return;
-        }
+        var count = selection.Selected.Count;
         
+        // No one selected
+        if (count is 0)
+        {
+            SharedUserInterfaces.ContentBox("PermissionsIndividualSelectOne", AetherRemoteColors.PanelColor, true, () =>
+            {
+                SharedUserInterfaces.TextCentered("You must select a friend");
+            });
+            return;
+        }
+
+        // More than one person selected
+        if (count > 1)
+        {
+            SharedUserInterfaces.ContentBox("PermissionsIndividualOnlyOne", AetherRemoteColors.PanelColor, true, () =>
+            {
+                SharedUserInterfaces.TextCentered("You may only edit one friend at a time");
+            });
+        }
+
         SharedUserInterfaces.ContentBox("PermissionsIndividualNote", AetherRemoteColors.PanelColor, true, () =>
         {
             SharedUserInterfaces.MediumText(selection.Selected.FirstOrDefault() is not { } friend ? "Note" : $"Note for {friend.FriendCode}");
@@ -51,16 +80,16 @@ public partial class FriendsViewUi
             ImGui.TextUnformatted("Allow");
             ImGui.Separator();
             
-            DrawIndividualPermissionButton("Body Swap", denyPosition, inheritPosition, allowPosition, ref controller.Individual.BodySwapValue);
-            DrawIndividualPermissionButton("Customize+", denyPosition, inheritPosition, allowPosition, ref controller.Individual.CustomizePlusValue);
-            DrawIndividualPermissionButton("Emote", denyPosition, inheritPosition, allowPosition, ref controller.Individual.EmoteValue);
-            DrawIndividualPermissionButton("Glamourer Customizations", denyPosition, inheritPosition, allowPosition, ref controller.Individual.GlamourerCustomizationsValue);
-            DrawIndividualPermissionButton("Glamourer Equipment", denyPosition, inheritPosition, allowPosition, ref controller.Individual.GlamourerEquipmentValue);
-            DrawIndividualPermissionButton("Honorific", denyPosition, inheritPosition, allowPosition, ref controller.Individual.HonorificValue);
-            DrawIndividualPermissionButton("Hypnosis", denyPosition, inheritPosition, allowPosition, ref controller.Individual.HypnosisValue);
-            DrawIndividualPermissionButton("Moodles", denyPosition, inheritPosition, allowPosition, ref controller.Individual.MoodlesValue);
-            DrawIndividualPermissionButton("Penumbra Mods", denyPosition, inheritPosition, allowPosition, ref controller.Individual.PenumbraModsValue);
-            DrawIndividualPermissionButton("Twinning", denyPosition, inheritPosition, allowPosition, ref controller.Individual.TwinningValue);
+            DrawIndividualPermissionRow("Body Swap", denyPosition, inheritPosition, allowPosition, ref controller.Individual.BodySwapValue);
+            DrawIndividualPermissionRow("Customize+", denyPosition, inheritPosition, allowPosition, ref controller.Individual.CustomizePlusValue);
+            DrawIndividualPermissionRow("Emote", denyPosition, inheritPosition, allowPosition, ref controller.Individual.EmoteValue);
+            DrawIndividualPermissionRow("Glamourer Customizations", denyPosition, inheritPosition, allowPosition, ref controller.Individual.GlamourerCustomizationsValue);
+            DrawIndividualPermissionRow("Glamourer Equipment", denyPosition, inheritPosition, allowPosition, ref controller.Individual.GlamourerEquipmentValue);
+            DrawIndividualPermissionRow("Honorific", denyPosition, inheritPosition, allowPosition, ref controller.Individual.HonorificValue);
+            DrawIndividualPermissionRow("Hypnosis", denyPosition, inheritPosition, allowPosition, ref controller.Individual.HypnosisValue);
+            DrawIndividualPermissionRow("Moodles", denyPosition, inheritPosition, allowPosition, ref controller.Individual.MoodlesValue);
+            DrawIndividualPermissionRow("Penumbra Mods", denyPosition, inheritPosition, allowPosition, ref controller.Individual.PenumbraModsValue);
+            DrawIndividualPermissionRow("Twinning", denyPosition, inheritPosition, allowPosition, ref controller.Individual.TwinningValue);
         });
         
         SharedUserInterfaces.ContentBox("PermissionsIndividualSpeak", AetherRemoteColors.PanelColor, true, () =>
@@ -73,30 +102,30 @@ public partial class FriendsViewUi
             ImGui.TextUnformatted("Allow");
             ImGui.Separator();
             
-            DrawIndividualPermissionButton("Alliance", denyPosition, inheritPosition, allowPosition, ref controller.Individual.AllianceValue);
-            DrawIndividualPermissionButton("Echo", denyPosition, inheritPosition, allowPosition, ref controller.Individual.EchoValue);
-            DrawIndividualPermissionButton("Free Company", denyPosition, inheritPosition, allowPosition, ref controller.Individual.FreeCompanyValue);
-            DrawIndividualPermissionButton("Party", denyPosition, inheritPosition, allowPosition, ref controller.Individual.PartyValue);
-            DrawIndividualPermissionButton("PvP Team", denyPosition, inheritPosition, allowPosition, ref controller.Individual.PvPTeamValue);
-            DrawIndividualPermissionButton("Roleplay", denyPosition, inheritPosition, allowPosition, ref controller.Individual.RoleplayValue);
-            DrawIndividualPermissionButton("Say", denyPosition, inheritPosition, allowPosition, ref controller.Individual.SayValue);
-            DrawIndividualPermissionButton("Shout", denyPosition, inheritPosition, allowPosition, ref controller.Individual.ShoutValue);
-            DrawIndividualPermissionButton("Tell", denyPosition, inheritPosition, allowPosition, ref controller.Individual.TellValue);
-            DrawIndividualPermissionButton("Yell", denyPosition, inheritPosition, allowPosition, ref controller.Individual.YellValue);
+            DrawIndividualPermissionRow("Alliance", denyPosition, inheritPosition, allowPosition, ref controller.Individual.AllianceValue);
+            DrawIndividualPermissionRow("Echo", denyPosition, inheritPosition, allowPosition, ref controller.Individual.EchoValue);
+            DrawIndividualPermissionRow("Free Company", denyPosition, inheritPosition, allowPosition, ref controller.Individual.FreeCompanyValue);
+            DrawIndividualPermissionRow("Party", denyPosition, inheritPosition, allowPosition, ref controller.Individual.PartyValue);
+            DrawIndividualPermissionRow("PvP Team", denyPosition, inheritPosition, allowPosition, ref controller.Individual.PvPTeamValue);
+            DrawIndividualPermissionRow("Roleplay", denyPosition, inheritPosition, allowPosition, ref controller.Individual.RoleplayValue);
+            DrawIndividualPermissionRow("Say", denyPosition, inheritPosition, allowPosition, ref controller.Individual.SayValue);
+            DrawIndividualPermissionRow("Shout", denyPosition, inheritPosition, allowPosition, ref controller.Individual.ShoutValue);
+            DrawIndividualPermissionRow("Tell", denyPosition, inheritPosition, allowPosition, ref controller.Individual.TellValue);
+            DrawIndividualPermissionRow("Yell", denyPosition, inheritPosition, allowPosition, ref controller.Individual.YellValue);
             
             ImGui.Spacing();
             
             ImGui.TextUnformatted("Linkshell Permissions");
             ImGui.Separator();
             for (uint index = 0; index < 8; index++)
-                DrawIndividualLinkshellButton(index, true, denyPosition, inheritPosition, allowPosition, ref controller.Individual.LinkshellValues[index]);
+                DrawIndividualLinkshellPermissionRow(index, true, denyPosition, inheritPosition, allowPosition, ref controller.Individual.LinkshellValues[index]);
             
             ImGui.Spacing();
             
             ImGui.TextUnformatted("Cross-world Linkshell Permissions");
             ImGui.Separator();
             for (uint index = 0; index < 8; index++)
-                DrawIndividualLinkshellButton(index, false, denyPosition, inheritPosition, allowPosition, ref controller.Individual.CrossWorldLinkshellValues[index]);
+                DrawIndividualLinkshellPermissionRow(index, false, denyPosition, inheritPosition, allowPosition, ref controller.Individual.CrossWorldLinkshellValues[index]);
         });
         
         SharedUserInterfaces.ContentBox("PermissionsIndividualElevated", AetherRemoteColors.PrimaryColor, true, () =>
@@ -110,7 +139,7 @@ public partial class FriendsViewUi
             ImGui.Separator();
             
             // DrawIndividualPermissionButton("Permanent Transformations", denyPosition, inheritPosition, allowPosition, ref controller.Individual.PermanentTransformationValue);
-            DrawIndividualPermissionButton("Possession", denyPosition, inheritPosition, allowPosition, ref controller.Individual.PossessionValue);
+            DrawIndividualPermissionRow("Possession", denyPosition, inheritPosition, allowPosition, ref controller.Individual.PossessionValue);
         });
         
         SharedUserInterfaces.ContentBox("PermissionsIndividualSave", AetherRemoteColors.PanelColor, false, () =>
@@ -131,115 +160,85 @@ public partial class FriendsViewUi
         });
     }
     
-    /// <summary>
-    ///     Draws the radio buttons to make up the three options for an individual permission
-    /// </summary>
-    private static void DrawIndividualPermissionButton(string permission, float denyPosition, float inheritPosition, float allowPosition, ref PermissionValue value)
+    private static void DrawIndividualPermissionRow(string label, float denyPosition, float inheritPosition, float allowPosition, ref PermissionValue value)
     {
-        ImGui.TextUnformatted(permission); ImGui.SameLine(denyPosition);
+        ImGui.TextUnformatted(label); ImGui.SameLine(denyPosition);
+        ImGui.PushID(label);
 
-        switch (value)
-        {
-            case PermissionValue.Deny:
-                ImGui.PushStyleColor(ImGuiCol.CheckMark, ImGuiColors.DalamudRed);
-                ImGui.RadioButton($"##Deny{permission}", true);
-                ImGui.PopStyleColor();
-                ImGui.SameLine(inheritPosition);
+        // Deny
+        var denySelected = value == PermissionValue.Deny;
+        if (denySelected)
+            ImGui.PushStyleColor(ImGuiCol.CheckMark, ImGuiColors.DalamudRed);
 
-                if (ImGui.RadioButton($"##Inherit{permission}", false))
-                    value = PermissionValue.Inherit;
-                ImGui.SameLine(allowPosition);
+        if (ImGui.RadioButton("##Deny", denySelected))
+            value = PermissionValue.Deny;
+
+        if (denySelected)
+            ImGui.PopStyleColor();
         
-                if (ImGui.RadioButton($"##Allow{permission}", false))
-                    value = PermissionValue.Allow;
-                break;
-            
-            case PermissionValue.Inherit:
-                if (ImGui.RadioButton($"##Deny{permission}", false))
-                    value = PermissionValue.Deny;
-                ImGui.SameLine(inheritPosition);
-                
-                ImGui.RadioButton($"##Inherit{permission}", true);
-                ImGui.SameLine(allowPosition);
-                
-                if (ImGui.RadioButton($"##Allow{permission}", false))
-                    value = PermissionValue.Allow;
-                break;
-            
-            case PermissionValue.Allow:
-                if (ImGui.RadioButton($"##Deny{permission}", false))
-                    value = PermissionValue.Deny;
-                ImGui.SameLine(inheritPosition);
-        
-                if (ImGui.RadioButton($"##Inherit{permission}", false))
-                    value = PermissionValue.Inherit;
-                ImGui.SameLine(allowPosition);
-        
-                ImGui.PushStyleColor(ImGuiCol.CheckMark, ImGuiColors.HealerGreen);
-                ImGui.RadioButton($"##Allow{permission}", true);
-                ImGui.PopStyleColor();
-                break;
-            
-            default:
-                ImGui.TextUnformatted("Unknown PermissionValue");
-                break;
-        }
+        ImGui.SameLine(inheritPosition);
+
+        // Inherit
+        var inheritSelected = value == PermissionValue.Inherit;
+        if (ImGui.RadioButton("##Inherit", inheritSelected))
+            value = PermissionValue.Inherit;
+
+        ImGui.SameLine(allowPosition);
+
+        // Allow
+        var allowSelected = value == PermissionValue.Allow;
+        if (allowSelected)
+            ImGui.PushStyleColor(ImGuiCol.CheckMark, ImGuiColors.HealerGreen);
+
+        if (ImGui.RadioButton("##Allow", allowSelected))
+            value = PermissionValue.Allow;
+
+        if (allowSelected)
+            ImGui.PopStyleColor();
+
+        ImGui.PopID();
     }
     
-    /// <summary>
-    ///     Draws the radio buttons to make up the three options for an individual permission
-    /// </summary>
-    private static void DrawIndividualLinkshellButton(uint index, bool linkshell, float denyPosition, float inheritPosition, float allowPosition, ref PermissionValue value)
+    private static void DrawIndividualLinkshellPermissionRow(uint index, bool linkshell, float denyPosition, float inheritPosition, float allowPosition, ref PermissionValue value)
     {
-        var name = linkshell ? GetLinkshellName(index) : GetCrossWorldLinkshellName(index);
-        ImGui.TextUnformatted($"[{index + 1}]: {name}"); ImGui.SameLine(denyPosition);
+        // Label
+        ImGui.TextUnformatted(linkshell ? GetLinkshellName(index) : GetCrossWorldLinkshellName(index));
+        ImGui.SameLine(denyPosition);
+        
+        // Id
+        ImGui.PushID(linkshell ? LinkshellLabels[index] : CrossWorldLabels[index]);
 
-        var prefix = linkshell ? "Ls" : "Cwls";
-        switch (value)
-        {
-            case PermissionValue.Deny:
-                ImGui.PushStyleColor(ImGuiCol.CheckMark, ImGuiColors.DalamudRed);
-                ImGui.RadioButton($"##Deny{prefix}{index}", true);
-                ImGui.PopStyleColor();
-                ImGui.SameLine(inheritPosition);
+        // Deny
+        var denySelected = value == PermissionValue.Deny;
+        if (denySelected)
+            ImGui.PushStyleColor(ImGuiCol.CheckMark, ImGuiColors.DalamudRed);
 
-                if (ImGui.RadioButton($"##Inherit{prefix}{index}", false))
-                    value = PermissionValue.Inherit;
-                ImGui.SameLine(allowPosition);
-        
-                if (ImGui.RadioButton($"##Allow{prefix}{index}", false))
-                    value = PermissionValue.Allow;
-                break;
-            
-            case PermissionValue.Inherit:
-                if (ImGui.RadioButton($"##Deny{prefix}{index}", false))
-                    value = PermissionValue.Deny;
-                ImGui.SameLine(inheritPosition);
-                
-                ImGui.RadioButton($"##Inherit{prefix}{index}", true);
-                ImGui.SameLine(allowPosition);
-                
-                if (ImGui.RadioButton($"##Allow{prefix}{index}", false))
-                    value = PermissionValue.Allow;
-                break;
-            
-            case PermissionValue.Allow:
-                if (ImGui.RadioButton($"##Deny{prefix}{index}", false))
-                    value = PermissionValue.Deny;
-                ImGui.SameLine(inheritPosition);
-        
-                if (ImGui.RadioButton($"##Inherit{prefix}{index}", false))
-                    value = PermissionValue.Inherit;
-                ImGui.SameLine(allowPosition);
-        
-                ImGui.PushStyleColor(ImGuiCol.CheckMark, ImGuiColors.HealerGreen);
-                ImGui.RadioButton($"##Allow{prefix}{index}", true);
-                ImGui.PopStyleColor();
-                break;
-            
-            default:
-                ImGui.TextUnformatted("Unknown PermissionValue");
-                break;
-        }
+        if (ImGui.RadioButton("##Deny", denySelected))
+            value = PermissionValue.Deny;
+
+        if (denySelected)
+            ImGui.PopStyleColor();
+
+        ImGui.SameLine(inheritPosition);
+
+        // Inherit
+        var inheritSelected = value == PermissionValue.Inherit;
+        if (ImGui.RadioButton("##Inherit", inheritSelected))
+            value = PermissionValue.Inherit;
+
+        ImGui.SameLine(allowPosition);
+
+        // Allow
+        var allowSelected = value == PermissionValue.Allow;
+        if (allowSelected)
+            ImGui.PushStyleColor(ImGuiCol.CheckMark, ImGuiColors.HealerGreen);
+
+        if (ImGui.RadioButton("##Allow", allowSelected))
+            value = PermissionValue.Allow;
+
+        if (allowSelected)
+            ImGui.PopStyleColor();
+
+        ImGui.PopID();
     }
 }

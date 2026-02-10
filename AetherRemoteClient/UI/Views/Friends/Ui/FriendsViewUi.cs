@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
@@ -57,29 +58,31 @@ public partial class FriendsViewUi(FriendsListComponentUi friendsList, FriendsVi
                 
                 ImGui.EndTooltip();
             }
+
+            // Snapshot the value just in case
+            var shouldDrawIndividual = _drawIndividuals;
+
+            // Individual Button
+            if (shouldDrawIndividual)
+                ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteColors.PrimaryColor);
             
-            if (_drawIndividuals)
-            {
-                ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteColors.PrimaryColor);
-                ImGui.Button("Individual", buttonDimensions);
+            if (ImGui.Button("Individual", buttonDimensions))
+                _drawIndividuals = true;
+            
+            if (shouldDrawIndividual)
                 ImGui.PopStyleColor();
-                
-                ImGui.SameLine();
-                
-                if (ImGui.Button("Global", buttonDimensions))
-                    _drawIndividuals = false;
-            }
-            else
-            {
-                if (ImGui.Button("Individual", buttonDimensions))
-                    _drawIndividuals = true;
-                
-                ImGui.SameLine();
-                
+            
+            ImGui.SameLine();
+            
+            // Global Button
+            if (shouldDrawIndividual is false)
                 ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteColors.PrimaryColor);
-                ImGui.Button("Global", buttonDimensions);
+            
+            if (ImGui.Button("Global", buttonDimensions))
+                _drawIndividuals = false;
+            
+            if (shouldDrawIndividual is false)
                 ImGui.PopStyleColor();
-            }
         });
 
         bool pendingChanges;
@@ -115,24 +118,37 @@ public partial class FriendsViewUi(FriendsListComponentUi friendsList, FriendsVi
 
             drawList.ChannelsMerge();
         }
-            
         
         ImGui.EndChild();
         ImGui.SameLine();
         friendsList.Draw(true, true);
     }
-    
+
+    private static readonly Dictionary<uint, string?> LinkshellCache = []; 
     private static unsafe string? GetLinkshellName(uint index)
     {
+        if (LinkshellCache.TryGetValue(index, out var name))
+            return name;
+        
         var instance = InfoProxyLinkshell.Instance();
         var info = instance->GetLinkshellInfo(index);
-        return info == null ? null : instance->GetLinkshellName(info->Id).ToString();
+        
+        var linkshell = info == null ? null : string.Concat("[", index, "]: ", instance->GetLinkshellName(info->Id).ToString());
+        LinkshellCache[index] = linkshell;
+        return linkshell;
     }
 
+    private static readonly Dictionary<uint, string> CrossWorldCache = []; 
     private static unsafe string GetCrossWorldLinkshellName(uint index)
     {
+        if (CrossWorldCache.TryGetValue(index, out var name))
+            return name;
+        
         var instance = InfoProxyCrossWorldLinkshell.Instance();
         var info = instance->GetCrossworldLinkshellName(index);
-        return info->ToString();
+
+        var crossWorld = string.Concat("[", index, "]: ", info->ToString());
+        CrossWorldCache[index] = crossWorld;
+        return crossWorld;
     }
 }
