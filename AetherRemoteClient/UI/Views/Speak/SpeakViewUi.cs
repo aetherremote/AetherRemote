@@ -2,6 +2,7 @@ using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Style;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon;
@@ -22,12 +23,12 @@ public class SpeakViewUi(
 
     public void Draw()
     {
-        ImGui.BeginChild("SpeakContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
+        ImGui.BeginChild("SpeakContent", AetherRemoteDimensions.ContentSize, false, AetherRemoteImGui.ContentFlags);
 
         switch (selectionManager.Selected.Count)
         {
             case 0:
-                SharedUserInterfaces.ContentBox("SpeakSelectMoreFriends", AetherRemoteStyle.PanelBackground, true, () =>
+                SharedUserInterfaces.ContentBox("SpeakSelectMoreFriends", AetherRemoteColors.PanelColor, true, () =>
                 {
                     SharedUserInterfaces.TextCentered("You must select at least one friend");
                 });
@@ -38,7 +39,7 @@ public class SpeakViewUi(
                 return;
 
             case > 3:
-                SharedUserInterfaces.ContentBox("SpeakLimitedSelection", AetherRemoteStyle.PanelBackground, true, () =>
+                SharedUserInterfaces.ContentBox("SpeakLimitedSelection", AetherRemoteColors.PanelColor, true, () =>
                 {
                     SharedUserInterfaces.TextCentered("You may only select 3 friends for in game functions");
                 });
@@ -52,7 +53,7 @@ public class SpeakViewUi(
         var windowPadding = ImGui.GetStyle().WindowPadding;
         var windowWidth = ImGui.GetWindowWidth();
 
-        SharedUserInterfaces.ContentBox("SpeakChannel", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("SpeakChannel", AetherRemoteColors.PanelColor, true, () =>
         {
             SharedUserInterfaces.MediumText("Channel");
 
@@ -66,7 +67,7 @@ public class SpeakViewUi(
         switch (controller.ChannelSelectionIndex)
         {
             case (int)ChatChannel.Linkshell or (int)ChatChannel.CrossWorldLinkshell:
-                SharedUserInterfaces.ContentBox("SpeakLinkshell", AetherRemoteStyle.PanelBackground, true, () =>
+                SharedUserInterfaces.ContentBox("SpeakLinkshell", AetherRemoteColors.PanelColor, true, () =>
                 {
                     SharedUserInterfaces.MediumText("Linkshell Number");
                     ImGui.SetNextItemWidth(60);
@@ -76,7 +77,7 @@ public class SpeakViewUi(
                 break;
 
             case (int)ChatChannel.Tell:
-                SharedUserInterfaces.ContentBox("SpeakTell", AetherRemoteStyle.PanelBackground, true, () =>
+                SharedUserInterfaces.ContentBox("SpeakTell", AetherRemoteColors.PanelColor, true, () =>
                 {
                     SharedUserInterfaces.MediumText("Tell Target");
                     ImGui.SetNextItemWidth(180);
@@ -105,7 +106,7 @@ public class SpeakViewUi(
         var friendsLackingPermissions = controller.GetFriendsLackingPermissions();
         if (friendsLackingPermissions.Count is not 0)
         {
-            SharedUserInterfaces.ContentBox("SpeakLackingPermissions", AetherRemoteStyle.PanelBackground, true, () =>
+            SharedUserInterfaces.ContentBox("SpeakLackingPermissions", AetherRemoteColors.PanelColor, true, () =>
             {
                 SharedUserInterfaces.MediumText("Lacking Permissions", ImGuiColors.DalamudYellow);
                 ImGui.SameLine();
@@ -116,7 +117,7 @@ public class SpeakViewUi(
             });
         }
 
-        SharedUserInterfaces.ContentBox("SpeakSend", AetherRemoteStyle.PanelBackground, false, () =>
+        SharedUserInterfaces.ContentBox("SpeakSend", AetherRemoteColors.PanelColor, false, () =>
         {
             var width = windowWidth - windowPadding.X * 2;
             SharedUserInterfaces.MediumText("Message");

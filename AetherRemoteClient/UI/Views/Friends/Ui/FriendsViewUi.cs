@@ -17,11 +17,11 @@ public partial class FriendsViewUi(FriendsListComponentUi friendsList, FriendsVi
     
     public void Draw()
     {
-        ImGui.BeginChild("PermissionContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
+        ImGui.BeginChild("PermissionContent", AetherRemoteDimensions.ContentSize, false, AetherRemoteImGui.ContentFlags);
 
         var width = ImGui.GetWindowWidth();
         
-        SharedUserInterfaces.ContentBox("PermissionsSelectMode", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("PermissionsSelectMode", AetherRemoteColors.PanelColor, true, () =>
         {
             var buttonWidth = (width - 3 * AetherRemoteImGui.WindowPadding.X) * 0.5f;
             var buttonDimensions = new Vector2(buttonWidth, AetherRemoteDimensions.SendCommandButtonHeight);
@@ -60,7 +60,7 @@ public partial class FriendsViewUi(FriendsListComponentUi friendsList, FriendsVi
             
             if (_drawIndividuals)
             {
-                ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteStyle.PrimaryColor);
+                ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteColors.PrimaryColor);
                 ImGui.Button("Individual", buttonDimensions);
                 ImGui.PopStyleColor();
                 
@@ -76,7 +76,7 @@ public partial class FriendsViewUi(FriendsListComponentUi friendsList, FriendsVi
                 
                 ImGui.SameLine();
                 
-                ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteStyle.PrimaryColor);
+                ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteColors.PrimaryColor);
                 ImGui.Button("Global", buttonDimensions);
                 ImGui.PopStyleColor();
             }
@@ -109,9 +109,9 @@ public partial class FriendsViewUi(FriendsListComponentUi friendsList, FriendsVi
             drawList.ChannelsSetCurrent(0);
             var min = final - AetherRemoteImGui.WindowPadding;
             var max = final + textSize + AetherRemoteImGui.WindowPadding;
-            drawList.AddRectFilled(min, max, ImGui.ColorConvertFloat4ToU32(new Vector4(0, 0, 0, 1)), AetherRemoteStyle.Rounding);
-            drawList.AddRect(min, max, ImGui.ColorConvertFloat4ToU32(ImGuiColors.DalamudOrange), AetherRemoteStyle.Rounding);
-            drawList.AddRect(pos, pos + size, ImGui.ColorConvertFloat4ToU32(ImGuiColors.DalamudOrange), AetherRemoteStyle.Rounding);
+            drawList.AddRectFilled(min, max, ImGui.ColorConvertFloat4ToU32(new Vector4(0, 0, 0, 1)), AetherRemoteImGui.ChildRounding);
+            drawList.AddRect(min, max, ImGui.ColorConvertFloat4ToU32(ImGuiColors.DalamudOrange), AetherRemoteImGui.ChildRounding);
+            drawList.AddRect(pos, pos + size, ImGui.ColorConvertFloat4ToU32(ImGuiColors.DalamudOrange), AetherRemoteImGui.ChildRounding);
 
             drawList.ChannelsMerge();
         }

@@ -17,13 +17,13 @@ public class NavigationBarComponentUi(NetworkService networkService, ViewService
     
     public void Draw()
     {
-        var size = new Vector2(AetherRemoteStyle.NavBarDimensions.X - AetherRemoteImGui.WindowPadding.X * 2, 25);
+        var size = new Vector2(AetherRemoteDimensions.NavBar.X - AetherRemoteImGui.WindowPadding.X * 2, 25);
         var offset = AetherRemoteImGui.WindowPadding with { Y = (size.Y - ImGui.GetFontSize()) * 0.5f };
 
-        ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, AetherRemoteStyle.Rounding);
-        ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, AetherRemoteStyle.Rounding);
+        ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, AetherRemoteImGui.ChildRounding);
+        ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, AetherRemoteImGui.ChildRounding);
 
-        if (ImGui.BeginChild("###MainWindowNavBar", AetherRemoteStyle.NavBarDimensions, true, ImGuiWindowFlags.NoScrollbar))
+        if (ImGui.BeginChild("###MainWindowNavBar", AetherRemoteDimensions.NavBar, true, ImGuiWindowFlags.NoScrollbar))
         {
             ImGui.PushStyleVar(ImGuiStyleVar.ButtonTextAlign, AlignButtonTextLeft);
 
@@ -76,7 +76,7 @@ public class NavigationBarComponentUi(NetworkService networkService, ViewService
         var begin = ImGui.GetCursorPos();
         if (viewService.CurrentView == view)
         {
-            ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteStyle.PrimaryColor);
+            ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteColors.PrimaryColor);
             ImGui.Button($"##{text}", size);
             ImGui.PopStyleColor();
         }

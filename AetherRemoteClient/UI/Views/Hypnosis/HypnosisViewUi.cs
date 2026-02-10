@@ -3,6 +3,7 @@ using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Style;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon;
@@ -25,11 +26,11 @@ public class HypnosisViewUi(
     
     public void Draw()
     {
-        ImGui.BeginChild("HypnosisContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
+        ImGui.BeginChild("HypnosisContent", AetherRemoteDimensions.ContentSize, false, AetherRemoteImGui.ContentFlags);
         
         if (selectionManager.Selected.Count is 0)
         {
-            SharedUserInterfaces.ContentBox("", AetherRemoteStyle.PanelBackground, true, () =>
+            SharedUserInterfaces.ContentBox("", AetherRemoteColors.PanelColor, true, () =>
             {
                 SharedUserInterfaces.TextCentered("You must select at least one friend");
             });
@@ -46,7 +47,7 @@ public class HypnosisViewUi(
         var fontSize = ImGui.GetFontSize();
         var itemWidth = (width - padding * 3) * 0.5f;
         
-        SharedUserInterfaces.ContentBox("HypnosisLoadSpiral", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("HypnosisLoadSpiral", AetherRemoteColors.PanelColor, true, () =>
         {
             SharedUserInterfaces.MediumText("Spirals");
             SharedUserInterfaces.ComboWithFilter("##LoadSpiralInputText", "Name", ref controller.SaveLoadSpiralSearchText, width - padding * 8 - fontSize * 3, controller.SaveLoadSpiralFileOptionsListFilter);
@@ -73,7 +74,7 @@ public class HypnosisViewUi(
                 controller.ImportFromClipboard();
         });
         
-        SharedUserInterfaces.ContentBox("HypnosisSpiralConfiguration", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("HypnosisSpiralConfiguration", AetherRemoteColors.PanelColor, true, () =>
         {
             SharedUserInterfaces.MediumText("Spiral Configuration");
             
@@ -128,7 +129,7 @@ public class HypnosisViewUi(
                 controller.SetDirection();  
         });
         
-        SharedUserInterfaces.ContentBox("HypnosisTextConfiguration", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("HypnosisTextConfiguration", AetherRemoteColors.PanelColor, true, () =>
         {
             SharedUserInterfaces.MediumText("Spiral Text Configuration");
             
@@ -174,7 +175,7 @@ public class HypnosisViewUi(
                 controller.BeginTextRefreshTimer();
         });
         
-        SharedUserInterfaces.ContentBox("HypnosisSendCommand", AetherRemoteStyle.PanelBackground, false, () =>
+        SharedUserInterfaces.ContentBox("HypnosisSendCommand", AetherRemoteColors.PanelColor, false, () =>
         {
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Eye, IconSize, "Open the preview spiral window"))
                 _showPreviewWindow = true;

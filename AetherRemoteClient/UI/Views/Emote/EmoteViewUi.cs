@@ -2,6 +2,7 @@ using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Style;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
@@ -18,12 +19,12 @@ public class EmoteViewUi(
 {
     public void Draw()
     {
-        ImGui.BeginChild("EmoteContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
+        ImGui.BeginChild("EmoteContent", AetherRemoteDimensions.ContentSize, false, AetherRemoteImGui.ContentFlags);
 
         switch (selectionManager.Selected.Count)
         {
             case 0:
-                SharedUserInterfaces.ContentBox("EmoteSelectMoreFriends", AetherRemoteStyle.PanelBackground, true,
+                SharedUserInterfaces.ContentBox("EmoteSelectMoreFriends", AetherRemoteColors.PanelColor, true,
                     () =>
                     {
                         SharedUserInterfaces.TextCentered("You must select at least one friend");
@@ -35,7 +36,7 @@ public class EmoteViewUi(
                 return;
 
             case > 3:
-                SharedUserInterfaces.ContentBox("EmoteLimitedSelection", AetherRemoteStyle.PanelBackground, true,
+                SharedUserInterfaces.ContentBox("EmoteLimitedSelection", AetherRemoteColors.PanelColor, true,
                     () =>
                     {
                         SharedUserInterfaces.TextCentered("You may only select 3 friends for in game functions");
@@ -47,7 +48,7 @@ public class EmoteViewUi(
                 return;
         }
 
-        SharedUserInterfaces.ContentBox("EmoteOptions", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("EmoteOptions", AetherRemoteColors.PanelColor, true, () =>
         {
             SharedUserInterfaces.MediumText("Options");
             ImGui.Checkbox("Display log message?", ref controller.DisplayLogMessage);
@@ -56,7 +57,7 @@ public class EmoteViewUi(
         var friendsLackingPermissions = controller.GetFriendsLackingPermissions();
         if (friendsLackingPermissions.Count is not 0)
         {
-            SharedUserInterfaces.ContentBox("EmoteLackingPermissions", AetherRemoteStyle.PanelBackground, true, () =>
+            SharedUserInterfaces.ContentBox("EmoteLackingPermissions", AetherRemoteColors.PanelColor, true, () =>
             {
                 SharedUserInterfaces.MediumText("Lacking Permissions", ImGuiColors.DalamudYellow);
                 ImGui.SameLine();
@@ -67,7 +68,7 @@ public class EmoteViewUi(
             });
         }
 
-        SharedUserInterfaces.ContentBox("EmoteSend", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("EmoteSend", AetherRemoteColors.PanelColor, true, () =>
         {
             SharedUserInterfaces.MediumText("Emote");
 

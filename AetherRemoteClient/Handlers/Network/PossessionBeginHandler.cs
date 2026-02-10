@@ -42,7 +42,7 @@ public class PossessionBeginHandler : AbstractNetworkHandler, IDisposable
         Plugin.Log.Verbose($"{command}");
         
         // If the client has not accepted the agreement
-        if (AgreementsService.HasAgreedTo(AgreementsService.Agreements.MoodlesWarning) is false)
+        if (AgreementsService.HasAgreedTo(AgreementsService.Agreements.Possession) is false)
             return PossessionResultEc.HasNotAcceptedAgreement;
         
         var sender = TryGetFriendWithCorrectPermissions(Operation, command.SenderFriendCode, Permissions);

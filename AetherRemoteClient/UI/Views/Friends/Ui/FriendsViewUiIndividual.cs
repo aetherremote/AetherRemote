@@ -20,28 +20,28 @@ public partial class FriendsViewUi
         switch (selection.Selected.Count)
         {
             case 0:
-                SharedUserInterfaces.ContentBox("PermissionsIndividualSelectOne", AetherRemoteStyle.PanelBackground, true, () =>
+                SharedUserInterfaces.ContentBox("PermissionsIndividualSelectOne", AetherRemoteColors.PanelColor, true, () =>
                 {
                     SharedUserInterfaces.TextCentered("You must select a friend");
                 });
                 return;
             
             case >1:
-                SharedUserInterfaces.ContentBox("PermissionsIndividualOnlyOne", AetherRemoteStyle.PanelBackground, true, () =>
+                SharedUserInterfaces.ContentBox("PermissionsIndividualOnlyOne", AetherRemoteColors.PanelColor, true, () =>
                 {
                     SharedUserInterfaces.TextCentered("You may only edit one friend at a time");
                 });
                 return;
         }
         
-        SharedUserInterfaces.ContentBox("PermissionsIndividualNote", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("PermissionsIndividualNote", AetherRemoteColors.PanelColor, true, () =>
         {
             SharedUserInterfaces.MediumText(selection.Selected.FirstOrDefault() is not { } friend ? "Note" : $"Note for {friend.FriendCode}");
             ImGui.SetNextItemWidth(width - AetherRemoteImGui.WindowPadding.X * 2);
             ImGui.InputText("##Note", ref controller.Individual.Note, 32);
         });
         
-        SharedUserInterfaces.ContentBox("PermissionsIndividualPrimary", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("PermissionsIndividualPrimary", AetherRemoteColors.PanelColor, true, () =>
         {
             ImGui.AlignTextToFramePadding();
             
@@ -63,7 +63,7 @@ public partial class FriendsViewUi
             DrawIndividualPermissionButton("Twinning", denyPosition, inheritPosition, allowPosition, ref controller.Individual.TwinningValue);
         });
         
-        SharedUserInterfaces.ContentBox("PermissionsIndividualSpeak", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("PermissionsIndividualSpeak", AetherRemoteColors.PanelColor, true, () =>
         {
             ImGui.AlignTextToFramePadding();
             
@@ -99,7 +99,7 @@ public partial class FriendsViewUi
                 DrawIndividualLinkshellButton(index, false, denyPosition, inheritPosition, allowPosition, ref controller.Individual.CrossWorldLinkshellValues[index]);
         });
         
-        SharedUserInterfaces.ContentBox("PermissionsIndividualElevated", AetherRemoteStyle.ElevatedBackground, true, () =>
+        SharedUserInterfaces.ContentBox("PermissionsIndividualElevated", AetherRemoteColors.PrimaryColor, true, () =>
         {
             ImGui.AlignTextToFramePadding();
             
@@ -113,7 +113,7 @@ public partial class FriendsViewUi
             DrawIndividualPermissionButton("Possession", denyPosition, inheritPosition, allowPosition, ref controller.Individual.PossessionValue);
         });
         
-        SharedUserInterfaces.ContentBox("PermissionsIndividualSave", AetherRemoteStyle.PanelBackground, false, () =>
+        SharedUserInterfaces.ContentBox("PermissionsIndividualSave", AetherRemoteColors.PanelColor, false, () =>
         {
             if (ImGui.Button("Save Changes", new Vector2(width - AetherRemoteImGui.WindowPadding.X * 3 - AetherRemoteDimensions.SendCommandButtonHeight, AetherRemoteDimensions.SendCommandButtonHeight)))
                 _ = controller.SaveIndividualPermissions().ConfigureAwait(false);

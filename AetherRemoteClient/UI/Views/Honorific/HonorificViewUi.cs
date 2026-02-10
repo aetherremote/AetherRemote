@@ -18,12 +18,12 @@ public class HonorificViewUi(HonorificViewUiController controller, FriendsListCo
 {
     public void Draw()
     {
-        ImGui.BeginChild("HonorificContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
+        ImGui.BeginChild("HonorificContent", AetherRemoteDimensions.ContentSize, false, AetherRemoteImGui.ContentFlags);
 
         var width = ImGui.GetWindowWidth();
 
         var begin = ImGui.GetCursorPosY();
-        SharedUserInterfaces.ContentBox("TitleSearch", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("TitleSearch", AetherRemoteColors.PanelColor, true, () =>
         {
             SharedUserInterfaces.MediumText("Select Title");
 
@@ -54,7 +54,7 @@ public class HonorificViewUi(HonorificViewUiController controller, FriendsListCo
                 if (ImGui.CollapsingHeader(character) is false)
                     continue;
                 
-                ImGui.PushStyleColor(ImGuiCol.Header, AetherRemoteStyle.PrimaryColor);
+                ImGui.PushStyleColor(ImGuiCol.Header, AetherRemoteColors.PrimaryColor);
                 foreach (var title in titles)
                     DrawTitleOption(parameters, title);
                 
@@ -66,7 +66,7 @@ public class HonorificViewUi(HonorificViewUiController controller, FriendsListCo
 
         ImGui.Spacing();
         
-        SharedUserInterfaces.ContentBox("HonorificSend", AetherRemoteStyle.PanelBackground, false, () =>
+        SharedUserInterfaces.ContentBox("HonorificSend", AetherRemoteColors.PanelColor, false, () =>
         {
             var size = new Vector2(ImGui.GetWindowWidth() - AetherRemoteImGui.WindowPadding.X * 2, AetherRemoteDimensions.SendCommandButtonHeight);
             if (selectionManager.Selected.Count is 0)

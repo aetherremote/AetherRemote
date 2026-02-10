@@ -4,6 +4,7 @@ using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Managers.Possession;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Style;
 using AetherRemoteClient.UI.Components.Input;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
@@ -23,14 +24,14 @@ public class StatusViewUi(
 {
     public void Draw()
     {
-        ImGui.BeginChild("SettingsContent", Vector2.Zero, false, AetherRemoteStyle.ContentFlags);
+        ImGui.BeginChild("SettingsContent", Vector2.Zero, false, AetherRemoteImGui.ContentFlags);
         
         var windowWidth = ImGui.GetWindowWidth();
         var windowPadding = ImGui.GetStyle().WindowPadding;
 
         ImGui.AlignTextToFramePadding();
 
-        SharedUserInterfaces.ContentBox("StatusHeader", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("StatusHeader", AetherRemoteColors.PanelColor, true, () =>
         {
             SharedUserInterfaces.PushBigFont();
             
@@ -43,7 +44,7 @@ public class StatusViewUi(
             SharedUserInterfaces.TextCentered("(click friend code to copy)", ImGuiColors.DalamudGrey);
         });
         
-        SharedUserInterfaces.ContentBox("StatusLogout", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("StatusLogout", AetherRemoteColors.PanelColor, true, () =>
         {
             SharedUserInterfaces.MediumText("Welcome");
             ImGui.TextUnformatted(tipService.CurrentTip);
@@ -54,7 +55,7 @@ public class StatusViewUi(
         
         SharedUserInterfaces.Tooltip("Disconnect");
         
-        SharedUserInterfaces.ContentBox("StatusButtons", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("StatusButtons", AetherRemoteColors.PanelColor, true, () =>
         {
             SharedUserInterfaces.MediumText("Statuses");
             ImGui.TextUnformatted("Various aspects of the plugin have lingering affects. You can find them below.");
@@ -86,7 +87,7 @@ public class StatusViewUi(
         if (possessionManager.Possessed)
             RenderPossessionComponent(windowPadding, windowWidth);
         
-        SharedUserInterfaces.ContentBox("OmniTool", AetherRemoteStyle.PanelBackground, false, () =>
+        SharedUserInterfaces.ContentBox("OmniTool", AetherRemoteColors.PanelColor, false, () =>
         {
             SharedUserInterfaces.MediumText("Plugin Misbehaving? (Temporary Solution)");
             if (ImGui.Button("Reset Collection"))
@@ -104,7 +105,7 @@ public class StatusViewUi(
     
     private void RenderPermanentTransformationComponent(Vector2 windowPadding, float windowWidth)
     {
-        SharedUserInterfaces.ContentBox("StatusLock", AetherRemoteStyle.ElevatedBackground, true, () =>
+        SharedUserInterfaces.ContentBox("StatusLock", AetherRemoteColors.PrimaryColor, true, () =>
         {
             SharedUserInterfaces.MediumText("Permanently Transformed");
             ImGui.TextUnformatted($"{identityService.Alteration?.Sender ?? "Unknown"} has locked your appearance");
@@ -131,7 +132,7 @@ public class StatusViewUi(
 
     private void RenderTransformationComponent(Vector2 windowPadding, float windowWidth)
     {
-        SharedUserInterfaces.ContentBox("StatusTransformation", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("StatusTransformation", AetherRemoteColors.PanelColor, true, () =>
         {
             SharedUserInterfaces.MediumText("Identity Altered");
 
@@ -167,7 +168,7 @@ public class StatusViewUi(
 
     private void RenderHypnosisComponent(Vector2 windowPadding, float windowWidth)
     {
-        SharedUserInterfaces.ContentBox("StatusHypnosis", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("StatusHypnosis", AetherRemoteColors.PanelColor, true, () =>
         {
             SharedUserInterfaces.MediumText("Hypnosis");
             ImGui.TextUnformatted($"{hypnosisManager.Hypnotist?.NoteOrFriendCode ?? "Unknown"} is hypnotizing you");
@@ -179,7 +180,7 @@ public class StatusViewUi(
 
     private void RenderPossessionComponent(Vector2 windowPadding, float windowWidth)
     {
-        SharedUserInterfaces.ContentBox("StatusPossession", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("StatusPossession", AetherRemoteColors.PanelColor, true, () =>
         {
             SharedUserInterfaces.MediumText("Possession");
             ImGui.TextUnformatted($"There is paranormal activity afoot...");

@@ -1,5 +1,6 @@
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
+using AetherRemoteClient.Style;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
 
@@ -11,7 +12,7 @@ public class HistoryViewUi(HistoryViewUiController controller) : IDrawable
     {
         ImGui.BeginChild("PermissionContent", Vector2.Zero, false, ImGuiWindowFlags.NoBackground);
         
-        SharedUserInterfaces.ContentBox("HistorySearch", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("HistorySearch", AetherRemoteColors.PanelColor, true, () =>
         {
             SharedUserInterfaces.MediumText("History");
 
@@ -19,7 +20,7 @@ public class HistoryViewUi(HistoryViewUiController controller) : IDrawable
                 controller.Logs.UpdateSearchTerm(controller.Search);
         });
         
-        SharedUserInterfaces.ContentBox("HistoryLog", AetherRemoteStyle.PanelBackground, false, () =>
+        SharedUserInterfaces.ContentBox("HistoryLog", AetherRemoteColors.PanelColor, false, () =>
         {
             for (var i = controller.Logs.List.Count - 1; i >= 0; i--)
             {

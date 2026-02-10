@@ -3,6 +3,7 @@ using System.Numerics;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Style;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using Dalamud.Bindings.ImGui;
@@ -19,18 +20,18 @@ public class PauseViewUi(
 {
     public void Draw()
     {
-        ImGui.BeginChild("OverridesContent", Vector2.Zero, false, AetherRemoteStyle.ContentFlags);
-        ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, AetherRemoteStyle.Rounding);
+        ImGui.BeginChild("OverridesContent", Vector2.Zero, false, AetherRemoteImGui.ContentFlags);
+        ImGui.PushStyleVar(ImGuiStyleVar.ChildRounding, AetherRemoteImGui.ChildRounding);
 
-        var width = new Vector2(ImGui.GetWindowWidth() - AetherRemoteStyle.NavBarDimensions.X, 0);
-        if (ImGui.BeginChild("PauseFeatureHeader", width, false, AetherRemoteStyle.ContentFlags))
+        var width = new Vector2(ImGui.GetWindowWidth() - AetherRemoteDimensions.NavBar.X, 0);
+        if (ImGui.BeginChild("PauseFeatureHeader", width, false, AetherRemoteImGui.ContentFlags))
         {
-            SharedUserInterfaces.ContentBox("PauseHeader", AetherRemoteStyle.PanelBackground, true, () =>
+            SharedUserInterfaces.ContentBox("PauseHeader", AetherRemoteColors.PanelColor, true, () =>
             {
                 ImGui.TextUnformatted("Pausing a feature disables all incoming requests of that feature");
             });
             
-            SharedUserInterfaces.ContentBox("PauseSpeakPermissions", AetherRemoteStyle.PanelBackground, true, () =>
+            SharedUserInterfaces.ContentBox("PauseSpeakPermissions", AetherRemoteColors.PanelColor, true, () =>
             {
                 ImGui.TextUnformatted("Speak Permissions");
                 if (ImGui.BeginTable("GeneralSpeakPermissions", 4) is false)
@@ -62,7 +63,7 @@ public class PauseViewUi(
                 ImGui.EndTable();
             });
             
-            SharedUserInterfaces.ContentBox("PauseLinkshellPermissions", AetherRemoteStyle.PanelBackground, true, () =>
+            SharedUserInterfaces.ContentBox("PauseLinkshellPermissions", AetherRemoteColors.PanelColor, true, () =>
             {
                 ImGui.TextUnformatted("Linkshell Permissions");
                 if (ImGui.BeginTable("LinkshellSpeakPermissions", 4) is false)
@@ -88,7 +89,7 @@ public class PauseViewUi(
                 ImGui.EndTable();
             });
             
-            SharedUserInterfaces.ContentBox("PauseCrossWorldPermissions", AetherRemoteStyle.PanelBackground, true, () =>
+            SharedUserInterfaces.ContentBox("PauseCrossWorldPermissions", AetherRemoteColors.PanelColor, true, () =>
             {
                 ImGui.TextUnformatted("Cross-world Linkshell Permissions");
                 if (ImGui.BeginTable("Cross-worldLinkshellPermissions", 4) is false)
@@ -114,7 +115,7 @@ public class PauseViewUi(
                 ImGui.EndTable();
             });
             
-            SharedUserInterfaces.ContentBox("PauseGeneralPermissions", AetherRemoteStyle.PanelBackground, true, () =>
+            SharedUserInterfaces.ContentBox("PauseGeneralPermissions", AetherRemoteColors.PanelColor, true, () =>
             {
                 ImGui.TextUnformatted("General Permissions");
                 if (ImGui.BeginTable("GeneralPermissions", 2) is false)
@@ -129,7 +130,7 @@ public class PauseViewUi(
             });
 
             // TODO: Change includeEndPadding once elevated permissions are back
-            SharedUserInterfaces.ContentBox("PauseAttributes", AetherRemoteStyle.PanelBackground, true, () =>
+            SharedUserInterfaces.ContentBox("PauseAttributes", AetherRemoteColors.PanelColor, true, () =>
             {
                 ImGui.TextUnformatted("Character Attributes");
                 if (ImGui.BeginTable("CharacterAttributes", 2))
@@ -155,7 +156,7 @@ public class PauseViewUi(
                 }
             });
             
-            SharedUserInterfaces.ContentBox("TransformationElevatedPermissions", AetherRemoteStyle.ElevatedBackground, false, () =>
+            SharedUserInterfaces.ContentBox("TransformationElevatedPermissions", AetherRemoteColors.PrimaryColor, false, () =>
             {
                 ImGui.TextUnformatted("Character Attributes");
                 if (ImGui.BeginTable("CharacterAttributes", 2) is false)
@@ -172,9 +173,9 @@ public class PauseViewUi(
         
         ImGui.SameLine();
 
-        if (ImGui.BeginChild("PauseFriendHeader", Vector2.Zero, false, AetherRemoteStyle.ContentFlags))
+        if (ImGui.BeginChild("PauseFriendHeader", Vector2.Zero, false, AetherRemoteImGui.ContentFlags))
         {
-            SharedUserInterfaces.ContentBox("PauseFriendList", AetherRemoteStyle.PanelBackground, true, () =>
+            SharedUserInterfaces.ContentBox("PauseFriendList", AetherRemoteColors.PanelColor, true, () =>
             {
                 ImGui.TextUnformatted("Pause Friend");
                 
@@ -202,7 +203,7 @@ public class PauseViewUi(
     {
         if (pauseService.IsFriendPaused(friend.FriendCode))
         {
-            ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteStyle.PrimaryColor);
+            ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteColors.PrimaryColor);
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Play, null, null, friend.FriendCode))
                 pauseService.ToggleFriend(friend.FriendCode);
             ImGui.PopStyleColor();
@@ -221,7 +222,7 @@ public class PauseViewUi(
     {
         if (pauseService.IsFeaturePaused(permissions))
         {
-            ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteStyle.PrimaryColor);
+            ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteColors.PrimaryColor);
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Play, null, null, permissions.ToString()))
                 pauseService.ToggleFeature(permissions);
             ImGui.PopStyleColor();
@@ -240,7 +241,7 @@ public class PauseViewUi(
     {
         if (pauseService.IsFeaturePaused(permissions))
         {
-            ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteStyle.PrimaryColor);
+            ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteColors.PrimaryColor);
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Play, null, null, permissions.ToString()))
                 pauseService.ToggleFeature(permissions);
             ImGui.PopStyleColor();
@@ -259,7 +260,7 @@ public class PauseViewUi(
     {
         if (pauseService.IsFeaturePaused(permissions))
         {
-            ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteStyle.PrimaryColor);
+            ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteColors.PrimaryColor);
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Play, null, null, permissions.ToString()))
                 pauseService.ToggleFeature(permissions);
             ImGui.PopStyleColor();

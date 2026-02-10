@@ -30,7 +30,7 @@ public class MoodlesViewUi(
     
     public void Draw()
     {
-        ImGui.BeginChild("MoodlesContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
+        ImGui.BeginChild("MoodlesContent", AetherRemoteDimensions.ContentSize, false, AetherRemoteImGui.ContentFlags);
 
         if (AgreementsService.HasAgreedTo(AgreementsService.Agreements.MoodlesWarning))
             DrawContent();
@@ -48,7 +48,7 @@ public class MoodlesViewUi(
         var padding = new Vector2(AetherRemoteImGui.WindowPadding.X, 0);
 
         var begin = ImGui.GetCursorPosY();
-        SharedUserInterfaces.ContentBox("MoodlesFromMoodles", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("MoodlesFromMoodles", AetherRemoteColors.PanelColor, true, () =>
         {
             SharedUserInterfaces.MediumText("Select Moodle");
 
@@ -93,7 +93,7 @@ public class MoodlesViewUi(
 
         ImGui.Spacing();
         
-        SharedUserInterfaces.ContentBox("MoodlesSend", AetherRemoteStyle.PanelBackground, false, () =>
+        SharedUserInterfaces.ContentBox("MoodlesSend", AetherRemoteColors.PanelColor, false, () =>
         {
             var size = new Vector2(ImGui.GetWindowWidth() - padding.X * 2, AetherRemoteDimensions.SendCommandButtonHeight);
             if (selectionManager.Selected.Count is 0)
@@ -158,7 +158,7 @@ public class MoodlesViewUi(
 
         if (index == controller.SelectedMoodleIndex)
         {
-            ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteStyle.PrimaryColor);
+            ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteColors.PrimaryColor);
             ImGui.Button($"##{moodle.Info.Guid}", DefaultMoodleButtonSize);
             ImGui.PopStyleColor();
         }

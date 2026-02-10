@@ -5,6 +5,7 @@ using AetherRemoteClient.Dependencies.Honorific.Services;
 using AetherRemoteClient.Dependencies.Moodles.Services;
 using AetherRemoteClient.Dependencies.Penumbra.Services;
 using AetherRemoteClient.Domain.Interfaces;
+using AetherRemoteClient.Style;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
@@ -24,10 +25,10 @@ public class SettingsViewUi(
 
     public void Draw()
     {
-        ImGui.BeginChild("SettingsContent", Vector2.Zero, false, AetherRemoteStyle.ContentFlags);
+        ImGui.BeginChild("SettingsContent", Vector2.Zero, false, AetherRemoteImGui.ContentFlags);
         ImGui.PushStyleVar(ImGuiStyleVar.ItemInnerSpacing, CheckboxPadding);
 
-        SharedUserInterfaces.ContentBox("", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("", AetherRemoteColors.PanelColor, true, () =>
         {
             SharedUserInterfaces.MediumText("Emergency Actions");
             ImGui.AlignTextToFramePadding();
@@ -47,7 +48,7 @@ public class SettingsViewUi(
                 ImGui.TextColored(ImGuiColors.DalamudRed, "OFF");
         });
         
-        SharedUserInterfaces.ContentBox("SettingsGeneral", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("SettingsGeneral", AetherRemoteColors.PanelColor, true, () =>
         {
             SharedUserInterfaces.MediumText("General");
 
@@ -59,7 +60,7 @@ public class SettingsViewUi(
                 controller.SaveConfiguration();
         });
         
-        SharedUserInterfaces.ContentBox("SettingsDependencies", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("SettingsDependencies", AetherRemoteColors.PanelColor, true, () =>
         {
             SharedUserInterfaces.MediumText("Dependencies");
             ImGui.TextColored(ImGuiColors.DalamudGrey,

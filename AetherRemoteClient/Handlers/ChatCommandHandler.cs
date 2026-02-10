@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Managers.Possession;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Style;
 using AetherRemoteClient.UI;
-using AetherRemoteClient.Utils;
 using Dalamud.Game.Command;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
@@ -80,7 +80,7 @@ public class ChatCommandHandler : IDisposable
                 case StopArg:
                     // Stop any spirals
                     _hypnosisManager.Wake();
-                    payloads.Add(new UIForegroundPayload(AetherRemoteStyle.TextColorPurple));
+                    payloads.Add(new UIForegroundPayload(AetherRemoteColors.TextColorPurple));
                     payloads.Add(new TextPayload("[AetherRemote] "));
                     payloads.Add(UIForegroundPayload.UIForegroundOff);
                     payloads.Add( new TextPayload("Stopped current spirals"));
@@ -104,11 +104,11 @@ public class ChatCommandHandler : IDisposable
                     Plugin.Configuration.SafeMode = true;
                     await Plugin.Configuration.Save().ConfigureAwait(false);
                     
-                    payloads.Add(new UIForegroundPayload(AetherRemoteStyle.TextColorPurple));
+                    payloads.Add(new UIForegroundPayload(AetherRemoteColors.TextColorPurple));
                     payloads.Add(new TextPayload("[AetherRemote] "));
                     payloads.Add(UIForegroundPayload.UIForegroundOff);
                     payloads.Add(new TextPayload("Plugin is now in "));
-                    payloads.Add(new UIForegroundPayload(AetherRemoteStyle.TextColorGreen));
+                    payloads.Add(new UIForegroundPayload(AetherRemoteColors.TextColorGreen));
                     payloads.Add(new TextPayload("safe mode"));
                     payloads.Add(UIForegroundPayload.UIForegroundOff);
                     break;
@@ -116,14 +116,14 @@ public class ChatCommandHandler : IDisposable
                 case Unpossess:
                     await _possessionManager.EndAllParanormalActivity(true).ConfigureAwait(false);
                     
-                    payloads.Add(new UIForegroundPayload(AetherRemoteStyle.TextColorPurple));
+                    payloads.Add(new UIForegroundPayload(AetherRemoteColors.TextColorPurple));
                     payloads.Add(new TextPayload("[AetherRemote] "));
                     payloads.Add(UIForegroundPayload.UIForegroundOff);
                     payloads.Add(new TextPayload("Stopped all possession activities."));
                     break;
                 
                 default:
-                    payloads.Add(new UIForegroundPayload(AetherRemoteStyle.TextColorPurple));
+                    payloads.Add(new UIForegroundPayload(AetherRemoteColors.TextColorPurple));
                     payloads.Add(new TextPayload("[AetherRemote] "));
                     payloads.Add(UIForegroundPayload.UIForegroundOff);
                     payloads.Add(new TextPayload($"Unknown argument \"{args}\""));

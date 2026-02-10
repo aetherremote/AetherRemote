@@ -1,33 +1,31 @@
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
-using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Style;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.Colors;
-using Microsoft.AspNetCore.SignalR.Client;
 
 namespace AetherRemoteClient.UI.Views.Login;
 
 public class LoginViewUi(LoginViewUiController controller, NetworkService networkService) : IDrawable
 {
-    private const ImGuiInputTextFlags SecretInputFlags =
-        ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.Password | ImGuiInputTextFlags.AutoSelectAll;
+    private const ImGuiInputTextFlags SecretInputFlags = ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.Password | ImGuiInputTextFlags.AutoSelectAll;
     
     public void Draw()
     {
-        ImGui.BeginChild("LoginContent", Vector2.Zero, false, AetherRemoteStyle.ContentFlags);
+        ImGui.BeginChild("LoginContent", Vector2.Zero, false, AetherRemoteImGui.ContentFlags);
 
         ImGui.AlignTextToFramePadding();
 
-        SharedUserInterfaces.ContentBox("LoginHeader", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("LoginHeader", AetherRemoteColors.PanelColor, true, () =>
         {
             SharedUserInterfaces.BigTextCentered("Aether Remote");
             SharedUserInterfaces.TextCentered(Plugin.Version.ToString());
         });
 
-        SharedUserInterfaces.ContentBox("LoginSecret", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("LoginSecret", AetherRemoteColors.PanelColor, true, () =>
         {
             var shouldConnect = false;
 
@@ -57,7 +55,7 @@ public class LoginViewUi(LoginViewUiController controller, NetworkService networ
 
             ImGui.TextUnformatted("Need a secret? Join the");
             ImGui.SameLine();
-            ImGui.PushStyleColor(ImGuiCol.Text, AetherRemoteStyle.DiscordBlue);
+            ImGui.PushStyleColor(ImGuiCol.Text, AetherRemoteColors.DiscordBlue);
             var size = ImGui.CalcTextSize("discord");
             if (ImGui.Selectable("discord", false, ImGuiSelectableFlags.None, size))
                 LoginViewUiController.OpenDiscordLink();
@@ -69,7 +67,7 @@ public class LoginViewUi(LoginViewUiController controller, NetworkService networ
             ImGui.PopStyleVar();
         });
 
-        SharedUserInterfaces.ContentBox("CharacterConfiguration", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("CharacterConfiguration", AetherRemoteColors.PanelColor, true, () =>
         {
             SharedUserInterfaces.Icon(FontAwesomeIcon.ExclamationTriangle, ImGuiColors.DalamudYellow);
             ImGui.SameLine();
@@ -78,12 +76,12 @@ public class LoginViewUi(LoginViewUiController controller, NetworkService networ
 
         if (Plugin.LegacyConfiguration is not null)
         {
-            SharedUserInterfaces.ContentBox("LegacyConfiguration", AetherRemoteStyle.PanelBackground, true, () =>
+            SharedUserInterfaces.ContentBox("LegacyConfiguration", AetherRemoteColors.PanelColor, true, () =>
             {
                 SharedUserInterfaces.MediumText("Legacy Configuration");
                 ImGui.TextUnformatted("Click");
                 ImGui.SameLine();
-                ImGui.PushStyleColor(ImGuiCol.Text, AetherRemoteStyle.DiscordBlue);
+                ImGui.PushStyleColor(ImGuiCol.Text, AetherRemoteColors.DiscordBlue);
                 var size = ImGui.CalcTextSize("here");
                 if (ImGui.Selectable("here", false, ImGuiSelectableFlags.None, size))
                     LoginViewUiController.CopyOriginalSecret();

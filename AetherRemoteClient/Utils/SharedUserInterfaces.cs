@@ -18,7 +18,9 @@ namespace AetherRemoteClient.Utils;
 public static class SharedUserInterfaces
 {
     private const ImGuiWindowFlags PopupWindowFlags =
-        ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoResize;
+        ImGuiWindowFlags.NoTitleBar | 
+        ImGuiWindowFlags.NoMove | 
+        ImGuiWindowFlags.NoResize;
 
     private const ImGuiWindowFlags ComboWithFilterFlags = PopupWindowFlags | ImGuiWindowFlags.ChildWindow;
     
@@ -106,7 +108,7 @@ public static class SharedUserInterfaces
         bool result;
         if (selected)
         {
-            ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteStyle.PrimaryColor);
+            ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteColors.PrimaryColor);
             result = ImGui.Button(icon.ToIconString(), size);
             ImGui.PopStyleColor();
         }
@@ -215,8 +217,7 @@ public static class SharedUserInterfaces
         return clicked;
     }
 
-    public static void ComboWithFilter(string id, string hint, ref string choice, float width,
-        ListFilter<string> filterHelper, ImGuiWindowFlags? flags = null)
+    public static void ComboWithFilter(string id, string hint, ref string choice, float width, ListFilter<string> filterHelper, ImGuiWindowFlags? flags = null)
     {
         var comboFilterFlags = flags ?? ComboWithFilterFlags;
         var comboFilterId = $"##{id}-ComboFilter";
@@ -274,7 +275,7 @@ public static class SharedUserInterfaces
         var startScreenPos = ImGui.GetCursorScreenPos();
 
         if (ContextBoxSizeCache.TryGetValue(id, out var cached))
-            draw.AddRectFilled(startScreenPos, startScreenPos + cached, backgroundColor, AetherRemoteStyle.Rounding);
+            draw.AddRectFilled(startScreenPos, startScreenPos + cached, backgroundColor, AetherRemoteImGui.ChildRounding);
         
         ImGui.SetCursorPos(startCursorPos + padding);
         
@@ -285,14 +286,11 @@ public static class SharedUserInterfaces
         var itemSize = ImGui.GetItemRectSize();
         var size = new Vector2(ImGui.GetWindowWidth(), itemSize.Y + padding.Y * 2);
         
-        ContextBoxSizeCache[id] = size;
+        // Only cache if required, should ease dictionary hashing
+        if (size.Equals(cached) is false)
+            ContextBoxSizeCache[id] = size;
+        
         ImGui.SetCursorPosY(startCursorPos.Y + size.Y + (includeEndPadding ? padding.Y : 0));
-    }
-
-    public static bool ShouldUseWhiteText(Vector4 color)
-    {
-        var luminance = (0.299f * color.X + 0.587f * color.Y + 0.114f * color.Z) * color.W;
-        return luminance <= 0.5f;
     }
 
     /// <summary>

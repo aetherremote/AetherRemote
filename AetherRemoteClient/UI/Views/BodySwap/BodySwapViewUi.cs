@@ -2,6 +2,7 @@ using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Style;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
@@ -24,7 +25,7 @@ public class BodySwapViewUi(FriendsListComponentUi friendsList, BodySwapViewUiCo
     
     public void Draw()
     {
-        ImGui.BeginChild("BodySwapContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
+        ImGui.BeginChild("BodySwapContent", AetherRemoteDimensions.ContentSize, false, AetherRemoteImGui.ContentFlags);
 
         var width = ImGui.GetWindowWidth();
         var height = ImGui.GetWindowHeight();
@@ -140,7 +141,7 @@ public class BodySwapViewUi(FriendsListComponentUi friendsList, BodySwapViewUiCo
         bool pressed;
         if (selected)
         {
-            ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteStyle.PrimaryColor);
+            ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteColors.PrimaryColor);
             pressed = ImGui.Button(label, size);
             ImGui.PopStyleColor();
         }

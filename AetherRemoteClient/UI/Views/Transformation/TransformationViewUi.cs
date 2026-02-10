@@ -6,6 +6,7 @@ using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Style;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
@@ -24,13 +25,13 @@ public class TransformationViewUi(
     
     public void Draw()
     {
-        ImGui.BeginChild("TransformationContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
+        ImGui.BeginChild("TransformationContent", AetherRemoteDimensions.ContentSize, false, AetherRemoteImGui.ContentFlags);
         
         var width = ImGui.GetWindowWidth();
         var padding = new Vector2(ImGui.GetStyle().WindowPadding.X, 0);
 
         var begin = ImGui.GetCursorPosY();
-        SharedUserInterfaces.ContentBox("TransformDesignSearch", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("TransformDesignSearch", AetherRemoteColors.PanelColor, true, () =>
         {
             SharedUserInterfaces.MediumText("Select Design");
 
@@ -57,11 +58,11 @@ public class TransformationViewUi(
         
         ImGui.Spacing();
 
-        SharedUserInterfaces.ContentBox("DesignOptions", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("DesignOptions", AetherRemoteColors.PanelColor, true, () =>
         {
             if (controller.ShouldApplyCustomization)
             {
-                ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteStyle.PrimaryColor);
+                ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteColors.PrimaryColor);
                 if (SharedUserInterfaces.IconButton(FontAwesomeIcon.User, new Vector2(SendDesignButtonHeight)))
                     controller.ShouldApplyCustomization = !controller.ShouldApplyCustomization;
                 ImGui.PopStyleColor();
@@ -79,7 +80,7 @@ public class TransformationViewUi(
 
             if (controller.ShouldApplyEquipment)
             {
-                ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteStyle.PrimaryColor);
+                ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteColors.PrimaryColor);
                 if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Tshirt, new Vector2(SendDesignButtonHeight)))
                     controller.ShouldApplyEquipment = !controller.ShouldApplyEquipment;
                 ImGui.PopStyleColor();
@@ -94,7 +95,7 @@ public class TransformationViewUi(
                 ImGui.SetTooltip(controller.ShouldApplyEquipment ? "Currently applying equipment, click to disable" : "Not applying equipment, click to enable");
         });
         
-        SharedUserInterfaces.ContentBox("DesignSend", AetherRemoteStyle.PanelBackground, false, () =>
+        SharedUserInterfaces.ContentBox("DesignSend", AetherRemoteColors.PanelColor, false, () =>
         {
             if (selectionManager.Selected.Count is 0)
             {
@@ -167,7 +168,7 @@ public class TransformationViewUi(
             {
                 if (controller.SelectedDesignId == node.Content.Id)
                 {
-                    ImGui.PushStyleColor(ImGuiCol.Header, AetherRemoteStyle.PrimaryColor);
+                    ImGui.PushStyleColor(ImGuiCol.Header, AetherRemoteColors.PrimaryColor);
                     ImGui.Selectable(node.Name, true);
                     ImGui.PopStyleColor();
                 }

@@ -13,7 +13,7 @@ public partial class FriendsViewUi
         var offPosition = width * 0.65f;
         var onPosition = width * 0.8f;
         
-        SharedUserInterfaces.ContentBox("PermissionsGlobalPrimary", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("PermissionsGlobalPrimary", AetherRemoteColors.PanelColor, true, () =>
         {
             ImGui.AlignTextToFramePadding();
             
@@ -34,7 +34,7 @@ public partial class FriendsViewUi
             DrawGlobalPermissionButton("Twinning", offPosition, onPosition, ref controller.Global.TwinningValue);
         });
         
-        SharedUserInterfaces.ContentBox("PermissionsGlobalSpeak", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("PermissionsGlobalSpeak", AetherRemoteColors.PanelColor, true, () =>
         {
             ImGui.AlignTextToFramePadding();
             
@@ -69,7 +69,7 @@ public partial class FriendsViewUi
                 DrawGlobalLinkshellButton(index, false, offPosition, onPosition, ref controller.Global.CrossWorldLinkshellValues[index]);
         });
 
-        SharedUserInterfaces.ContentBox("PermissionsGlobalElevated", AetherRemoteStyle.ElevatedBackground, true, () =>
+        SharedUserInterfaces.ContentBox("PermissionsGlobalElevated", AetherRemoteColors.PrimaryColor, true, () =>
         {
             ImGui.AlignTextToFramePadding();
             
@@ -82,7 +82,7 @@ public partial class FriendsViewUi
             DrawGlobalPermissionButton("Possession", offPosition, onPosition, ref controller.Global.PossessionValue);
         });
         
-        SharedUserInterfaces.ContentBox("PermissionsGlobalSave", AetherRemoteStyle.PanelBackground, false, () =>
+        SharedUserInterfaces.ContentBox("PermissionsGlobalSave", AetherRemoteColors.PanelColor, false, () =>
         {
             if (ImGui.Button("Save Changes", new Vector2(width - AetherRemoteImGui.WindowPadding.X * 2, AetherRemoteDimensions.SendCommandButtonHeight)))
                 _ = controller.SaveGlobalPermissions().ConfigureAwait(false);

@@ -5,6 +5,7 @@ using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Style;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
@@ -23,13 +24,13 @@ public class CustomizePlusViewUi(
     
     public void Draw()
     {
-        ImGui.BeginChild("CustomizePlusContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
+        ImGui.BeginChild("CustomizePlusContent", AetherRemoteDimensions.ContentSize, false, AetherRemoteImGui.ContentFlags);
         
         var width = ImGui.GetWindowWidth();
         var padding = new Vector2(ImGui.GetStyle().WindowPadding.X, 0);
 
         var begin = ImGui.GetCursorPosY();
-        SharedUserInterfaces.ContentBox("ProfileSearch", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("ProfileSearch", AetherRemoteColors.PanelColor, true, () =>
         {
             SharedUserInterfaces.MediumText("Select Profile");
 
@@ -56,7 +57,7 @@ public class CustomizePlusViewUi(
         
         ImGui.Spacing();
         
-        SharedUserInterfaces.ContentBox("CustomizePlusSend", AetherRemoteStyle.PanelBackground, false, () =>
+        SharedUserInterfaces.ContentBox("CustomizePlusSend", AetherRemoteColors.PanelColor, false, () =>
         {
             if (selectionManager.Selected.Count is 0)
             {
@@ -117,7 +118,7 @@ public class CustomizePlusViewUi(
             {
                 if (controller.SelectedProfileId == node.Content?.Guid)
                 {
-                    ImGui.PushStyleColor(ImGuiCol.Header, AetherRemoteStyle.PrimaryColor);
+                    ImGui.PushStyleColor(ImGuiCol.Header, AetherRemoteColors.PrimaryColor);
                     ImGui.Selectable(node.Name, true);
                     ImGui.PopStyleColor();
                 }

@@ -44,7 +44,7 @@ public class FriendsListComponentUi(FriendsListComponentUiController controller,
     
     public void Draw(bool displayAddFriendsBox = false, bool displayOfflineFriends = false)
     {
-        if (ImGui.BeginChild("FriendsListComponent", new Vector2(AetherRemoteDimensions.NavBar.X - AetherRemoteImGui.WindowPadding.X, 0), false, AetherRemoteStyle.ContentFlags) is false)
+        if (ImGui.BeginChild("FriendsListComponent", new Vector2(AetherRemoteDimensions.NavBar.X - AetherRemoteImGui.WindowPadding.X, 0), false, AetherRemoteImGui.ContentFlags) is false)
         {
             ImGui.EndChild();
             return;
@@ -52,7 +52,7 @@ public class FriendsListComponentUi(FriendsListComponentUiController controller,
         
         var width = ImGui.GetWindowWidth() - ImGui.GetCursorPosX() - AetherRemoteImGui.WindowPadding.X * 2;
         
-        SharedUserInterfaces.ContentBox("FriendsListSearch", AetherRemoteStyle.PanelBackground, true, () =>
+        SharedUserInterfaces.ContentBox("FriendsListSearch", AetherRemoteColors.PanelColor, true, () =>
         {
             ImGui.TextUnformatted("Search");
             ImGui.SetNextItemWidth(width - AetherRemoteImGui.WindowPadding.X - AetherRemoteDimensions.IconButton.X);
@@ -120,7 +120,7 @@ public class FriendsListComponentUi(FriendsListComponentUiController controller,
         {
             ImGui.Spacing();
 
-            SharedUserInterfaces.ContentBox("AddFriendContentBox", AetherRemoteStyle.PanelBackground, false, () =>
+            SharedUserInterfaces.ContentBox("AddFriendContentBox", AetherRemoteColors.PanelColor, false, () =>
             {
                 ImGui.SetNextItemWidth(width);
                 ImGui.InputTextWithHint("###AddFriendInputText", "Friend code", ref controller.FriendCodeToAdd, 128);

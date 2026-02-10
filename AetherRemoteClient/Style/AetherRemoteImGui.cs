@@ -17,6 +17,8 @@ public static class AetherRemoteImGui
     public static readonly Vector2 ItemSpacing = new(8, 4);
     public static readonly Vector2 ItemInnerSpacing = new(4, 4);
     public static readonly Vector2 WindowPadding = new(8, 8);
+    
+    public const ImGuiWindowFlags ContentFlags = ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoScrollbar;
 
     public static void Push()
     {

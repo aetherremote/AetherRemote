@@ -20,7 +20,7 @@ public class PossessionViewUi(
 {
     public void Draw()
     {
-        ImGui.BeginChild("PossessionContent", AetherRemoteStyle.ContentSize, false, AetherRemoteStyle.ContentFlags);
+        ImGui.BeginChild("PossessionContent", AetherRemoteDimensions.ContentSize, false, AetherRemoteImGui.ContentFlags);
         
         if (AgreementsService.HasAgreedTo(AgreementsService.Agreements.Possession))
             DrawContent();
