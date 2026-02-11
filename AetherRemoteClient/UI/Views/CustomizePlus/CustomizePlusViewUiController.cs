@@ -50,6 +50,11 @@ public class CustomizePlusViewUiController : IDisposable
     ///     The profiles to display in the Ui
     /// </summary>
     public List<FolderNode<Profile>>? Profiles => SearchTerm == string.Empty ? _sorted : _filtered;
+
+    /// <summary>
+    ///     Should this profile be added on top of existing ones?
+    /// </summary>
+    public bool ShouldApplyAsAdditive = false;
     
     /// <summary>
     ///     <inheritdoc cref="CustomizePlusViewUiController"/>
@@ -148,7 +153,7 @@ public class CustomizePlusViewUiController : IDisposable
             return;
 
         var bytes = Encoding.UTF8.GetBytes(profile);
-        var request = new CustomizeRequest(_selectionManager.GetSelectedFriendCodes(), bytes);
+        var request = new CustomizeRequest(_selectionManager.GetSelectedFriendCodes(), bytes, ShouldApplyAsAdditive);
         var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.CustomizePlus, request).ConfigureAwait(false);
 
         ActionResponseParser.Parse("Customize+", response);

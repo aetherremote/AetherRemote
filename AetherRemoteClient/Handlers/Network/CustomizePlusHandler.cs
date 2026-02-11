@@ -68,11 +68,22 @@ public class CustomizePlusHandler : AbstractNetworkHandler, IDisposable
                 Plugin.Log.Warning("[CustomizePlusHandler] Unable to delete existing customize");
                 return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
             }
-            
-            if (await _customize.ApplyCustomizeAsync(json).ConfigureAwait(false) is false)
+
+            if (request.Additive)
             {
-                Plugin.Log.Warning("[CustomizePlusHandler] Unable to apply customize");
-                return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
+                if (await _customize.ApplyCustomizeAdditive(json).ConfigureAwait(false) is false)
+                {
+                    Plugin.Log.Warning("[CustomizePlusHandler] Unable to apply customize");
+                    return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
+                }
+            }
+            else
+            {
+                if (await _customize.ApplyCustomizeAsync(json).ConfigureAwait(false) is false)
+                {
+                    Plugin.Log.Warning("[CustomizePlusHandler] Unable to apply customize");
+                    return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
+                }
             }
             
             _log.Custom($"{friend.NoteOrFriendCode} applied a customize plus template to you");

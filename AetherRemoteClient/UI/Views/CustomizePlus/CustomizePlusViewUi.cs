@@ -46,7 +46,7 @@ public class CustomizePlusViewUi(
 
         // TODO: Factor out ImGui calls -> AetherRemoteImGui
         var headerHeight = ImGui.GetCursorPosY() - begin;
-        var profilesContextBoxSize = new Vector2(0, ImGui.GetWindowHeight() - headerHeight - padding.X * 3 - SendProfileButtonHeight);
+        var profilesContextBoxSize = new Vector2(0, ImGui.GetWindowHeight() - headerHeight - padding.X * 6 - SendProfileButtonHeight * 1.75f);
         if (ImGui.BeginChild("##ProfilesContextBoxDisplay", profilesContextBoxSize, true, ImGuiWindowFlags.NoScrollbar))
         {
             if (controller.Profiles is { } profiles)
@@ -56,6 +56,28 @@ public class CustomizePlusViewUi(
         }
         
         ImGui.Spacing();
+        
+        SharedUserInterfaces.ContentBox("CustomizePlusOptions", AetherRemoteColors.PanelColor, true, () =>
+        {
+            var dimensions = new Vector2((width - padding.X * 3) * 0.5f, AetherRemoteDimensions.SendCommandButtonHeight * 0.75f);
+
+            // Snapshot the current mode
+            var value = controller.ShouldApplyAsAdditive;
+            
+            // Overwrite Existing
+            if (value is false) ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteColors.PrimaryColor);
+            if (ImGui.Button("Overwrite Existing", dimensions))
+                controller.ShouldApplyAsAdditive = false;
+            if (value is false) ImGui.PopStyleColor();
+            
+            ImGui.SameLine();
+            
+            // Merge Into Existing
+            if (value) ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteColors.PrimaryColor);
+            if (ImGui.Button("Merge Into Existing", dimensions))
+                controller.ShouldApplyAsAdditive = true;
+            if (value) ImGui.PopStyleColor();
+        });
         
         SharedUserInterfaces.ContentBox("CustomizePlusSend", AetherRemoteColors.PanelColor, false, () =>
         {

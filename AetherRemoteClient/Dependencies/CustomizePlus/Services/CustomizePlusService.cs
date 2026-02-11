@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AetherRemoteClient.Dependencies.CustomizePlus.Domain;
 using AetherRemoteClient.Dependencies.CustomizePlus.Reflection;
+using AetherRemoteClient.Dependencies.CustomizePlus.Reflection.Domain;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
 using Dalamud.Plugin.Ipc;
@@ -24,9 +25,6 @@ namespace AetherRemoteClient.Dependencies.CustomizePlus.Services;
 /// </summary>
 public class CustomizePlusService : IDisposable, IExternalPlugin
 {
-    // Default folder for designs without homes
-    private const string Uncategorized = "Uncategorized";
-    
     // Const
     private const int ExpectedMajor = 6;
     private const int ExpectedMinor = 4;
@@ -181,7 +179,7 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
     /// <returns>The JSON template data, same as if called via GetProfileIpc</returns>
     public async Task<string?> TryGetActiveProfileOnCharacter(string characterNameToSearchFor)
     {
-        return await Plugin.RunOnFrameworkSafely(() => _customizePlusPlugin?.ProfileManager.TryGetActiveProfileOnCharacter(characterNameToSearchFor)).ConfigureAwait(false);
+        return await Plugin.RunOnFrameworkSafely(() => _customizePlusPlugin?.ProfileManager.TryGetActiveIpcProfileOnCharacter(characterNameToSearchFor)).ConfigureAwait(false);
     } 
 
     /// <summary>
@@ -198,29 +196,68 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
 
         return await Plugin.RunOnFramework(() =>
         {
-            try
-            {
-                // Delete previous profile, then create and enable a blank one
-                if (_customizePlusPlugin.ProfileManager.DeleteTemporaryProfile() is false) return false;
-                if (_customizePlusPlugin.ProfileManager.CreateProfile() is not { } profile) return false;
-                if (_customizePlusPlugin.ProfileManager.AddCharacter(profile) is false) return false;
-                if (_customizePlusPlugin.ProfileManager.SetPriority(profile) is false) return false;
-                if (_customizePlusPlugin.ProfileManager.SetEnabled(profile) is false) return false;
+            // Delete previous profile, then create and enable a blank one
+            if (_customizePlusPlugin.ProfileManager.DeleteTemporaryProfile() is false) return false;
+            if (_customizePlusPlugin.ProfileManager.CreateProfile() is not { } profile) return false;
+            if (_customizePlusPlugin.ProfileManager.AddCharacter(profile) is false) return false;
+            if (_customizePlusPlugin.ProfileManager.SetPriority(profile) is false) return false;
+            if (_customizePlusPlugin.ProfileManager.SetEnabled(profile) is false) return false;
 
-                // If template data was not provided, end early
-                if (templateJson is null)
-                    return true;
-
-                // Add the template data
-                if (_customizePlusPlugin.TemplateManager.DeserializeTemplate(templateJson) is not { } template) return false;
-                if (_customizePlusPlugin.ProfileManager.AddTemplate(profile, template) is false) return false;
+            // If template data was not provided, end early
+            if (templateJson is null)
                 return true;
-            }
-            catch (Exception e)
+
+            // Add the template data
+            if (_customizePlusPlugin.TemplateManager.DeserializeTemplate(templateJson) is not { } template) return false;
+            if (_customizePlusPlugin.ProfileManager.AddTemplate(profile, template) is false) return false;
+            return true;
+        }).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     Apply a CustomizePlus profile to the local player in an additive way
+    /// </summary>
+    /// <param name="templateJson">Profile data, most commonly retrieved from <see cref="GetProfile"/> or via the "Copy Template" button in CustomizePlus UI</param>
+    public async Task<bool> ApplyCustomizeAdditive(string? templateJson = null)
+    {
+        if (ApiAvailable is false)
+            return false;
+
+        if (_customizePlusPlugin is null)
+            return false;
+        
+        if (Plugin.CharacterConfiguration is not { } character)
+            return false;
+
+        return await Plugin.RunOnFramework(() =>
+        {
+            CustomizePlusProfile profile;
+            if (_customizePlusPlugin.ProfileManager.TryGetActiveProfileOnCharacter(character.Name) is not { } activeProfile)
             {
-                Plugin.Log.Warning($"[CustomizePlusService.ApplyProfileByJson] An error occurred, {e}");
-                return false;
+                // There is no active profile, so make one.
+                if (_customizePlusPlugin.ProfileManager.CreateProfile() is not { } newProfile) return false;
+                if (_customizePlusPlugin.ProfileManager.AddCharacter(newProfile) is false) return false;
+                if (_customizePlusPlugin.ProfileManager.SetPriority(newProfile) is false) return false;
+                if (_customizePlusPlugin.ProfileManager.SetEnabled(newProfile) is false) return false;
+                profile = newProfile;
             }
+            else
+            {
+                // We have the existing profile, now copy it
+                if (_customizePlusPlugin.ProfileManager.Clone(activeProfile) is not { } cloned) return false;
+                if (_customizePlusPlugin.ProfileManager.SetPriority(cloned) is false) return false;
+                if (_customizePlusPlugin.ProfileManager.SetEnabled(cloned) is false) return false;
+                profile = cloned;
+            }
+
+            // If template data was not provided, end early
+            if (templateJson is null)
+                return true;
+
+            // Add the template data
+            if (_customizePlusPlugin.TemplateManager.DeserializeTemplate(templateJson) is not { } template) return false;
+            if (_customizePlusPlugin.ProfileManager.AddTemplate(profile, template) is false) return false;
+            return true;
         }).ConfigureAwait(false);
     }
     

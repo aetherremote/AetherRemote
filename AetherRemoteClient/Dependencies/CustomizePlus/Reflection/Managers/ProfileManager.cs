@@ -178,13 +178,52 @@ public class ProfileManager
 
         return null;
     }
+
+    /// <summary>
+    ///     Attempts to get the highest priority active profile for a character
+    /// </summary>
+    public string? TryGetActiveIpcProfileOnCharacter(string characterNameToSearchFor)
+    {
+        // If we couldn't find a customize profile on the character, that just means they don't have one set
+        if (TryGetActiveProfileOnCharacter(characterNameToSearchFor) is not { } profile)
+            return string.Empty;
+
+        if (_ipcCharacterProfileContainer.FromFullProfile.Invoke(null, [profile]) is not { } ipcCharacterProfile)
+            return null;
+        
+        try
+        {
+            return JsonConvert.SerializeObject(ipcCharacterProfile, SerializerSettings);
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Warning($"[ProfileManager.TryGetActiveIpcProfileOnCharacter] An error occurred, {e}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    ///     Clones an existing profile
+    /// </summary>
+    public CustomizePlusProfile? Clone(CustomizePlusProfile profile)
+    {
+        try
+        {
+            return _profileManagerContainer.Duplicate.Invoke(_profileManager, [profile.Value, TemporaryProfileName, false]) is { } cloned
+                ? new CustomizePlusProfile(cloned)
+                : null;
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Warning($"[ProfileManager.Clone] An error occurred, {e}");
+            return null;
+        }
+    }
     
     /// <summary>
-    ///     Attempts to get the active profile on a provided character
+    ///     Attempts to get the highest priority profile for a character
     /// </summary>
-    /// <param name="characterNameToSearchFor"></param>
-    /// <returns>The JSON template data if a profile was found, empty string is no profiles set, or null for any failures</returns>
-    public string? TryGetActiveProfileOnCharacter(string characterNameToSearchFor)
+    public CustomizePlusProfile? TryGetActiveProfileOnCharacter(string characterNameToSearchFor)
     {
         if (_profiles.GetValue(_profileManager) is not IEnumerable profiles)
             return null;
@@ -228,23 +267,9 @@ public class ProfileManager
             highestPriorityProfile = profile;
         }
 
-        // If we didn't find anything, just send an empty string to signify that it didn't fail, but the other person doesn't have a customize profile for this character
-        if (highestPriorityProfile is null)
-            return string.Empty;
-
-        // Try to convert the profile into an ipc character profile
-        if (_ipcCharacterProfileContainer.FromFullProfile.Invoke(null, [highestPriorityProfile]) is not { } ipcCharacterProfile)
-            return null;
-
-        try
-        {
-            return JsonConvert.SerializeObject(ipcCharacterProfile, SerializerSettings);
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Warning($"[ProfileManager.TryGetActiveProfileOnCharacter] An error occurred, {e}");
-            return null;
-        }
+        return highestPriorityProfile is null 
+            ? null 
+            : new CustomizePlusProfile(highestPriorityProfile);
     }
 
     /// <summary>
@@ -300,10 +325,11 @@ public class ProfileManager
             if (managerType.GetMethod("AddCharacter", PublicInstance) is not { } addCharacter) return null;
             if (managerType.GetMethod("AddTemplate", PublicInstance) is not { } addTemplate) return null;
             if (managerType.GetMethod("Create", PublicInstance) is not { } create) return null;
+            if (managerType.GetMethod("Clone", PublicInstance) is not { } clone) return null;
             if (managerType.GetMethod("Delete", PublicInstance) is not { } delete) return null;
             if (managerType.GetMethod("SetEnabled", PublicInstance, null, [profileType, typeof(bool), typeof(bool)], null) is not { } setEnabled) return null;
             if (managerType.GetMethod("SetPriority", PublicInstance, null, [profileType, typeof(int)], null) is not { } setPriority) return null;
-            var managerContainer = new ProfileManagerContainer(addCharacter, addTemplate, create, delete, setEnabled, setPriority);
+            var managerContainer = new ProfileManagerContainer(addCharacter, addTemplate, create, clone, delete, setEnabled, setPriority);
             
             return new ProfileManager(profileManager, actorManager, profilesField, ipcCharacterProfileContainer, profileContainer, managerContainer);
         }

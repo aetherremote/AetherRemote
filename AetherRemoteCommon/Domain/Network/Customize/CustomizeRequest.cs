@@ -8,5 +8,6 @@ namespace AetherRemoteCommon.Domain.Network.Customize;
 [MessagePackObject]
 public record CustomizeRequest(
     List<string> TargetFriendCodes,
-    [property: Key(1)] byte[] JsonBoneDataBytes
+    [property: Key(1)] byte[] JsonBoneDataBytes,
+    [property: Key(2)] bool Additive
 ) : ActionRequest(TargetFriendCodes);
