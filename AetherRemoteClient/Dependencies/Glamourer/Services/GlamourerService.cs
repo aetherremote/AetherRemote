@@ -122,143 +122,25 @@ public class GlamourerService : IExternalPlugin, IDisposable
     }
 
     /// <summary>
-    ///     Gets all the local player's glamourer designs as a folder structure. See <see cref="GetDesignListExtended"/> for more details
+    ///     Gets all the local player's glamourer designs
     /// </summary>
-    public async Task<List<Folder<Design>>> GetDesignList()
-    {
-        return await Task.Run(GetDesignListExtended).ConfigureAwait(false);
-    }
-
-    public async Task<FolderNode<Design>?> GetDesignList2()
+    public async Task<List<Design>?> GetDesignList()
     {
         if (ApiAvailable is false)
             return null;
         
-        var result = await Plugin.RunOnFramework(() => _getDesignListExtended.Invoke()).ConfigureAwait(false);
-        var root = new FolderNode<Design>("Root", null);
-        foreach (var (id, info) in result)
-        {
-            var parts = info.FullPath.Split('/', StringSplitOptions.RemoveEmptyEntries);
-            var current = root;
-
-            for (var i = 0; i < parts.Length; i++)
-            {
-                var part = parts[i];
-                if (current.Children.TryGetValue(part, out var node) is false)
-                {
-                    var design = i == parts.Length - 1
-                        ? new Design(id, info.DisplayName, info.DisplayColor)
-                        : null;
-                    
-                    node = new FolderNode<Design>(part, design);
-                    current.Children[part] = node;
-                }
-
-                current = node;
-            }
-        }
-
-        // The dictionary provided by glamourer is not sorted
-        SortTree(root);
-        
-        // Return the sorted roots
-        return root;
-    }
-
-    /// <summary>
-    ///     The dictionary returned by glamourer is not sorted, so we will recursively go through and sort the children
-    /// </summary>
-    private static void SortTree<T>(FolderNode<T> root)
-    {
-        // Copy all the children from this node and sort them by folder, then name
-        var sorted = root.Children.Values
-            .OrderByDescending(node => node.IsFolder)
-            .ThenBy(node => node.Name, StringComparer.OrdinalIgnoreCase)
-            .ToList();
-        
-        // Clear all the children with the values sorted and copied
-        root.Children.Clear();
-
-        // Reintroduce because dictionaries preserve insertion order
-        foreach (var node in sorted)
-            root.Children[node.Name] = node;
-        
-        // Recursively sort the remaining children
-        foreach (var child in root.Children.Values)
-            SortTree(child);
-    }
-    
-    private async Task<List<Folder<Design>>> GetDesignListExtended()
-    {
-        if (!ApiAvailable)
-        {
-            return [];
-        }
-
         try
         {
-            var result = await Plugin.RunOnFramework(() => _getDesignListExtended.Invoke()).ConfigureAwait(false);
-            
-            var folders = new Dictionary<string, List<Design>>();
-            foreach (var kvp in result)
-            {
-                var design = new Design(kvp.Key, kvp.Value.DisplayName, kvp.Value.DisplayColor);
-                var span = kvp.Value.FullPath.AsSpan();
-                var index = span.LastIndexOf('/');
+            var designs = new List<Design>();
+            foreach (var design in await Plugin.RunOnFramework(() => _getDesignListExtended.Invoke()).ConfigureAwait(false))
+                designs.Add(new Design(design.Key, design.Value.DisplayName, design.Value.FullPath, design.Value.DisplayColor));
 
-                var folderPathSpan = index is -1
-                    ? Uncategorized.AsSpan()
-                    : span[..index];
-                
-                var folderPath = folderPathSpan.ToString();
-
-                if (folders.TryGetValue(folderPath, out var list))
-                {
-                    list.Add(design);
-                }
-                else
-                {
-                    folders[folderPath] = [design];
-                }
-            }
-
-            foreach (var list in folders.Values)
-                list.Sort((x, y) => string.Compare(x.Name, y.Name, StringComparison.OrdinalIgnoreCase));
-
-            return folders
-                .Select(x => new Folder<Design>(x.Key, x.Value)) // Collapse
-                .OrderBy(x => x.Path, StringComparer.OrdinalIgnoreCase) // Alphabetical
-                .ThenBy(x => x.Path.Equals(Uncategorized, StringComparison.OrdinalIgnoreCase) ? 1 : 0) // Ensure Uncategorized is last
-                .ToList();
+            return designs;
         }
         catch (Exception e)
         {
-            Plugin.Log.Error($"[GlamourerService.GetDesignListExtended] An unexpected error occurred, {e}");
-            return [];
-        }
-    }
-
-    /// <summary>
-    ///     Reverts to original automation
-    /// </summary>
-    /// <param name="index">Object table index to revert</param>
-    public async Task<bool> RevertToGame(ushort index)
-    {
-        if (!ApiAvailable)
-        {
-            Plugin.Log.Warning($"[GlamourerService] [RevertToGame] Unable to revert index {index} because glamourer is not available");
-            return false;
-        }
-
-        try
-        {
-            var result = await Plugin.RunOnFramework(() => _revertState.Invoke(index)).ConfigureAwait(false);
-            return LogAndProcessResult("[RevertToGame]", index, result);
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Error($"[GlamourerService] [RevertToGame] Actor index {index} failed to revert unexpectedly, {e}");
-            return false;
+            Plugin.Log.Error($"[GlamourerService.GetDesignList] {e}");
+            return null;
         }
     }
     
@@ -270,7 +152,7 @@ public class GlamourerService : IExternalPlugin, IDisposable
     {
         if (!ApiAvailable)
         {
-            Plugin.Log.Warning($"[GlamourerService] [RevertToAutomation] Unable to revert index {index} because glamourer is not available");
+            Plugin.Log.Warning($"[GlamourerService.RevertToAutomation] Unable to revert index {index} because glamourer is not available");
             return false;
         }
         
@@ -281,7 +163,7 @@ public class GlamourerService : IExternalPlugin, IDisposable
         }
         catch (Exception e)
         {
-            Plugin.Log.Error($"[GlamourerService] [RevertToAutomation] Actor index {index} failed to revert unexpectedly, {e}");
+            Plugin.Log.Error($"[GlamourerService.RevertToAutomation] Actor index {index} failed to revert unexpectedly, {e}");
             return false;
         }
     }

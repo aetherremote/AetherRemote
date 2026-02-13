@@ -91,7 +91,7 @@ public class EmoteViewUi(
                     return;
 
                 commandLockoutService.Lock();
-                controller.Send();
+                _ = controller.Send();
             }
         });
 

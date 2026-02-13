@@ -129,6 +129,7 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<DependencyManager>();
         services.AddSingleton<HypnosisManager>();
         services.AddSingleton<LoginManager>();
+        services.AddSingleton<NetworkCommandManager>();
         services.AddSingleton<PossessionManager>();
         services.AddSingleton<PermanentTransformationHandler>();
         services.AddSingleton<SelectionManager>();

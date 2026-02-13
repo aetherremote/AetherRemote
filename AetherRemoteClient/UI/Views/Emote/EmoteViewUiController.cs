@@ -1,20 +1,16 @@
-using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
-using AetherRemoteClient.Utils;
-using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
-using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Domain.Network.Emote;
 
 namespace AetherRemoteClient.UI.Views.Emote;
 
 /// <summary>
 ///     Handles events from the <see cref="EmoteViewUi"/>
 /// </summary>
-public class EmoteViewUiController(EmoteService emoteService, NetworkService networkService, SelectionManager selectionManager)
+public class EmoteViewUiController(EmoteService emoteService, NetworkCommandManager networkCommandManager, SelectionManager selectionManager)
 {
     public readonly ListFilter<string> EmotesListFilter = new(emoteService.Emotes, FilterEmote);
     public string EmoteSelection = string.Empty;
@@ -25,24 +21,13 @@ public class EmoteViewUiController(EmoteService emoteService, NetworkService net
     /// <summary>
     ///     Handles the "send button" from the Ui
     /// </summary>
-    public async void Send()
+    public async Task Send()
     {
-        try
-        {
-            if (emoteService.Emotes.Contains(EmoteSelection) is false)
-                return;
+        if (emoteService.Emotes.Contains(EmoteSelection) is false)
+            return;
 
-            var request = new EmoteRequest(selectionManager.GetSelectedFriendCodes(), EmoteSelection, DisplayLogMessage);
-            var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.Emote, request).ConfigureAwait(false);
-            if (response.Result is ActionResponseEc.Success)
-                EmoteSelection = string.Empty;
-            
-            ActionResponseParser.Parse("Emote", response);
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Warning($"Unable to emote, {e.Message}");
-        }
+        await networkCommandManager.SendEmote(selectionManager.GetSelectedFriendCodes(), EmoteSelection, DisplayLogMessage).ConfigureAwait(false);
+        EmoteSelection = string.Empty;
     }
 
     /// <summary>

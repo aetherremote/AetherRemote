@@ -21,9 +21,8 @@ namespace AetherRemoteClient.UI.Views.CustomizePlus;
 public class CustomizePlusViewUiController : IDisposable
 {
     // Injected
-    private readonly CommandLockoutService _commandLockoutService;
     private readonly CustomizePlusService _customizePlusService;
-    private readonly NetworkService _networkService;
+    private readonly NetworkCommandManager _networkCommandManager;
     private readonly SelectionManager _selectionManager;
     
     /// <summary>
@@ -59,11 +58,10 @@ public class CustomizePlusViewUiController : IDisposable
     /// <summary>
     ///     <inheritdoc cref="CustomizePlusViewUiController"/>
     /// </summary>
-    public CustomizePlusViewUiController(CommandLockoutService commandLockoutService, CustomizePlusService customizePlusService, NetworkService networkService, SelectionManager selectionManager)
+    public CustomizePlusViewUiController(CustomizePlusService customizePlusService, NetworkCommandManager networkCommandManager, SelectionManager selectionManager)
     {
-        _commandLockoutService = commandLockoutService;
         _customizePlusService = customizePlusService;
-        _networkService = networkService;
+        _networkCommandManager = networkCommandManager;
         _selectionManager = selectionManager;
 
         _customizePlusService.IpcReady += OnIpcReady;
@@ -147,16 +145,11 @@ public class CustomizePlusViewUiController : IDisposable
         if (SelectedProfileId == Guid.Empty)
             return;
 
-        _commandLockoutService.Lock();
-        
         if (await _customizePlusService.GetProfile(SelectedProfileId).ConfigureAwait(false) is not { } profile)
             return;
 
         var bytes = Encoding.UTF8.GetBytes(profile);
-        var request = new CustomizeRequest(_selectionManager.GetSelectedFriendCodes(), bytes, ShouldApplyAsAdditive);
-        var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.CustomizePlus, request).ConfigureAwait(false);
-
-        ActionResponseParser.Parse("Customize+", response);
+        await _networkCommandManager.SendCustomize(_selectionManager.GetSelectedFriendCodes(), bytes, ShouldApplyAsAdditive).ConfigureAwait(false);
     }
     
     private void OnIpcReady(object? sender, EventArgs e)

@@ -6,12 +6,8 @@ using AetherRemoteClient.Dependencies.Glamourer.Domain;
 using AetherRemoteClient.Dependencies.Glamourer.Services;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Managers;
-using AetherRemoteClient.Services;
-using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
-using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Domain.Network.Transform;
 
 namespace AetherRemoteClient.UI.Views.Transformation;
 
@@ -21,9 +17,8 @@ namespace AetherRemoteClient.UI.Views.Transformation;
 public class TransformationViewUiController : IDisposable
 {
     // Injected
-    private readonly CommandLockoutService _commandLockoutService;
     private readonly GlamourerService _glamourerService;
-    private readonly NetworkService _networkService;
+    private readonly NetworkCommandManager _networkCommandManager;
     private readonly SelectionManager _selectionManager;
     
     /// <summary>
@@ -57,11 +52,10 @@ public class TransformationViewUiController : IDisposable
     /// <summary>
     ///     <inheritdoc cref="TransformationViewUiController"/>
     /// </summary>
-    public TransformationViewUiController(CommandLockoutService commandLockoutService, GlamourerService glamourer, NetworkService networkService, SelectionManager selectionManager)
+    public TransformationViewUiController(GlamourerService glamourer, NetworkCommandManager networkCommandManager, SelectionManager selectionManager)
     {
-        _commandLockoutService = commandLockoutService;
         _glamourerService = glamourer;
-        _networkService = networkService;
+        _networkCommandManager = networkCommandManager;
         _selectionManager = selectionManager;
 
         _glamourerService.IpcReady += OnIpcReady;
@@ -112,9 +106,33 @@ public class TransformationViewUiController : IDisposable
     {
         SelectedDesignId = Guid.Empty;
 
-        _sorted = await _glamourerService.GetDesignList2().ConfigureAwait(false) is { } unsorted
-            ? unsorted.Children.Values.ToList()
-            : null;
+        if (await _glamourerService.GetDesignList().ConfigureAwait(false) is not { } designs)
+            return;
+        
+        var root = new FolderNode<Design>("Root", null);
+        foreach (var design in designs)
+        {
+            var parts = design.Path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            var current = root;
+
+            for (var i = 0; i < parts.Length; i++)
+            {
+                var part = parts[i];
+                if (current.Children.TryGetValue(part, out var node) is false)
+                {
+                    node = new FolderNode<Design>(part, i == parts.Length - 1 ? design : null);
+                    current.Children[part] = node;
+                }
+
+                current = node;
+            }
+        }
+
+        // The dictionary provided by glamourer is not sorted
+        SortTree(root);
+        
+        // Assignment
+        _sorted = root.Children.Values.ToList();
     }
     
     public bool MissingPermissionsForATarget()
@@ -140,12 +158,7 @@ public class TransformationViewUiController : IDisposable
     {
         if (SelectedDesignId == Guid.Empty)
             return;
-            
-        if (await _glamourerService.GetDesignAsync(SelectedDesignId).ConfigureAwait(false) is not { } design)
-            return;
-            
-        _commandLockoutService.Lock();
-
+        
         var flags = GlamourerApplyFlags.Once;
         if (ShouldApplyCustomization)
             flags |= GlamourerApplyFlags.Customization;
@@ -155,11 +168,35 @@ public class TransformationViewUiController : IDisposable
         // Don't send one with nothing
         if (flags is GlamourerApplyFlags.Once)
             return;
-            
-        var request = new TransformRequest(_selectionManager.GetSelectedFriendCodes(), design, flags, null);
-        var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.Transform, request).ConfigureAwait(false);
-            
-        ActionResponseParser.Parse("Transformation", response);
+        
+        if (await _glamourerService.GetDesignAsync(SelectedDesignId).ConfigureAwait(false) is not { } design)
+            return;
+        
+        await _networkCommandManager.SendTransformation(_selectionManager.GetSelectedFriendCodes(), design, flags).ConfigureAwait(false);
+    }
+    
+        
+    /// <summary>
+    ///     The dictionary returned by glamourer is not sorted, so we will recursively go through and sort the children
+    /// </summary>
+    private static void SortTree<T>(FolderNode<T> root)
+    {
+        // Copy all the children from this node and sort them by folder, then name
+        var sorted = root.Children.Values
+            .OrderByDescending(node => node.IsFolder)
+            .ThenBy(node => node.Name, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        
+        // Clear all the children with the values sorted and copied
+        root.Children.Clear();
+
+        // Reintroduce because dictionaries preserve insertion order
+        foreach (var node in sorted)
+            root.Children[node.Name] = node;
+        
+        // Recursively sort the remaining children
+        foreach (var child in root.Children.Values)
+            SortTree(child);
     }
     
     private void OnIpcReady(object? sender, EventArgs e)

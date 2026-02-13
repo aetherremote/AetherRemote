@@ -4,11 +4,8 @@ using System.Linq;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
-using AetherRemoteClient.Utils;
 using AetherRemoteCommon;
 using AetherRemoteCommon.Domain.Enums;
-using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Domain.Network.Speak;
 using AetherRemoteCommon.Util;
 using Dalamud.Game.ClientState.Objects.Types;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
@@ -20,8 +17,9 @@ namespace AetherRemoteClient.UI.Views.Speak;
 /// </summary>
 public class SpeakViewUiController
 {
-    private readonly NetworkService _networkService;
+    // Injected
     private readonly WorldService _worldService;
+    private readonly NetworkCommandManager _networkCommandManager;
     private readonly SelectionManager _selectionManager;
 
     public readonly string[] LinkshellNumbers = ["1", "2", "3", "4", "5", "6", "7", "8"];
@@ -39,10 +37,10 @@ public class SpeakViewUiController
     /// <summary>
     ///     <inheritdoc cref="SpeakViewUiController"/>
     /// </summary>
-    public SpeakViewUiController(NetworkService networkService, WorldService worldService, SelectionManager selectionManager)
+    public SpeakViewUiController(WorldService worldService, NetworkCommandManager networkCommandManager, SelectionManager selectionManager)
     {
-        _networkService = networkService;
         _worldService = worldService;
+        _networkCommandManager = networkCommandManager;
         _selectionManager = selectionManager;
         
         WorldsListFilter = new ListFilter<string>(worldService.WorldNames, FilterWorld);
@@ -102,19 +100,8 @@ public class SpeakViewUiController
                 ChatChannel.Linkshell or ChatChannel.CrossWorldLinkshell => (LinkshellSelection + 1).ToString(),
                 _ => null
             };
-            
-            var request = new SpeakRequest(_selectionManager.GetSelectedFriendCodes(), Message, ChannelSelect, extra);
-            var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.Speak, request);
-            if (response.Result is ActionResponseEc.Success && response.Results.All(kvp => kvp.Value == ActionResultEc.Success))
-            {
-                Message = string.Empty;
-                
-                if (request.ChatChannel is ChatChannel.Echo)
-                    foreach (var friend in _selectionManager.Selected)
-                        Plugin.ChatGui.Print($">>{friend.NoteOrFriendCode}: {request.Message}");
-            }
-            
-            ActionResponseParser.Parse("Speak", response);
+
+            await _networkCommandManager.SendSpeak(_selectionManager.GetSelectedFriendCodes(), Message, ChannelSelect, extra).ConfigureAwait(false);
         }
         catch (Exception e)
         {

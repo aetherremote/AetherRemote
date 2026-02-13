@@ -13,7 +13,7 @@ public static class Constraints
     /// <summary>
     ///     How many seconds in between each command must a user wait to use in-game commands (Speak, Emote, etc.)
     /// </summary>
-    public const uint GlobalCommandCooldownInSeconds = 4;
+    public const uint GlobalCommandCooldownInSeconds = 2;
     
     // Friend Code
     public const int FriendCodeMinimumLength = 2;
