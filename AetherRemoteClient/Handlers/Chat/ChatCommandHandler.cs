@@ -1,5 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
+using AetherRemoteClient.Dependencies.CustomizePlus.Services;
+using AetherRemoteClient.Dependencies.Glamourer.Services;
+using AetherRemoteClient.Dependencies.Penumbra.Services;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Managers.Possession;
 using AetherRemoteClient.Services;
@@ -9,9 +13,9 @@ using Dalamud.Game.Command;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 
-namespace AetherRemoteClient.Handlers;
+namespace AetherRemoteClient.Handlers.Chat;
 
-public class ChatCommandHandler : IDisposable
+public partial class ChatCommandHandler : IDisposable
 {
     private const string CommandNameShort = "/ar";
     private const string CommandNameFull = "/aetherremote";
@@ -21,23 +25,39 @@ public class ChatCommandHandler : IDisposable
     private const string SafeMode = "safemode";
     private const string SafeWord = "safeword";
     private const string Unpossess = "unpossess";
+    private const string Emote = "emote";
+    private const string Speak = "speak";
+    private const string Customize = "customize";
+    private const string Transform = "transform";
     
     // Injected
     private readonly ActionQueueService _actionQueueService;
+    private readonly CustomizePlusService _customizePlusService;
+    private readonly EmoteService _emoteService;
+    private readonly GlamourerService _glamourerService;
     private readonly HypnosisManager _hypnosisManager;
+    private readonly NetworkCommandManager _networkCommandManager;
     private readonly PossessionManager _possessionManager;
     private readonly PermanentTransformationHandler _permanentTransformationHandler;
     private readonly MainWindow _mainWindow;
     
     public ChatCommandHandler(
         ActionQueueService actionQueueService,
+        CustomizePlusService customizePlusService,
+        EmoteService emoteService,
+        GlamourerService glamourerService,
         HypnosisManager hypnosisManager,
+        NetworkCommandManager networkCommandManager,
         PossessionManager possessionManager,
         PermanentTransformationHandler permanentTransformationHandler,
         MainWindow mainWindow)
     {
         _actionQueueService = actionQueueService;
+        _customizePlusService = customizePlusService;
+        _emoteService =  emoteService;
+        _glamourerService = glamourerService;
         _hypnosisManager = hypnosisManager;
+        _networkCommandManager = networkCommandManager;
         _possessionManager = possessionManager;
         _permanentTransformationHandler = permanentTransformationHandler;
         _mainWindow = mainWindow;
@@ -74,8 +94,14 @@ public class ChatCommandHandler : IDisposable
                 return;
             }
 
+            var c = args.Split(" ");
+            if (c.Length == 0)
+                return;
+
+            var co = c[0];
+
             var payloads = new List<Payload>();
-            switch (args)
+            switch (co)
             {
                 case StopArg:
                     // Stop any spirals
@@ -122,6 +148,26 @@ public class ChatCommandHandler : IDisposable
                     payloads.Add(new TextPayload("Stopped all possession activities."));
                     break;
                 
+                // Example: /ar customize [targets] [profile id] [additive]
+                case Customize:
+                    _ = HandleCustomize(args).ConfigureAwait(false);
+                    break;
+                
+                // Example: /ar emote [targets] [emote] [display log message]
+                case Emote:
+                    _ = HandleEmote(args).ConfigureAwait(false);
+                    break;
+                
+                // Example: /ar speak [targets] [channel] [message]
+                case Speak:
+                    _ = HandleSpeak(args).ConfigureAwait(false);
+                    break;
+                
+                // Example: /ar transform [targets] [design name] [apply type]
+                case Transform:
+                    _ = HandleTransform(args).ConfigureAwait(false);
+                    break;
+                
                 default:
                     payloads.Add(new UIForegroundPayload(AetherRemoteColors.TextColorPurple));
                     payloads.Add(new TextPayload("[AetherRemote] "));
@@ -139,6 +185,40 @@ public class ChatCommandHandler : IDisposable
         }
     }
 
+    private static string[] ExtractArguments(string input)
+    {
+        var tokens = new List<string>();
+        var current = new StringBuilder();
+        var inQuotes = false;
+
+        foreach (var character in input)
+        {
+            if (character == '"')
+            {
+                inQuotes = inQuotes is false;
+                continue;
+            }
+
+            if (char.IsWhiteSpace(character) && inQuotes is false)
+            {
+                if (current.Length > 0)
+                {
+                    tokens.Add(current.ToString());
+                    current.Clear();
+                }
+            }
+            else
+            {
+                current.Append(character);
+            }
+        }
+        
+        if (current.Length > 0)
+            tokens.Add(current.ToString());
+
+        return tokens.ToArray();
+    }
+    
     public void Dispose()
     {
         Plugin.CommandManager.RemoveHandler(CommandNameShort);

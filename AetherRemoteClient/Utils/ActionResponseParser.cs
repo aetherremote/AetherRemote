@@ -1,7 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.Text;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
+using Dalamud.Interface.ImGuiNotification;
 
 namespace AetherRemoteClient.Utils;
 
@@ -10,101 +12,149 @@ namespace AetherRemoteClient.Utils;
 /// </summary>
 public static class ActionResponseParser
 {
+    private static readonly Dictionary<ActionResponseEc, string> ActionResponseErrorMessages = new()
+    {
+        { ActionResponseEc.Uninitialized,                           "Uninitialized action response, if you see this something is wrong" },
+        { ActionResponseEc.TooManyRequests,                         "You are sending too many requests too quickly" },
+        { ActionResponseEc.TooManyTargets,                          "You have too many targets selected for this action" },
+        { ActionResponseEc.TooFewTargets,                           "You have too few targets selected for this action" },
+        { ActionResponseEc.TargetOffline,                           "One of your targets was offline" },
+        { ActionResponseEc.TargetBodySwapLacksPermissions,          "One of the targets you tried to body swap with has not granted you permissions" },
+        { ActionResponseEc.TargetBodySwapIsNotFriends,              "One of the targets you tried to body swap with is not your friend" },
+        { ActionResponseEc.IncludedSelfInBodySwap,                  "You may not include yourself as a target when body swapping, use the appropriate \"Include Self\" button" },
+        { ActionResponseEc.BadDataInRequest,                        "Your request included invalid data" },
+        { ActionResponseEc.BadTargets,                              "One of your targets does not exist" },
+        { ActionResponseEc.Disabled,                                "This action is disabled" },
+        { ActionResponseEc.Unknown,                                 "An unknown error has occurred" },
+        { ActionResponseEc.Success,                                 "Success" }
+    };
+
+    private static readonly Dictionary<ActionResultEc, string> ActionResultErrorMessages = new()
+    {
+        { ActionResultEc.Uninitialized,                             "- Uninitialized action result, if you see this something is wrong" },
+        { ActionResultEc.ClientNotFriends,                          "- is not one of your friends" },
+        { ActionResultEc.ClientInSafeMode,                          "- is not accepting commands at the moment" },
+        { ActionResultEc.ClientHasFeaturePaused,                    "- is not accepting this action at the moment" },
+        { ActionResultEc.ClientHasSenderPaused,                     "- is not accepting commands at the moment" },
+        { ActionResultEc.ClientHasNotGrantedSenderPermissions,      "- has not granted you permissions" },
+        { ActionResultEc.ClientBadData,                             "- could not process the command" },
+        { ActionResultEc.ClientPluginDependency,                    "- encountered an error with another plugin" },
+        { ActionResultEc.ClientBeingHypnotized,                     "- is occupied at the moment" },
+        { ActionResultEc.ClientPermanentlyTransformed,              "- is stuck in their current appearance" },
+        { ActionResultEc.TargetOffline,                             "- is offline" },
+        { ActionResultEc.TargetNotFriends,                          "- is not your friend" },
+        { ActionResultEc.TargetHasNotGrantedSenderPermissions,      "- has not granted you permissions" },
+        { ActionResultEc.TargetTimeout,                             "- had the request timeout" },
+        { ActionResultEc.HasNotAcceptedAgreement,                   "- has not accepted an agreement for this action" },
+        { ActionResultEc.Success,                                   "- Success" },
+        { ActionResultEc.ValueNotSet,                               "- had a value not set (this should never happen, contact a developer)" },
+        { ActionResultEc.Unknown,                                   "- An unknown error has occurred" }
+    };
+
+    public static void SanityCheck()
+    {
+        if (Enum.GetValues<ActionResponseEc>().Length != ActionResponseErrorMessages.Count)
+        {
+            var notification = new Notification
+            {
+                Title = "ActionResponseEc Case Not Covered",
+                MinimizedText = "ActionResponseEc Case Not Covered",
+                Type = NotificationType.Warning
+            };
+
+            Plugin.NotificationManager.AddNotification(notification);
+        }
+
+        if (Enum.GetValues<ActionResultEc>().Length != ActionResultErrorMessages.Count)
+        {
+            var notification = new Notification
+            {
+                Title = "ActionResultEc Case Not Covered",
+                MinimizedText = "ActionResultEc Case Not Covered",
+                Type = NotificationType.Warning
+            };
+
+            Plugin.NotificationManager.AddNotification(notification);
+        }
+    }
+
+    /// <summary>
+    ///     Parses the <see cref="ActionResponse"/> and displays a Dalamud notification with the success result
+    /// </summary>
     public static void Parse(string operation, ActionResponse response)
     {
         if (response.Result is not ActionResponseEc.Success)
         {
-            NotificationHelper.Error($"Failed {operation} request", BuildActionFailedNotification(response.Result));
-            return;
+            var title = string.Concat(operation, " request failed");
+            var success = new Notification
+            {
+                Minimized = false,
+                MinimizedText = title,
+                Title = title,
+                Content = ActionResponseErrorMessages.TryGetValue(response.Result, out var errorMessage) ? errorMessage : string.Empty,
+                Type = NotificationType.Error
+            };
+
+            Plugin.NotificationManager.AddNotification(success);
         }
 
-        var count = 0;
-        var message = new StringBuilder();
+        var failureCount = 0;
+        var failureMessage = new StringBuilder();
         foreach (var (target, code) in response.Results)
         {
             if (code is ActionResultEc.Success)
                 continue;
-
-            count++;
-            message.AppendLine(BuildActionFailedNotification2(target, code));
+            
+            var note = Plugin.Configuration.Notes.GetValueOrDefault(target, target);
+            var message = ActionResultErrorMessages.GetValueOrDefault(code, "Unknown ActionResultEc");
+            failureMessage.AppendLine(string.Concat(note, message));
+            failureCount++;
         }
 
-        if (count is 0)
+        // Notification we will push
+        Notification notification;
+
+        // If 0 targets failed to execute the command
+        if (failureCount is 0)
         {
-            NotificationHelper.Success($"{operation} - Success", string.Empty);
+            var title = string.Concat(operation, " request succeeded");
+            notification = new Notification
+            {
+                Minimized = true,
+                MinimizedText = title,
+                Title = title,
+                Content = string.Empty,
+                Type = NotificationType.Success
+            };
         }
-        else if (count == response.Results.Count)
+        // If all targets failed to execute the command
+        else if (failureCount == response.Results.Count)
         {
-            var title = $"{operation} - Failure";
-            NotificationHelper.Error(title, message.ToString());
+            var title = string.Concat(operation, " request failed");
+            notification = new Notification
+            {
+                Minimized = false,
+                MinimizedText = title,
+                Title = title,
+                Content = failureMessage.ToString(),
+                Type = NotificationType.Error
+            };
         }
+        // If some targets succeeded and some didn't
         else
         {
-            var title = $"{operation} - Partial Success, {count}/{response.Results.Count} failures";
-            NotificationHelper.Warning(title, message.ToString());
+            var title = string.Concat(operation, " partially succeeded");
+            notification = new Notification
+            {
+                Minimized = false,
+                MinimizedText = title,
+                Title = title,
+                Content = failureMessage.ToString(),
+                Type = NotificationType.Warning
+            };
         }
-    }
-
-    private static string BuildActionFailedNotification(ActionResponseEc code)
-    {
-        Plugin.Log.Warning($"[ActionResponseParser] The client recorded a failure of {code}");
         
-        if (code is ActionResponseEc.Success)
-            return "Code was successful but the error handling method was called.";
-
-        return code switch
-        {
-            // General
-            ActionResponseEc.TooManyRequests => "Too many requests, slow down!",
-            ActionResponseEc.TooManyTargets =>
-                "You have too many targets for this operation. In game operations are limited to 3 targets",
-
-            ActionResponseEc.TooFewTargets => "You have too few targets selected for this operation",
-            ActionResponseEc.TargetOffline => "One of your targets is offline",
-            ActionResponseEc.TargetBodySwapLacksPermissions => "You lack permissions for one of your targets",
-            ActionResponseEc.TargetBodySwapIsNotFriends => "You are not friends with one of your targets",
-            ActionResponseEc.BadDataInRequest => "Your request contained bad data",
-            
-            // Disabled
-            ActionResponseEc.Disabled => "This feature is temporarily disabled - How did you call this?!",
-            
-            // Exception
-            ActionResponseEc.Unknown => "Unknown failure",
-
-            // Default
-            _ => "The error code was uninitialized."
-        };
-    }
-    
-    private static string BuildActionFailedNotification2(string target, ActionResultEc code)
-    {
-        if (code is ActionResultEc.Success)
-            return string.Concat("No error for ", target);
-
-        var name = Plugin.Configuration.Notes.GetValueOrDefault(target, target);
-        return code switch
-        {
-            ActionResultEc.ClientNotFriends or
-                ActionResultEc.TargetNotFriends => string.Concat("You are not friends with ", name),
-
-            ActionResultEc.ClientInSafeMode => string.Concat(name, " is not accepting commands at the moment"),
-            ActionResultEc.ClientHasFeaturePaused => string.Concat(name, " has paused this feature"),
-            ActionResultEc.ClientHasSenderPaused => string.Concat(name, " did not process your command"),
-
-            ActionResultEc.ClientHasNotGrantedSenderPermissions or
-                ActionResultEc.TargetHasNotGrantedSenderPermissions => string.Concat(name,
-                    " has not granted you permissions for this command"),
-
-            ActionResultEc.ClientBadData => string.Concat(name, " could not parse the data you provided"),
-            ActionResultEc.ClientPluginDependency => string.Concat(name, " ran into an issue with another plugin"),
-            ActionResultEc.ClientBeingHypnotized => string.Concat(name, " is currently occupied elsewhere"),
-            ActionResultEc.ClientPermanentlyTransformed => string.Concat(name, " is permanently transformed and cannot change form"),
-            
-            ActionResultEc.TargetTimeout => string.Concat("The command timed out to ", name),
-            ActionResultEc.TargetOffline => string.Concat(name, " is offline"),
-            ActionResultEc.ValueNotSet => string.Concat(name, "Report to developer the code 730"),
-
-            _ => string.Concat(name, $" encountered an unknown error: {code}")
-        };
+        // Actually push the notification
+        Plugin.NotificationManager.AddNotification(notification);
     }
 }

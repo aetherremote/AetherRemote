@@ -57,34 +57,9 @@ public enum ActionResponseEc
     BadTargets,
     
     /// <summary>
-    ///     When the sender is in a state not expected by the server
-    /// </summary>
-    UnexpectedState,
-    
-    /// <summary>
     ///     When the action is disabled
     /// </summary>
     Disabled,
-    
-    /// <summary>
-    ///     The sender is not a part of an active session
-    /// </summary>
-    NoActivePossessionSession,
-    
-    /// <summary>
-    ///     The sender is not the ghost in this session
-    /// </summary>
-    NotGhost,
-    
-    /// <summary>
-    ///     The sender is already in a possession session
-    /// </summary>
-    SenderAlreadyInSession,
-    
-    /// <summary>
-    ///     The target is already in a possession session
-    /// </summary>
-    TargetAlreadyInSession,
     
     /// <summary>
     ///     An unknown error occurred

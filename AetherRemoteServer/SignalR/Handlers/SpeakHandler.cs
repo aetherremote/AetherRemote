@@ -40,7 +40,7 @@ public class SpeakHandler(PresenceService presenceService, ForwardedRequestManag
     private ActionResponseEc? ValidateSpeakRequest(string senderFriendCode, SpeakRequest request)
     {
         if (presenceService.IsUserExceedingCooldown(senderFriendCode))
-            return ActionResponseEc.UnexpectedState;
+            return ActionResponseEc.TooManyRequests;
         
         if (request.TargetFriendCodes.Count > Constraints.MaximumTargetsForInGameOperations)
             return ActionResponseEc.TooManyTargets;

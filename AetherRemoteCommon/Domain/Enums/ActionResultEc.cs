@@ -56,11 +56,6 @@ public enum ActionResultEc
     ClientPermanentlyTransformed,
     
     /// <summary>
-    ///     The client's local character was not found
-    /// </summary>
-    ClientNoLocalPlayer,
-    
-    /// <summary>
     ///     Target client is offline
     /// </summary>
     TargetOffline,

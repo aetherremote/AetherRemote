@@ -94,6 +94,22 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
     }
 
     /// <summary>
+    ///     Gets a list of all customize plus profiles
+    /// </summary>
+    /// <returns></returns>
+    public async Task<List<Profile>> GetProfilesPlain()
+    {
+        var result = await Plugin.RunOnFramework(() => _getProfileList.InvokeFunc()).ConfigureAwait(false);
+        var profiles = new List<Profile>();
+        foreach (var profile in result)
+            profiles.Add(new Profile(profile.Id, profile.Name));
+
+        return profiles;
+    }
+
+    // TODO: Refactor this to just be what GetProfilesPlain does, this is doing more than it should
+    
+    /// <summary>
     ///     Gets a list of all the customize plus profile identifiers
     /// </summary>
     public async Task<FolderNode<Profile>?> GetProfiles()

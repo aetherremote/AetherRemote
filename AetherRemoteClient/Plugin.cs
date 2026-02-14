@@ -8,6 +8,7 @@ using AetherRemoteClient.Dependencies.Moodles.Services;
 using AetherRemoteClient.Dependencies.Penumbra.Services;
 using AetherRemoteClient.Domain.Configurations;
 using AetherRemoteClient.Handlers;
+using AetherRemoteClient.Handlers.Chat;
 using AetherRemoteClient.Handlers.Network;
 using AetherRemoteClient.Hooks;
 using AetherRemoteClient.Managers;
@@ -250,7 +251,7 @@ public sealed class Plugin : IDalamudPlugin
         // Services
         _services.GetRequiredService<ActionQueueService>();
         
-        Task.Run(SharedUserInterfaces.InitializeFonts);
+        _ = SharedUserInterfaces.InitializeFonts().ConfigureAwait(false);
     }
     
     public void Dispose()

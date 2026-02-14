@@ -1,5 +1,6 @@
 using System;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Utils;
 
 namespace AetherRemoteClient.Managers;
 
@@ -54,6 +55,9 @@ public class LoginManager : IDisposable
 
             // Emit an event
             LoginFinished?.Invoke();
+            
+            // Ensure that all the values for various action responses and results are met (this check could go anywhere)
+            ActionResponseParser.SanityCheck();
             
             // Initiate a connection to the server if auto login is set to true
             if (Plugin.CharacterConfiguration.AutoLogin is true)
