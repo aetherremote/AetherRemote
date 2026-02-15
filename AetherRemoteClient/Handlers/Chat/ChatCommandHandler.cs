@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Text;
 using AetherRemoteClient.Dependencies.CustomizePlus.Services;
 using AetherRemoteClient.Dependencies.Glamourer.Services;
-using AetherRemoteClient.Dependencies.Penumbra.Services;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Managers.Possession;
 using AetherRemoteClient.Services;
@@ -70,6 +68,27 @@ public partial class ChatCommandHandler : IDisposable
                            /ar {SafeMode} - Put the plugin into safe mode
                            /ar {SafeWord} - Put the plugin into safe mode
                            /ar {Unpossess} - Stops possessing or being possessed
+                           /ar {Customize} | targets | profile name | optional: merge
+                                - Must use friend codes when targeting
+                                - Profile name is case sensitive
+                                - Example: /ar customize | FriendCodeOne, FriendCodeTwo | My Profile Name
+                                - Example: /ar customize | FriendCodeOne | Mimic Profile | merge
+                           /ar {Emote} | targets | emote | optional: display a log message
+                                - Must use friend codes when targeting
+                                - Emote is case sensitive, type it like you would in chat
+                                - Example: /ar emote | FriendCode | dance
+                                - Example: /ar emote | FriendCodeOne, FriendCodeThree | dance | true
+                           /ar {Speak} | targets | channel | message
+                                - Must use friend codes when targeting
+                                - Channel is case sensitive, type it like you would in chat
+                                - Example: /ar speak | FriendCode | tell My Name@My World | Hello how are you?
+                                - Example: /ar speak | FriendCode | cwl1 | Roulette?
+                           /ar {Transform} | targets | design name | optional: apply type
+                                - Must use friend codes when targeting
+                                - Design is case sensitive
+                                - Apply type options are customize, equipment, both (blank defaults to both)
+                                - Example: /ar transform | FriendCode | My Design Name
+                                - Example: /Ar transform | FriendCode | Farming Glam | equipment
                            """
         });
         
@@ -148,22 +167,18 @@ public partial class ChatCommandHandler : IDisposable
                     payloads.Add(new TextPayload("Stopped all possession activities."));
                     break;
                 
-                // Example: /ar customize [targets] [profile id] [additive]
                 case Customize:
                     _ = HandleCustomize(args).ConfigureAwait(false);
                     break;
                 
-                // Example: /ar emote [targets] [emote] [display log message]
                 case Emote:
                     _ = HandleEmote(args).ConfigureAwait(false);
                     break;
                 
-                // Example: /ar speak [targets] [channel] [message]
                 case Speak:
                     _ = HandleSpeak(args).ConfigureAwait(false);
                     break;
                 
-                // Example: /ar transform [targets] [design name] [apply type]
                 case Transform:
                     _ = HandleTransform(args).ConfigureAwait(false);
                     break;
@@ -184,39 +199,21 @@ public partial class ChatCommandHandler : IDisposable
             Plugin.Log.Error($"[ChatCommandHandler.OnCommand] {e}");
         }
     }
-
-    private static string[] ExtractArguments(string input)
+    
+    /// <summary>
+    ///     Sends a message in chat that looks like "[AetherRemote] Message"
+    /// </summary>
+    private static void SendChatMessage(string message)
     {
-        var tokens = new List<string>();
-        var current = new StringBuilder();
-        var inQuotes = false;
-
-        foreach (var character in input)
+        var payloads = new List<Payload>
         {
-            if (character == '"')
-            {
-                inQuotes = inQuotes is false;
-                continue;
-            }
-
-            if (char.IsWhiteSpace(character) && inQuotes is false)
-            {
-                if (current.Length > 0)
-                {
-                    tokens.Add(current.ToString());
-                    current.Clear();
-                }
-            }
-            else
-            {
-                current.Append(character);
-            }
-        }
-        
-        if (current.Length > 0)
-            tokens.Add(current.ToString());
-
-        return tokens.ToArray();
+            new UIForegroundPayload(AetherRemoteColors.TextColorPurple),
+            new TextPayload("[AetherRemote] "),
+            UIForegroundPayload.UIForegroundOff,
+            new TextPayload(message)
+        };
+            
+        Plugin.ChatGui.Print(new SeString(payloads));
     }
     
     public void Dispose()
