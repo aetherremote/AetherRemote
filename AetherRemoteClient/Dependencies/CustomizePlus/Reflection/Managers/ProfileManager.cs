@@ -188,7 +188,7 @@ public class ProfileManager
         if (TryGetActiveProfileOnCharacter(characterNameToSearchFor) is not { } profile)
             return string.Empty;
 
-        if (_ipcCharacterProfileContainer.FromFullProfile.Invoke(null, [profile]) is not { } ipcCharacterProfile)
+        if (_ipcCharacterProfileContainer.FromFullProfile.Invoke(null, [profile.Value]) is not { } ipcCharacterProfile)
             return null;
         
         try
