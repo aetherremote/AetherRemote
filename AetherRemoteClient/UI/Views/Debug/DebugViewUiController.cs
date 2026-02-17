@@ -1,43 +1,18 @@
-using System;
-using System.Numerics;
-using AetherRemoteClient.Dependencies.CustomizePlus.Domain;
-using AetherRemoteClient.Dependencies.CustomizePlus.Services;
-using AetherRemoteClient.Dependencies.Honorific.Domain;
-using AetherRemoteClient.Dependencies.Honorific.Services;
-using AetherRemoteClient.Domain;
-using AetherRemoteClient.Hooks;
-using AetherRemoteClient.Managers;
-using Dalamud.Game.ClientState.Objects.Enums;
-using Dalamud.Game.Command;
-using Newtonsoft.Json;
+using System.Threading.Tasks;
 
 namespace AetherRemoteClient.UI.Views.Debug;
 
-public class DebugViewUiController(CustomizePlusService c)
+public class DebugViewUiController
 {
-    public FolderNode<Profile>? _node;
-    
-    public async void Debug()
+    public async Task Debug()
     {
-        try
-        {
-            Plugin.CommandManager.ProcessCommand("/honorific force set title Hello");
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Warning($"{e}");
-        }
+        // Do Something
+        await Task.Delay(1000).ConfigureAwait(false);
     }
     
-    public async void Debug2()
+    public async Task Debug2()
     {
-        try
-        {
-            
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Warning($"{e}");
-        }
+        // Do Something
+        await Task.Delay(1000).ConfigureAwait(false);
     }
 }

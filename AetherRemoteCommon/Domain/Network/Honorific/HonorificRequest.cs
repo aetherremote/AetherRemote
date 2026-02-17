@@ -6,5 +6,5 @@ namespace AetherRemoteCommon.Domain.Network.Honorific;
 [MessagePackObject]
 public record HonorificRequest(
     List<string> TargetFriendCodes,
-    [property: Key(1)] HonorificInfo Honorific
+    [property: Key(1)] HonorificDto Honorific
 ) : ActionRequest(TargetFriendCodes);

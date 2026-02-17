@@ -13,6 +13,6 @@ public record SerializableVector3(
     [property: Key(2)] float Z
 )
 {
-    public static implicit operator Vector3(SerializableVector3 v) => new(v.X, v.Y, v.Z);
-    public static implicit operator SerializableVector3(Vector3 v) => new(v.X, v.Y, v.Z);
+    public static implicit operator Vector3?(SerializableVector3? v) => v is null ? null : new Vector3(v.X, v.Y, v.Z);
+    public static implicit operator SerializableVector3?(Vector3? v) => v is null ? null : new SerializableVector3(v.Value.X, v.Value.Y, v.Value.Z);
 }

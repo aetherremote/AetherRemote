@@ -1,16 +1,14 @@
 using System.Threading.Tasks;
+using AetherRemoteClient.Dependencies.Honorific.Domain;
 using AetherRemoteClient.Dependencies.Honorific.Services;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Utils;
-using AetherRemoteCommon.Dependencies.Honorific.Domain;
 
 namespace AetherRemoteClient.Domain.Attributes;
 
-// ReSharper disable RedundantBoolCompare
-
 public class HonorificAttribute(HonorificService honorific, ushort characterIndex) : ICharacterAttribute
 {
-    private HonorificInfo _honorific = new();
+    private HonorificCustomTitle? _honorific;
     
     public async Task<bool> Store()
     {
@@ -26,6 +24,9 @@ public class HonorificAttribute(HonorificService honorific, ushort characterInde
 
     public async Task<bool> Apply(PermanentTransformationData data)
     {
+        if (_honorific is null)
+            return false;
+        
         if (await honorific.SetCharacterTitle(_honorific).ConfigureAwait(false) is false)
         {
             Plugin.Log.Warning("[HonorificAttribute.Apply] Could not set title");
@@ -33,8 +34,6 @@ public class HonorificAttribute(HonorificService honorific, ushort characterInde
         }
 
         NotificationHelper.Honorific();
-        
-        // TODO: Update PermanentTransformationData with Honorific
         return true;
     }
 }

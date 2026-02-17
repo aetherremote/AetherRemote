@@ -1,11 +1,11 @@
 using System.Numerics;
+using AetherRemoteClient.Dependencies.Honorific.Domain;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Style;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
-using AetherRemoteCommon.Dependencies.Honorific.Domain;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 using Dalamud.Interface.ImGuiSeStringRenderer;
@@ -33,7 +33,7 @@ public class HonorificViewUi(HonorificViewUiController controller, FriendsListCo
             ImGui.SameLine();
 
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Sync, null, "Refresh Titles"))
-                controller.RefreshTitles();
+                _ = controller.RefreshTitles().ConfigureAwait(false);
         });
         
         var headerHeight = ImGui.GetCursorPosY() - begin;
@@ -98,7 +98,7 @@ public class HonorificViewUi(HonorificViewUiController controller, FriendsListCo
                 else
                 {
                     if (ImGui.Button("Send Honorific", size))
-                        controller.SendHonorific();
+                        _ =controller.SendHonorific().ConfigureAwait(false);
                 }
             }
         });
@@ -108,12 +108,12 @@ public class HonorificViewUi(HonorificViewUiController controller, FriendsListCo
         friendsList.Draw();
     }
 
-    private void DrawTitleOption(SeStringDrawParams parameters, HonorificInfo honorific)
+    private void DrawTitleOption(SeStringDrawParams parameters, HonorificCustomTitle honorific)
     {
         var builder = new SeStringBuilder();
 
-        if (honorific.Color is not null) builder.PushColorRgba(new Vector4(honorific.Color, 1f));
-        if (honorific.Glow is not null) builder.PushEdgeColorRgba(new Vector4(honorific.Glow, 1f));
+        if (honorific.Color is not null) builder.PushColorRgba(new Vector4(honorific.Color.Value, 1f));
+        if (honorific.Glow is not null) builder.PushEdgeColorRgba(new Vector4(honorific.Glow.Value, 1f));
         builder.Append(honorific.Title == string.Empty ? "[Blank Title]" : honorific.Title);
         if (honorific.Glow is not null) builder.PopEdgeColor();
         if (honorific.Color is not null) builder.PopColor();

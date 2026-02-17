@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using AetherRemoteClient.Dependencies.Honorific.Domain;
 using AetherRemoteClient.Dependencies.Honorific.Services;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
-using AetherRemoteCommon.Dependencies.Honorific.Domain;
+using AetherRemoteClient.Utils.Extensions;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Honorific;
@@ -23,10 +25,10 @@ public class HonorificViewUiController : IDisposable
     
     public string SearchTerm = string.Empty;
     
-    public HonorificInfo? SelectedTitle;
+    public HonorificCustomTitle? SelectedTitle;
     
-    private Dictionary<string, List<HonorificInfo>> _titles = [];
-    public Dictionary<string, List<HonorificInfo>> FilteredTitles => SearchTerm == string.Empty
+    private Dictionary<string, List<HonorificCustomTitle>> _titles = [];
+    public Dictionary<string, List<HonorificCustomTitle>> FilteredTitles => SearchTerm == string.Empty
         ? _titles.ToDictionary()
         : FilterTitles();
     
@@ -40,33 +42,26 @@ public class HonorificViewUiController : IDisposable
 
         _honorific.IpcReady += OnIpcReady;
         if (_honorific.ApiAvailable)
-            RefreshTitles();
+            _ = RefreshTitles().ConfigureAwait(false);
     }
 
-    public async void RefreshTitles()
+    public async Task RefreshTitles()
     {
-        try
-        {
-            SelectedTitle = null;
+        SelectedTitle = null;
             
-            var titles = await HonorificService.GetCharacterTitleList().ConfigureAwait(false);
+        var titles = await HonorificService.GetCharacterTitleList().ConfigureAwait(false);
 
-            var final = new Dictionary<string, List<HonorificInfo>>();
-            foreach (var (worldId, dictionary) in titles)
-            {
-                if (_world.TryGetWorldById(worldId > ushort.MaxValue ? ushort.MaxValue : (ushort)worldId) is not { } worldName)
-                    continue;
-
-                foreach (var (character, configuration) in dictionary)
-                    final[$"{character} - {worldName}"] = configuration;
-            }
-
-            _titles = final;
-        }
-        catch (Exception)
+        var final = new Dictionary<string, List<HonorificCustomTitle>>();
+        foreach (var (worldId, dictionary) in titles)
         {
-            // Ignored
+            if (_world.TryGetWorldById(worldId > ushort.MaxValue ? ushort.MaxValue : (ushort)worldId) is not { } worldName)
+                continue;
+
+            foreach (var (character, configuration) in dictionary)
+                final[$"{character} - {worldName}"] = configuration;
         }
+
+        _titles = final;
     }
     
     public bool MissingPermissionsForATarget()
@@ -83,28 +78,21 @@ public class HonorificViewUiController : IDisposable
         return false;
     }
 
-    public async void SendHonorific()
+    public async Task SendHonorific()
     {
-        try
-        {
-            if (SelectedTitle == null)
-                return;
+        if (SelectedTitle == null)
+            return;
             
-            _commandLockout.Lock();
+        _commandLockout.Lock();
             
-            var request = new HonorificRequest(_selection.GetSelectedFriendCodes(), SelectedTitle);
-            var response = await _network.InvokeAsync<ActionResponse>(HubMethod.Honorific, request).ConfigureAwait(false);
-            ActionResponseParser.Parse("Honorific", response);
-        }
-        catch (Exception)
-        {
-            // Ignore
-        }
+        var request = new HonorificRequest(_selection.GetSelectedFriendCodes(), SelectedTitle.ToHonorificDto());
+        var response = await _network.InvokeAsync<ActionResponse>(HubMethod.Honorific, request).ConfigureAwait(false);
+        ActionResponseParser.Parse("Honorific", response);
     }
     
     private void OnIpcReady(object? sender, EventArgs e)
     {
-        RefreshTitles();
+        _ = RefreshTitles().ConfigureAwait(false);
     }
 
     public void Dispose()
@@ -117,14 +105,14 @@ public class HonorificViewUiController : IDisposable
     ///     Function to filter out the original dictionary to retrieve only the 
     /// </summary>
     /// <returns></returns>
-    private Dictionary<string, List<HonorificInfo>> FilterTitles()
+    private Dictionary<string, List<HonorificCustomTitle>> FilterTitles()
     {
-        var result = new Dictionary<string, List<HonorificInfo>>();
+        var result = new Dictionary<string, List<HonorificCustomTitle>>();
         foreach (var (character, titles) in _titles)
         {
-            var list = new List<HonorificInfo>();
+            var list = new List<HonorificCustomTitle>();
             foreach (var title in titles)
-                if (title.Title?.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase) ?? false)
+                if (title.Title.Contains(SearchTerm, StringComparison.OrdinalIgnoreCase))
                     list.Add(title);
             
             if (list.Count > 0)

@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 using AetherRemoteClient.Dependencies.Honorific.Domain;
 using AetherRemoteClient.Domain.Interfaces;
-using AetherRemoteCommon.Dependencies.Honorific.Domain;
 using Dalamud.Plugin.Ipc;
 using Newtonsoft.Json;
 
@@ -91,12 +89,12 @@ public class HonorificService : IExternalPlugin
     /// <summary>
     ///     Gets any character's title as JSON
     /// </summary>
-    public async Task<HonorificInfo?> GetCharacterTitle(int characterObjectIndex)
+    public async Task<HonorificCustomTitle?> GetCharacterTitle(int characterObjectIndex)
     {
         try
         {
             var json = await Plugin.RunOnFramework(() => _getCharacterTitle.InvokeFunc(characterObjectIndex)).ConfigureAwait(false);
-            return JsonConvert.DeserializeObject<HonorificInfo>(json);
+            return JsonConvert.DeserializeObject<HonorificCustomTitle>(json);
         }
         catch (Exception e)
         {
@@ -109,7 +107,7 @@ public class HonorificService : IExternalPlugin
     ///     Gets all the characters with titles created.
     /// </summary>
     /// <returns>A dictionary mapping world id to a dictionary mapping character name to a list of titles</returns>
-    public static async Task<Dictionary<uint, Dictionary<string, List<HonorificInfo>>>> GetCharacterTitleList()
+    public static async Task<Dictionary<uint, Dictionary<string, List<HonorificCustomTitle>>>> GetCharacterTitleList()
     {
         // NOTE:    This is probably not an ideal solution. In order to get ALL the honorifics for every character
         //          it makes more sense to load the actual configuration and get the required data, rather than
@@ -130,12 +128,12 @@ public class HonorificService : IExternalPlugin
                 return [];
             
             // Convert the returned object to domain models
-            var results = new Dictionary<uint, Dictionary<string, List<HonorificInfo>>>();
+            var results = new Dictionary<uint, Dictionary<string, List<HonorificCustomTitle>>>();
             foreach (var (world, dictionary) in configuration.WorldCharacterDictionary)
             {
-                var sub = new Dictionary<string, List<HonorificInfo>>();
+                var sub = new Dictionary<string, List<HonorificCustomTitle>>();
                 foreach (var (character, config) in dictionary)
-                    sub[character] = config.CustomTitles.Select(title => title.ToHonorificInfo()).ToList();
+                    sub[character] = config.CustomTitles; 
                 
                 results.Add(world, sub);
             }
@@ -152,7 +150,7 @@ public class HonorificService : IExternalPlugin
     /// <summary>
     ///     Sets a title
     /// </summary>
-    public async Task<bool> SetCharacterTitle(HonorificInfo honorific)
+    public async Task<bool> SetCharacterTitle(HonorificCustomTitle honorific)
     {
         var sb = new StringBuilder();
         sb.Append("/honorific force set ");
@@ -163,7 +161,7 @@ public class HonorificService : IExternalPlugin
         if (honorific.Color is not null)
         {
             sb.Append(" | ");
-            sb.Append(ToHex(honorific.Color));
+            sb.Append(ToHex(honorific.Color.Value));
         }
 
         if (honorific.Glow is not null)
@@ -176,7 +174,7 @@ public class HonorificService : IExternalPlugin
             }
             
             sb.Append(" | ");
-            sb.Append(ToHex(honorific.Glow));
+            sb.Append(ToHex(honorific.Glow.Value));
         }
 
         return await Plugin.RunOnFramework(() => Plugin.CommandManager.ProcessCommand(sb.ToString())).ConfigureAwait(false);
