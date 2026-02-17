@@ -86,7 +86,7 @@ public partial class ChatCommandHandler : IDisposable
                            /ar {Transform} | targets | design name | optional: apply type
                                 - Must use friend codes when targeting
                                 - Design is case sensitive
-                                - Apply type options are customize, equipment, both (blank defaults to both)
+                                - Apply type options are customization, equipment, both (blank defaults to both)
                                 - Example: /ar transform | FriendCode | My Design Name
                                 - Example: /Ar transform | FriendCode | Farming Glam | equipment
                            """
