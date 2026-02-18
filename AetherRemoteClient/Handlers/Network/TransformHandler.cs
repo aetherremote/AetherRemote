@@ -26,7 +26,6 @@ public class TransformHandler : AbstractNetworkHandler, IDisposable
     private const string Operation = "Transform";
     
     // Injected
-    private readonly IdentityService _identity;
     private readonly LogService _log;
     private readonly CharacterTransformationManager _characterTransformation;
     
@@ -39,13 +38,11 @@ public class TransformHandler : AbstractNetworkHandler, IDisposable
     public TransformHandler(
         AccountService account,
         FriendsListService friends,
-        IdentityService identity,
         LogService log, 
         NetworkService network, 
         PauseService pause, 
         CharacterTransformationManager characterTransformation) : base(account, friends, log, pause)
     {
-       _identity = identity;
        _log = log;
        _characterTransformation = characterTransformation;
 
@@ -100,9 +97,6 @@ public class TransformHandler : AbstractNetworkHandler, IDisposable
             _log.Custom($"{friend.NoteOrFriendCode} tried to transform you, but an internal error occured");
             return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
         }
-
-        // Set your new identity
-        _identity.AddAlteration(IdentityAlterationType.Transformation, friend.NoteOrFriendCode);
         
         // Log the success
         _log.Custom($"{friend.NoteOrFriendCode} transformed you");

@@ -14,7 +14,6 @@ namespace AetherRemoteClient.UI.Views.Status;
 
 public class StatusViewUiController(
     NetworkService networkService,
-    IdentityService identityService,
     GlamourerService glamourer,
     CustomizePlusService customizePlus,
     HonorificService honorific,
@@ -47,19 +46,9 @@ public class StatusViewUiController(
     /// <summary>
     ///     Button event to trigger an identity reset
     /// </summary>
-    public async void ResetIdentity()
+    public async Task ResetIdentity()
     {
-        try
-        {
-            if (await glamourer.RevertToAutomation(0).ConfigureAwait(false) is false)
-                return;
-
-            identityService.ClearAlterations();
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Warning($"[StatusViewUiController] Unable to reset identity, {e.Message}");
-        }
+        await glamourer.RevertToAutomation(0).ConfigureAwait(false);
     }
 
     public void ResetHonorific()

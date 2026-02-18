@@ -1,5 +1,4 @@
 using System;
-using AetherRemoteClient.Domain;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.Input;
@@ -16,7 +15,6 @@ namespace AetherRemoteClient.UI.Views.BodySwap;
 /// </summary>
 public class BodySwapViewUiController(
     CommandLockoutService commandLockout,
-    IdentityService identityService,
     NetworkService networkService,
     CharacterTransformationManager characterTransformationManager,
     SelectionManager selectionManager)
@@ -93,9 +91,6 @@ public class BodySwapViewUiController(
             {
                 // Otherwise just body swap into them
                 await characterTransformationManager.ApplyCharacterTransformation(response.CharacterName, request.SwapAttributes);
-                
-                // Mark us as altered
-                identityService.AddAlteration(IdentityAlterationType.BodySwap, "You");
             }
             
             // Process the results

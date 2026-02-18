@@ -100,7 +100,6 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<EmoteService>();
         services.AddSingleton<FriendsListService>();
         services.AddSingleton<GameSettingsService>();
-        services.AddSingleton<IdentityService>();
         services.AddSingleton<LogService>();
         services.AddSingleton<NetworkService>();
         services.AddSingleton<PauseService>();

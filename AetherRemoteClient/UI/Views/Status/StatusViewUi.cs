@@ -17,7 +17,6 @@ public class StatusViewUi(
     StatusViewUiController controller,
     AccountService account,
     PermanentTransformationLockService permanentTransformationLockService,
-    IdentityService identityService,
     TipService tipService,
     HypnosisManager hypnosisManager,
     PossessionManager possessionManager) : IDrawable
@@ -75,12 +74,6 @@ public class StatusViewUi(
                 ]);
         });
         
-        if (permanentTransformationLockService.Locked)
-            RenderPermanentTransformationComponent(windowPadding, windowWidth);
-
-        if (identityService.IsAltered)
-            RenderTransformationComponent(windowPadding, windowWidth);
-
         if (hypnosisManager.IsBeingHypnotized)
             RenderHypnosisComponent(windowPadding, windowWidth);
         
@@ -101,69 +94,6 @@ public class StatusViewUi(
         });
         
         ImGui.EndChild();
-    }
-    
-    private void RenderPermanentTransformationComponent(Vector2 windowPadding, float windowWidth)
-    {
-        SharedUserInterfaces.ContentBox("StatusLock", AetherRemoteColors.PrimaryColor, true, () =>
-        {
-            SharedUserInterfaces.MediumText("Permanently Transformed");
-            ImGui.TextUnformatted($"{identityService.Alteration?.Sender ?? "Unknown"} has locked your appearance");
-        });
-
-        var previousContextBoxSize = ImGui.GetItemRectSize();
-        var endingCursorPosition = ImGui.GetCursorPosY();
-        
-        SharedUserInterfaces.PushBigFont();
-        var cursorPositionStartX = windowWidth - previousContextBoxSize.Y - FourDigitInput.Width - windowPadding.Y * 2;
-        var start = new Vector2(cursorPositionStartX ,endingCursorPosition - previousContextBoxSize.Y - windowPadding.Y * 2);
-        ImGui.SetCursorPos(start);
-        
-        controller.PinInput.Draw();
-        SharedUserInterfaces.PopBigFont();
-        
-        ImGui.SameLine();
-
-        if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Unlock, new Vector2(previousContextBoxSize.Y)))
-            controller.Unlock();
-        
-        ImGui.SetCursorPosY(endingCursorPosition);
-    }
-
-    private void RenderTransformationComponent(Vector2 windowPadding, float windowWidth)
-    {
-        SharedUserInterfaces.ContentBox("StatusTransformation", AetherRemoteColors.PanelColor, true, () =>
-        {
-            SharedUserInterfaces.MediumText("Identity Altered");
-
-            if (identityService.Alteration is not { } alteration)
-            {
-                ImGui.TextUnformatted("An unknown friend altered your identity");
-                return;
-            }
-
-            var type = alteration.Type switch
-            {
-                IdentityAlterationType.Transformation => $"{alteration.Sender} transformed you or your clothing",
-                IdentityAlterationType.Twinning => $"{alteration.Sender} twinned with you",
-                IdentityAlterationType.BodySwap => $"{alteration.Sender} swapped your body",
-                _ => $"{alteration.Sender} altered your identity"
-            };
-            
-            ImGui.TextUnformatted(type);
-        });
-
-        if (permanentTransformationLockService.Locked)
-        {
-            ImGui.BeginDisabled();
-            SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.History, windowPadding, windowWidth);
-            ImGui.EndDisabled();
-        }
-        else
-        {
-            if (SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.History, windowPadding, windowWidth))
-                controller.ResetIdentity();
-        }
     }
 
     private void RenderHypnosisComponent(Vector2 windowPadding, float windowWidth)
