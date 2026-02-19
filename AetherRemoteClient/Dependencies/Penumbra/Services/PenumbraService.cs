@@ -25,7 +25,7 @@ public class PenumbraService : IExternalPlugin
     private readonly GetGameObjectResourcePaths _getGameObjectResourcePaths;
     private readonly GetMetaManipulations _getMetaManipulations;
     private readonly GetCollectionForObject _getCollectionForObject;
-    private readonly RemoveTemporaryMod _removeTemporaryMod;
+    private readonly RemoveTemporaryModAll _removeTemporaryMod;
     private readonly RedrawObject _redrawObject;
     private readonly ApiVersion _version;
     
@@ -47,7 +47,7 @@ public class PenumbraService : IExternalPlugin
         _addTemporaryMod = new AddTemporaryMod(Plugin.PluginInterface);
         _getGameObjectResourcePaths = new GetGameObjectResourcePaths(Plugin.PluginInterface);
         _getMetaManipulations = new GetMetaManipulations(Plugin.PluginInterface);
-        _removeTemporaryMod = new RemoveTemporaryMod(Plugin.PluginInterface);
+        _removeTemporaryMod = new RemoveTemporaryModAll(Plugin.PluginInterface);
         _getCollectionForObject = new GetCollectionForObject(Plugin.PluginInterface);
         _redrawObject = new RedrawObject(Plugin.PluginInterface);
         _version = new ApiVersion(Plugin.PluginInterface);
@@ -221,14 +221,14 @@ public class PenumbraService : IExternalPlugin
     ///     Calls penumbra's RemoveTemporaryMod function
     /// </summary>
     /// <returns><see cref="bool"/> indicating success</returns>
-    public async Task<bool> CallRemoveTemporaryMod(Guid collectionId)
+    public async Task<bool> CallRemoveTemporaryMod()
     {
         if (ApiAvailable)
             return await Plugin.RunOnFramework(() =>
             {
                 try
                 {
-                    var result = _removeTemporaryMod.Invoke(TemporaryModName, collectionId, Priority);
+                    var result = _removeTemporaryMod.Invoke(TemporaryModName, Priority);
                     if (result is PenumbraApiEc.Success or PenumbraApiEc.NothingChanged)
                         return true;
 

@@ -23,6 +23,7 @@ using AetherRemoteClient.UI.Views.Debug;
 using AetherRemoteClient.UI.Views.Emote;
 using AetherRemoteClient.UI.Views.Friends;
 using AetherRemoteClient.UI.Views.History;
+using AetherRemoteClient.UI.Views.Home;
 using AetherRemoteClient.UI.Views.Honorific;
 using AetherRemoteClient.UI.Views.Hypnosis;
 using AetherRemoteClient.UI.Views.Login;
@@ -104,6 +105,7 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<NetworkService>();
         services.AddSingleton<PauseService>();
         services.AddSingleton<PermanentTransformationLockService>();
+        services.AddSingleton<StatusService>();
         services.AddSingleton<TipService>();
         services.AddSingleton<ViewService>();
         services.AddSingleton<WorldService>();
@@ -166,6 +168,7 @@ public sealed class Plugin : IDalamudPlugin
         // Ui - View Controllers
         services.AddSingleton<BodySwapViewUiController>();
         services.AddSingleton<CustomizePlusViewUiController>();
+        services.AddSingleton<HomeViewUiController>();
         services.AddSingleton<DebugViewUiController>();
         services.AddSingleton<EmoteViewUiController>();
         services.AddSingleton<FriendsViewUiController>();
@@ -185,6 +188,7 @@ public sealed class Plugin : IDalamudPlugin
         // Ui - Views
         services.AddSingleton<BodySwapViewUi>();
         services.AddSingleton<CustomizePlusViewUi>();
+        services.AddSingleton<HomeViewUi>();
         services.AddSingleton<DebugViewUi>();
         services.AddSingleton<EmoteViewUi>();
         services.AddSingleton<FriendsViewUi>();

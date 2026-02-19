@@ -65,8 +65,7 @@ public class GlamourerEventHandler : IDisposable
             await _customizePlusService.DeleteTemporaryCustomizeAsync();
             
             // Clean up the temporary mods added to the collection
-            var currentCollection = await _penumbraService.GetCollection().ConfigureAwait(false);
-            await _penumbraService.CallRemoveTemporaryMod(currentCollection).ConfigureAwait(false);
+            await _penumbraService.CallRemoveTemporaryMod().ConfigureAwait(false);
         }
         catch (Exception exception)
         {

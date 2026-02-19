@@ -66,7 +66,7 @@ public class ConnectionManager : IDisposable
         }
 
         // Set the view to the 'home screen'
-        _viewService.CurrentView = View.Status;
+        _viewService.Home();
     }
 
     private Task OnDisconnected()

@@ -14,6 +14,14 @@ public class ViewService
     public View CurrentView { get; set; } = View.Login;
 
     /// <summary>
+    ///     Set the current view to whatever the 'Home' view should be
+    /// </summary>
+    public void Home()
+    {
+        CurrentView = View.Home;
+    }
+
+    /// <summary>
     ///     Resets the view to login if it is not on the settings page or the login page
     /// </summary>
     public void ResetView()

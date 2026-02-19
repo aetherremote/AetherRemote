@@ -30,6 +30,7 @@ public class NavigationBarComponentUi(NetworkService networkService, ViewService
             if (networkService.Connection.State is HubConnectionState.Connected)
             {
                 ImGui.TextUnformatted("General");
+                NavBarButton(FontAwesomeIcon.HouseChimney, "Home", View.Home, size, offset);
                 NavBarButton(FontAwesomeIcon.User, "Status", View.Status, size, offset);
                 NavBarButton(FontAwesomeIcon.UserFriends, "Friends", View.Friends, size, offset);
                 NavBarButton(FontAwesomeIcon.Pause, "Pause", View.Pause, size, offset);

@@ -156,7 +156,7 @@ public class CharacterTransformationManager(
             return null;
         
         // Remove Existing Temp Mods
-        if (await penumbraService.CallRemoveTemporaryMod(collection).ConfigureAwait(false) is false)
+        if (await penumbraService.CallRemoveTemporaryMod().ConfigureAwait(false) is false)
             return null;
         
         // Return the collection
