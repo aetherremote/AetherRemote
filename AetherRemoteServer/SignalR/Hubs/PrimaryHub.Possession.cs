@@ -16,7 +16,7 @@ public partial class PrimaryHub
         logger.LogInformation("{Request}", request);
         var friendCode = FriendCode;
         LogWithBehavior($"[PossessionBegin] Sender = {friendCode}, Target = {request.TargetFriendCode}", LogMode.Console);
-        return await possessionBeginHandler.Handle(friendCode, request, Clients);
+        return await requestHandler.HandlePossessionBegin(friendCode, request, Clients);
     }
     
     [HubMethodName(HubMethod.Possession.Camera)]
@@ -25,7 +25,7 @@ public partial class PrimaryHub
         // logger.LogInformation("{Request}", request);
         var friendCode = FriendCode;
         // LogWithBehavior($"[PossessionCameraRequest] Sender = {friendCode}", LogMode.Console);
-        return await possessionCameraHandler.Handle(friendCode, request, Clients);
+        return await requestHandler.HandlePossessionCamera(friendCode, request, Clients);
     }
     
     [HubMethodName(HubMethod.Possession.Movement)]
@@ -34,7 +34,7 @@ public partial class PrimaryHub
         // logger.LogInformation("{Request}", request);
         var friendCode = FriendCode;
         // LogWithBehavior($"[PossessionMovementRequest] Sender = {friendCode}", LogMode.Console);
-        return await possessionMovementHandler.Handle(friendCode, request, Clients);
+        return await requestHandler.HandlePossessionMovement(friendCode, request, Clients);
     }
     
     [HubMethodName(HubMethod.Possession.End)]
@@ -43,6 +43,6 @@ public partial class PrimaryHub
         logger.LogInformation("{Request}", request);
         var friendCode = FriendCode;
         LogWithBehavior($"[PossessionEndRequest] Sender = {friendCode}", LogMode.Console);
-        return await possessionEndHandler.Handle(friendCode, Clients);
+        return await requestHandler.HandlePossessionEnd(friendCode, Clients);
     }
 }

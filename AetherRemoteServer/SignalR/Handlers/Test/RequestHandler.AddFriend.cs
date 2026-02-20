@@ -4,24 +4,22 @@ using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.AddFriend;
 using AetherRemoteCommon.Domain.Network.SyncOnlineStatus;
-using AetherRemoteServer.Services;
-using AetherRemoteServer.Services.Database;
 using Microsoft.AspNetCore.SignalR;
 
-namespace AetherRemoteServer.SignalR.Handlers;
+namespace AetherRemoteServer.SignalR.Handlers.Test;
 
 /// <summary>
 ///     Handles the logic for fulfilling a <see cref="AddFriendRequest"/>
 /// </summary>
-public class AddFriendHandler(DatabaseService database, PresenceService presenceService, ILogger<AddFriendHandler> logger)
+public partial class RequestHandler
 {
     /// <summary>
     ///     Handles the request
     /// </summary>
-    public async Task<AddFriendResponse> Handle(string friendCode, AddFriendRequest request, IHubCallerClients clients)
+    public async Task<AddFriendResponse> HandleAddFriend(string friendCode, AddFriendRequest request, IHubCallerClients clients)
     {
         // Create the permissions in the database
-        var result = await database.CreatePermissions(friendCode, request.TargetFriendCode);
+        var result = await _databaseService.CreatePermissions(friendCode, request.TargetFriendCode);
         
         // Map the result
         var code = result switch
@@ -42,7 +40,7 @@ public class AddFriendHandler(DatabaseService database, PresenceService presence
         }
 
         // Only update if they are online
-        if (presenceService.TryGet(request.TargetFriendCode) is not { } target)
+        if (_presenceService.TryGet(request.TargetFriendCode) is not { } target)
             return new AddFriendResponse(code, FriendOnlineStatus.Offline);
         
         try
@@ -53,7 +51,7 @@ public class AddFriendHandler(DatabaseService database, PresenceService presence
         }
         catch (Exception e)
         {
-            logger.LogError("Syncing online status {Sender} -> {Target} failed, {Error}", friendCode, request.TargetFriendCode, e);
+            _logger.LogError("Syncing online status {Sender} -> {Target} failed, {Error}", friendCode, request.TargetFriendCode, e);
         }
         
         return new AddFriendResponse(code, FriendOnlineStatus.Online);

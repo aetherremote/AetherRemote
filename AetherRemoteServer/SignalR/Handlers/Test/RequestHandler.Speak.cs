@@ -5,41 +5,42 @@ using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Speak;
 using AetherRemoteCommon.Util;
-using AetherRemoteServer.Managers;
-using AetherRemoteServer.Services;
 using AetherRemoteServer.Utilities;
 using Microsoft.AspNetCore.SignalR;
 
-namespace AetherRemoteServer.SignalR.Handlers;
+namespace AetherRemoteServer.SignalR.Handlers.Test;
 
-/// <summary>
-///     Handles the logic for fulfilling a <see cref="SpeakRequest"/>
-/// </summary>
-public class SpeakHandler(PresenceService presenceService, ForwardedRequestManager forwardedRequestManager, ILogger<SpeakHandler> logger)
+public partial class RequestHandler
 {
     /// <summary>
-    ///     Handles the request
+    ///     Handles the logic for fulfilling a <see cref="SpeakRequest"/>
     /// </summary>
-    public async Task<ActionResponse> Handle(string senderFriendCode, SpeakRequest request, IHubCallerClients clients)
+    public async Task<ActionResponse> HandleSpeak(string senderFriendCode, SpeakRequest request, IHubCallerClients clients)
     {
         if (ValidateSpeakRequest(senderFriendCode, request) is { } error)
         {
-            logger.LogWarning("{Sender} sent invalid speak request {Error}", senderFriendCode, error);
+            _logger.LogWarning("{Sender} sent invalid speak request {Error}", senderFriendCode, error);
             return new ActionResponse(error, []);
         }
         
         var speak = request.ChatChannel.ToSpeakPermissions(request.Extra);
         if (speak is SpeakPermissions.None)
-            logger.LogWarning("{Sender} tried to request with empty permissions {Request}", senderFriendCode, request);
+            _logger.LogWarning("{Sender} tried to request with empty permissions {Request}", senderFriendCode, request);
         
         var permissions = new ResolvedPermissions(PrimaryPermissions.None, speak, ElevatedPermissions.None);
         var command = new SpeakCommand(senderFriendCode, request.Message, request.ChatChannel, request.Extra);
-        return await forwardedRequestManager.CheckPermissionsAndSend(senderFriendCode, request.TargetFriendCodes, HubMethod.Speak, permissions, command, clients);
+        return await _forwardedRequestManager.CheckPermissionsAndSend(
+            senderFriendCode, 
+            request.TargetFriendCodes, 
+            HubMethod.Speak, 
+            permissions, 
+            command, 
+            clients);
     }
 
     private ActionResponseEc? ValidateSpeakRequest(string senderFriendCode, SpeakRequest request)
     {
-        if (presenceService.IsUserExceedingCooldown(senderFriendCode))
+        if (_presenceService.IsUserExceedingCooldown(senderFriendCode))
             return ActionResponseEc.TooManyRequests;
         
         if (request.TargetFriendCodes.Count > Constraints.MaximumTargetsForInGameOperations)

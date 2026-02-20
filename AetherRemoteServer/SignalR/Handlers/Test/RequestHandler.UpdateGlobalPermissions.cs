@@ -3,21 +3,19 @@ using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.SyncPermissions;
 using AetherRemoteCommon.Domain.Network.UpdateGlobalPermissions;
 using AetherRemoteCommon.Util;
-using AetherRemoteServer.Services;
-using AetherRemoteServer.Services.Database;
 using Microsoft.AspNetCore.SignalR;
 
-namespace AetherRemoteServer.SignalR.Handlers;
+namespace AetherRemoteServer.SignalR.Handlers.Test;
 
-public class UpdateGlobalPermissionsHandler(DatabaseService database, PresenceService presences, ILogger<UpdateGlobalPermissionsHandler> logger)
+public partial class RequestHandler
 {
-    public async Task<ActionResponseEc> Handle(string friendCode, UpdateGlobalPermissionsRequest request, IHubCallerClients clients)
+    public async Task<ActionResponseEc> HandleUpdateGlobalPermissions(string friendCode, UpdateGlobalPermissionsRequest request, IHubCallerClients clients)
     {
-        var databaseResultEc = await database.UpdateGlobalPermissions(friendCode, request.Permissions);
+        var databaseResultEc = await _databaseService.UpdateGlobalPermissions(friendCode, request.Permissions);
         if (databaseResultEc == DatabaseResultEc.Unknown)
             return ActionResponseEc.Unknown;
         
-        var permissions = await database.GetAllPermissions(friendCode);
+        var permissions = await _databaseService.GetAllPermissions(friendCode);
         foreach (var permission in permissions)
         {
             // Ignore pending friends
@@ -25,7 +23,7 @@ public class UpdateGlobalPermissionsHandler(DatabaseService database, PresenceSe
                 continue;
             
             // Only evaluate online friends
-            if (presences.TryGet(permission.TargetFriendCode) is not { } target)
+            if (_presenceService.TryGet(permission.TargetFriendCode) is not { } target)
                 continue;
             
             try
@@ -36,7 +34,7 @@ public class UpdateGlobalPermissionsHandler(DatabaseService database, PresenceSe
             }
             catch (Exception e)
             {
-                logger.LogError("Syncing online status {Sender} -> {Target} failed, {Error}", friendCode, permission.TargetFriendCode, e);
+                _logger.LogError("Syncing online status {Sender} -> {Target} failed, {Error}", friendCode, permission.TargetFriendCode, e);
             }
         }
 

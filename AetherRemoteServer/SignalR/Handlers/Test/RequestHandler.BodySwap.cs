@@ -5,25 +5,23 @@ using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.BodySwap;
 using AetherRemoteCommon.Util;
 using AetherRemoteServer.Managers;
-using AetherRemoteServer.Services;
-using AetherRemoteServer.Services.Database;
 using Microsoft.AspNetCore.SignalR;
 
-namespace AetherRemoteServer.SignalR.Handlers;
+namespace AetherRemoteServer.SignalR.Handlers.Test;
 
 /// <summary>
 ///     Handles the logic for fulfilling a <see cref="BodySwapRequest"/>
 /// </summary>
-public class BodySwapHandler(DatabaseService database, PresenceService presenceService, ILogger<BodySwapHandler> logger)
+public partial class RequestHandler
 {
     /// <summary>
     ///     Handles the request
     /// </summary>
-    public async Task<BodySwapResponse> Handle(string senderFriendCode, BodySwapRequest request, IHubCallerClients clients)
+    public async Task<BodySwapResponse> HandleBodySwap(string senderFriendCode, BodySwapRequest request, IHubCallerClients clients)
     {
         if (ValidateBodySwapRequest(senderFriendCode, request) is { } error)
         {
-            logger.LogWarning("{Sender} sent invalid body swap request {Error}", senderFriendCode, error);
+            _logger.LogWarning("{Sender} sent invalid body swap request {Error}", senderFriendCode, error);
             return new BodySwapResponse(error, [], null, null);
         }
         
@@ -40,15 +38,15 @@ public class BodySwapHandler(DatabaseService database, PresenceService presenceS
         var characters = new List<Character>();
         foreach (var targetFriendCode in request.TargetFriendCodes)
         {
-            if (presenceService.TryGet(targetFriendCode) is not { } target)
+            if (_presenceService.TryGet(targetFriendCode) is not { } target)
                 return new BodySwapResponse(ActionResponseEc.TargetOffline, [], null, null);
 
             // Get the target's permissions for the sender
-            if (await database.GetSinglePermissions(targetFriendCode, senderFriendCode) is not { } targetPermissions)
+            if (await _databaseService.GetSinglePermissions(targetFriendCode, senderFriendCode) is not { } targetPermissions)
                 return new BodySwapResponse(ActionResponseEc.TargetBodySwapIsNotFriends, [], null, null);
 
             // Get and resolve their permissions
-            var global = await database.GetGlobalPermissions(targetFriendCode);
+            var global = await _databaseService.GetGlobalPermissions(targetFriendCode);
             var resolved = PermissionResolver.Resolve(global, targetPermissions);
             
             // Body swap will only every make use of primary and elevated permissions
@@ -76,7 +74,7 @@ public class BodySwapHandler(DatabaseService database, PresenceService presenceS
             var forwarded = new BodySwapCommand(senderFriendCode, character.Name, character.World, request.SwapAttributes, request.LockCode);
 
             // Double-check the target is still online
-            if (presenceService.TryGet(request.TargetFriendCodes[i]) is not { } connectionClient)
+            if (_presenceService.TryGet(request.TargetFriendCodes[i]) is not { } connectionClient)
                 return new BodySwapResponse(ActionResponseEc.TargetOffline, [], null, null);
             
             try
@@ -86,7 +84,7 @@ public class BodySwapHandler(DatabaseService database, PresenceService presenceS
             }
             catch (Exception e)
             {
-                logger.LogWarning("{Issuer} send action to {Target} failed, {Error}", senderFriendCode, request.TargetFriendCodes[i], e.Message);
+                _logger.LogWarning("{Issuer} send action to {Target} failed, {Error}", senderFriendCode, request.TargetFriendCodes[i], e.Message);
                 pending[i] = Task.FromResult(ActionResultBuilder.Fail(ActionResultEc.Unknown));
             }
         }
@@ -105,7 +103,7 @@ public class BodySwapHandler(DatabaseService database, PresenceService presenceS
 
     private ActionResponseEc? ValidateBodySwapRequest(string senderFriendCode, BodySwapRequest request)
     {
-        if (presenceService.IsUserExceedingCooldown(senderFriendCode))
+        if (_presenceService.IsUserExceedingCooldown(senderFriendCode))
             return ActionResponseEc.TooManyRequests;
         
         // This function does not function if the sender includes themselves in the target

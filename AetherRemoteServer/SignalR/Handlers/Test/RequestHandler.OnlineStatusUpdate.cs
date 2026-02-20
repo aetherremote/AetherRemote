@@ -5,36 +5,22 @@ using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Possession.End;
 using AetherRemoteCommon.Domain.Network.SyncOnlineStatus;
 using AetherRemoteCommon.Util;
-using AetherRemoteServer.Managers;
-using AetherRemoteServer.Services;
-using AetherRemoteServer.Services.Database;
 using Microsoft.AspNetCore.SignalR;
 
-namespace AetherRemoteServer.SignalR.Handlers;
+namespace AetherRemoteServer.SignalR.Handlers.Test;
 
-/// <summary>
-///     Processes clients connecting and disconnecting from the server
-/// </summary>
-public class OnlineStatusUpdateHandler(
-    DatabaseService database, 
-    PresenceService presences, 
-    ForwardedRequestManager forwarder,
-    PossessionManager possessions,
-    ILogger<OnlineStatusUpdateHandler> logger)
+public partial class RequestHandler
 {
-    private const string Method = HubMethod.Possession.End;
-    private static readonly ResolvedPermissions Required = new(PrimaryPermissions.None, SpeakPermissions.None, ElevatedPermissions.Possession);
-    
     /// <summary>
     ///     Handle the event, removing or adding from the current client list, and updating all the user's friends who are online
     /// </summary>
-    public async Task Handle(string friendCode, bool online, IHubCallerClients clients)
+    public async Task HandleOnlineStatusUpdate(string friendCode, bool online, IHubCallerClients clients)
     {
         if (online is false)
             await HandleOffline(friendCode, clients);
         
-        var global = await database.GetGlobalPermissions(friendCode);
-        var permissions = await database.GetAllPermissions(friendCode);
+        var global = await _databaseService.GetGlobalPermissions(friendCode);
+        var permissions = await _databaseService.GetAllPermissions(friendCode);
         foreach (var permission in permissions)
         {
             // Ignore pending friends
@@ -42,7 +28,7 @@ public class OnlineStatusUpdateHandler(
                 continue;
             
             // Only evaluate online friends
-            if (presences.TryGet(permission.TargetFriendCode) is not { } target)
+            if (_presenceService.TryGet(permission.TargetFriendCode) is not { } target)
                 continue;
 
             try
@@ -61,22 +47,28 @@ public class OnlineStatusUpdateHandler(
             }
             catch (Exception e)
             {
-                logger.LogError("Syncing online status {Sender} -> {Target} failed, {Error}", friendCode, permission.TargetFriendCode, e);
+                _logger.LogError("Syncing online status {Sender} -> {Target} failed, {Error}", friendCode, permission.TargetFriendCode, e);
             }
         }
     }
 
     private async Task HandleOffline(string friendCode, IHubCallerClients clients)
     {
-        presences.Remove(friendCode);
+        _presenceService.Remove(friendCode);
 
-        if (possessions.TryGetSession(friendCode) is not { } session)
+        if (_possessionManager.TryGetSession(friendCode) is not { } session)
             return;
         
-        possessions.TryRemoveSession(session);
+        _possessionManager.TryRemoveSession(session);
         
         var friendCodeToNotify = session.GhostFriendCode == friendCode ? session.HostFriendCode : session.GhostFriendCode;
         var command = new PossessionEndCommand(friendCode);
-        await forwarder.CheckPossessionAndInvoke(friendCode, friendCodeToNotify, Method, Required, command, clients);
+        await _forwardedRequestManager.CheckPossessionAndInvoke(
+            friendCode, 
+            friendCodeToNotify, 
+            HubMethod.Possession.End, 
+            new ResolvedPermissions(PrimaryPermissions.None, SpeakPermissions.None, ElevatedPermissions.Possession), 
+            command, 
+            clients);
     }
 }

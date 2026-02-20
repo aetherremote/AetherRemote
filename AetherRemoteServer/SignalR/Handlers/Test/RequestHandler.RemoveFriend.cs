@@ -2,23 +2,18 @@ using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.RemoveFriend;
 using AetherRemoteCommon.Domain.Network.SyncOnlineStatus;
-using AetherRemoteServer.Services;
-using AetherRemoteServer.Services.Database;
 using Microsoft.AspNetCore.SignalR;
 
-namespace AetherRemoteServer.SignalR.Handlers;
+namespace AetherRemoteServer.SignalR.Handlers.Test;
 
-/// <summary>
-///     Handles the logic for fulfilling a <see cref="RemoveFriendRequest"/>
-/// </summary>
-public class RemoveFriendHandler(DatabaseService databaseService, PresenceService presenceService, ILogger<RemoveFriendHandler> logger)
+public partial class RequestHandler
 {
     /// <summary>
-    ///     Handles the request
+    ///     Handles the logic for fulfilling a <see cref="RemoveFriendRequest"/>
     /// </summary>
-    public async Task<RemoveFriendResponse> Handle(string senderFriendCode, RemoveFriendRequest request, IHubCallerClients clients)
+    public async Task<RemoveFriendResponse> HandleRemoveFriend(string senderFriendCode, RemoveFriendRequest request, IHubCallerClients clients)
     {
-        var result = await databaseService.DeletePermissions(senderFriendCode, request.TargetFriendCode) switch
+        var result = await _databaseService.DeletePermissions(senderFriendCode, request.TargetFriendCode) switch
         {
             DatabaseResultEc.NoOp => RemoveFriendEc.NotFriends,
             DatabaseResultEc.Success => RemoveFriendEc.Success,
@@ -30,11 +25,11 @@ public class RemoveFriendHandler(DatabaseService databaseService, PresenceServic
             return new RemoveFriendResponse(result);
         
         // If the target isn't online
-        if (presenceService.TryGet(request.TargetFriendCode) is not { } friend)
+        if (_presenceService.TryGet(request.TargetFriendCode) is not { } friend)
             return new RemoveFriendResponse(result);
         
         // If the target is online, but they don't have us added
-        if (await databaseService.GetSinglePermissions(request.TargetFriendCode, senderFriendCode) is null)
+        if (await _databaseService.GetSinglePermissions(request.TargetFriendCode, senderFriendCode) is null)
             return new RemoveFriendResponse(result);
         
         try
@@ -45,7 +40,7 @@ public class RemoveFriendHandler(DatabaseService databaseService, PresenceServic
         }
         catch (Exception e)
         {
-            logger.LogError("Syncing online status {Sender} -> {Target} failed, {Error}", senderFriendCode, request.TargetFriendCode, e);
+            _logger.LogError("Syncing online status {Sender} -> {Target} failed, {Error}", senderFriendCode, request.TargetFriendCode, e);
         }
         
         // Return always

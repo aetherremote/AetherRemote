@@ -4,39 +4,37 @@ using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Hypnosis;
-using AetherRemoteServer.Managers;
-using AetherRemoteServer.Services;
 using AetherRemoteServer.Utilities;
 using Microsoft.AspNetCore.SignalR;
 
-namespace AetherRemoteServer.SignalR.Handlers;
+namespace AetherRemoteServer.SignalR.Handlers.Test;
 
-/// <summary>
-///     Handles the logic for fulling a <see cref="HypnosisRequest"/>
-/// </summary>
-public class HypnosisHandler(PresenceService presenceService, ForwardedRequestManager forwardedRequestManager, ILogger<HypnosisHandler> logger)
+public partial class RequestHandler
 {
-    private const string Method = HubMethod.Hypnosis;
-    private static readonly ResolvedPermissions Permissions = new(PrimaryPermissions.Hypnosis, SpeakPermissions.None, ElevatedPermissions.None);
-
     /// <summary>
-    ///     Handles the request
+    ///     Handles the logic for fulling a <see cref="HypnosisRequest"/>
     /// </summary>
-    public async Task<ActionResponse> Handle(string senderFriendCode, HypnosisRequest request, IHubCallerClients clients)
+    public async Task<ActionResponse> HandleHypnosis(string senderFriendCode, HypnosisRequest request, IHubCallerClients clients)
     {
         if (ValidateHypnosisRequest(senderFriendCode, request) is { } error)
         {
-            logger.LogWarning("{Sender} sent invalid hypnosis request {Error}", senderFriendCode, error);
+            _logger.LogWarning("{Sender} sent invalid hypnosis request {Error}", senderFriendCode, error);
             return new ActionResponse(error, []);
         }
 
         var command = new HypnosisCommand(senderFriendCode, request.Data);
-        return await forwardedRequestManager.CheckPermissionsAndSend(senderFriendCode, request.TargetFriendCodes, Method, Permissions, command, clients);
+        return await _forwardedRequestManager.CheckPermissionsAndSend(
+            senderFriendCode, 
+            request.TargetFriendCodes, 
+            HubMethod.Hypnosis, 
+            new ResolvedPermissions(PrimaryPermissions.Hypnosis, SpeakPermissions.None, ElevatedPermissions.None), 
+            command, 
+            clients);
     }
 
     private ActionResponseEc? ValidateHypnosisRequest(string senderFriendCode, HypnosisRequest request)
     {
-        if (presenceService.IsUserExceedingCooldown(senderFriendCode))
+        if (_presenceService.IsUserExceedingCooldown(senderFriendCode))
             return ActionResponseEc.TooManyRequests;
         
         if (VerificationUtilities.ValidFriendCodes(request.TargetFriendCodes) is false)

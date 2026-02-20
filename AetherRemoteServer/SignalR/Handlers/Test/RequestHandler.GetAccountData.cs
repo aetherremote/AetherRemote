@@ -2,32 +2,27 @@ using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network.GetAccountData;
 using AetherRemoteServer.Domain;
-using AetherRemoteServer.Services;
-using AetherRemoteServer.Services.Database;
 
-namespace AetherRemoteServer.SignalR.Handlers;
+namespace AetherRemoteServer.SignalR.Handlers.Test;
 
-/// <summary>
-///     Handles the logic for fulfilling a <see cref="GetAccountDataRequest"/>
-/// </summary>
-public class GetAccountDataHandler(DatabaseService database, PresenceService presenceService)
+public partial class RequestHandler
 {
     /// <summary>
-    ///     Handles the request
+    ///     Handles the logic for fulfilling a <see cref="GetAccountDataRequest"/>
     /// </summary>
-    public async Task<GetAccountDataResponse> Handle(string friendCode, string connectionId, GetAccountDataRequest request)
+    public async Task<GetAccountDataResponse> HandleGetAccountData(string friendCode, string connectionId, GetAccountDataRequest request)
     {
         var presence = new Presence(connectionId, request.CharacterName, request.CharacterWorld);
-        presenceService.Add(friendCode, presence);
+        _presenceService.Add(friendCode, presence);
         
         var results = new List<FriendDto>();
-        var global = await database.GetGlobalPermissions(friendCode);
-        var permissions = await database.GetAllPermissions(friendCode);
+        var global = await _databaseService.GetGlobalPermissions(friendCode);
+        var permissions = await _databaseService.GetAllPermissions(friendCode);
         foreach (var permission in permissions)
         {
             var online = permission.PermissionsGrantedBy is null
                 ? FriendOnlineStatus.Pending
-                : presenceService.TryGet(permission.TargetFriendCode) is null
+                : _presenceService.TryGet(permission.TargetFriendCode) is null
                     ? FriendOnlineStatus.Offline
                     : FriendOnlineStatus.Online;
             

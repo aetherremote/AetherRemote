@@ -1,10 +1,9 @@
-using System.Net;
 using System.Text;
 using AetherRemoteServer.Domain;
 using AetherRemoteServer.Managers;
 using AetherRemoteServer.Services;
 using AetherRemoteServer.Services.Database;
-using AetherRemoteServer.SignalR.Handlers;
+using AetherRemoteServer.SignalR.Handlers.Test;
 using AetherRemoteServer.SignalR.Hubs;
 using MessagePack;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -47,26 +46,7 @@ public class Program
         builder.Services.AddSingleton<PossessionManager>();
 
         // Handles
-        builder.Services.AddSingleton<OnlineStatusUpdateHandler>();
-        builder.Services.AddSingleton<AddFriendHandler>();
-        builder.Services.AddSingleton<BodySwapHandler>();
-        builder.Services.AddSingleton<CustomizePlusHandler>();
-        builder.Services.AddSingleton<EmoteHandler>();
-        builder.Services.AddSingleton<GetAccountDataHandler>();
-        builder.Services.AddSingleton<HonorificHandler>();
-        builder.Services.AddSingleton<HypnosisHandler>();
-        builder.Services.AddSingleton<HypnosisStopHandler>();
-        builder.Services.AddSingleton<MoodlesHandler>();
-        builder.Services.AddSingleton<RemoveFriendHandler>();
-        builder.Services.AddSingleton<SpeakHandler>();
-        builder.Services.AddSingleton<TransformHandler>();
-        builder.Services.AddSingleton<TwinningHandler>();
-        builder.Services.AddSingleton<UpdateFriendHandler>();
-        builder.Services.AddSingleton<UpdateGlobalPermissionsHandler>();
-        builder.Services.AddSingleton<PossessionBeginHandler>();
-        builder.Services.AddSingleton<PossessionCameraHandler>();
-        builder.Services.AddSingleton<PossessionEndHandler>();
-        builder.Services.AddSingleton<PossessionMovementHandler>();
+        builder.Services.AddSingleton<RequestHandler>();
 
 #if DEBUG
         builder.WebHost.UseUrls("https://localhost:5006");

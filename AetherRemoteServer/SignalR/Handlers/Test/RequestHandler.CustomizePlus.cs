@@ -3,36 +3,37 @@ using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Customize;
-using AetherRemoteServer.Managers;
-using AetherRemoteServer.Services;
 using AetherRemoteServer.Utilities;
 using Microsoft.AspNetCore.SignalR;
 
-namespace AetherRemoteServer.SignalR.Handlers;
+namespace AetherRemoteServer.SignalR.Handlers.Test;
 
-public class CustomizePlusHandler(PresenceService presenceService, ForwardedRequestManager forwardedRequestManager, ILogger<CustomizePlusHandler> logger)
+public partial class RequestHandler
 {
-    private const string Method = HubMethod.CustomizePlus;
-    private static readonly ResolvedPermissions Permissions = new(PrimaryPermissions.CustomizePlus, SpeakPermissions.None, ElevatedPermissions.None);
-
     /// <summary>
-    ///     Handles the request
+    ///     Handles the logic for fulfilling a <see cref="CustomizeRequest"/>
     /// </summary>
-    public async Task<ActionResponse> Handle(string senderFriendCode, CustomizeRequest request, IHubCallerClients clients)
+    public async Task<ActionResponse> HandleCustomizePlus(string senderFriendCode, CustomizeRequest request, IHubCallerClients clients)
     {
         if (ValidateCustomizeRequest(senderFriendCode, request) is { } error)
         {
-            logger.LogWarning("{Sender} sent invalid customize+ request {Error}", senderFriendCode, error);
+            _logger.LogWarning("{Sender} sent invalid customize+ request {Error}", senderFriendCode, error);
             return new ActionResponse(error, []);
         }
         
         var forwardedRequest = new CustomizeCommand(senderFriendCode, request.JsonBoneDataBytes, request.Additive);
-        return await forwardedRequestManager.CheckPermissionsAndSend(senderFriendCode, request.TargetFriendCodes, Method, Permissions, forwardedRequest, clients);
+        return await _forwardedRequestManager.CheckPermissionsAndSend(
+            senderFriendCode, 
+            request.TargetFriendCodes, 
+            HubMethod.CustomizePlus, 
+            new ResolvedPermissions(PrimaryPermissions.CustomizePlus, SpeakPermissions.None, ElevatedPermissions.None), 
+            forwardedRequest, 
+            clients);
     }
     
     private ActionResponseEc? ValidateCustomizeRequest(string senderFriendCode, CustomizeRequest request)
     {
-        if (presenceService.IsUserExceedingCooldown(senderFriendCode))
+        if (_presenceService.IsUserExceedingCooldown(senderFriendCode))
             return ActionResponseEc.TooManyRequests;
         
         if (VerificationUtilities.ValidFriendCodes(request.TargetFriendCodes) is false)

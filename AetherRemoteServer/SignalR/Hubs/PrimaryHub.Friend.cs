@@ -13,7 +13,7 @@ public partial class PrimaryHub
     {
         var friendCode = FriendCode;
         LogWithBehavior($"[AddFriendRequest] Sender = {friendCode}, Target = {request.TargetFriendCode}", LogMode.Both);
-        return await addFriendHandler.Handle(friendCode, request, Clients);
+        return await requestHandler.HandleAddFriend(friendCode, request, Clients);
     }
     
     [HubMethodName(HubMethod.RemoveFriend)]
@@ -21,7 +21,7 @@ public partial class PrimaryHub
     {
         var friendCode = FriendCode;
         LogWithBehavior($"[RemoveFriendRequest] Sender = {friendCode}, Target = {request.TargetFriendCode}", LogMode.Both);
-        return await removeFriendHandler.Handle(friendCode, request, Clients);
+        return await requestHandler.HandleRemoveFriend(friendCode, request, Clients);
     }
     
     [HubMethodName(HubMethod.UpdateFriend)]
@@ -29,6 +29,6 @@ public partial class PrimaryHub
     {
         var friendCode = FriendCode;
         LogWithBehavior($"[UpdateFriendRequest] Sender = {friendCode}, Target = {request.TargetFriendCode}, Permissions = {request.Permissions}", LogMode.Disk);
-        return await updateFriendHandler.Handle(friendCode, request, Clients);
+        return await requestHandler.HandleUpdateFriend(friendCode, request, Clients);
     }
 }

@@ -12,12 +12,12 @@ public partial class PrimaryHub
     {
         var friendCode = FriendCode;
         LogWithBehavior($"[SpeakRequest] Sender = {friendCode}, Targets = {string.Join(", ", request.TargetFriendCodes)}, Message = {request.Message}", LogMode.Both);
-        return await speakHandler.Handle(friendCode, request, Clients);
+        return await requestHandler.HandleSpeak(friendCode, request, Clients);
     }
     
     [HubMethodName(HubMethod.Emote)]
     public async Task<ActionResponse> Emote(EmoteRequest request)
     {
-        return await emoteHandler.Handle(FriendCode, request, Clients);
+        return await requestHandler.HandleEmote(FriendCode, request, Clients);
     }
 }

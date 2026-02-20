@@ -13,7 +13,7 @@ public partial class PrimaryHub
     [HubMethodName(HubMethod.CustomizePlus)]
     public async Task<ActionResponse> CustomizePlus(CustomizeRequest request)
     {
-        return await customizePlusHandler.Handle(FriendCode, request, Clients);
+        return await requestHandler.HandleCustomizePlus(FriendCode, request, Clients);
     }
     
     [HubMethodName(HubMethod.Honorific)]
@@ -21,7 +21,7 @@ public partial class PrimaryHub
     {
         var friendCode = FriendCode;
         LogWithBehavior($"[HonorificRequest] Sender = {friendCode}, Targets = {string.Join(", ", request.TargetFriendCodes)}, Honorific = {request.Honorific}", LogMode.Console);
-        return await honorificHandler.Handle(friendCode, request, Clients);
+        return await requestHandler.HandleHonorific(friendCode, request, Clients);
     }
     
     [HubMethodName(HubMethod.Moodles)]
@@ -31,12 +31,12 @@ public partial class PrimaryHub
         
         var friendCode = FriendCode;
         LogWithBehavior($"[MoodlesRequest] Sender = {friendCode}, Targets = {string.Join(", ", request.TargetFriendCodes)}, Moodle = {request.Info.Title}", LogMode.Console);
-        return await moodlesHandler.Handle(friendCode, request, Clients);
+        return await requestHandler.HandleMoodles(friendCode, request, Clients);
     }
     
     [HubMethodName(HubMethod.UpdateGlobalPermissions)]
     public async Task<ActionResponseEc> UpdateGlobalPermissions(UpdateGlobalPermissionsRequest request)
     {
-        return await updateGlobalPermissionsHandler.Handle(FriendCode, request, Clients);
+        return await requestHandler.HandleUpdateGlobalPermissions(FriendCode, request, Clients);
     }
 }

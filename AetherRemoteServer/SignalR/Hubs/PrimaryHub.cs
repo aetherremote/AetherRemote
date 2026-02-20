@@ -1,6 +1,6 @@
 using AetherRemoteServer.Domain;
 using AetherRemoteServer.Services;
-using AetherRemoteServer.SignalR.Handlers;
+using AetherRemoteServer.SignalR.Handlers.Test;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 
@@ -11,27 +11,8 @@ public partial class PrimaryHub(
     // Services
     RequestLoggingService requestLoggingService,
     
-    // Handlers
-    AddFriendHandler addFriendHandler,
-    BodySwapHandler bodySwapHandler,
-    CustomizePlusHandler customizePlusHandler,
-    EmoteHandler emoteHandler,
-    GetAccountDataHandler getAccountDataHandler,
-    HonorificHandler honorificHandler,
-    HypnosisHandler hypnosisHandler,
-    HypnosisStopHandler hypnosisStopHandler,
-    MoodlesHandler moodlesHandler,
-    OnlineStatusUpdateHandler onlineStatusUpdateHandler,
-    PossessionBeginHandler possessionBeginHandler,
-    PossessionMovementHandler possessionMovementHandler,
-    PossessionCameraHandler possessionCameraHandler,
-    PossessionEndHandler possessionEndHandler,
-    RemoveFriendHandler removeFriendHandler,
-    SpeakHandler speakHandler,
-    TransformHandler transformHandler,
-    TwinningHandler twinningHandler,
-    UpdateFriendHandler updateFriendHandler,
-    UpdateGlobalPermissionsHandler updateGlobalPermissionsHandler,
+    // Handler
+    RequestHandler requestHandler,
 
     // Logger
     ILogger<PrimaryHub> logger) : Hub
@@ -46,7 +27,7 @@ public partial class PrimaryHub(
     /// </summary>
     public override async Task OnConnectedAsync()
     {
-        await onlineStatusUpdateHandler.Handle(FriendCode, true, Clients);
+        await requestHandler.HandleOnlineStatusUpdate(FriendCode, true, Clients);
         await base.OnConnectedAsync();
     }
 
@@ -55,7 +36,7 @@ public partial class PrimaryHub(
     /// </summary>
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        await onlineStatusUpdateHandler.Handle(FriendCode, false, Clients);
+        await requestHandler.HandleOnlineStatusUpdate(FriendCode, false, Clients);
         await base.OnDisconnectedAsync(exception);
     }
 

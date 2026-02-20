@@ -15,7 +15,7 @@ public partial class PrimaryHub
         if (request.LockCode is not null)
             return new ActionResponse(ActionResponseEc.Disabled, []);
         
-        return await bodySwapHandler.Handle(FriendCode, request, Clients);
+        return await requestHandler.HandleBodySwap(FriendCode, request, Clients);
     }
     
     [HubMethodName(HubMethod.Transform)]
@@ -24,7 +24,7 @@ public partial class PrimaryHub
         if (request.LockCode is not null)
             return new ActionResponse(ActionResponseEc.Disabled, []);
         
-        return await transformHandler.Handle(FriendCode, request, Clients);
+        return await requestHandler.HandleTransform(FriendCode, request, Clients);
     }
 
     [HubMethodName(HubMethod.Twinning)]
@@ -33,6 +33,6 @@ public partial class PrimaryHub
         if (request.LockCode is not null)
             return new ActionResponse(ActionResponseEc.Disabled, []);
         
-        return await twinningHandler.Handle(FriendCode, request, Clients);
+        return await requestHandler.HandleTwinning(FriendCode, request, Clients);
     }
 }

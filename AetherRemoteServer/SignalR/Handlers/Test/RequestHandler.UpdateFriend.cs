@@ -3,17 +3,15 @@ using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.SyncPermissions;
 using AetherRemoteCommon.Domain.Network.UpdateFriend;
 using AetherRemoteCommon.Util;
-using AetherRemoteServer.Services;
-using AetherRemoteServer.Services.Database;
 using Microsoft.AspNetCore.SignalR;
 
-namespace AetherRemoteServer.SignalR.Handlers;
+namespace AetherRemoteServer.SignalR.Handlers.Test;
 
-public class UpdateFriendHandler(DatabaseService database, PresenceService presenceService, ILogger<UpdateFriendHandler> logger)
+public partial class RequestHandler
 {
-    public async Task<UpdateFriendResponse> Handle(string friendCode, UpdateFriendRequest request, IHubCallerClients clients)
+    public async Task<UpdateFriendResponse> HandleUpdateFriend(string friendCode, UpdateFriendRequest request, IHubCallerClients clients)
     {
-        var databaseResult = await database.UpdatePermissions(friendCode, request.TargetFriendCode, request.Permissions);
+        var databaseResult = await _databaseService.UpdatePermissions(friendCode, request.TargetFriendCode, request.Permissions);
         var result = databaseResult switch
         {
             DatabaseResultEc.Success => UpdateFriendEc.Success,
@@ -21,11 +19,11 @@ public class UpdateFriendHandler(DatabaseService database, PresenceService prese
             _ => UpdateFriendEc.Unknown
         };
         
-        if (presenceService.TryGet(request.TargetFriendCode) is not { } connectedClient)
+        if (_presenceService.TryGet(request.TargetFriendCode) is not { } connectedClient)
             return new UpdateFriendResponse(result);
         
         // TODO: Update failure state. This is not an expected state
-        if (await database.GetGlobalPermissions(friendCode) is not { } global)
+        if (await _databaseService.GetGlobalPermissions(friendCode) is not { } global)
             return new UpdateFriendResponse(result);
         
         try
@@ -37,7 +35,7 @@ public class UpdateFriendHandler(DatabaseService database, PresenceService prese
         }
         catch (Exception e)
         {
-            logger.LogWarning("{Issuer} send action to {Target} failed, {Error}", friendCode, request.TargetFriendCode, e.Message);
+            _logger.LogWarning("{Issuer} send action to {Target} failed, {Error}", friendCode, request.TargetFriendCode, e.Message);
         }
 
         return new UpdateFriendResponse(result);
