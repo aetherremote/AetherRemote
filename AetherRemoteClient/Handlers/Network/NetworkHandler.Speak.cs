@@ -1,60 +1,23 @@
-using System;
 using System.Text;
-using AetherRemoteClient.Handlers.Network.Base;
-using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Speak;
 using AetherRemoteCommon.Util;
-using Microsoft.AspNetCore.SignalR.Client;
 
 namespace AetherRemoteClient.Handlers.Network;
 
-/// <summary>
-///     Handles a <see cref="SpeakCommand"/>
-/// </summary>
-public class SpeakHandler : AbstractNetworkHandler, IDisposable
+public partial class NetworkHandler
 {
-    // Const
-    private const string Operation = "Speak";
-    
-    // Injected
-    private readonly ActionQueueService _actionQueue;
-    private readonly LogService _log;
-    
-    // Instantiated
-    private readonly IDisposable _handler;
-
-    /// <summary>
-    ///     <inheritdoc cref="SpeakHandler"/>
-    /// </summary>
-    public SpeakHandler(
-        AccountService account, 
-        ActionQueueService actionQueue, 
-        FriendsListService friends, 
-        LogService log, 
-        NetworkService network, 
-        PauseService pause) : base(account, friends, log, pause)
-    {
-        _actionQueue = actionQueue;
-        _log = log;
-
-        _handler = network.Connection.On<SpeakCommand, ActionResult<Unit>>(HubMethod.Speak, Handle);
-    }
-    
-    /// <summary>
-    ///     <inheritdoc cref="SpeakHandler"/>
-    /// </summary>
-    private ActionResult<Unit> Handle(SpeakCommand request)
+    private ActionResult<Unit> HandleSpeak(SpeakCommand request)
     {
         Plugin.Log.Verbose($"{request}");
         
         var speakPermissions = request.ChatChannel.ToSpeakPermissions(request.Extra);
         var permissions = new ResolvedPermissions(PrimaryPermissions.None, speakPermissions, ElevatedPermissions.None);
         
-        var sender = TryGetFriendWithCorrectPermissions(Operation, request.SenderFriendCode, permissions);
+        var sender = TryGetFriendWithCorrectPermissions("Speak", request.SenderFriendCode, permissions);
         if (sender.Result is not ActionResultEc.Success)
             return ActionResultBuilder.Fail(sender.Result);
         
@@ -62,7 +25,7 @@ public class SpeakHandler : AbstractNetworkHandler, IDisposable
             return ActionResultBuilder.Fail(ActionResultEc.ValueNotSet);
 
         // Add the action to the action queue to be sent when available
-        _actionQueue.Enqueue(friend, request.Message, request.ChatChannel, request.Extra);
+        _actionQueueService.Enqueue(friend, request.Message, request.ChatChannel, request.Extra);
 
         // Build a proper log message with specific formatting
         var log = new StringBuilder();
@@ -100,13 +63,7 @@ public class SpeakHandler : AbstractNetworkHandler, IDisposable
         }
         
         // Add log to history
-        _log.Custom(log.ToString());
+        _logService.Custom(log.ToString());
         return ActionResultBuilder.Ok();
-    }
-
-    public void Dispose()
-    {
-        _handler.Dispose();
-        GC.SuppressFinalize(this);
     }
 }

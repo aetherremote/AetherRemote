@@ -141,22 +141,7 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<GlamourerEventHandler>();
         
         // Handlers Network
-        services.AddSingleton<BodySwapHandler>();
-        services.AddSingleton<EmoteHandler>();
-        services.AddSingleton<HonorificHandler>();
-        services.AddSingleton<HypnosisHandler>();
-        services.AddSingleton<HypnosisStopHandler>();
-        services.AddSingleton<MoodlesHandler>();
-        services.AddSingleton<PossessionBeginHandler>();
-        services.AddSingleton<PossessionCameraHandler>();
-        services.AddSingleton<PossessionEndHandler>();
-        services.AddSingleton<PossessionMovementHandler>();
-        services.AddSingleton<SpeakHandler>();
-        services.AddSingleton<SyncOnlineStatusHandler>();
-        services.AddSingleton<SyncPermissionsHandler>();
-        services.AddSingleton<TransformHandler>();
-        services.AddSingleton<TwinningHandler>();
-        services.AddSingleton<CustomizePlusHandler>();
+        services.AddSingleton<NetworkHandler>();
         
         // Ui - Component Controllers
         services.AddSingleton<FriendsListComponentUiController>();
@@ -228,22 +213,7 @@ public sealed class Plugin : IDalamudPlugin
         _services.GetRequiredService<GlamourerEventHandler>();
         
         // Handlers Network
-        _services.GetRequiredService<BodySwapHandler>();
-        _services.GetRequiredService<EmoteHandler>();
-        _services.GetRequiredService<HonorificHandler>();
-        _services.GetRequiredService<HypnosisHandler>();
-        _services.GetRequiredService<HypnosisStopHandler>();
-        _services.GetRequiredService<MoodlesHandler>();
-        _services.GetRequiredService<PossessionBeginHandler>();
-        _services.GetRequiredService<PossessionCameraHandler>();
-        _services.GetRequiredService<PossessionEndHandler>();
-        _services.GetRequiredService<PossessionMovementHandler>();
-        _services.GetRequiredService<SpeakHandler>();
-        _services.GetRequiredService<SyncOnlineStatusHandler>();
-        _services.GetRequiredService<SyncPermissionsHandler>();
-        _services.GetRequiredService<TransformHandler>();
-        _services.GetRequiredService<TwinningHandler>();
-        _services.GetRequiredService<CustomizePlusHandler>();
+        _services.GetRequiredService<NetworkHandler>();
         
         // Managers
         _services.GetRequiredService<DependencyManager>();
