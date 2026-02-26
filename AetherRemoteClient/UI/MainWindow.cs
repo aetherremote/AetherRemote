@@ -7,6 +7,7 @@ using AetherRemoteClient.UI.Views.BodySwap;
 using AetherRemoteClient.UI.Views.CustomizePlus;
 using AetherRemoteClient.UI.Views.Debug;
 using AetherRemoteClient.UI.Views.Emote;
+using AetherRemoteClient.UI.Views.Friends.Ui;
 using AetherRemoteClient.UI.Views.History;
 using AetherRemoteClient.UI.Views.Home;
 using AetherRemoteClient.UI.Views.Honorific;
@@ -22,7 +23,6 @@ using AetherRemoteClient.UI.Views.Transformation;
 using AetherRemoteClient.UI.Views.Twinning;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Windowing;
-using FriendsViewUi = AetherRemoteClient.UI.Views.Friends.Ui.FriendsViewUi;
 
 namespace AetherRemoteClient.UI;
 

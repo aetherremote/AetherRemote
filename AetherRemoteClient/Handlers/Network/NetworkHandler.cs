@@ -45,6 +45,7 @@ public partial class NetworkHandler : IDisposable
     private readonly FriendsListService _friendsListService;
     private readonly LogService _logService;
     private readonly PauseService _pauseService;
+    private readonly StatusService _statusService;
     
     private readonly CharacterTransformationManager _characterTransformationManager;
     private readonly HypnosisManager _hypnosisManager;
@@ -66,6 +67,7 @@ public partial class NetworkHandler : IDisposable
         LogService logService,
         NetworkService networkService,
         PauseService pauseService,
+        StatusService statusService,
         
         CharacterTransformationManager characterTransformationManager,
         HypnosisManager hypnosisManager,
@@ -83,6 +85,7 @@ public partial class NetworkHandler : IDisposable
         _friendsListService = friendsListService;
         _logService = logService;
         _pauseService = pauseService;
+        _statusService = statusService;
         
         _characterTransformationManager = characterTransformationManager;
         _hypnosisManager = hypnosisManager;
@@ -165,6 +168,21 @@ public partial class NetworkHandler : IDisposable
         }
         
         return ActionResultBuilder.Ok(friend);
+    }
+    
+    /// <summary>
+    ///     Shared between Body Swap & Twinning
+    /// </summary>
+    private void UpdateStatusServicePostBodySwapOrTwinning(Friend applier, CharacterAttributes attributes)
+    {
+        // Always applying glamourer, so we don't need to check mods
+        _statusService.GlamourerPenumbra = new AetherRemoteStatus(applier, DateTime.Now);
+        
+        if ((attributes & CharacterAttributes.CustomizePlus) == CharacterAttributes.CustomizePlus)
+            _statusService.CustomizePlus = new AetherRemoteStatus(applier, DateTime.Now);
+        
+        if ((attributes & CharacterAttributes.Honorific) == CharacterAttributes.Honorific)
+            _statusService.Honorific = new AetherRemoteStatus(applier, DateTime.Now);
     }
     
     public void Dispose()

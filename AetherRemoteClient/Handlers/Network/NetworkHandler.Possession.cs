@@ -119,6 +119,7 @@ public partial class NetworkHandler
             _logService.Custom($"{sender.Value?.FriendCode ?? string.Empty} expelled you from their body");
         }
 
+        _statusService.Possession = null;
         return PossessionResultEc.Success;
     }
     

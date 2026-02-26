@@ -60,15 +60,31 @@ public partial class PossessionManager : IDisposable
     ///     Helper method to determine how the possession should be stopped
     /// </summary>
     /// <param name="notifyOther">If the other person should be notified or not.</param>
-    public async Task EndAllParanormalActivity(bool notifyOther)
+    public async Task<bool> EndAllParanormalActivity(bool notifyOther)
     {
         if (Possessed)
+        {
             if (await Expel(notifyOther).ConfigureAwait(false))
+            {
                 NotificationHelper.Success("Possession Ended", string.Empty);
-        
+                return true;
+            }
+            
+            return false;
+        }
+
         if (Possessing)
+        {
             if (await Unpossess(notifyOther).ConfigureAwait(false))
+            {
                 NotificationHelper.Success("Possession Ended", string.Empty);
+                return true;
+            }
+            
+            return false;
+        }
+
+        return true;
     }
     
     /// <summary>

@@ -1,4 +1,6 @@
+using System;
 using System.Threading.Tasks;
+using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Enums;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
@@ -38,6 +40,9 @@ public partial class NetworkHandler
             _logService.Custom($"{friend.NoteOrFriendCode} tried to twin with you, but an internal error occured");
             return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
         }
+        
+        // Set the Statuses of everything we applied
+        UpdateStatusServicePostBodySwapOrTwinning(friend, request.SwapAttributes);
         
         // Log success
         _logService.Custom($"{friend.NoteOrFriendCode} twinned you with {request.CharacterName}");

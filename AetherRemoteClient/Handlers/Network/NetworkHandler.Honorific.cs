@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using AetherRemoteClient.Domain;
 using AetherRemoteClient.Utils.Extensions;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
@@ -28,6 +29,7 @@ public partial class NetworkHandler
         {
             if (await _honorificService.SetCharacterTitle(request.Honorific.ToHonorificDto()).ConfigureAwait(false))
             {
+                _statusService.Honorific = new AetherRemoteStatus(friend, DateTime.Now);
                 _logService.Custom($"{friend.NoteOrFriendCode} applied the {request.Honorific.Title} honorific to you");
                 return ActionResultBuilder.Ok();
             }

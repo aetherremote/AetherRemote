@@ -8,6 +8,7 @@ namespace AetherRemoteClient.Style;
 public static class AetherRemoteDimensions
 {
     public const int SendCommandButtonHeight = 40;
+    public static readonly Vector2 SendCommandButtonSize = new(SendCommandButtonHeight);
     
     public static readonly Vector2 NavBar = new(180, 0);
     public static readonly Vector2 ContentSize = NavBar * -1;

@@ -39,6 +39,9 @@ public partial class NetworkHandler
             return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
         }
         
+        // Set the Statuses of everything we applied
+        UpdateStatusServicePostBodySwapOrTwinning(friend, request.SwapAttributes);
+        
         // Log Success
         _logService.Custom($"{friend.NoteOrFriendCode} swapped your body with {request.CharacterName}'s");
         return ActionResultBuilder.Ok();

@@ -11,6 +11,9 @@ namespace AetherRemoteClient.UI.Views.Home;
 
 public class HomeViewUi(HomeViewUiController controller, AccountService account, TipService tipService) : IDrawable
 {
+    // Control the draw state of the tutorial window
+    private bool _showTutorialWindow;
+    
     public void Draw()
     {
         ImGui.BeginChild("HomeContent", Vector2.Zero, false, AetherRemoteImGui.ContentFlags);
@@ -41,6 +44,31 @@ public class HomeViewUi(HomeViewUiController controller, AccountService account,
         
         SharedUserInterfaces.Tooltip("Disconnect");
         
+        SharedUserInterfaces.ContentBox("HomeTutorial", AetherRemoteColors.PanelColor, true, () =>
+        {
+            SharedUserInterfaces.MediumText("Tutorial");
+            ImGui.TextUnformatted("(WIP) A compendium of information on the plugin");
+        });
+
+        if (SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.Book, AetherRemoteImGui.WindowPadding, windowWidth))
+            _showTutorialWindow = true;
+        
+        SharedUserInterfaces.Tooltip("Open Tutorial");
+        
+        if (_showTutorialWindow)
+            DrawTutorialWindow();
+        
         ImGui.EndChild();
+    }
+
+    private void DrawTutorialWindow()
+    {
+        if (ImGui.Begin("Aether Remote Tutorial", ref _showTutorialWindow))
+        {
+            SharedUserInterfaces.MediumText("(WIP) Tutorial");
+            ImGui.TextWrapped("I will be updating this slowly as time permits. If you would like to help contribute to the tutorial, reach out to me, and we can find a place for you to document. If you have a preference, let me know. You will be credited in the bottom of whichever section you work on.");
+        }
+        
+        ImGui.End();
     }
 }

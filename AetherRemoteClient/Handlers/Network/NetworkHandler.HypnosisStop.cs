@@ -31,6 +31,7 @@ public partial class NetworkHandler
         if (_hypnosisManager.Hypnotist?.FriendCode == request.SenderFriendCode)
         {
             await Plugin.RunOnFramework((Action)(() => _hypnosisManager.Wake())).ConfigureAwait(false);
+            _statusService.Hypnosis = null;
             return ActionResultBuilder.Ok();
         }
 

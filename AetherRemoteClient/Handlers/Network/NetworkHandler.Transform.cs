@@ -1,4 +1,6 @@
+using System;
 using System.Threading.Tasks;
+using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Enums;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
@@ -42,6 +44,7 @@ public partial class NetworkHandler
         }
         
         // Log the success
+        _statusService.GlamourerPenumbra = new AetherRemoteStatus(friend, DateTime.Now);
         _logService.Custom($"{friend.NoteOrFriendCode} transformed you");
         return ActionResultBuilder.Ok();
     }
