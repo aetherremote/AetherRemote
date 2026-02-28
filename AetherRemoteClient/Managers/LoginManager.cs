@@ -16,6 +16,11 @@ public class LoginManager : IDisposable
     ///     If we have finished processing all the login events
     /// </summary>
     public event Action? LoginFinished;
+
+    /// <summary>
+    ///     Event protection for <see cref="LoginFinished"/>
+    /// </summary>
+    public bool HasLoginFinished { get; private set; }
     
     /// <summary>
     ///     <inheritdoc cref="LoginManager"/>
@@ -56,6 +61,9 @@ public class LoginManager : IDisposable
             // Emit an event
             LoginFinished?.Invoke();
             
+            // Set the event protection lines
+            HasLoginFinished = true;
+            
             // Ensure that all the values for various action responses and results are met (this check could go anywhere)
             ActionResponseParser.SanityCheck();
             
@@ -74,6 +82,9 @@ public class LoginManager : IDisposable
         try
         {
             await _networkService.StopAsync();
+            
+            // Reset event protection
+            HasLoginFinished = false;
         }
         catch (Exception e)
         {

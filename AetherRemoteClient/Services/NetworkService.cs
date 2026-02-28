@@ -56,6 +56,11 @@ public class NetworkService : IDisposable
     ///     If the plugin has begun the connection process
     /// </summary>
     public bool Connecting;
+    
+    /// <summary>
+    ///     If we are currently connected to the server
+    /// </summary>
+    public bool CurrentlyConnected => Connection.State is HubConnectionState.Connected;
 
     /// <summary>
     ///     <inheritdoc cref="NetworkService"/>

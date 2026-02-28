@@ -20,6 +20,11 @@ public class Configuration
     ///     Is the plugin in safe mode
     /// </summary>
     public bool SafeMode = false;
+
+    /// <summary>
+    ///     Show the plugin on the Dtr Bar
+    /// </summary>
+    public bool ShowOnDtrBar = false;
     
     /// <summary>
     ///     A dictionary of agreements a client must accept

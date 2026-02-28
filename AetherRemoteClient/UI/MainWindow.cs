@@ -1,6 +1,8 @@
+using System;
 using System.Numerics;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
+using AetherRemoteClient.Handlers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.NavigationBar;
 using AetherRemoteClient.UI.Views.BodySwap;
@@ -26,13 +28,16 @@ using Dalamud.Interface.Windowing;
 
 namespace AetherRemoteClient.UI;
 
-public class MainWindow : Window
+public class MainWindow : Window, IDisposable
 {
     // Const
     private static readonly string MainWindowTitle = $"Aether Remote 2 - Version {Plugin.Version}";
 
     // Services
     private readonly ViewService _viewService;
+    
+    // Handlers
+    private readonly DtrHandler _dtrHandler;
 
     // Components
     private readonly NavigationBarComponentUi _navigationBar;
@@ -59,6 +64,7 @@ public class MainWindow : Window
 
     public MainWindow(
         ViewService viewService,
+        DtrHandler dtrHandler,
         NavigationBarComponentUi navigationBarComponentUi,
         BodySwapViewUi bodySwapView,
         CustomizePlusViewUi customizePlusView,
@@ -87,6 +93,8 @@ public class MainWindow : Window
 
         _viewService = viewService;
 
+        _dtrHandler = dtrHandler;
+
         _navigationBar = navigationBarComponentUi;
 
         _bodySwapView = bodySwapView;
@@ -107,6 +115,8 @@ public class MainWindow : Window
         _statusView = statusView;
         _transformationView = transformationView;
         _twinningView = twinningView;
+
+        _dtrHandler.DtrClicked += OnDtrClicked;
     }
 
     public override void Draw()
@@ -139,5 +149,16 @@ public class MainWindow : Window
         };
 
         view.Draw();
+    }
+    
+    private void OnDtrClicked()
+    {
+        IsOpen = true;
+    }
+
+    public void Dispose()
+    {
+        _dtrHandler.DtrClicked -= OnDtrClicked;
+        GC.SuppressFinalize(this);
     }
 }

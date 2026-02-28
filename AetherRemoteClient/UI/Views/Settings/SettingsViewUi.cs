@@ -58,6 +58,12 @@ public class SettingsViewUi(
             
             if (ImGui.Checkbox("Auto Connect", ref Plugin.CharacterConfiguration.AutoLogin))
                 controller.SaveConfiguration();
+
+            if (ImGui.Checkbox("Display information on server info bar (Dtr Bar)", ref Plugin.Configuration.ShowOnDtrBar))
+                _ = controller.SaveAndUpdateDtrBarSettings().ConfigureAwait(false);
+            
+            if (ImGui.IsItemHovered())
+                ImGui.SetTooltip("This is the bar (usually) at the top of your screen with server info, time, etc");
         });
         
         SharedUserInterfaces.ContentBox("SettingsDependencies", AetherRemoteColors.PanelColor, true, () =>

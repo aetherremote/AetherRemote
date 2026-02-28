@@ -13,4 +13,5 @@ public static class AetherRemoteColors
     
     public const ushort TextColorGreen = 45;
     public const ushort TextColorPurple = 48;
+    public const ushort TextColorRed = 17;
 }

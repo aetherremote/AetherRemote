@@ -7,11 +7,7 @@ using AetherRemoteClient.Dependencies.CustomizePlus.Domain;
 using AetherRemoteClient.Dependencies.CustomizePlus.Services;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Managers;
-using AetherRemoteClient.Services;
-using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums.Permissions;
-using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Domain.Network.Customize;
 
 namespace AetherRemoteClient.UI.Views.CustomizePlus;
 

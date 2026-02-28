@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using AetherRemoteClient.Handlers;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
@@ -8,6 +9,7 @@ namespace AetherRemoteClient.UI.Views.Settings;
 public class SettingsViewUiController(
     ActionQueueService actionQueueService,
     HypnosisManager hypnosisManager,
+    DtrHandler dtrHandler,
     PermanentTransformationHandler permanentTransformationHandler)
 {
     /// <summary>
@@ -52,5 +54,15 @@ public class SettingsViewUiController(
         {
             Plugin.Log.Error($"[SettingsViewUiController.SaveConfiguration] {e}");
         }
+    }
+
+    public async Task SaveAndUpdateDtrBarSettings()
+    {
+        await Plugin.Configuration.Save().ConfigureAwait(true);
+        
+        if (Plugin.Configuration.ShowOnDtrBar)
+            dtrHandler.UpdateDtrBar();
+        else
+            DtrHandler.RemoveDtrBar();
     }
 }

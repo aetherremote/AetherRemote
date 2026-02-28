@@ -1,7 +1,6 @@
 using System;
 using System.Text;
 using System.Threading.Tasks;
-using AetherRemoteClient.Domain;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
@@ -51,7 +50,7 @@ public partial class NetworkHandler
                 }
             }
             
-            _statusService.CustomizePlus = new AetherRemoteStatus(friend, DateTime.Now);
+            _statusManager.SetCustomizePlus(friend);
             _logService.Custom($"{friend.NoteOrFriendCode} applied a customize plus template to you");
             return ActionResultBuilder.Ok();
         }

@@ -49,8 +49,18 @@ public partial class NetworkHandler
 
         var result = await _possessionManager.BecomePossessed(command.MoveMode).ConfigureAwait(false);
         if (result is PossessionResultEc.Success)
-            _logService.Custom($"You were possessed by {sender.Value?.FriendCode ?? string.Empty}");
-
+        {
+            if (sender.Value is null)
+            {
+                Plugin.Log.Warning("[NetworkHandler.HandlePossessionBegin] Sender value not set");
+            }
+            else
+            {
+                _logService.Custom($"You were possessed by {sender.Value.FriendCode}");
+                _statusManager.SetPossession(sender.Value);
+            }
+        }
+        
         return result;
     }
     
@@ -119,7 +129,7 @@ public partial class NetworkHandler
             _logService.Custom($"{sender.Value?.FriendCode ?? string.Empty} expelled you from their body");
         }
 
-        _statusService.Possession = null;
+        _statusManager.ClearPossession();
         return PossessionResultEc.Success;
     }
     

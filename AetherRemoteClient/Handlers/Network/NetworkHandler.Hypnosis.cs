@@ -1,6 +1,4 @@
-using System;
 using System.Threading.Tasks;
-using AetherRemoteClient.Domain;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
@@ -44,7 +42,7 @@ public partial class NetworkHandler
         await _hypnosisManager.Hypnotize(friend, request.Data);
         
         // Log
-        _statusService.Hypnosis = new AetherRemoteStatus(friend, DateTime.Now);
+        _statusManager.SetHypnosis(friend);
         _logService.Custom($"{friend.NoteOrFriendCode} began to hypnotize you");
         return ActionResultBuilder.Ok();
     }

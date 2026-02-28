@@ -63,6 +63,7 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static IGameInteropProvider GameInteropProvider { get; private set; } = null!;
     [PluginService] internal static ISigScanner SigScanner { get; private set; } = null!;
     [PluginService] internal static IGameConfig GameConfig { get; private set; } = null!;
+    [PluginService] internal static IDtrBar DtrBar { get; private set; } = null!;
     internal static Configuration Configuration { get; private set; } = null!;
     internal static CharacterConfiguration? CharacterConfiguration { get; set; }
     internal static LegacyConfiguration? LegacyConfiguration { get; private set; }
@@ -105,7 +106,7 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<NetworkService>();
         services.AddSingleton<PauseService>();
         services.AddSingleton<PermanentTransformationLockService>();
-        services.AddSingleton<StatusService>();
+        services.AddSingleton<StatusManager>();
         services.AddSingleton<TipService>();
         services.AddSingleton<ViewService>();
         services.AddSingleton<WorldService>();
@@ -138,6 +139,7 @@ public sealed class Plugin : IDalamudPlugin
         
         // Handlers
         services.AddSingleton<ChatCommandHandler>();
+        services.AddSingleton<DtrHandler>();
         services.AddSingleton<GlamourerEventHandler>();
         
         // Handlers Network
@@ -210,6 +212,7 @@ public sealed class Plugin : IDalamudPlugin
         // Handlers
         _services.GetRequiredService<ChatCommandHandler>();
         _services.GetRequiredService<ConnectionManager>();
+        _services.GetRequiredService<DtrHandler>();
         _services.GetRequiredService<GlamourerEventHandler>();
         
         // Handlers Network

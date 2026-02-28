@@ -41,7 +41,12 @@ public class NavigationBarComponentUi(NetworkService networkService, ViewService
                 NavBarButton(FontAwesomeIcon.Smile, "Emote", View.Emote, size, offset);
                 NavBarButton(FontAwesomeIcon.Crown, "Honorific", View.Honorific, size, offset);
                 NavBarButton(FontAwesomeIcon.Stopwatch, "Hypnosis", View.Hypnosis, size, offset);
+                
+                // TODO: Re-enable when Moodles IPC is reintroduced
+                ImGui.BeginDisabled();
                 NavBarButton(FontAwesomeIcon.Icons, "Moodles", View.Moodles, size, offset);
+                ImGui.EndDisabled();
+                
                 NavBarButton(FontAwesomeIcon.Ghost, "(Beta) Possession", View.Possession, size, offset);
                 NavBarButton(FontAwesomeIcon.Comments, "Speak", View.Speak, size, offset);
                 NavBarButton(FontAwesomeIcon.WandMagicSparkles, "Transformation", View.Transformation, size, offset);

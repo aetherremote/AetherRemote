@@ -1,7 +1,6 @@
 using System;
 using AetherRemoteClient.Style;
 using AetherRemoteClient.UI;
-using AetherRemoteClient.Utils;
 using Dalamud.Interface.Windowing;
 
 namespace AetherRemoteClient.Managers;

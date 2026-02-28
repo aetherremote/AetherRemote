@@ -5,7 +5,6 @@ using AetherRemoteClient.Dependencies.Honorific.Services;
 using AetherRemoteClient.Dependencies.Penumbra.Services;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Managers.Possession;
-using AetherRemoteClient.Services;
 
 namespace AetherRemoteClient.UI.Views.Status;
 
@@ -14,7 +13,7 @@ public class StatusViewUiController(
     GlamourerService glamourerService,
     HonorificService honorificService,
     PenumbraService penumbraService,
-    StatusService statusService,
+    StatusManager statusManager,
     HypnosisManager hypnosisManager,
     PossessionManager possessionManager)
 {
@@ -25,7 +24,7 @@ public class StatusViewUiController(
     {
         var result = await customizePlusService.DeleteTemporaryCustomizeAsync().ConfigureAwait(false);
         if (result)
-            statusService.CustomizePlus = null;
+            statusManager.ClearCustomizePlus();
     }
     
     /// <summary>
@@ -36,7 +35,7 @@ public class StatusViewUiController(
         var glamourer = await glamourerService.RevertToAutomation(0).ConfigureAwait(false);
         var penumbra = await penumbraService.CallRemoveTemporaryMod().ConfigureAwait(false);
         if (glamourer && penumbra)
-            statusService.GlamourerPenumbra = null;
+            statusManager.ClearGlamourerPenumbra();
     }
     
     /// <summary>
@@ -46,7 +45,7 @@ public class StatusViewUiController(
     {
         var result = honorificService.ClearCharacterTitle();
         if (result)
-            statusService.Honorific = null;
+            statusManager.ClearHonorific();
     }
     
     /// <summary>
@@ -56,7 +55,7 @@ public class StatusViewUiController(
     {
         var result = hypnosisManager.Wake();
         if (result)
-            statusService.Hypnosis = null;
+            statusManager.ClearHypnosis();
     }
     
     /// <summary>
@@ -66,6 +65,6 @@ public class StatusViewUiController(
     {
         var result = await possessionManager.EndAllParanormalActivity(true).ConfigureAwait(false);
         if (result)
-            statusService.Possession = null;
+            statusManager.ClearPossession();
     }
 }
