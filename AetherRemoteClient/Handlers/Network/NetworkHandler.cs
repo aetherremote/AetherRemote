@@ -175,13 +175,13 @@ public partial class NetworkHandler : IDisposable
     /// </summary>
     private void UpdateStatusServicePostBodySwapOrTwinning(Friend applier, CharacterAttributes attributes)
     {
-        // Always applying glamourer, so we don't need to check mods
-        _statusManager.SetGlamourerPenumbra(applier);
+        if ((attributes & CharacterAttributes.PenumbraMods) is CharacterAttributes.PenumbraMods)
+            _statusManager.SetGlamourerPenumbra(applier);
         
-        if ((attributes & CharacterAttributes.CustomizePlus) == CharacterAttributes.CustomizePlus)
+        if ((attributes & CharacterAttributes.CustomizePlus) is CharacterAttributes.CustomizePlus)
             _statusManager.SetCustomizePlus(applier);
         
-        if ((attributes & CharacterAttributes.Honorific) == CharacterAttributes.Honorific)
+        if ((attributes & CharacterAttributes.Honorific) is CharacterAttributes.Honorific)
             _statusManager.SetHonorific(applier);
     }
     

@@ -34,6 +34,7 @@ using AetherRemoteClient.UI.Views.Settings;
 using AetherRemoteClient.UI.Views.Speak;
 using AetherRemoteClient.UI.Views.Status;
 using AetherRemoteClient.UI.Views.Transformation;
+using AetherRemoteClient.UI.Views.Transformations;
 using AetherRemoteClient.UI.Views.Twinning;
 using AetherRemoteClient.Utils;
 using Dalamud.Game.ClientState.Objects.Enums;
@@ -43,6 +44,8 @@ using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using Microsoft.Extensions.DependencyInjection;
 using FriendsViewUi = AetherRemoteClient.UI.Views.Friends.Ui.FriendsViewUi;
+using TransformationsViewUi = AetherRemoteClient.UI.Views.Transformations.Views.TransformationsViewUi;
+using TransformationsViewUiController = AetherRemoteClient.UI.Views.Transformations.Controllers.TransformationsViewUiController;
 
 namespace AetherRemoteClient;
 
@@ -57,7 +60,7 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static IChatGui ChatGui { get; private set; } = null!;
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
     [PluginService] internal static IPluginLog Log { get; private set; } = null!;
-    [PluginService] internal static IFramework Framework { get; set; } = null!;
+    [PluginService] internal static IFramework Framework { get; private set; } = null!;
     [PluginService] internal static INotificationManager NotificationManager { get; private set; } = null!;
     [PluginService] internal static ITextureProvider TextureProvider { get; private set; } = null!;
     [PluginService] internal static IGameInteropProvider GameInteropProvider { get; private set; } = null!;
@@ -105,7 +108,6 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<LogService>();
         services.AddSingleton<NetworkService>();
         services.AddSingleton<PauseService>();
-        services.AddSingleton<PermanentTransformationLockService>();
         services.AddSingleton<StatusManager>();
         services.AddSingleton<TipService>();
         services.AddSingleton<ViewService>();
@@ -134,7 +136,6 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<LoginManager>();
         services.AddSingleton<NetworkCommandManager>();
         services.AddSingleton<PossessionManager>();
-        services.AddSingleton<PermanentTransformationHandler>();
         services.AddSingleton<SelectionManager>();
         
         // Handlers
@@ -170,6 +171,7 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<SpeakViewUiController>();
         services.AddSingleton<StatusViewUiController>();
         services.AddSingleton<TransformationViewUiController>();
+        services.AddSingleton<TransformationsViewUiController>();
         services.AddSingleton<TwinningViewUiController>();
         
         // Ui - Views
@@ -190,6 +192,7 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<SpeakViewUi>();
         services.AddSingleton<StatusViewUi>();
         services.AddSingleton<TransformationViewUi>();
+        services.AddSingleton<TransformationsViewUi>();
         services.AddSingleton<TwinningViewUi>();
         
         // Ui - Windows
@@ -239,6 +242,7 @@ public sealed class Plugin : IDalamudPlugin
     ///     Runs provided function on the XIV Framework. Await should never be used inside the <see cref="Func{T}"/>
     ///     passed to this function.
     /// </summary>
+    [Obsolete("Use DalamudUtilities version instead")]
     public static async Task<T> RunOnFramework<T>(Func<T> func)
     {
         if (Framework.IsInFrameworkUpdateThread)
@@ -247,6 +251,7 @@ public sealed class Plugin : IDalamudPlugin
         return await Framework.RunOnFrameworkThread(func).ConfigureAwait(false);
     }
 
+    [Obsolete("Use DalamudUtilities version instead")]
     public static async Task RunOnFramework(Action func)
     {
         if (Framework.IsInFrameworkUpdateThread)
@@ -263,6 +268,7 @@ public sealed class Plugin : IDalamudPlugin
     ///     Runs provided function on the XIV Framework. Await should never be used inside the <see cref="Func{T}"/>
     ///     passed to this function.
     /// </summary>
+    [Obsolete("Do not use this, just try catch in your local scope")]
     public static async Task<T> RunOnFrameworkSafely<T>(Func<T> func)
     {
         try
@@ -282,6 +288,7 @@ public sealed class Plugin : IDalamudPlugin
     /// <summary>
     ///     Attempts to find a character in the object list by name
     /// </summary>
+    [Obsolete("Do not use this, use the Dalamud Utilities version instead")]
     public static async Task<IntPtr> TryFindAddressByCharacter(string characterName, string characterWorld)
     {
         return await RunOnFrameworkSafely(() =>

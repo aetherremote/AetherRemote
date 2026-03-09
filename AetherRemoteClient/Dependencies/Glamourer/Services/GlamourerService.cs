@@ -444,7 +444,7 @@ public class GlamourerService : IExternalPlugin, IDisposable
         }
     }
 
-    public static JObject? CreateJObjectToRevertExistingAdvancedDyes(JObject currentDesign, JObject targetDesign)
+    public static JObject? SanitizeGlamourerAdvancedDyes(JObject currentDesign, JObject targetDesign)
     {
         // Create a new copy
         if (targetDesign.DeepClone() is not JObject copiedTargetDesign)

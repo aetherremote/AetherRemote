@@ -177,6 +177,25 @@ public static class SharedUserInterfaces
     }
 
     /// <summary>
+    ///     Draws centered text
+    /// </summary>
+    public static void TextCentered(string text, float windowWidth)
+    {
+        ImGui.SetCursorPosX((windowWidth - ImGui.CalcTextSize(text).X) * 0.5f);
+        ImGui.TextUnformatted(text);
+    }
+
+    /// <summary>
+    ///     Draws centered at medium font size
+    /// </summary>
+    public static void MediumTextCentered(string text, float windowWidth)
+    {
+        _mediumFont?.Push();
+        TextCentered(text, windowWidth);
+        _mediumFont?.Pop();
+    }
+
+    /// <summary>
     ///     Draws text using the big font, centered, with optional color.
     /// </summary>
     public static void BigTextCentered(string text, Vector4? color = null)

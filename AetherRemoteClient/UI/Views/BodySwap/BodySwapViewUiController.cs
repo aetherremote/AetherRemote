@@ -20,7 +20,9 @@ public class BodySwapViewUiController(
     SelectionManager selectionManager)
 {
     // Swap Parameters
-    public bool SwapMods;
+    public bool SwapGlamourerCustomization;
+    public bool SwapGlamourerEquipment;
+    public bool SwapPenumbraMods;
     public bool SwapMoodles;
     public bool SwapCustomizePlus;
     public bool SwapHonorific;
@@ -35,7 +37,9 @@ public class BodySwapViewUiController(
     public void SwapBodies()
     {
         var attributes = CharacterAttributes.None;
-        if (SwapMods) attributes |= CharacterAttributes.Mods;
+        if (SwapGlamourerCustomization) attributes |= CharacterAttributes.GlamourerCustomization;
+        if (SwapGlamourerEquipment) attributes |= CharacterAttributes.GlamourerEquipment;
+        if (SwapPenumbraMods) attributes |= CharacterAttributes.PenumbraMods;
         if (SwapMoodles) attributes |= CharacterAttributes.Moodles;
         if (SwapCustomizePlus) attributes |= CharacterAttributes.CustomizePlus;
         if (SwapHonorific) attributes |= CharacterAttributes.Honorific;
@@ -49,7 +53,9 @@ public class BodySwapViewUiController(
     public void SwapBodiesIncludingSelf()
     {
         var attributes = CharacterAttributes.None;
-        if (SwapMods) attributes |= CharacterAttributes.Mods;
+        if (SwapGlamourerCustomization) attributes |= CharacterAttributes.GlamourerCustomization;
+        if (SwapGlamourerEquipment) attributes |= CharacterAttributes.GlamourerEquipment;
+        if (SwapPenumbraMods) attributes |= CharacterAttributes.PenumbraMods;
         if (SwapMoodles) attributes |= CharacterAttributes.Moodles;
         if (SwapCustomizePlus) attributes |= CharacterAttributes.CustomizePlus;
         if (SwapHonorific) attributes |= CharacterAttributes.Honorific;
@@ -78,7 +84,7 @@ public class BodySwapViewUiController(
             }
             
             // If the character we'd be body swapping into was null...
-            if (response.CharacterName is null)
+            if (response.CharacterName is null || response.CharacterWorld is null)
             {
                 // ...but we expected to get back a result by submitting our name in the body swap request...
                 if (request.SenderCharacterName is not null)
@@ -90,7 +96,9 @@ public class BodySwapViewUiController(
             else
             {
                 // Otherwise just body swap into them
-                await characterTransformationManager.ApplyCharacterTransformation(response.CharacterName, request.SwapAttributes);
+                await characterTransformationManager.ApplyFullScaleTransformation(response.CharacterName, response.CharacterWorld, request.SwapAttributes);
+                
+                // TODO: Update for the status manager
             }
             
             // Process the results
@@ -108,7 +116,9 @@ public class BodySwapViewUiController(
     public bool MissingPermissionsForATarget()
     {
         var attributes = PrimaryPermissions.BodySwap;
-        if (SwapMods) attributes |= PrimaryPermissions.Mods;
+        if (SwapGlamourerCustomization) attributes |= PrimaryPermissions.GlamourerCustomization;
+        if (SwapGlamourerEquipment) attributes |= PrimaryPermissions.GlamourerEquipment;
+        if (SwapPenumbraMods) attributes |= PrimaryPermissions.Mods;
         if (SwapMoodles) attributes |= PrimaryPermissions.Moodles;
         if (SwapCustomizePlus) attributes |= PrimaryPermissions.CustomizePlus;
         if (SwapHonorific) attributes |= PrimaryPermissions.Honorific;

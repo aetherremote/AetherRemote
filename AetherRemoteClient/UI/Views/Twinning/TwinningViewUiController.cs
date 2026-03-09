@@ -13,7 +13,9 @@ namespace AetherRemoteClient.UI.Views.Twinning;
 public class TwinningViewUiController(CommandLockoutService commandLockout, NetworkService network, SelectionManager selection)
 {
     // Swap Parameters
-    public bool SwapMods;
+    public bool SwapGlamourerCustomization;
+    public bool SwapGlamourerEquipment;
+    public bool SwapPenumbraMods;
     public bool SwapMoodles;
     public bool SwapCustomizePlus;
     public bool SwapHonorific;
@@ -30,7 +32,9 @@ public class TwinningViewUiController(CommandLockoutService commandLockout, Netw
         try
         {
             var attributes = CharacterAttributes.None;
-            if (SwapMods) attributes |= CharacterAttributes.Mods;
+            if (SwapGlamourerCustomization) attributes |= CharacterAttributes.GlamourerCustomization;
+            if (SwapGlamourerEquipment) attributes |= CharacterAttributes.GlamourerEquipment;
+            if (SwapPenumbraMods) attributes |= CharacterAttributes.PenumbraMods;
             if (SwapMoodles) attributes |= CharacterAttributes.Moodles;
             if (SwapCustomizePlus) attributes |= CharacterAttributes.CustomizePlus;
             if (SwapHonorific) attributes |= CharacterAttributes.Honorific;
@@ -64,7 +68,9 @@ public class TwinningViewUiController(CommandLockoutService commandLockout, Netw
     public bool MissingPermissionsForATarget()
     {
         var attributes = PrimaryPermissions.Twinning;
-        if (SwapMods) attributes |= PrimaryPermissions.Mods;
+        if (SwapGlamourerCustomization) attributes |= PrimaryPermissions.GlamourerCustomization;
+        if (SwapGlamourerEquipment) attributes |= PrimaryPermissions.GlamourerEquipment;
+        if (SwapPenumbraMods) attributes |= PrimaryPermissions.Mods;
         if (SwapMoodles) attributes |= PrimaryPermissions.Moodles;
         if (SwapCustomizePlus) attributes |= PrimaryPermissions.CustomizePlus;
         if (SwapHonorific) attributes |= PrimaryPermissions.Honorific;
@@ -79,5 +85,12 @@ public class TwinningViewUiController(CommandLockoutService commandLockout, Netw
         }
 
         return false;
+    }
+
+    public enum BodySwapMode
+    {
+        BodySwap,
+        Twinning,
+        Mimicry
     }
 }

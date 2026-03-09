@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using AetherRemoteClient.Domain.Enums;
+using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
@@ -15,7 +15,7 @@ public partial class NetworkHandler
     {
         Plugin.Log.Verbose($"{request}");
         
-        var primary = request.SwapAttributes.ToPrimaryPermission() | PrimaryPermissions.BodySwap;
+        var primary = request.SwapAttributes.ToPrimaryPermissions() | PrimaryPermissions.BodySwap;
         var elevated = request.LockCode is null 
             ? ElevatedPermissions.None 
             : ElevatedPermissions.PermanentTransformation;
@@ -30,11 +30,10 @@ public partial class NetworkHandler
             return ActionResultBuilder.Fail(ActionResultEc.ValueNotSet);
         
         // Try to apply the transformation
-        var result = await _characterTransformationManager.ApplyCharacterTransformation(request.CharacterName, request.SwapAttributes);
-        if (result.Success is not ApplyCharacterTransformationErrorCode.Success)
+        var result = await _characterTransformationManager.ApplyFullScaleTransformation(request.CharacterName, request.CharacterWorld, request.SwapAttributes).ConfigureAwait(false);
+        if (result is false)
         {
-            // Log the failure
-            Plugin.Log.Warning($"[BodySwapHandler.Handle] Applying a body swap failed, {result.Success}");
+            NotificationHelper.Warning("Something went wrong", $"{friend.NoteOrFriendCode} tried to swap your body, but an error occurred. Type /xllog in chat to find out more.");
             _logService.Custom($"{friend.NoteOrFriendCode} tried to body swap with you, but an internal error occured");
             return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
         }

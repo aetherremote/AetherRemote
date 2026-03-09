@@ -22,9 +22,11 @@ using AetherRemoteClient.UI.Views.Settings;
 using AetherRemoteClient.UI.Views.Speak;
 using AetherRemoteClient.UI.Views.Status;
 using AetherRemoteClient.UI.Views.Transformation;
+using AetherRemoteClient.UI.Views.Transformations;
 using AetherRemoteClient.UI.Views.Twinning;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Windowing;
+using TransformationsViewUi = AetherRemoteClient.UI.Views.Transformations.Views.TransformationsViewUi;
 
 namespace AetherRemoteClient.UI;
 
@@ -60,6 +62,7 @@ public class MainWindow : Window, IDisposable
     private readonly SpeakViewUi _speakView;
     private readonly StatusViewUi _statusView;
     private readonly TransformationViewUi _transformationView;
+    private readonly TransformationsViewUi _transformationsView;
     private readonly TwinningViewUi _twinningView;
 
     public MainWindow(
@@ -83,6 +86,7 @@ public class MainWindow : Window, IDisposable
         SpeakViewUi speakView,
         StatusViewUi statusView,
         TransformationViewUi transformationView,
+        TransformationsViewUi transformationsView,
         TwinningViewUi twinningView) : base(MainWindowTitle)
     {
         SizeConstraints = new WindowSizeConstraints
@@ -90,7 +94,7 @@ public class MainWindow : Window, IDisposable
             MinimumSize = new Vector2(800, 500),
             MaximumSize = ImGui.GetIO().DisplaySize
         };
-
+        
         _viewService = viewService;
 
         _dtrHandler = dtrHandler;
@@ -114,6 +118,7 @@ public class MainWindow : Window, IDisposable
         _speakView = speakView;
         _statusView = statusView;
         _transformationView = transformationView;
+        _transformationsView = transformationsView;
         _twinningView = twinningView;
 
         _dtrHandler.DtrClicked += OnDtrClicked;
@@ -144,6 +149,7 @@ public class MainWindow : Window, IDisposable
             View.Speak => _speakView,
             View.Status => _statusView,
             View.Transformation => _transformationView,
+            View.Transformations => _transformationsView,
             View.Twinning => _twinningView,
             _ => _loginView
         };

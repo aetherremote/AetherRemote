@@ -53,14 +53,16 @@ public class BodySwapViewUi(FriendsListComponentUi friendsList, BodySwapViewUiCo
             var rowOneButtonWidth = (width - padding * 3) * 0.5f;
             var rowTwoButtonWidth = (width - padding * 4) * 0.33333f;
             
+            // TODO: Update these buttons to show
+            
             SharedUserInterfaces.MediumText("Always applied");
             DrawAttributeButton(FontAwesomeIcon.User, rowOneButtonWidth, "Customization", true, RequiresGlamourer);
             ImGui.SameLine();
             DrawAttributeButton(FontAwesomeIcon.Tshirt,rowOneButtonWidth, "Equipment", true, RequiresGlamourer);
 
             SharedUserInterfaces.MediumText("Extra attributes");
-            if (DrawAttributeButton(FontAwesomeIcon.Wrench, rowTwoButtonWidth, "Mods", controller.SwapMods, RequiresPenumbra))
-                controller.SwapMods = !controller.SwapMods;
+            if (DrawAttributeButton(FontAwesomeIcon.Wrench, rowTwoButtonWidth, "Mods", controller.SwapPenumbraMods, RequiresPenumbra))
+                controller.SwapPenumbraMods = !controller.SwapPenumbraMods;
             ImGui.SameLine();
             
             if (DrawAttributeButton(FontAwesomeIcon.Icons, rowTwoButtonWidth,"Moodles", controller.SwapMoodles, RequiresMoodles))

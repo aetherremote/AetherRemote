@@ -6,11 +6,7 @@ using AetherRemoteClient.Services;
 
 namespace AetherRemoteClient.UI.Views.Settings;
 
-public class SettingsViewUiController(
-    ActionQueueService actionQueueService,
-    HypnosisManager hypnosisManager,
-    DtrHandler dtrHandler,
-    PermanentTransformationHandler permanentTransformationHandler)
+public class SettingsViewUiController(ActionQueueService actionQueueService, HypnosisManager hypnosisManager, DtrHandler dtrHandler)
 {
     /// <summary>
     ///     Updates safe mode, and clears all pending actions, spirals, etc...
@@ -25,10 +21,7 @@ public class SettingsViewUiController(
             // Only proceed if safe mode is enabled
             if (safeMode is false)
                 return;
-
-            // Unlock permanent transformations
-            permanentTransformationHandler.ForceClearPermanentTransformation();
-        
+            
             // Stop spirals
             hypnosisManager.Wake();
         

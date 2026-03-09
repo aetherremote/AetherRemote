@@ -203,6 +203,30 @@ public class ProfileManager
     }
 
     /// <summary>
+    ///     Attempts to get the highest priority active profile for a character
+    /// </summary>
+    /// <returns>The JSON string of the target character (empty string if none found), or null if something went wrong</returns>
+    public string? TryGetActiveIpcProfileOnCharacter(string characterName, string characterWorld)
+    {
+        // If we couldn't find a customize profile on the character, that just means they don't have one set
+        if (TryGetActiveProfileOnCharacter(characterName, characterWorld) is not { } profile)
+            return string.Empty;
+
+        if (_ipcCharacterProfileContainer.FromFullProfile.Invoke(null, [profile.Value]) is not { } ipcCharacterProfile)
+            return null;
+        
+        try
+        {
+            return JsonConvert.SerializeObject(ipcCharacterProfile, SerializerSettings);
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Warning($"[ProfileManager.TryGetActiveIpcProfileOnCharacter] An error occurred, {e}");
+            return null;
+        }
+    }
+
+    /// <summary>
     ///     Clones an existing profile
     /// </summary>
     public CustomizePlusProfile? Clone(CustomizePlusProfile profile)
@@ -223,7 +247,7 @@ public class ProfileManager
     /// <summary>
     ///     Attempts to get the highest priority profile for a character
     /// </summary>
-    public CustomizePlusProfile? TryGetActiveProfileOnCharacter(string characterNameToSearchFor)
+    public CustomizePlusProfile? TryGetActiveProfileOnCharacter(string characterName)
     {
         if (_profiles.GetValue(_profileManager) is not IEnumerable profiles)
             return null;
@@ -245,7 +269,7 @@ public class ProfileManager
             foreach (var character in characters)
             {
                 // Returns a string that looks like "First Last (World)"
-                if (character?.ToString()?.Contains(characterNameToSearchFor) is null or false)
+                if (character?.ToString()?.Contains(characterName) is null or false)
                     continue;
 
                 containsCharacter = true;
@@ -261,6 +285,51 @@ public class ProfileManager
 
             if (priority <= highestPriority)
                 continue;
+            
+            // Set the current highest profile
+            highestPriority = priority;
+            highestPriorityProfile = profile;
+        }
+
+        return highestPriorityProfile is null 
+            ? null 
+            : new CustomizePlusProfile(highestPriorityProfile);
+    }
+    
+    /// <summary>
+    ///     Attempts to get the highest priority profile for a character
+    /// </summary>
+    public CustomizePlusProfile? TryGetActiveProfileOnCharacter(string characterName, string characterWorld)
+    {
+        if (_profiles.GetValue(_profileManager) is not IEnumerable profiles) return null;
+
+        var highestPriority = -1;
+        object? highestPriorityProfile = null;
+        foreach (var profile in profiles)
+        {
+            // Skip over portions we can't find
+            if (_profileContainer.Enabled.GetValue(profile) is false or null) continue;
+            if (_profileContainer.Characters.GetValue(profile) is not IEnumerable characters) continue;
+
+            // Check to see if the character is one we care about
+            var containsCharacter = false;
+            foreach (var character in characters)
+            {
+                // Returns a string that looks like "First Last (World)"
+                if (character?.ToString() is not { } name) continue;
+                if (name.Contains(characterName, StringComparison.OrdinalIgnoreCase) is false) continue;
+                if (name.Contains(characterWorld, StringComparison.OrdinalIgnoreCase) is false) continue;
+
+                containsCharacter = true;
+                break;
+            }
+
+            // This is not the character we are looking for
+            if (containsCharacter is false) continue;
+
+            // Check Priority
+            if (_profileContainer.Priority.GetValue(profile) is not int priority) continue;
+            if (priority <= highestPriority) continue;
             
             // Set the current highest profile
             highestPriority = priority;

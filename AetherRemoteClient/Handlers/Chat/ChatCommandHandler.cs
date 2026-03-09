@@ -36,7 +36,6 @@ public partial class ChatCommandHandler : IDisposable
     private readonly HypnosisManager _hypnosisManager;
     private readonly NetworkCommandManager _networkCommandManager;
     private readonly PossessionManager _possessionManager;
-    private readonly PermanentTransformationHandler _permanentTransformationHandler;
     private readonly MainWindow _mainWindow;
     
     public ChatCommandHandler(
@@ -47,7 +46,6 @@ public partial class ChatCommandHandler : IDisposable
         HypnosisManager hypnosisManager,
         NetworkCommandManager networkCommandManager,
         PossessionManager possessionManager,
-        PermanentTransformationHandler permanentTransformationHandler,
         MainWindow mainWindow)
     {
         _actionQueueService = actionQueueService;
@@ -57,7 +55,6 @@ public partial class ChatCommandHandler : IDisposable
         _hypnosisManager = hypnosisManager;
         _networkCommandManager = networkCommandManager;
         _possessionManager = possessionManager;
-        _permanentTransformationHandler = permanentTransformationHandler;
         _mainWindow = mainWindow;
         
         Plugin.CommandManager.AddHandler(CommandNameShort, new CommandInfo(OnCommand)
@@ -133,9 +130,6 @@ public partial class ChatCommandHandler : IDisposable
                 
                 case SafeMode:
                 case SafeWord:
-                    // Remove permanent transformations
-                    _permanentTransformationHandler.ForceClearPermanentTransformation();
-                    
                     // Stop any spirals
                     _hypnosisManager.Wake();
                     

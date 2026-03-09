@@ -29,7 +29,7 @@ public class TwinningViewUi(FriendsListComponentUi friendsList, TwinningViewUiCo
 
         var width = ImGui.GetWindowWidth();
         var height = ImGui.GetWindowHeight();
-        var padding = ImGui.GetStyle().WindowPadding.X;
+        var padding = AetherRemoteImGui.WindowPadding.X;
         
         var size = ImGui.CalcTextSize(TutorialText, false, width - padding * 2f);
         
@@ -37,16 +37,52 @@ public class TwinningViewUi(FriendsListComponentUi friendsList, TwinningViewUiCo
         var footerHeight = InitiateTwinningButtonHeight + padding * 2f;
         var contentHeight = height - headerHeight - footerHeight - padding * 2f;
         
-        if (ImGui.BeginChild("TwinningTutorial", new Vector2(0, headerHeight), true))
+        SharedUserInterfaces.ContentBox("CustomizePlusOptions", AetherRemoteColors.PanelColor, true, () =>
         {
-            SharedUserInterfaces.TextCentered("Tutorial");
-            ImGui.Spacing();
-            ImGui.TextWrapped(TutorialText);
+            var dimensions = new Vector2((width - padding * 5) * 0.25f, 0);//AetherRemoteDimensions.SendCommandButtonHeight);
+
+            // Snapshot the current mode
+            var value = false;
             
-            ImGui.EndChild();
-        }
-        
-        ImGui.Spacing();
+            SharedUserInterfaces.PushMediumFont();
+            SharedUserInterfaces.TextCentered("Mode", width);
+            SharedUserInterfaces.PopMediumFont();
+            
+            ImGui.SameLine(width - ImGui.GetFontSize() - AetherRemoteImGui.WindowPadding.X * 2);
+            SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
+            
+            // Overwrite Existing
+            if (value is false) ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteColors.PrimaryColor);
+            if (ImGui.Button("Body Swap", dimensions))
+            {
+                
+            }
+            if (value is false) ImGui.PopStyleColor();
+            
+            ImGui.SameLine();
+            
+            // Merge Into Existing
+            if (value) ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteColors.PrimaryColor);
+            if (ImGui.Button("Twinning", dimensions))
+            {
+                
+            }
+            if (value) ImGui.PopStyleColor();
+            
+            ImGui.SameLine();
+            
+            if (ImGui.Button("Mimicry", dimensions))
+            {
+                
+            }
+            
+            ImGui.SameLine();
+            
+            if (ImGui.Button("Transform", dimensions))
+            {
+                
+            }
+        });
         
         if (ImGui.BeginChild("TwinningOptions", new Vector2(0, contentHeight), true))
         {
@@ -59,8 +95,8 @@ public class TwinningViewUi(FriendsListComponentUi friendsList, TwinningViewUiCo
             DrawAttributeButton(FontAwesomeIcon.Tshirt,rowOneButtonWidth, "Equipment", true, RequiresGlamourer);
 
             SharedUserInterfaces.MediumText("Extra attributes");
-            if (DrawAttributeButton(FontAwesomeIcon.Wrench, rowTwoButtonWidth, "Mods", controller.SwapMods, RequiresPenumbra))
-                controller.SwapMods = !controller.SwapMods;
+            if (DrawAttributeButton(FontAwesomeIcon.Wrench, rowTwoButtonWidth, "Mods", controller.SwapPenumbraMods, RequiresPenumbra))
+                controller.SwapPenumbraMods = !controller.SwapPenumbraMods;
             ImGui.SameLine();
             
             if (DrawAttributeButton(FontAwesomeIcon.Icons, rowTwoButtonWidth,"Moodles", controller.SwapMoodles, RequiresMoodles))

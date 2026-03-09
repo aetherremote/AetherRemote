@@ -24,6 +24,8 @@ public class LoginViewUiController : IDisposable
         _networkService = networkService;
         _loginManager = loginManager;
         _loginManager.LoginFinished += OnLoginFinished;
+        if (_loginManager.HasLoginFinished)
+            OnLoginFinished();
     }
     
     public async void Connect()

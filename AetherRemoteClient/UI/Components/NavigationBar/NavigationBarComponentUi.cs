@@ -35,23 +35,25 @@ public class NavigationBarComponentUi(NetworkService networkService, ViewService
                 NavBarButton(FontAwesomeIcon.UserFriends, "Friends", View.Friends, size, offset);
                 NavBarButton(FontAwesomeIcon.Pause, "Pause", View.Pause, size, offset);
 
-                ImGui.TextUnformatted("Actions");
-                NavBarButton(FontAwesomeIcon.PeopleArrows, "Body Swap", View.BodySwap, size, offset);
-                NavBarButton(FontAwesomeIcon.Plus, "Customize+", View.CustomizePlus, size, offset);
+                ImGui.TextUnformatted("Social");
+                NavBarButton(FontAwesomeIcon.Comments, "Speak", View.Speak, size, offset);
                 NavBarButton(FontAwesomeIcon.Smile, "Emote", View.Emote, size, offset);
-                NavBarButton(FontAwesomeIcon.Crown, "Honorific", View.Honorific, size, offset);
-                NavBarButton(FontAwesomeIcon.Stopwatch, "Hypnosis", View.Hypnosis, size, offset);
+                
+                ImGui.TextUnformatted("Manipulations");
+                NavBarButton(FontAwesomeIcon.PeopleArrows, "Transformations", View.Transformations, size, offset);
+                NavBarButton(FontAwesomeIcon.Plus, "Customize+", View.CustomizePlus, size, offset);
                 
                 // TODO: Re-enable when Moodles IPC is reintroduced
                 ImGui.BeginDisabled();
                 NavBarButton(FontAwesomeIcon.Icons, "Moodles", View.Moodles, size, offset);
                 ImGui.EndDisabled();
                 
-                NavBarButton(FontAwesomeIcon.Ghost, "(Beta) Possession", View.Possession, size, offset);
-                NavBarButton(FontAwesomeIcon.Comments, "Speak", View.Speak, size, offset);
-                NavBarButton(FontAwesomeIcon.WandMagicSparkles, "Transformation", View.Transformation, size, offset);
-                NavBarButton(FontAwesomeIcon.PeopleGroup, "Twinning", View.Twinning, size, offset);
+                NavBarButton(FontAwesomeIcon.Crown, "Honorific", View.Honorific, size, offset);
                 
+                ImGui.TextUnformatted("Control");
+                NavBarButton(FontAwesomeIcon.Stopwatch, "Hypnosis", View.Hypnosis, size, offset);
+                NavBarButton(FontAwesomeIcon.Ghost, "(Beta) Possession", View.Possession, size, offset);
+
                 ImGui.TextUnformatted("Configuration");
                 NavBarButton(FontAwesomeIcon.History, "History", View.History, size, offset);
             }

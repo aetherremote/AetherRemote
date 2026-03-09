@@ -25,7 +25,7 @@ public class PenumbraService : IExternalPlugin
     private readonly GetGameObjectResourcePaths _getGameObjectResourcePaths;
     private readonly GetMetaManipulations _getMetaManipulations;
     private readonly GetCollectionForObject _getCollectionForObject;
-    private readonly RemoveTemporaryModAll _removeTemporaryMod;
+    private readonly RemoveTemporaryMod _removeTemporaryMod;
     private readonly RedrawObject _redrawObject;
     private readonly ApiVersion _version;
     
@@ -47,7 +47,7 @@ public class PenumbraService : IExternalPlugin
         _addTemporaryMod = new AddTemporaryModAll(Plugin.PluginInterface);
         _getGameObjectResourcePaths = new GetGameObjectResourcePaths(Plugin.PluginInterface);
         _getMetaManipulations = new GetMetaManipulations(Plugin.PluginInterface);
-        _removeTemporaryMod = new RemoveTemporaryModAll(Plugin.PluginInterface);
+        _removeTemporaryMod = new RemoveTemporaryMod(Plugin.PluginInterface);
         _getCollectionForObject = new GetCollectionForObject(Plugin.PluginInterface);
         _redrawObject = new RedrawObject(Plugin.PluginInterface);
         _version = new ApiVersion(Plugin.PluginInterface);
@@ -154,6 +154,8 @@ public class PenumbraService : IExternalPlugin
         return string.Empty;
     }
 
+    // TODO: Look into making this maybe nullable to where if something fails it is a clue error state?
+    
     /// <summary>
     ///     Calls penumbra's GetCollectionForObject function
     /// </summary>
@@ -218,33 +220,31 @@ public class PenumbraService : IExternalPlugin
     }
 
     /// <summary>
-    ///     Calls penumbra's RemoveTemporaryMod function
+    ///     Removes the temporary mod collection from the specified collection
     /// </summary>
-    /// <returns><see cref="bool"/> indicating success</returns>
-    public async Task<bool> CallRemoveTemporaryMod()
+    /// <remarks>Returns true if the result is Success, NothingChanged, or CollectionMissing</remarks>
+    public async Task<bool> RemoveTemporaryMod(Guid collectionId)
     {
-        if (ApiAvailable)
+        if (ApiAvailable is false)
+            return false;
+
+        try
+        {
             return await Plugin.RunOnFramework(() =>
             {
-                try
-                {
-                    var result = _removeTemporaryMod.Invoke(TemporaryModName, Priority);
-                    if (result is PenumbraApiEc.Success or PenumbraApiEc.NothingChanged)
-                        return true;
-
-                    Plugin.Log.Warning(
-                        $"[PenumbraService] Removing temporary mod was unsuccessful, result was {result}");
-                    return false;
-                }
-                catch (Exception e)
-                {
-                    Plugin.Log.Warning($"[PenumbraService] Removing temporary mod failed unexpectedly, {e.Message}");
-                    return false;
-                }
+                var result = _removeTemporaryMod.Invoke(TemporaryModName, collectionId, Priority);
+                if (result is PenumbraApiEc.Success or PenumbraApiEc.NothingChanged or PenumbraApiEc.CollectionMissing)
+                    return true;
+                
+                Plugin.Log.Warning($"[PenumbraService.RemoveTemporaryMod] Ipc call unsuccessful, {result}");
+                return false;
             }).ConfigureAwait(false);
-
-        Plugin.Log.Warning("[PenumbraService] Unable to remove temporary mod because penumbra is not available");
-        return false;
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error($"[PenumbraService.RemoveTemporaryMod] {e}");
+            return false;
+        }
     }
 
     /// <summary>

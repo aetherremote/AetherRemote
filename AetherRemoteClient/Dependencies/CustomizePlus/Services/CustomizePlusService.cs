@@ -7,7 +7,9 @@ using AetherRemoteClient.Dependencies.CustomizePlus.Reflection;
 using AetherRemoteClient.Dependencies.CustomizePlus.Reflection.Domain;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
+using AetherRemoteClient.Utils;
 using Dalamud.Plugin.Ipc;
+using Dalamud.Utility;
 using ProfileData = (
     System.Guid Id,
     string Name,
@@ -196,7 +198,24 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
     public async Task<string?> TryGetActiveProfileOnCharacter(string characterNameToSearchFor)
     {
         return await Plugin.RunOnFrameworkSafely(() => _customizePlusPlugin?.ProfileManager.TryGetActiveIpcProfileOnCharacter(characterNameToSearchFor)).ConfigureAwait(false);
-    } 
+    }
+
+    /// <summary>
+    ///     Tries to get the template data for the active profile on a provided character
+    /// </summary>
+    /// <returns>The JSON template data, same as if called via GetProfileIpc</returns>
+    public async Task<string?> TryGetActiveProfileOnCharacter(string characterName, string characterWorld)
+    {
+        try
+        {
+            return await DalamudUtilities.RunOnFramework(() => _customizePlusPlugin?.ProfileManager.TryGetActiveIpcProfileOnCharacter(characterName, characterWorld)).ConfigureAwait(false);
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error($"[CustomizePlusService.TryGetActiveProfileOnCharacter] {e}");
+            return null;
+        }
+    }
 
     /// <summary>
     ///     Apply a CustomizePlus profile to the local player

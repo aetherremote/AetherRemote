@@ -1,5 +1,5 @@
 using System.Threading.Tasks;
-using AetherRemoteClient.Domain.Enums;
+using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
@@ -32,11 +32,10 @@ public partial class NetworkHandler
             return ActionResultBuilder.Fail(ActionResultEc.ValueNotSet);
         
         // Try to apply the transformation
-        var result = await _characterTransformationManager.ApplyGenericTransformation(request.GlamourerData, request.GlamourerApplyType);
-        if (result.Success is not ApplyGenericTransformationErrorCode.Success)
+        var result = await _characterTransformationManager.ApplyTransformation(request.GlamourerData, request.GlamourerApplyType).ConfigureAwait(false);
+        if (result is false)
         {
-            // Log the failure
-            Plugin.Log.Warning($"[TransformHandler.Handle] Applying a transformation failed, {result.Success}");
+            NotificationHelper.Warning("Something went wrong", $"{friend.NoteOrFriendCode} tried to transform you, but an error occurred. Type /xllog in chat to find out more.");
             _logService.Custom($"{friend.NoteOrFriendCode} tried to transform you, but an internal error occured");
             return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
         }

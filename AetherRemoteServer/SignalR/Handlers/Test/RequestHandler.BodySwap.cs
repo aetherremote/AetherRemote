@@ -26,7 +26,7 @@ public partial class RequestHandler
         }
         
         // Convert the swap attributes to primary permissions
-        var primary = request.SwapAttributes.ToPrimaryPermission();
+        var primary = request.SwapAttributes.ToPrimaryPermissions();
         primary |= PrimaryPermissions.BodySwap;
 
         // Check elevated

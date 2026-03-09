@@ -3,316 +3,339 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using AetherRemoteClient.Dependencies.CustomizePlus.Services;
 using AetherRemoteClient.Dependencies.Glamourer.Services;
+using AetherRemoteClient.Dependencies.Honorific.Domain;
 using AetherRemoteClient.Dependencies.Honorific.Services;
 using AetherRemoteClient.Dependencies.Moodles.Services;
 using AetherRemoteClient.Dependencies.Penumbra.Services;
-using AetherRemoteClient.Domain;
-using AetherRemoteClient.Domain.Attributes;
-using AetherRemoteClient.Domain.Dependencies.Glamourer;
-using AetherRemoteClient.Domain.Enums;
-using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
-using Dalamud.Bindings.ImGui;
-using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Game.ClientState.Objects.Types;
 using Newtonsoft.Json.Linq;
 
-// ReSharper disable RedundantBoolCompare
+// ReSharper disable InvertIf
 
 namespace AetherRemoteClient.Managers;
 
-/// <summary>
-///     Manages the application of transformations to the local player
-/// </summary>
 public class CharacterTransformationManager(
-    CustomizePlusService customizePlusService, 
+    CustomizePlusService customizePlusService,
     GlamourerService glamourerService, 
-    HonorificService honorificService,
+    HonorificService honorificService, 
     MoodlesService moodlesService, 
     PenumbraService penumbraService)
 {
     // Control how long the plugin should wait before initiating a transformation, useful for clients with high network latency
     private const int TransformationDelayInMilliseconds = 3000;
-    
+
+    // The collection that has the temporary mods from any body swap / twinning
+    private Guid? _collectionThatHasAetherRemoteMods;
+
+    // The status manager for the local player, used to restore the original Moodles applied to the local player if something goes wrong
+    private string? _moodlesLocalPlayerStatusManager;
+
     /// <summary>
     ///     Applies a glamourer code to the local player
-    /// </summary> 
-    public async Task<ApplyGenericTransformationResult> ApplyGenericTransformation(string glamourerCode, GlamourerApplyFlags flags)
-    {
-        // Convert to JObject
-        if (GlamourerService.ConvertGlamourerBase64StringToJObject(glamourerCode) is not { } glamourerCodeAsComponents)
-            return new ApplyGenericTransformationResult(ApplyGenericTransformationErrorCode.FailedBase64Conversion, null);
-        
-        return await ApplyGenericTransformation(glamourerCodeAsComponents, flags).ConfigureAwait(false);
-    }
-
-    /// <summary>
-    ///     <inheritdoc cref="ApplyGenericTransformation(string, GlamourerApplyFlags)"/>
     /// </summary>
-    public async Task<ApplyGenericTransformationResult> ApplyGenericTransformation(JObject glamourerJObject, GlamourerApplyFlags flags)
+    public async Task<bool> ApplyTransformation(string glamourerCode, GlamourerApplyFlags applyFlags)
     {
-        // Get local character data
-        if (await glamourerService.GetDesignComponentsAsync(0).ConfigureAwait(false) is not { } local)
-            return new ApplyGenericTransformationResult(ApplyGenericTransformationErrorCode.FailedToGetDesign, null);
+        if (GlamourerService.ConvertGlamourerBase64StringToJObject(glamourerCode) is not { } glamourerCodeAsComponents)
+        {
+            Plugin.Log.Error("[CharacterTransformationManager.ApplyTransformation] Could not deserialize glamourer code. If you see this please contact the developer!");
+            return false;
+        }
         
-        // Append any details to the converted JObject to clean up the dyes
-        if (GlamourerService.CreateJObjectToRevertExistingAdvancedDyes(local, glamourerJObject) is not { } glamourerCodeAsComponentsWithoutAdvancedDyes)
-            return new ApplyGenericTransformationResult(ApplyGenericTransformationErrorCode.FailedToRemoveAdvancedDyes, null);
-        
-        // Apply the newly converted design
-        return await glamourerService.ApplyDesignAsync(glamourerCodeAsComponentsWithoutAdvancedDyes, flags, 0).ConfigureAwait(false) 
-            ? new ApplyGenericTransformationResult(ApplyGenericTransformationErrorCode.Success, glamourerJObject)
-            : new ApplyGenericTransformationResult(ApplyGenericTransformationErrorCode.FailedToApplyDesign, null);
+        return await ApplyTransformation(glamourerCodeAsComponents, applyFlags).ConfigureAwait(false);
     }
     
     /// <summary>
-    ///     Applies another character to the local player
+    ///     Applies glamourer components to the local player
     /// </summary>
-    /// <param name="characterName">The character to transform into</param>
-    /// <param name="characterAttributes">The attributes of the character we want to transform into</param>
-    public async Task<ApplyCharacterTransformationResult> ApplyCharacterTransformation(string characterName, CharacterAttributes characterAttributes)
+    public async Task<bool> ApplyTransformation(JObject glamourerJObject, GlamourerApplyFlags applyFlags)
     {
-        // Try to remove the existing mods on the current collection
-        if (await TryRemoveExistingMods().ConfigureAwait(false) is not { } collection)
-            return new ApplyCharacterTransformationResult(ApplyCharacterTransformationErrorCode.FailedToClearExistingMods, null);
+        if (await DalamudUtilities.TryGetLocalPlayer().ConfigureAwait(false) is not { } localPlayer)
+        {
+            Plugin.Log.Error("[CharacterTransformationManager.ApplyTransformation] Could not get the local player");
+            return false;
+        }
+
+        if (await glamourerService.GetDesignComponentsAsync(localPlayer.ObjectIndex).ConfigureAwait(false) is not { } glamourerDesignComponents)
+        {
+            Plugin.Log.Error("[CharacterTransformationManager.ApplyTransformation] Could not get glamourer design components");
+            return false;
+        }
         
-        // Try to get the target player to transform into from the object table
-        if (await TryGetPlayerFromObjectTable(characterName).ConfigureAwait(false) is not { } gameObject)
-            return new ApplyCharacterTransformationResult(ApplyCharacterTransformationErrorCode.FailedToFindCharacter, null);
+        if (GlamourerService.SanitizeGlamourerAdvancedDyes(glamourerDesignComponents, glamourerJObject) is not { } glamourerDesignComponentsSanitized)
+        {
+            Plugin.Log.Error("[CharacterTransformationManager.ApplyTransformation] Could not properly sanitize advanced dyes");
+            return false;
+        }
         
-        // Try to store all the character data we will use in this transformation
-        if (await TryGetPlayerAttributes(characterAttributes, gameObject, collection).ConfigureAwait(false) is not { } attributes)
-            return new ApplyCharacterTransformationResult(ApplyCharacterTransformationErrorCode.FailedToStoreAttributes, null);
+        return await glamourerService.ApplyDesignAsync(glamourerDesignComponentsSanitized, applyFlags, localPlayer.ObjectIndex).ConfigureAwait(false);
+    }
+    
+    /// <summary>
+    ///     Transforms the local character into target character
+    /// </summary>
+    public async Task<bool> ApplyFullScaleTransformation(string characterName, string characterWorld, CharacterAttributes characterAttributes)
+    {
+        if (await TryRemoveExistingMods().ConfigureAwait(false) is false)
+        {
+            Plugin.Log.Error("[CharacterTransformationManager.ApplyFullScaleTransformation] Could not remove existing mods");
+            return false;
+        }
+
+        if (await DalamudUtilities.TryGetPlayerFromObjectTable(characterName, characterWorld).ConfigureAwait(false) is not { } targetPlayerObject)
+        {
+            Plugin.Log.Error("[CharacterTransformationManager.ApplyFullScaleTransformation] Could not find local player");
+            return false;
+        }
+
+        if (await StoreCharacterAttributes(characterName, characterWorld, targetPlayerObject, characterAttributes).ConfigureAwait(false) is not { } storedAttributes)
+        {
+            Plugin.Log.Error("[CharacterTransformationManager.ApplyFullScaleTransformation] Failed to store character attributes");
+            return false;
+        }
         
-        // Await a moment for other clients to get our local client's data
+        // In the case of body swapping, there needs to be a delay so other people can get a snapshot our character before we transform
         await Task.Delay(TransformationDelayInMilliseconds).ConfigureAwait(false);
         
-        // Ready an object to store all the transformation data
-        var permanent = new PermanentTransformationData();
-        
-        // Apply in reverse order so that C+, Mods, etc... are applied first before glamourer
-        attributes.Reverse();
-        
-        // Iterate over all the attributes and try to apply them one by one
-        foreach(var attribute in attributes)
-            if (await attribute.Apply(permanent).ConfigureAwait(false) is false)
-                return new ApplyCharacterTransformationResult(ApplyCharacterTransformationErrorCode.FailedToApplyAttributes, null);
-        
-        // Return success with the transformation data
-        return new ApplyCharacterTransformationResult(ApplyCharacterTransformationErrorCode.Success, permanent);
+        // Apply those stored changed back
+        if (await ApplyStoredAttributes(characterAttributes, storedAttributes).ConfigureAwait(false) is false)
+        {
+            Plugin.Log.Error("[CharacterTransformationManager.ApplyFullScaleTransformation] Failed to apply character attributes");
+            return false;
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    ///     Returns the collection that has modified Aether Remote mods in it, or null if it has not been set
+    /// </summary>
+    public Guid? TryGetCollectionThatHasAetherRemoteMods()
+    {
+        return _collectionThatHasAetherRemoteMods;
     }
     
-    public async Task ApplyPerm(PermanentTransformationData permanentTransformationData)
+    /// <summary>
+    ///     Store all attributes of a given character to be applied
+    /// </summary>
+    private async Task<StoredAttributes?> StoreCharacterAttributes(string characterName, string characterWorld, IGameObject playerObject, CharacterAttributes characterAttributes)
     {
-        // Try to remove the existing mods on the current collection
-        if (await TryRemoveExistingMods().ConfigureAwait(false) is not { } collection)
-            return;
-        
-        // Get local character data
-        if (await glamourerService.GetDesignComponentsAsync(0).ConfigureAwait(false) is not { } localDesignJObject)
-            return;
+        // Get a snapshot of what our target looks like now so it can be applied later
+        var storedAttributes = new StoredAttributes();
 
-        // Convert to a glamourer design
-        if (GlamourerDesignHelper.FromJObject(localDesignJObject) is not { } localDesign)
-            return;
-        
-        // Get a list of the materials to revert
-        var designWithAdvancedDyesToRevert = AppendAdvanceDyesToRevertToNewGlamourerDesign(localDesign, permanentTransformationData.GlamourerDesign);
-        
-        // Convert back to JObject
-        var convertedDesign = GlamourerDesignHelper.ToJObject(designWithAdvancedDyesToRevert);
-        
-        // Plugin.Log.Info($"Applying: {convertedDesign}");
-        ImGui.SetClipboardText(convertedDesign.ToString());
-        
-        // Apply Glamourer
-        await glamourerService.ApplyDesignAsync(convertedDesign, permanentTransformationData.GlamourerApplyType, 0).ConfigureAwait(false);
-
-        // Apply Mods
-        if (permanentTransformationData.ModMetaData is not null && permanentTransformationData.ModPathData is not null)
-            await penumbraService.AddTemporaryMod(collection, permanentTransformationData.ModPathData, permanentTransformationData.ModMetaData).ConfigureAwait(false);
-
-        // Apply Customize
-        if (permanentTransformationData.CustomizePlusData is not null)
-            await customizePlusService.ApplyCustomizeAsync(permanentTransformationData.CustomizePlusData).ConfigureAwait(false);
-
-        // Apply Moodles
-        if (permanentTransformationData.MoodlesData is not null)
-            if (await Plugin.RunOnFramework(() => Plugin.ObjectTable[0]?.Address).ConfigureAwait(false) is { } address)
+        // Save glamourer data if either are set
+        if ((characterAttributes & (CharacterAttributes.GlamourerCustomization | CharacterAttributes.GlamourerEquipment)) is not CharacterAttributes.None)
+        {
+            // This is an error state because we should have received them
+            if (await glamourerService.GetDesignComponentsAsync(playerObject.ObjectIndex).ConfigureAwait(false) is not { } glamourerDesignComponents)
             {
-                // TODO: Readd
-                //await moodlesService.SetMoodles(address, permanentTransformationData.MoodlesData).ConfigureAwait(false);
+                Plugin.Log.Error("[CharacterTransformationManager.StoreCharacterAttributes] Unable to store glamourer data");
+                return null;
             }
-    }
-
-    private async Task<Guid?> TryRemoveExistingMods()
-    {
-        // Get Current Collection
-        var collection = await penumbraService.GetCollection().ConfigureAwait(false);
-
-        // If the collection guid is the empty guid return
-        if (collection == Guid.Empty)
-            return null;
-        
-        // Remove Existing Temp Mods
-        if (await penumbraService.CallRemoveTemporaryMod().ConfigureAwait(false) is false)
-            return null;
-        
-        // Return the collection
-        return collection;
-    }
-
-    private static async Task<IGameObject?> TryGetPlayerFromObjectTable(string characterName)
-    {
-        try
-        {
-            // Get a game object for target player in object table
-            var gameObject = await Plugin.RunOnFramework(() =>
-            {
-                // Iterate through the object table
-                for (ushort i = 0; i < Plugin.ObjectTable.Length; i++)
-                {
-                    // Continue to the next object if the current is null
-                    if (Plugin.ObjectTable[i] is not { } gameObject)
-                        continue;
-
-                    // If the object is a player and the name of it is our character's name, return it
-                    if (gameObject.ObjectKind is ObjectKind.Player && gameObject.Name.TextValue == characterName)
-                        return Plugin.ObjectTable[i];
-                }
-
-                // No objects found that matched
-                return null;
-            }).ConfigureAwait(false);
-
-            // If the object was not found in the table, exit
-            if (gameObject is null)
-                Plugin.Log.Warning($"[CharacterTransformationManager] [TryGetPlayerFromObjectTable] Unable to find {characterName} in object table");
-            
-            // Return the result
-            return gameObject;
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Error($"[CharacterTransformationManager] [TryGetPlayerFromObjectTable] Encountered an unexpected error {e}");
-            return null;
-        }
-    }
-
-    // TODO: Refactor to removing Attributes
-    private async Task<List<ICharacterAttribute>?> TryGetPlayerAttributes(CharacterAttributes characterAttributes, IGameObject gameObject, Guid collection)
-    {
-        // Create a new attribute list
-        var attributes = new List<ICharacterAttribute>();
-        
-        // Store Glamourer always
-        var glamourerAttribute = new GlamourerAttribute(this, glamourerService, gameObject.ObjectIndex);
-        if (await glamourerAttribute.Store().ConfigureAwait(false) is false)
-            return null;
-        
-        // Add glamourer attribute
-        attributes.Add(glamourerAttribute);
-
-        // Check if mods are one of the attributes to store
-        if ((characterAttributes & CharacterAttributes.Mods) is CharacterAttributes.Mods)
-        {
-            // Create mod attribute
-            var modsAttribute = new ModsAttribute(penumbraService, collection, gameObject.ObjectIndex);
-            if (await modsAttribute.Store().ConfigureAwait(false) is false)
-                return null;
-            
-            // Add mods attribute
-            attributes.Add(modsAttribute);
-        }
-
-        // Check if moodles are one of the attributes to store
-        if ((characterAttributes & CharacterAttributes.Moodles) is CharacterAttributes.Moodles)
-        {
-            // Create Moodles attribute
-            var moodlesAttribute = new MoodlesAttribute(moodlesService, gameObject.Address);
-            if (await moodlesAttribute.Store().ConfigureAwait(false) is false)
-                return null;
-            
-            // Add Moodles attribute
-            attributes.Add(moodlesAttribute);
-        }
-
-        // Check if CustomizePlus is one of the attributes to store
-        if ((characterAttributes & CharacterAttributes.CustomizePlus) is CharacterAttributes.CustomizePlus)
-        {
-            // Store CustomizePlus attribute
-            var customizePlusAttribute = new CustomizePlusAttribute(customizePlusService, gameObject.Name.TextValue);
-            if (await customizePlusAttribute.Store().ConfigureAwait(false) is false)
-                return null;
-            
-            // Add CustomizePlus attribute
-            attributes.Add(customizePlusAttribute);
+                
+            // Set the attribute
+            storedAttributes.GlamourerDesignComponents = glamourerDesignComponents;   
         }
         
-        // Check if Honorific is one of the attributes to store
+        // Save penumbra data
+        if ((characterAttributes & CharacterAttributes.PenumbraMods) is CharacterAttributes.PenumbraMods)
+        {
+            // TODO: Should these fail too?
+            storedAttributes.PenumbraModifiedPaths = await penumbraService.GetGameObjectResourcePaths(playerObject.ObjectIndex).ConfigureAwait(false);
+            storedAttributes.PenumbraMetaManipulations = await penumbraService.GetMetaManipulations(playerObject.ObjectIndex).ConfigureAwait(false);
+        }
+        
+        // Save honorific
         if ((characterAttributes & CharacterAttributes.Honorific) is CharacterAttributes.Honorific)
         {
-            // Store Honorific attribute
-            var honorificAttribute = new HonorificAttribute(honorificService, gameObject.ObjectIndex);
-            if (await honorificAttribute.Store().ConfigureAwait(false) is false)
+            // This is an error state because we should have received them
+            if (await honorificService.GetCharacterTitle(playerObject.ObjectIndex).ConfigureAwait(false) is not { } honorific)
+            {
+                Plugin.Log.Error("[CharacterTransformationManager.StoreCharacterAttributes] Unable to store honorific data");
                 return null;
+            }
             
-            // Add CustomizePlus attribute
-            attributes.Add(honorificAttribute);
+            // Set the attribute
+            storedAttributes.Honorific = honorific;
         }
         
-        // Return attributes
-        return attributes;
-    }
-
-    private static GlamourerDesign AppendAdvanceDyesToRevertToNewGlamourerDesign(GlamourerDesign localDesign, GlamourerDesign targetDesign)
-    {
-        // Clone the target design
-        var finalDesign = targetDesign.Clone();
-        
-        // Iterate over all the materials on the local design
-        foreach (var material in localDesign.Materials)
+        // Save Moodles
+        if ((characterAttributes & CharacterAttributes.Moodles) is CharacterAttributes.Moodles)
         {
-            // Check to see if this material affects a piece of equipment in the permanent transformation
-            var slot = GlamourerDesignHelper.ToEquipmentSlot(material.Key);
-            if (AffectsEquipmentSlot(slot, finalDesign.Equipment) is false)
-                continue;
+            // This is an error state because we should have received them
+            if (await moodlesService.GetStatusManager(playerObject.Address).ConfigureAwait(false) is not { } moodles)
+            {
+                Plugin.Log.Error("[CharacterTransformationManager.StoreCharacterAttributes] Unable to store moodles data");
+                return null;
+            }
             
-            // Check to see if the material is already present in the permanent transformation, and ignore it if is since it will be overwritten anyway
-            if (finalDesign.Materials.ContainsKey(material.Key))
-                continue;
-
-            // Copy the material
-            var clone = material.Value.Clone();
+            // Set the attribute
+            storedAttributes.Moodles = moodles;
             
-            // Mark it to revert when applied
-            clone.Revert = true;
+            // We'll try to save the local player's Moodles too just in case
+            if (await DalamudUtilities.TryGetLocalPlayer().ConfigureAwait(false) is { } localPlayer)
+                _moodlesLocalPlayerStatusManager = await moodlesService.GetStatusManager(localPlayer.Address).ConfigureAwait(false);
+        }
+        
+        // Save Customize+
+        if ((characterAttributes & CharacterAttributes.CustomizePlus) is CharacterAttributes.CustomizePlus)
+        {
+            // This is an error state because we should have received them
+            if (await customizePlusService.TryGetActiveProfileOnCharacter(characterName, characterWorld).ConfigureAwait(false) is not { } profile)
+            {
+                Plugin.Log.Error("[CharacterTransformationManager.StoreCharacterAttributes] Unable to store customize+ data");
+                return null;
+            }
             
-            // Add to the final design
-            finalDesign.Materials.Add(material.Key, clone);
+            storedAttributes.CustomizePlusTemplate = profile;
+        }
+        
+        // All attributes have been stored, this can be returned for use in application or permanent transformations
+        return storedAttributes;
+    }
+    
+    /// <summary>
+    ///     Apply all attributes of a given character to the local character
+    /// </summary>
+    private async Task<bool> ApplyStoredAttributes(CharacterAttributes characterAttributes, StoredAttributes storedAttributes)
+    {
+        // Get the local player we will be applying these things to
+        if (await DalamudUtilities.TryGetLocalPlayer().ConfigureAwait(false) is not { } localPlayer)
+        {
+            Plugin.Log.Error("[CharacterTransformationManager.ApplyStoredAttributes] Could not find local player");
+            await TryRevert().ConfigureAwait(false);
+            return false;
+        }
+        
+        // Apply the Customize+ data if it exists
+        if (storedAttributes.CustomizePlusTemplate is { } customizePlusTemplate)
+        {
+            if (await customizePlusService.ApplyCustomizeAsync(customizePlusTemplate).ConfigureAwait(false) is false)
+            {
+                Plugin.Log.Error("[CharacterTransformationManager.ApplyStoredAttributes] Unable to apply customize+ data");
+                await TryRevert().ConfigureAwait(false);
+                return false;
+            }
         }
 
-        // Return everything modified
-        return finalDesign;
+        // Apply the Honorific data if it exists
+        if (storedAttributes.Honorific is { } honorific)
+        {
+            if (await honorificService.SetCharacterTitle(honorific).ConfigureAwait(false) is false)
+            {
+                Plugin.Log.Error("[CharacterTransformationManager.ApplyStoredAttributes] Unable to apply honorific data");
+                await TryRevert().ConfigureAwait(false);
+                return false;
+            }
+        }
+
+        // Apply the Moodles data if it exists
+        if (storedAttributes.Moodles is { } moodles)
+        {
+            if (await moodlesService.SetStatusManager(localPlayer.Address, moodles).ConfigureAwait(false) is false)
+            {
+                Plugin.Log.Error("[CharacterTransformationManager.ApplyStoredAttributes] Unable to apply moodles data");
+                await TryRevert().ConfigureAwait(false);
+                return false;
+            }
+        }
+        
+        // Apply the Penumbra data if it exists (apparently this is a pattern? Rider knows best I guess...)
+        if (storedAttributes is { PenumbraModifiedPaths: { } penumbraModifiedPaths, PenumbraMetaManipulations: { } penumbraMetaManipulations })
+        {
+            // Get the currently active collection guid
+            var guid = await penumbraService.GetCollection().ConfigureAwait(false);
+            if (await penumbraService.AddTemporaryMod(guid, penumbraModifiedPaths, penumbraMetaManipulations).ConfigureAwait(false) is false)
+            {
+                Plugin.Log.Error("[CharacterTransformationManager.ApplyStoredAttributes] Unable to apply penumbra data");
+                await TryRevert().ConfigureAwait(false);
+                return false;
+            }
+
+            // We need to store the last collection guid we applied mods to
+            _collectionThatHasAetherRemoteMods = guid;
+        }
+        
+        // Wait a short second to make sure everything applies and propagates
+        await Task.Delay(100).ConfigureAwait(false);
+        
+        // Apply the Glamourer data if it exists
+        if (storedAttributes.GlamourerDesignComponents is { } glamourerDesignComponents)
+        {
+            var applyFlags = ExtractApplyFlagsFromCharacterAttributes(characterAttributes);
+            if (await glamourerService.ApplyDesignAsync(glamourerDesignComponents, applyFlags, localPlayer.ObjectIndex).ConfigureAwait(false) is false)
+            {
+                Plugin.Log.Error("[CharacterTransformationManager.ApplyStoredAttributes] Unable to apply glamourer data");
+                await TryRevert().ConfigureAwait(false);
+                return false;
+            }
+        }
+
+        return true;
     }
 
-    private static bool AffectsEquipmentSlot(GlamourerEquipmentSlot slot, GlamourerEquipment equipment)
+    /// <summary>
+    ///     Reverts the local character back to their default, to be used as a fall-back if something goes wrong
+    /// </summary>
+    private async Task TryRevert()
     {
-        return slot switch
+        honorificService.ClearCharacterTitle();
+        await TryRemoveExistingMods().ConfigureAwait(false);
+        await customizePlusService.DeleteTemporaryCustomizeAsync().ConfigureAwait(false);
+        
+        if (_collectionThatHasAetherRemoteMods is not null)
+            await penumbraService.RemoveTemporaryMod(_collectionThatHasAetherRemoteMods.Value).ConfigureAwait(false);
+
+        if (await DalamudUtilities.TryGetLocalPlayer().ConfigureAwait(false) is { } localPlayer)
         {
-            GlamourerEquipmentSlot.None => false,
-            GlamourerEquipmentSlot.Head => equipment.Head.Apply,
-            GlamourerEquipmentSlot.Body => equipment.Body.Apply,
-            GlamourerEquipmentSlot.Hands => equipment.Hands.Apply,
-            GlamourerEquipmentSlot.Legs => equipment.Legs.Apply,
-            GlamourerEquipmentSlot.Feet => equipment.Feet.Apply,
-            GlamourerEquipmentSlot.Ears => equipment.Ears.Apply,
-            GlamourerEquipmentSlot.Neck => equipment.Neck.Apply,
-            GlamourerEquipmentSlot.Wrists => equipment.Wrists.Apply,
-            GlamourerEquipmentSlot.RFinger => equipment.RFinger.Apply,
-            GlamourerEquipmentSlot.LFinger => equipment.LFinger.Apply,
-            _ => false
-        };
+            if (_moodlesLocalPlayerStatusManager is not null)
+                await moodlesService.SetStatusManager(localPlayer.Address, _moodlesLocalPlayerStatusManager).ConfigureAwait(false);
+            
+            await glamourerService.RevertToAutomation(localPlayer.ObjectIndex).ConfigureAwait(false);
+        }
+
+        _collectionThatHasAetherRemoteMods = null;
+        _moodlesLocalPlayerStatusManager = null;
+    }
+
+    /// <summary>
+    ///     Light wrapper to help remove existing mods before doing something new
+    /// </summary>
+    private async Task<bool> TryRemoveExistingMods()
+    {
+        // Exit gracefully if there are no mods to remove
+        if (_collectionThatHasAetherRemoteMods is null)
+            return true;
+
+        // Try to remove the temporary mods from the stored collection
+        return await penumbraService.RemoveTemporaryMod(_collectionThatHasAetherRemoteMods.Value).ConfigureAwait(false);
+    }
+
+    /// <summary>
+    ///     Wrapper to pull out the apply flags from the character attribute
+    /// </summary>
+    private static GlamourerApplyFlags ExtractApplyFlagsFromCharacterAttributes(CharacterAttributes characterAttributes)
+    {
+        var applyFlags = GlamourerApplyFlags.Once;
+        if ((characterAttributes & CharacterAttributes.GlamourerCustomization) is CharacterAttributes.GlamourerCustomization)
+            applyFlags |= GlamourerApplyFlags.Customization;
+        
+        if ((characterAttributes & CharacterAttributes.GlamourerEquipment) is CharacterAttributes.GlamourerEquipment)
+            applyFlags |= GlamourerApplyFlags.Equipment;
+
+        return applyFlags;
+    }
+
+
+
+    private class StoredAttributes
+    {
+        public JObject? GlamourerDesignComponents;
+        public Dictionary<string, string>? PenumbraModifiedPaths;
+        public string? PenumbraMetaManipulations;
+        public HonorificCustomTitle? Honorific;
+        public string? Moodles;
+        public string? CustomizePlusTemplate;
     }
 }

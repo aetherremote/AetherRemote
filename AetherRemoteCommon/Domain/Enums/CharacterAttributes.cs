@@ -7,8 +7,10 @@ namespace AetherRemoteCommon.Domain.Enums;
 public enum CharacterAttributes
 {
     None = 0,
-    Mods = 1 << 0,
-    Moodles = 1 << 1,
-    CustomizePlus = 1 << 2,
+    GlamourerCustomization = 1 << 0,
+    GlamourerEquipment = 1 << 1,
+    PenumbraMods = 1 << 2,
     Honorific = 1 << 3,
+    Moodles = 1 << 4,
+    CustomizePlus = 1 << 5,
 }

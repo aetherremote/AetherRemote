@@ -5,6 +5,7 @@ using AetherRemoteClient.Dependencies.Honorific.Services;
 using AetherRemoteClient.Dependencies.Penumbra.Services;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Managers.Possession;
+using AetherRemoteClient.Utils;
 
 namespace AetherRemoteClient.UI.Views.Status;
 
@@ -15,6 +16,7 @@ public class StatusViewUiController(
     PenumbraService penumbraService,
     StatusManager statusManager,
     HypnosisManager hypnosisManager,
+    CharacterTransformationManager characterTransformationManager,
     PossessionManager possessionManager)
 {
     /// <summary>
@@ -32,10 +34,19 @@ public class StatusViewUiController(
     /// </summary>
     public async Task ClearGlamourerPenumbra()
     {
-        var glamourer = await glamourerService.RevertToAutomation(0).ConfigureAwait(false);
-        var penumbra = await penumbraService.CallRemoveTemporaryMod().ConfigureAwait(false);
-        if (glamourer && penumbra)
-            statusManager.ClearGlamourerPenumbra();
+        if (await DalamudUtilities.TryGetLocalPlayer().ConfigureAwait(false) is not { } localPlayer)
+            return;
+
+        if (await glamourerService.RevertToAutomation(localPlayer.ObjectIndex).ConfigureAwait(false) is false)
+            return;
+
+        // If collections are set, try to remove
+        if (characterTransformationManager.TryGetCollectionThatHasAetherRemoteMods() is { } collection)
+            if (await penumbraService.RemoveTemporaryMod(collection).ConfigureAwait(false) is false)
+                return;
+        
+        // If the mod removal process succeeded or exited gracefully, we are now in the clear to reset the status
+        statusManager.ClearGlamourerPenumbra();
     }
     
     /// <summary>

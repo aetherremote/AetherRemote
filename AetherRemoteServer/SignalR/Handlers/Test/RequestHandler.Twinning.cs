@@ -22,7 +22,7 @@ public partial class RequestHandler
             return new ActionResponse(error, []);
         }
         
-        var primary = request.SwapAttributes.ToPrimaryPermission();
+        var primary = request.SwapAttributes.ToPrimaryPermissions();
         primary |= PrimaryPermissions.Twinning;
         
         var elevated = ElevatedPermissions.None;
