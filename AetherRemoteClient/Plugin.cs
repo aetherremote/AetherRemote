@@ -22,6 +22,7 @@ using AetherRemoteClient.UI.Views.CustomizePlus;
 using AetherRemoteClient.UI.Views.Debug;
 using AetherRemoteClient.UI.Views.Emote;
 using AetherRemoteClient.UI.Views.Friends;
+using AetherRemoteClient.UI.Views.Friends.Ui;
 using AetherRemoteClient.UI.Views.History;
 using AetherRemoteClient.UI.Views.Home;
 using AetherRemoteClient.UI.Views.Honorific;
@@ -43,9 +44,6 @@ using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using Microsoft.Extensions.DependencyInjection;
-using FriendsViewUi = AetherRemoteClient.UI.Views.Friends.Ui.FriendsViewUi;
-using TransformationsViewUi = AetherRemoteClient.UI.Views.Transformations.Views.TransformationsViewUi;
-using TransformationsViewUiController = AetherRemoteClient.UI.Views.Transformations.Controllers.TransformationsViewUiController;
 
 namespace AetherRemoteClient;
 
@@ -208,7 +206,7 @@ public sealed class Plugin : IDalamudPlugin
         // Ui - Controllers
         _services.GetRequiredService<LoginViewUiController>();              // Required to display secret once character configuration loads
         _services.GetRequiredService<MoodlesViewUiController>();            // Required to display UI elements when IPCs are loaded
-        _services.GetRequiredService<TransformationViewUiController>();     // Required to display UI elements when IPCs are loaded
+        _services.GetRequiredService<TransformationsViewUiController>();    // Required to display UI elements when IPCs are loaded
         _services.GetRequiredService<CustomizePlusViewUiController>();      // Required to display UI elements when IPCs are loaded
         _services.GetRequiredService<HonorificViewUiController>();          // Required to display UI elements when IPCs are loaded
         

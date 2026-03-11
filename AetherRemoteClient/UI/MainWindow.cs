@@ -26,7 +26,6 @@ using AetherRemoteClient.UI.Views.Transformations;
 using AetherRemoteClient.UI.Views.Twinning;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Windowing;
-using TransformationsViewUi = AetherRemoteClient.UI.Views.Transformations.Views.TransformationsViewUi;
 
 namespace AetherRemoteClient.UI;
 

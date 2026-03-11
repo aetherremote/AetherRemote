@@ -8,6 +8,7 @@ using AetherRemoteCommon.Domain.Network.Customize;
 using AetherRemoteCommon.Domain.Network.Emote;
 using AetherRemoteCommon.Domain.Network.Speak;
 using AetherRemoteCommon.Domain.Network.Transform;
+using AetherRemoteCommon.Domain.Network.Twinning;
 
 namespace AetherRemoteClient.Managers;
 
@@ -67,7 +68,7 @@ public class NetworkCommandManager(CommandLockoutService commandLockoutService, 
     }
 
     /// <summary>
-    ///     Sends a <see cref="CustomizeRequest"/> to the server
+    ///     Sends a <see cref="TransformRequest"/> to the server
     /// </summary>
     public async Task SendTransformation(List<string> targets, string design, GlamourerApplyFlags flags)
     {
@@ -75,5 +76,16 @@ public class NetworkCommandManager(CommandLockoutService commandLockoutService, 
         var request = new TransformRequest(targets, design, flags, null);
         var response = await network.InvokeAsync<ActionResponse>(HubMethod.Transform, request).ConfigureAwait(false);
         ActionResponseParser.Parse("Transform", response);
+    }
+    
+    /// <summary>
+    ///     Sends a <see cref="TwinningRequest"/> to the server
+    /// </summary>
+    public async Task SendTwinning(List<string> targets, string characterName, string characterWorld, CharacterAttributes attributes)
+    {
+        commandLockoutService.Lock();
+        var request = new TwinningRequest(targets, characterName, characterWorld, attributes, null);
+        var response = await network.InvokeAsync<ActionResponse>(HubMethod.Twinning, request).ConfigureAwait(false);
+        ActionResponseParser.Parse("Twinning", response);
     }
 }
