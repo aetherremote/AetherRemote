@@ -13,9 +13,9 @@ public partial class PrimaryHub
     [HubMethodName(HubMethod.Possession.Begin)]
     public async Task<PossessionBeginResponse> PossessionBegin(PossessionBeginRequest request)
     {
-        logger.LogInformation("{Request}", request);
+        // logger.LogInformation("{Request}", request);
         var friendCode = FriendCode;
-        LogWithBehavior($"[PossessionBegin] Sender = {friendCode}, Target = {request.TargetFriendCode}", LogMode.Console);
+        // LogWithBehavior($"[PossessionBegin] Sender = {friendCode}, Target = {request.TargetFriendCode}", LogMode.Console);
         return await requestHandler.HandlePossessionBegin(friendCode, request, Clients);
     }
     
@@ -40,9 +40,9 @@ public partial class PrimaryHub
     [HubMethodName(HubMethod.Possession.End)]
     public async Task<PossessionResponse> PossessionEnd(PossessionEndRequest request)
     {
-        logger.LogInformation("{Request}", request);
+        // logger.LogInformation("{Request}", request);
         var friendCode = FriendCode;
-        LogWithBehavior($"[PossessionEndRequest] Sender = {friendCode}", LogMode.Console);
+        // LogWithBehavior($"[PossessionEndRequest] Sender = {friendCode}", LogMode.Console);
         return await requestHandler.HandlePossessionEnd(friendCode, Clients);
     }
 }

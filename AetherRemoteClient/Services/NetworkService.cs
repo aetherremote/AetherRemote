@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using AetherRemoteClient.Domain.Network;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network.GetToken;
@@ -34,10 +35,10 @@ public class NetworkService : IDisposable
     public event Func<Task>? Disconnected;
     
 #if DEBUG
-    // private const string HubUrl = "https://localhost:5006/primaryHub";
-    // private const string PostUrl = "https://localhost:5006/api/auth/login";
-    private const string HubUrl = "https://foxitsvc.com:5017/primaryHub";
-    private const string PostUrl = "https://foxitsvc.com:5017/api/auth/login";
+    private const string HubUrl = "https://localhost:5006/primaryHub";
+    private const string PostUrl = "https://localhost:5006/api/auth/login";
+    // private const string HubUrl = "https://foxitsvc.com:5017/primaryHub";
+    // private const string PostUrl = "https://foxitsvc.com:5017/api/auth/login";
     // private const string HubUrl = "https://foxitsvc.com:5006/primaryHub";
     // private const string PostUrl = "https://foxitsvc.com:5006/api/auth/login";
 #else
@@ -72,7 +73,7 @@ public class NetworkService : IDisposable
                 // ReSharper disable once RedundantTypeArgumentsOfMethod
                 options.AccessTokenProvider = () => Task.FromResult<string?>(_token);
             })
-            .WithAutomaticReconnect()
+            .WithAutomaticReconnect(new InfiniteRetryPolicy())
             .AddMessagePackProtocol(options =>
             {
                 options.SerializerOptions = MessagePackSerializerOptions.Standard.WithSecurity(MessagePackSecurity.UntrustedData);
