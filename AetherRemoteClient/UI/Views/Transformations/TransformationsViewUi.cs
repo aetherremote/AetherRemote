@@ -82,9 +82,9 @@ public class TransformationsViewUi(FriendsListComponentUi friendsList, Transform
             
             // Snapshot the current mode and create nav buttons
             var value = controller.Mode;
-            DrawHeaderNavButton(TransformationMode.Transform, "Transform", headerButtonDimensions, value); ImGui.SameLine();
-            DrawHeaderNavButton(TransformationMode.BodySwap, "Body Swap", headerButtonDimensions, value); ImGui.SameLine();
-            DrawHeaderNavButton(TransformationMode.Twinning, "Twinning", headerButtonDimensions, value); ImGui.SameLine();
+            DrawHeaderNavButton(TransformationMode.Transform, "Transform##NavButtonTransformation", headerButtonDimensions, value); ImGui.SameLine();
+            DrawHeaderNavButton(TransformationMode.BodySwap, "Body Swap##NavButtonTransformation", headerButtonDimensions, value); ImGui.SameLine();
+            DrawHeaderNavButton(TransformationMode.Twinning, "Twinning##NavButtonTransformation", headerButtonDimensions, value); ImGui.SameLine();
             ImGui.BeginDisabled();
             DrawHeaderNavButton(TransformationMode.Mimicry, "Mimicry", headerButtonDimensions, value);
             ImGui.EndDisabled();
@@ -130,7 +130,7 @@ public class TransformationsViewUi(FriendsListComponentUi friendsList, Transform
             if (shouldSwapGlamourerCustomization) ImGui.PopStyleColor();
             
             if (ImGui.IsItemHovered())
-                ImGui.SetTooltip(shouldSwapGlamourerCustomization ? "Currently applying glamourer customizations" : "Currently not applying glamourer customizations");
+                ImGui.SetTooltip(shouldSwapGlamourerCustomization ? "Currently applying glamourer customizations" : "Currently not applying glamourer equipment");
             
             ImGui.SameLine();
             

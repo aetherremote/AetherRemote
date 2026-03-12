@@ -53,7 +53,7 @@ public partial class RequestHandler
             if ((resolved.Primary & primary) != primary || (resolved.Elevated & elevated) != elevated)
                 return new BodySwapResponse(ActionResponseEc.TargetBodySwapLacksPermissions, [], null, null);
             
-            characters.Add(new Character(target.CharacterName, target.CharacterName));
+            characters.Add(new Character(target.CharacterName, target.CharacterWorld));
         }
 
         // Including yourself if you marked as such

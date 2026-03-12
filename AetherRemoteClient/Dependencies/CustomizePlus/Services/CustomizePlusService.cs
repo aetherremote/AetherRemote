@@ -9,7 +9,6 @@ using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Utils;
 using Dalamud.Plugin.Ipc;
-using Dalamud.Utility;
 using ProfileData = (
     System.Guid Id,
     string Name,

@@ -50,4 +50,9 @@ public class Friend(string friendCode, FriendOnlineStatus status, string? note, 
     ///     Gets the note if available, otherwise the friend code
     /// </summary>
     public string NoteOrFriendCode => Note ?? FriendCode;
+
+    /// <summary>
+    ///     A representation of the owner account. Do not access anything other than FriendCode.
+    /// </summary>
+    public static readonly Friend Self = new("You", FriendOnlineStatus.Online, null, null!, null);
 }

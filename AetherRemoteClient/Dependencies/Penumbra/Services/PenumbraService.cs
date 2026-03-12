@@ -21,7 +21,7 @@ public class PenumbraService : IExternalPlugin
     private const int ExpectedMajor = 4;
     
     // Penumbra API
-    private readonly AddTemporaryModAll _addTemporaryMod;
+    private readonly AddTemporaryMod _addTemporaryMod;
     private readonly GetGameObjectResourcePaths _getGameObjectResourcePaths;
     private readonly GetMetaManipulations _getMetaManipulations;
     private readonly GetCollectionForObject _getCollectionForObject;
@@ -44,7 +44,7 @@ public class PenumbraService : IExternalPlugin
     /// </summary>
     public PenumbraService()
     {
-        _addTemporaryMod = new AddTemporaryModAll(Plugin.PluginInterface);
+        _addTemporaryMod = new AddTemporaryMod(Plugin.PluginInterface);
         _getGameObjectResourcePaths = new GetGameObjectResourcePaths(Plugin.PluginInterface);
         _getMetaManipulations = new GetMetaManipulations(Plugin.PluginInterface);
         _removeTemporaryMod = new RemoveTemporaryMod(Plugin.PluginInterface);
@@ -194,7 +194,7 @@ public class PenumbraService : IExternalPlugin
             {
                 try
                 {
-                    var result = _addTemporaryMod.Invoke(TemporaryModName, modifiedPaths, meta, Priority);
+                    var result = _addTemporaryMod.Invoke(TemporaryModName, collectionGuid, modifiedPaths, meta, Priority);
                     switch (result)
                     {
                         case PenumbraApiEc.Success:

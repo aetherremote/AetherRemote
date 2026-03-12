@@ -34,10 +34,10 @@ public class NetworkService : IDisposable
     public event Func<Task>? Disconnected;
     
 #if DEBUG
-    private const string HubUrl = "https://localhost:5006/primaryHub";
-    private const string PostUrl = "https://localhost:5006/api/auth/login";
-    // private const string HubUrl = "https://foxitsvc.com:5017/primaryHub";
-    // private const string PostUrl = "https://foxitsvc.com:5017/api/auth/login";
+    // private const string HubUrl = "https://localhost:5006/primaryHub";
+    // private const string PostUrl = "https://localhost:5006/api/auth/login";
+    private const string HubUrl = "https://foxitsvc.com:5017/primaryHub";
+    private const string PostUrl = "https://foxitsvc.com:5017/api/auth/login";
     // private const string HubUrl = "https://foxitsvc.com:5006/primaryHub";
     // private const string PostUrl = "https://foxitsvc.com:5006/api/auth/login";
 #else

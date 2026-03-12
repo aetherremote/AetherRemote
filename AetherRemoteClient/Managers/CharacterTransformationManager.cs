@@ -21,7 +21,7 @@ public class CharacterTransformationManager(
     GlamourerService glamourerService, 
     HonorificService honorificService, 
     MoodlesService moodlesService, 
-    PenumbraService penumbraService)
+    PenumbraService penumbraService) : IDisposable
 {
     // Control how long the plugin should wait before initiating a transformation, useful for clients with high network latency
     private const int TransformationDelayInMilliseconds = 3000;
@@ -82,10 +82,10 @@ public class CharacterTransformationManager(
             Plugin.Log.Error("[CharacterTransformationManager.ApplyFullScaleTransformation] Could not remove existing mods");
             return false;
         }
-
+        
         if (await DalamudUtilities.TryGetPlayerFromObjectTable(characterName, characterWorld).ConfigureAwait(false) is not { } targetPlayerObject)
         {
-            Plugin.Log.Error("[CharacterTransformationManager.ApplyFullScaleTransformation] Could not find local player");
+            Plugin.Log.Error("[CharacterTransformationManager.ApplyFullScaleTransformation] Could not find target player");
             return false;
         }
 
@@ -211,7 +211,16 @@ public class CharacterTransformationManager(
         // Apply the Customize+ data if it exists
         if (storedAttributes.CustomizePlusTemplate is { } customizePlusTemplate)
         {
-            if (await customizePlusService.ApplyCustomizeAsync(customizePlusTemplate).ConfigureAwait(false) is false)
+            // Since we're dealing with reflection, no harm in doing another delete first
+            if (await customizePlusService.DeleteTemporaryCustomizeAsync().ConfigureAwait(false) is false)
+            {
+                Plugin.Log.Error("[CharacterTransformationManager.ApplyStoredAttributes] Unable to delete existing customize+ data");
+                await TryRevert().ConfigureAwait(false);
+            }
+
+            // If the string was empty, that means we just didn't find a C+ profile on them, but we still can't deserialize it, so we set it to null
+            var final = customizePlusTemplate == string.Empty ? null : customizePlusTemplate;
+            if (await customizePlusService.ApplyCustomizeAsync(final).ConfigureAwait(false) is false)
             {
                 Plugin.Log.Error("[CharacterTransformationManager.ApplyStoredAttributes] Unable to apply customize+ data");
                 await TryRevert().ConfigureAwait(false);
@@ -326,9 +335,7 @@ public class CharacterTransformationManager(
 
         return applyFlags;
     }
-
-
-
+    
     private class StoredAttributes
     {
         public JObject? GlamourerDesignComponents;
@@ -337,5 +344,13 @@ public class CharacterTransformationManager(
         public HonorificCustomTitle? Honorific;
         public string? Moodles;
         public string? CustomizePlusTemplate;
+    }
+
+    public void Dispose()
+    {
+        if (_collectionThatHasAetherRemoteMods is not null)
+            penumbraService.RemoveTemporaryMod(_collectionThatHasAetherRemoteMods.Value).ConfigureAwait(false);
+        
+        GC.SuppressFinalize(this);
     }
 }

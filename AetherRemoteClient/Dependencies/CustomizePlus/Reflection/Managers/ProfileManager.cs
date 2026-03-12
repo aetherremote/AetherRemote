@@ -318,7 +318,10 @@ public class ProfileManager
                 // Returns a string that looks like "First Last (World)"
                 if (character?.ToString() is not { } name) continue;
                 if (name.Contains(characterName, StringComparison.OrdinalIgnoreCase) is false) continue;
-                if (name.Contains(characterWorld, StringComparison.OrdinalIgnoreCase) is false) continue;
+                
+                // This character belongs to a different world, check their name too
+                // if (name.Contains('(', StringComparison.OrdinalIgnoreCase))
+                //    if (name.Contains(characterWorld, StringComparison.OrdinalIgnoreCase) is false) continue;
 
                 containsCharacter = true;
                 break;

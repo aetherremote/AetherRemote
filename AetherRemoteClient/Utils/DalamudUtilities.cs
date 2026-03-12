@@ -1,7 +1,6 @@
 using System;
 using System.Threading.Tasks;
 using Dalamud.Game.ClientState.Objects.SubKinds;
-using Dalamud.Game.ClientState.Objects.Types;
 
 namespace AetherRemoteClient.Utils;
 
@@ -34,7 +33,6 @@ public static class DalamudUtilities
     /// <summary>
     ///     Attempts to get the local player
     /// </summary>
-    /// <returns></returns>
     public static async Task<IPlayerCharacter?> TryGetLocalPlayer()
     {
         try
