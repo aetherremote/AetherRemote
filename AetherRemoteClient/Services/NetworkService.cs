@@ -47,11 +47,6 @@ public class NetworkService : IDisposable
 #endif
 
     private static readonly JsonSerializerOptions DeserializationOptions = new() { PropertyNameCaseInsensitive = true };
-    
-    /// <summary>
-    ///     Access token required to connect to the SignalR hub
-    /// </summary>
-    private string? _token = string.Empty;
 
     /// <summary>
     ///     If the plugin has begun the connection process
@@ -70,8 +65,7 @@ public class NetworkService : IDisposable
     {
         Connection = new HubConnectionBuilder().WithUrl(HubUrl, options =>
             {
-                // ReSharper disable once RedundantTypeArgumentsOfMethod
-                options.AccessTokenProvider = () => Task.FromResult<string?>(_token);
+                options.AccessTokenProvider = async () => await TryAuthenticateSecret().ConfigureAwait(false);
             })
             .WithAutomaticReconnect(new InfiniteRetryPolicy())
             .AddMessagePackProtocol(options =>
@@ -100,22 +94,16 @@ public class NetworkService : IDisposable
         
         try
         {
-            // Try to get the Token
-            if (await TryAuthenticateSecret().ConfigureAwait(false) is { } token)
-            {
-                _token = token;
-            
-                await Connection.StartAsync().ConfigureAwait(false);
+            await Connection.StartAsync().ConfigureAwait(false);
 
-                if (Connection.State is HubConnectionState.Connected)
-                {
-                    Connected?.Invoke();
-                    NotificationHelper.Success("[Aether Remote] Connected", string.Empty);
-                }
-                else
-                { 
-                    NotificationHelper.Warning("[Aether Remote] Unable to connect", "See developer console for more information");
-                }
+            if (Connection.State is HubConnectionState.Connected)
+            {
+                Connected?.Invoke();
+                NotificationHelper.Success("[Aether Remote] Connected", string.Empty);
+            }
+            else
+            { 
+                NotificationHelper.Warning("[Aether Remote] Unable to connect", "See developer console for more information");
             }
         }
         catch (Exception e)
