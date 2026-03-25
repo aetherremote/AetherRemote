@@ -74,24 +74,6 @@ public class LoginViewUi(LoginViewUiController controller, NetworkService networ
             ImGui.TextWrapped("Aether Remote now operates on a per-character configuration system.");
         });
 
-        if (Plugin.LegacyConfiguration is not null)
-        {
-            SharedUserInterfaces.ContentBox("LegacyConfiguration", AetherRemoteColors.PanelColor, true, () =>
-            {
-                SharedUserInterfaces.MediumText("Legacy Configuration");
-                ImGui.TextUnformatted("Click");
-                ImGui.SameLine();
-                ImGui.PushStyleColor(ImGuiCol.Text, AetherRemoteColors.DiscordBlue);
-                var size = ImGui.CalcTextSize("here");
-                if (ImGui.Selectable("here", false, ImGuiSelectableFlags.None, size))
-                    LoginViewUiController.CopyOriginalSecret();
-
-                ImGui.PopStyleColor();
-                ImGui.SameLine();
-                ImGui.TextUnformatted("to copy your original secret to the clipboard.");
-            });
-        }
-
         ImGui.EndChild();
     }
 }

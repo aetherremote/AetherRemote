@@ -1,9 +1,6 @@
 using System;
-using System.IO;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
-using AetherRemoteClient.Utils;
-using Dalamud.Bindings.ImGui;
 using Dalamud.Utility;
 
 namespace AetherRemoteClient.UI.Views.Login;
@@ -52,34 +49,6 @@ public class LoginViewUiController : IDisposable
         catch (Exception)
         {
             // ignored
-        }
-    }
-
-    public static void CopyOriginalSecret()
-    {
-        // Check if the legacy configuration isn't null
-        if (Plugin.LegacyConfiguration?.Secret is not { } secret)
-            return;
-        
-        // Copy to clipboard
-        ImGui.SetClipboardText(secret);
-        
-        // Notify the client
-        NotificationHelper.Success("Copied secret to clipboard", string.Empty);
-        
-        // Try to remove the old configuration file
-        try
-        {
-            // Create the file path
-            var legacyConfigurationFilePath = Plugin.PluginInterface.GetPluginConfigDirectory() + ".json";
-            
-            // Delete the file if it exists
-            if (File.Exists(legacyConfigurationFilePath))
-                File.Delete(legacyConfigurationFilePath);
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Error($"[LoginViewUiController] Error while attempting to delete old configuration files, {e}");
         }
     }
     

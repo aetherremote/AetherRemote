@@ -38,13 +38,6 @@ public static class ConfigurationService
                 // Create a new configuration
                 var configuration = new Configuration();
                 
-                // Check to see if there is a legacy configuration present
-                if (Plugin.LegacyConfiguration is { } legacyConfiguration)
-                {
-                    // Copy the notes
-                    configuration.Notes = legacyConfiguration.Notes;
-                }
-                
                 // Save the new configuration
                 await SaveConfiguration(configuration).ConfigureAwait(false);
                 

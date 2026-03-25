@@ -67,7 +67,6 @@ public sealed class Plugin : IDalamudPlugin
     [PluginService] internal static IDtrBar DtrBar { get; private set; } = null!;
     internal static Configuration Configuration { get; private set; } = null!;
     internal static CharacterConfiguration? CharacterConfiguration { get; set; }
-    internal static LegacyConfiguration? LegacyConfiguration { get; private set; }
 
     /// <summary>
     ///     Internal plugin version
@@ -79,17 +78,6 @@ public sealed class Plugin : IDalamudPlugin
     
     public Plugin()
     {
-        // TODO: Remove after 10-25-2025
-        // Load the legacy configuration
-        try
-        {
-            LegacyConfiguration = PluginInterface.GetPluginConfig() as LegacyConfiguration;
-        }
-        catch (Exception e)
-        {
-            Log.Error($"[Initialization] Failed to load legacy configuration, {e}");
-        }
-        
         // Load the default configuration
         Configuration = ConfigurationService.LoadConfiguration().GetAwaiter().GetResult() ?? new Configuration();
         
