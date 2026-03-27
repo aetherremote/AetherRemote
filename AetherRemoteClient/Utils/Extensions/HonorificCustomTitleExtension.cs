@@ -1,5 +1,5 @@
-using AetherRemoteClient.Dependencies.Honorific.Domain;
-using AetherRemoteCommon.Dependencies.Honorific.Domain;
+using AetherRemoteClient.Domain.Honorific;
+using AetherRemoteCommon.Domain.Honorific;
 
 namespace AetherRemoteClient.Utils.Extensions;
 

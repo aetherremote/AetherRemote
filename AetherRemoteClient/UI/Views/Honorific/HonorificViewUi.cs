@@ -1,5 +1,5 @@
 using System.Numerics;
-using AetherRemoteClient.Dependencies.Honorific.Domain;
+using AetherRemoteClient.Domain.Honorific;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;

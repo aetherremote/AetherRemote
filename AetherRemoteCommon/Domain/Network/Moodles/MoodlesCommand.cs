@@ -1,4 +1,4 @@
-using AetherRemoteCommon.Dependencies.Moodles.Domain;
+using AetherRemoteCommon.Domain.Moodles;
 using MessagePack;
 
 namespace AetherRemoteCommon.Domain.Network.Moodles;

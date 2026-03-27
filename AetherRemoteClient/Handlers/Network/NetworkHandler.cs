@@ -1,8 +1,5 @@
 using System;
 using System.Collections.Generic;
-using AetherRemoteClient.Dependencies.CustomizePlus.Services;
-using AetherRemoteClient.Dependencies.Honorific.Services;
-using AetherRemoteClient.Dependencies.Moodles.Services;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Managers.Possession;

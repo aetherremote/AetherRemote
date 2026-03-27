@@ -1,4 +1,4 @@
-using AetherRemoteCommon.Dependencies.Honorific.Domain;
+using AetherRemoteCommon.Domain.Honorific;
 using MessagePack;
 
 namespace AetherRemoteCommon.Domain.Network.Honorific;

@@ -1,12 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AetherRemoteClient.Dependencies.CustomizePlus.Services;
-using AetherRemoteClient.Dependencies.Glamourer.Services;
-using AetherRemoteClient.Dependencies.Honorific.Domain;
-using AetherRemoteClient.Dependencies.Honorific.Services;
-using AetherRemoteClient.Dependencies.Moodles.Services;
-using AetherRemoteClient.Dependencies.Penumbra.Services;
+using AetherRemoteClient.Domain.Honorific;
+using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
 using Dalamud.Game.ClientState.Objects.Types;

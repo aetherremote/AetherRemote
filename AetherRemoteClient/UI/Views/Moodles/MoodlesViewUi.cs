@@ -2,14 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Numerics;
 using System.Text;
-using AetherRemoteClient.Dependencies.Moodles.Domain;
 using AetherRemoteClient.Domain.Interfaces;
+using AetherRemoteClient.Domain.Moodles;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Style;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
-using AetherRemoteCommon.Dependencies.Moodles.Enums;
+using AetherRemoteCommon.Domain.Moodles;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
 

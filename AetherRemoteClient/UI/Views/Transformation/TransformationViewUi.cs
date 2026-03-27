@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Numerics;
-using AetherRemoteClient.Dependencies.Glamourer.Domain;
 using AetherRemoteClient.Domain;
+using AetherRemoteClient.Domain.Glamourer;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;

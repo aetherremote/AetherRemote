@@ -1,11 +1,6 @@
 using System;
 using System.Reflection;
 using System.Threading.Tasks;
-using AetherRemoteClient.Dependencies.CustomizePlus.Services;
-using AetherRemoteClient.Dependencies.Glamourer.Services;
-using AetherRemoteClient.Dependencies.Honorific.Services;
-using AetherRemoteClient.Dependencies.Moodles.Services;
-using AetherRemoteClient.Dependencies.Penumbra.Services;
 using AetherRemoteClient.Domain.Configurations;
 using AetherRemoteClient.Handlers;
 using AetherRemoteClient.Handlers.Chat;

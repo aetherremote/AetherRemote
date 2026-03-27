@@ -1,10 +1,7 @@
 using System.Threading.Tasks;
-using AetherRemoteClient.Dependencies.CustomizePlus.Services;
-using AetherRemoteClient.Dependencies.Glamourer.Services;
-using AetherRemoteClient.Dependencies.Honorific.Services;
-using AetherRemoteClient.Dependencies.Penumbra.Services;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Managers.Possession;
+using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 
 namespace AetherRemoteClient.UI.Views.Status;

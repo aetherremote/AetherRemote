@@ -1,10 +1,8 @@
 using System;
 using System.Threading.Tasks;
-using AetherRemoteClient.Dependencies.CustomizePlus.Services;
-using AetherRemoteClient.Dependencies.Glamourer.Services;
-using AetherRemoteClient.Dependencies.Penumbra.Services;
 using AetherRemoteClient.Domain.Events;
 using AetherRemoteClient.Managers;
+using AetherRemoteClient.Services;
 
 namespace AetherRemoteClient.Handlers;
 

@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AetherRemoteClient.Dependencies.Glamourer.Domain;
-using AetherRemoteClient.Dependencies.Glamourer.Services;
 using AetherRemoteClient.Domain;
+using AetherRemoteClient.Domain.Glamourer;
 using AetherRemoteClient.Managers;
+using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 

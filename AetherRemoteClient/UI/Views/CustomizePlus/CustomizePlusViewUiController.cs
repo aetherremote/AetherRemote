@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using AetherRemoteClient.Dependencies.CustomizePlus.Domain;
-using AetherRemoteClient.Dependencies.CustomizePlus.Services;
 using AetherRemoteClient.Domain;
+using AetherRemoteClient.Domain.CustomizePlus;
 using AetherRemoteClient.Managers;
+using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 
 namespace AetherRemoteClient.UI.Views.CustomizePlus;
