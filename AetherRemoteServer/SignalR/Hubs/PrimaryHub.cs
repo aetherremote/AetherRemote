@@ -1,6 +1,6 @@
 using AetherRemoteServer.Domain;
 using AetherRemoteServer.Services;
-using AetherRemoteServer.SignalR.Handlers.Test;
+using AetherRemoteServer.SignalR.Handlers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
 

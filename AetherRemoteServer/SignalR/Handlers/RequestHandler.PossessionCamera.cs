@@ -6,7 +6,7 @@ using AetherRemoteCommon.Domain.Network.Possession;
 using AetherRemoteCommon.Domain.Network.Possession.Camera;
 using Microsoft.AspNetCore.SignalR;
 
-namespace AetherRemoteServer.SignalR.Handlers.Test;
+namespace AetherRemoteServer.SignalR.Handlers;
 
 public partial class RequestHandler
 {

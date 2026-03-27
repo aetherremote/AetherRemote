@@ -5,7 +5,7 @@ using AetherRemoteCommon.Domain.Network.UpdateFriend;
 using AetherRemoteCommon.Util;
 using Microsoft.AspNetCore.SignalR;
 
-namespace AetherRemoteServer.SignalR.Handlers.Test;
+namespace AetherRemoteServer.SignalR.Handlers;
 
 public partial class RequestHandler
 {

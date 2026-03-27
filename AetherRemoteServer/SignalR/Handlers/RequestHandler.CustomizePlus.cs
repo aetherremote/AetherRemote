@@ -6,7 +6,7 @@ using AetherRemoteCommon.Domain.Network.Customize;
 using AetherRemoteServer.Utilities;
 using Microsoft.AspNetCore.SignalR;
 
-namespace AetherRemoteServer.SignalR.Handlers.Test;
+namespace AetherRemoteServer.SignalR.Handlers;
 
 public partial class RequestHandler
 {

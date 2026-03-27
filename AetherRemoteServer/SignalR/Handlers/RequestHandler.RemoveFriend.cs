@@ -4,7 +4,7 @@ using AetherRemoteCommon.Domain.Network.RemoveFriend;
 using AetherRemoteCommon.Domain.Network.SyncOnlineStatus;
 using Microsoft.AspNetCore.SignalR;
 
-namespace AetherRemoteServer.SignalR.Handlers.Test;
+namespace AetherRemoteServer.SignalR.Handlers;
 
 public partial class RequestHandler
 {

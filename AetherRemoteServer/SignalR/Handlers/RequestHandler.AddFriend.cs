@@ -6,7 +6,7 @@ using AetherRemoteCommon.Domain.Network.AddFriend;
 using AetherRemoteCommon.Domain.Network.SyncOnlineStatus;
 using Microsoft.AspNetCore.SignalR;
 
-namespace AetherRemoteServer.SignalR.Handlers.Test;
+namespace AetherRemoteServer.SignalR.Handlers;
 
 /// <summary>
 ///     Handles the logic for fulfilling a <see cref="AddFriendRequest"/>

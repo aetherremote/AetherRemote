@@ -4,11 +4,11 @@ using AetherRemoteServer.Domain;
 using AetherRemoteServer.Managers;
 using AetherRemoteServer.Services;
 using AetherRemoteServer.Services.Database;
-using AetherRemoteServer.SignalR.Handlers.Test;
 using AetherRemoteServer.SignalR.Hubs;
 using MessagePack;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using RequestHandler = AetherRemoteServer.SignalR.Handlers.RequestHandler;
 
 namespace AetherRemoteServer;
 

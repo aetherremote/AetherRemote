@@ -7,7 +7,7 @@ using AetherRemoteCommon.Domain.Network.SyncOnlineStatus;
 using AetherRemoteCommon.Util;
 using Microsoft.AspNetCore.SignalR;
 
-namespace AetherRemoteServer.SignalR.Handlers.Test;
+namespace AetherRemoteServer.SignalR.Handlers;
 
 public partial class RequestHandler
 {

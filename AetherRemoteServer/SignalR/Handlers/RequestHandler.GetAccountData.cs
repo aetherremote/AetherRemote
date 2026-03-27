@@ -3,7 +3,7 @@ using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network.GetAccountData;
 using AetherRemoteServer.Domain;
 
-namespace AetherRemoteServer.SignalR.Handlers.Test;
+namespace AetherRemoteServer.SignalR.Handlers;
 
 public partial class RequestHandler
 {

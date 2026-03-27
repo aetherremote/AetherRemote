@@ -7,7 +7,7 @@ using AetherRemoteCommon.Util;
 using AetherRemoteServer.Managers;
 using Microsoft.AspNetCore.SignalR;
 
-namespace AetherRemoteServer.SignalR.Handlers.Test;
+namespace AetherRemoteServer.SignalR.Handlers;
 
 /// <summary>
 ///     Handles the logic for fulfilling a <see cref="BodySwapRequest"/>

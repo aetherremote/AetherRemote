@@ -2,7 +2,7 @@ using AetherRemoteServer.Managers;
 using AetherRemoteServer.Services;
 using AetherRemoteServer.Services.Database;
 
-namespace AetherRemoteServer.SignalR.Handlers.Test;
+namespace AetherRemoteServer.SignalR.Handlers;
 
 public partial class RequestHandler
 {
