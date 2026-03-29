@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 
@@ -39,57 +40,45 @@ public class LoginManager : IDisposable
             OnLogin();
     }
 
-    private async void OnLogin()
+    private void OnLogin() => _ = OnLoginAsync().ConfigureAwait(false);
+    private async Task OnLoginAsync()
     {
-        try
-        {
-            // Make sure the local player is present
-            if (await Plugin.RunOnFramework(() => Plugin.ObjectTable.LocalPlayer).ConfigureAwait(false) is not { } player)
-                return;
+        // Make sure the local player is present
+        if (await DalamudUtilities.RunOnFramework(() => Plugin.ObjectTable.LocalPlayer).ConfigureAwait(false) is not { } player)
+            return;
 
-            // Store the name and world for readability
-            var name = player.Name.ToString();
-            var world = player.HomeWorld.Value.Name.ToString();
+        // Store the name and world for readability
+        var name = player.Name.ToString();
+        var world = player.HomeWorld.Value.Name.ToString();
 
-            // Load the character configuration
-            if (await ConfigurationService.LoadCharacterConfiguration(name, world).ConfigureAwait(false) is not { } characterConfiguration)
-                return;
+        // Load the character configuration
+        if (await ConfigurationService.LoadCharacterConfiguration(name, world).ConfigureAwait(false) is not { } characterConfiguration)
+            return;
 
-            // Set the character configuration
-            Plugin.CharacterConfiguration = characterConfiguration;
+        // Set the character configuration
+        Plugin.CharacterConfiguration = characterConfiguration;
 
-            // Emit an event
-            LoginFinished?.Invoke();
+        // Emit an event
+        LoginFinished?.Invoke();
             
-            // Set the event protection lines
-            HasLoginFinished = true;
+        // Set the event protection lines
+        HasLoginFinished = true;
             
-            // Ensure that all the values for various action responses and results are met (this check could go anywhere)
-            ActionResponseParser.SanityCheck();
+        // Ensure that all the values for various action responses and results are met (this check could go anywhere)
+        ActionResponseParser.SanityCheck();
             
-            // Initiate a connection to the server if auto login is set to true
-            if (Plugin.CharacterConfiguration.AutoLogin is true)
-                await _networkService.StartAsync().ConfigureAwait(false);
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Error($"[LoginManager] Unexpected error handling login event, {e}");
-        }
+        // Initiate a connection to the server if auto login is set to true
+        if (Plugin.CharacterConfiguration.AutoLogin is true)
+            await _networkService.StartAsync().ConfigureAwait(false);
     }
     
-    private async void OnLogout(int type, int code)
+    private void OnLogout(int type, int code) => _ = OnLogoutAsync().ConfigureAwait(false);
+    private async Task OnLogoutAsync()
     {
-        try
-        {
-            await _networkService.StopAsync();
+        await _networkService.StopAsync();
             
-            // Reset event protection
-            HasLoginFinished = false;
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Error($"[LoginManager] Unexpected error handling logout event, {e}");
-        }
+        // Reset event protection
+        HasLoginFinished = false;
     }
 
     public void Dispose()

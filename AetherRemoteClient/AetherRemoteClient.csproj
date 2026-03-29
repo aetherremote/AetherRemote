@@ -38,8 +38,4 @@
     <ItemGroup>
         <ProjectReference Include="..\AetherRemoteCommon\AetherRemoteCommon.csproj"/>
     </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Hooks\Domain\" />
-    </ItemGroup>
 </Project>

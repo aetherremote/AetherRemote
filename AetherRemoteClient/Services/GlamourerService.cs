@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using AetherRemoteClient.Domain.Events;
 using AetherRemoteClient.Domain.Glamourer;
 using AetherRemoteClient.Domain.Interfaces;
+using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using Glamourer.Api.Enums;
@@ -21,9 +22,6 @@ namespace AetherRemoteClient.Services;
 /// </summary>
 public class GlamourerService : IExternalPlugin, IDisposable
 {
-    // Default folder for designs without homes
-    private const string Uncategorized = "Uncategorized";
-    
     // Const
     private const int ExpectedMajor = 1;
     private const int ExpectedMinor = 7;
@@ -48,7 +46,6 @@ public class GlamourerService : IExternalPlugin, IDisposable
     private readonly ApplyState _applyState;
     private readonly GetState _getState;
     private readonly GetStateBase64 _getStateBase64;
-    private readonly RevertState _revertState;
     private readonly RevertToAutomation _revertToAutomation;
 
     // Glamourer Events
@@ -88,7 +85,6 @@ public class GlamourerService : IExternalPlugin, IDisposable
         _applyState = new ApplyState(Plugin.PluginInterface);
         _getState = new GetState(Plugin.PluginInterface);
         _getStateBase64 = new GetStateBase64(Plugin.PluginInterface);
-        _revertState = new RevertState(Plugin.PluginInterface);
         _revertToAutomation = new RevertToAutomation(Plugin.PluginInterface);
 
         _stateChangedWithType = StateChangedWithType.Subscriber(Plugin.PluginInterface);
@@ -105,18 +101,26 @@ public class GlamourerService : IExternalPlugin, IDisposable
     {
         // Set everything to disabled state
         ApiAvailable = false;
-        
-        // Invoke Api
-        var version = await Plugin.RunOnFrameworkSafely(() => _apiVersion.Invoke()).ConfigureAwait(false);
 
-        // Test for proper versioning
-        if (version.Major is not ExpectedMajor || version.Minor < ExpectedMinor)
+        try
+        {
+            // Invoke Api
+            var version = await DalamudUtilities.RunOnFramework(() => _apiVersion.Invoke()).ConfigureAwait(false);
+
+            // Test for proper versioning
+            if (version.Major is not ExpectedMajor || version.Minor < ExpectedMinor)
+                return false;
+
+            // Mark as ready
+            ApiAvailable = true;
+            IpcReady?.Invoke(this, EventArgs.Empty);
+            return true;
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error($"[GlamourerService.TestIpcAvailability] {e}");
             return false;
-
-        // Mark as ready
-        ApiAvailable = true;
-        IpcReady?.Invoke(this, EventArgs.Empty);
-        return true;
+        }
     }
 
     /// <summary>
@@ -130,7 +134,7 @@ public class GlamourerService : IExternalPlugin, IDisposable
         try
         {
             var designs = new List<Design>();
-            foreach (var design in await Plugin.RunOnFramework(() => _getDesignListExtended.Invoke()).ConfigureAwait(false))
+            foreach (var design in await DalamudUtilities.RunOnFramework(() => _getDesignListExtended.Invoke()).ConfigureAwait(false))
                 designs.Add(new Design(design.Key, design.Value.DisplayName, design.Value.FullPath, design.Value.DisplayColor));
 
             return designs;
@@ -156,7 +160,7 @@ public class GlamourerService : IExternalPlugin, IDisposable
         
         try
         {
-            var result = await Plugin.RunOnFramework(() => _revertToAutomation.Invoke(index)).ConfigureAwait(false);
+            var result = await DalamudUtilities.RunOnFramework(() => _revertToAutomation.Invoke(index)).ConfigureAwait(false);
             return LogAndProcessResult("[RevertToAutomation]", index, result);
         }
         catch (Exception e)
@@ -187,7 +191,7 @@ public class GlamourerService : IExternalPlugin, IDisposable
             var converted = ConvertGlamourerToApplyFlags(flags);
         
             // Invoke the function
-            var result = await Plugin.RunOnFramework(() => _applyState.Invoke(glamourerData, index, 0, converted)).ConfigureAwait(false);
+            var result = await DalamudUtilities.RunOnFramework(() => _applyState.Invoke(glamourerData, index, 0, converted)).ConfigureAwait(false);
         
             // Process results
             return LogAndProcessResult("[ApplyDesignAsync]", index, result);
@@ -220,7 +224,7 @@ public class GlamourerService : IExternalPlugin, IDisposable
             var converted = ConvertGlamourerToApplyFlags(flags);
         
             // Invoke the function
-            var result = await Plugin.RunOnFramework(() => _applyState.Invoke(glamourerData, index, 0, converted)).ConfigureAwait(false);
+            var result = await DalamudUtilities.RunOnFramework(() => _applyState.Invoke(glamourerData, index, 0, converted)).ConfigureAwait(false);
         
             // Process results
             return LogAndProcessResult("[ApplyDesignAsync]", index, result);
@@ -246,7 +250,7 @@ public class GlamourerService : IExternalPlugin, IDisposable
 
         try
         {
-            return await Plugin.RunOnFramework(() => _getDesignBase64.Invoke(designId)).ConfigureAwait(false);
+            return await DalamudUtilities.RunOnFramework(() => _getDesignBase64.Invoke(designId)).ConfigureAwait(false);
         }
         catch (Exception e)
         {
@@ -274,7 +278,7 @@ public class GlamourerService : IExternalPlugin, IDisposable
             foreach (var key in LockCodes)
             {
                 // Invoke the function
-                var (code, data) = await Plugin.RunOnFramework(() => _getStateBase64.Invoke(index, key)).ConfigureAwait(false);
+                var (code, data) = await DalamudUtilities.RunOnFramework(() => _getStateBase64.Invoke(index, key)).ConfigureAwait(false);
                 
                 // Process result
                 switch (code)
@@ -329,7 +333,7 @@ public class GlamourerService : IExternalPlugin, IDisposable
             foreach (var key in LockCodes)
             {
                 // Invoke the function
-                var (code, data) = await Plugin.RunOnFramework(() => _getState.Invoke(index, key)).ConfigureAwait(false);
+                var (code, data) = await DalamudUtilities.RunOnFramework(() => _getState.Invoke(index, key)).ConfigureAwait(false);
                 
                 // Process result
                 switch (code)

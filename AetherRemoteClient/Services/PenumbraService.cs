@@ -21,13 +21,12 @@ public class PenumbraService : IExternalPlugin
     private const int ExpectedMajor = 4;
     
     // Penumbra API
-    private readonly AddTemporaryMod _addTemporaryMod;
-    private readonly GetGameObjectResourcePaths _getGameObjectResourcePaths;
-    private readonly GetMetaManipulations _getMetaManipulations;
-    private readonly GetCollectionForObject _getCollectionForObject;
-    private readonly RemoveTemporaryMod _removeTemporaryMod;
-    private readonly RedrawObject _redrawObject;
-    private readonly ApiVersion _version;
+    private readonly AddTemporaryMod _addTemporaryMod = new(Plugin.PluginInterface);
+    private readonly ApiVersion _apiVersion = new(Plugin.PluginInterface);
+    private readonly GetGameObjectResourcePaths _getGameObjectResourcePaths = new(Plugin.PluginInterface);
+    private readonly GetMetaManipulations _getMetaManipulations = new(Plugin.PluginInterface);
+    private readonly GetCollectionForObject _getCollectionForObject = new(Plugin.PluginInterface);
+    private readonly RemoveTemporaryMod _removeTemporaryMod = new(Plugin.PluginInterface);
     
     /// <summary>
     ///     Is Penumbra available for use?
@@ -38,20 +37,6 @@ public class PenumbraService : IExternalPlugin
     ///     <inheritdoc cref="IExternalPlugin.IpcReady"/>
     /// </summary>
     public event EventHandler? IpcReady;
-
-    /// <summary>
-    ///     <see cref="PenumbraService"/>
-    /// </summary>
-    public PenumbraService()
-    {
-        _addTemporaryMod = new AddTemporaryMod(Plugin.PluginInterface);
-        _getGameObjectResourcePaths = new GetGameObjectResourcePaths(Plugin.PluginInterface);
-        _getMetaManipulations = new GetMetaManipulations(Plugin.PluginInterface);
-        _removeTemporaryMod = new RemoveTemporaryMod(Plugin.PluginInterface);
-        _getCollectionForObject = new GetCollectionForObject(Plugin.PluginInterface);
-        _redrawObject = new RedrawObject(Plugin.PluginInterface);
-        _version = new ApiVersion(Plugin.PluginInterface);
-    }
     
     /// <summary>
     ///     Tests for availability to Penumbra
@@ -60,102 +45,100 @@ public class PenumbraService : IExternalPlugin
     {
         // Set everything to disabled state
         ApiAvailable = false;
-        
-        // Invoke Api
-        var version = await Plugin.RunOnFrameworkSafely(() => _version.Invoke()).ConfigureAwait(false);
 
-        // Test for proper versioning
-        if (version.Breaking < ExpectedMajor)
+        try
+        {
+            // Invoke Api
+            var version = await DalamudUtilities.RunOnFramework(() => _apiVersion.Invoke()).ConfigureAwait(false);
+            
+            // Test for proper versioning
+            if (version.Breaking < ExpectedMajor)
+                return false;
+            
+            // Mark as ready
+            ApiAvailable = true;
+            IpcReady?.Invoke(this, EventArgs.Empty);
+            return true;
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error($"[PenumbraService.TestIpcAvailability] {e}");
             return false;
-        
-        // Mark as ready
-        ApiAvailable = true;
-        IpcReady?.Invoke(this, EventArgs.Empty);
-        return true;
+        }
     }
     
+    // TODO: Bring this in line with an error state returning null instead of an empty dictionary
     /// <summary>
     ///     Calls penumbra's GetGameObjectResourcePaths function
     /// </summary>
     /// <returns>A list of modified objects, mapping the modified object to the target path</returns>
     public async Task<Dictionary<string, string>> GetGameObjectResourcePaths(ushort index)
     {
-        // TODO: There is an issue with multiple named files having the same name causing issues
-        //          An example of which would be if someone has ../../something_SOMETHING.tex
-        //          and ../../something_something.tex
-        //          There is a possibility of fixing this just by forcing everything lowercase
-        //          however I don't know enough about mod paths to know if this is problematic
-        
-        if (ApiAvailable)
-            return await Plugin.RunOnFramework(() =>
-            {
-                try
-                {
-                    var resources = _getGameObjectResourcePaths.Invoke(index);
-                    var paths = new Dictionary<string, string>();
-                    foreach (var resource in resources)
-                    {
-                        if (resource is null)
-                            continue;
+        if (ApiAvailable is false)
+        {
+            Plugin.Log.Warning("[PenumbraService.GetGameObjectResourcePaths] Api not available");
+            return [];
+        }
 
-                        foreach (var kvp in resource)
+        try
+        {
+            return await DalamudUtilities.RunOnFramework(() =>
+            {
+                var resources = _getGameObjectResourcePaths.Invoke(index);
+                var paths = new Dictionary<string, string>();
+                foreach (var resource in resources)
+                {
+                    if (resource is null)
+                        continue;
+                    
+                    foreach (var kvp in resource)
+                    {
+                        foreach (var item in kvp.Value)
                         {
-                            foreach (var item in kvp.Value)
-                            {
-                                if (item.EndsWith(".imc") || kvp.Key.EndsWith(".imc"))
-                                {
-                                    Plugin.Log.Verbose($"Skipping .imc redirect {item} --> {kvp.Key}");
-                                    continue;
-                                }
+                            // Penumbra does not allow .imc redirects
+                            if (item.EndsWith(".imc") || kvp.Key.EndsWith(".imc"))
+                                continue;
                                 
-                                paths.TryAdd(item, kvp.Key);
-                            }
+                            paths.TryAdd(item, kvp.Key);
                         }
                     }
+                }
 
-                    return paths;
-                }
-                catch (Exception e)
-                {
-                    Plugin.Log.Warning(
-                        $"[PenumbraService] Unexpectedly failed getting resource paths for index {index}, {e.Message}");
-                    return [];
-                }
+                return paths;
             }).ConfigureAwait(false);
-
-        Plugin.Log.Warning(
-            $"[PenumbraService] Failed to get object resource paths for index {index} because penumbra is not available");
-        return [];
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error($"[PenumbraService.GetGameObjectResourcePaths] {e}");
+            return [];
+        }
     }
 
+    // TODO: Bring this in line with an error state returning null instead of an empty string
     /// <summary>
     ///     Calls penumbra's GetMetaManipulations function
     /// </summary>
     /// <returns>A character's metadata</returns>
     public async Task<string> GetMetaManipulations(ushort index)
     {
-        if (ApiAvailable)
-            return await Plugin.RunOnFramework(() =>
-            {
-                try
-                {
-                    return _getMetaManipulations.Invoke(index);
-                }
-                catch (Exception e)
-                {
-                    Plugin.Log.Warning(
-                        $"[PenumbraService] Unexpectedly failed getting manipulations for index {index}, {e.Message}");
-                    return string.Empty;
-                }
-            }).ConfigureAwait(false);
+        if (ApiAvailable is false)
+        {
+            Plugin.Log.Warning("[PenumbraService.GetMetaManipulations] Api not available");
+            return string.Empty;
+        }
 
-        Plugin.Log.Warning(
-            $"[PenumbraService] Failed to get manipulations for index {index} because penumbra is not available");
-        return string.Empty;
+        try
+        {
+            return await DalamudUtilities.RunOnFramework(() => _getMetaManipulations.Invoke(index)).ConfigureAwait(false);
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error($"[PenumbraService.GetMetaManipulations] {e}");
+            return string.Empty;
+        }
     }
 
     // TODO: Look into making this maybe nullable to where if something fails it is a clue error state?
-    
     /// <summary>
     ///     Calls penumbra's GetCollectionForObject function
     /// </summary>
@@ -163,24 +146,21 @@ public class PenumbraService : IExternalPlugin
     /// <returns>Collection GUID</returns>
     public async Task<Guid> GetCollection(int index = 0)
     {
-        if (ApiAvailable)
-            return await Plugin.RunOnFramework(() =>
-            {
-                try
-                {
-                    return _getCollectionForObject.Invoke(index).EffectiveCollection.Id;
-                }
-                catch (Exception e)
-                {
-                    Plugin.Log.Warning(
-                        $"[PenumbraService] Unexpectedly failed to get collection for index {index}, {e.Message}");
-                    return Guid.Empty;
-                }
-            }).ConfigureAwait(false);
+        if (ApiAvailable is false)
+        {
+            Plugin.Log.Warning("[PenumbraService.GetCollection] Api not available");
+            return Guid.Empty;
+        }
 
-        Plugin.Log.Warning(
-            $"[PenumbraService] Failed to get collection for index {index} because penumbra is not available");
-        return Guid.Empty;
+        try
+        {
+            return await DalamudUtilities.RunOnFramework(() => _getCollectionForObject.Invoke(index).EffectiveCollection.Id).ConfigureAwait(false);
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error($"[PenumbraService.GetCollection] {e}");
+            return Guid.Empty;
+        }
     }
 
     /// <summary>
@@ -189,34 +169,33 @@ public class PenumbraService : IExternalPlugin
     /// <returns><see cref="bool"/> indicating success</returns>
     public async Task<bool> AddTemporaryMod(Guid collectionGuid, Dictionary<string, string> modifiedPaths, string meta)
     {
-        if (ApiAvailable)
-            return await Plugin.RunOnFramework(() =>
+        if (ApiAvailable is false)
+        {
+            Plugin.Log.Warning("[PenumbraService.AddTemporaryMod] Api not available");
+            return false;
+        }
+
+        try
+        {
+            var result = await DalamudUtilities.RunOnFramework(() => _addTemporaryMod.Invoke(TemporaryModName, collectionGuid, modifiedPaths, meta, Priority)).ConfigureAwait(false);
+            switch (result)
             {
-                try
-                {
-                    var result = _addTemporaryMod.Invoke(TemporaryModName, collectionGuid, modifiedPaths, meta, Priority);
-                    switch (result)
-                    {
-                        case PenumbraApiEc.Success:
-                            return true;
+                case PenumbraApiEc.Success:
+                    return true;
                         
-                        case PenumbraApiEc.InvalidGamePath:
-                            NotificationHelper.Error("Invalid Game Files", "The person you are being transformed into contains mods that do not all have valid game file paths. Most commonly, this happens when a mod maker includes two or more assets with the same name, but different punctuation: \"aether_remote.png\" and \"Aether_Remote.png\" as an example.");
-                            break;
-                    }
+                case PenumbraApiEc.InvalidGamePath:
+                    NotificationHelper.Error("Invalid Game Files", "The person you are being transformed into contains mods that do not all have valid game file paths. Most commonly, this happens when a mod maker includes two or more assets with the same name, but different punctuation: \"aether_remote.png\" and \"Aether_Remote.png\" as an example.");
+                    break;
+            }
 
-                    Plugin.Log.Warning($"[PenumbraService] Adding temporary mod was unsuccessful, result was {result}");
-                    return false;
-                }
-                catch (Exception e)
-                {
-                    Plugin.Log.Warning($"[PenumbraService] Adding temporary mod failed unexpectedly, {e.Message}");
-                    return false;
-                }
-            }).ConfigureAwait(false);
-
-        Plugin.Log.Warning("[PenumbraService] Unable to add temporary mod because penumbra is not available");
-        return false;
+            Plugin.Log.Warning($"[PenumbraService.AddTemporaryMod] Adding temporary mod was unsuccessful, result was {result}");
+            return false;
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error($"[PenumbraService.AddTemporaryMod] {e}");
+            return false;
+        }
     }
 
     /// <summary>
@@ -226,11 +205,14 @@ public class PenumbraService : IExternalPlugin
     public async Task<bool> RemoveTemporaryMod(Guid collectionId)
     {
         if (ApiAvailable is false)
+        {
+            Plugin.Log.Warning("[PenumbraService.RemoveTemporaryMod] Api not available");
             return false;
-
+        }
+        
         try
         {
-            return await Plugin.RunOnFramework(() =>
+            return await DalamudUtilities.RunOnFramework(() =>
             {
                 var result = _removeTemporaryMod.Invoke(TemporaryModName, collectionId, Priority);
                 if (result is PenumbraApiEc.Success or PenumbraApiEc.NothingChanged or PenumbraApiEc.CollectionMissing)
@@ -245,29 +227,5 @@ public class PenumbraService : IExternalPlugin
             Plugin.Log.Error($"[PenumbraService.RemoveTemporaryMod] {e}");
             return false;
         }
-    }
-
-    /// <summary>
-    ///     Redraws the local client
-    /// </summary>
-    public async Task<bool> CallRedraw(int objectIndex = 0)
-    {
-        if (ApiAvailable)
-            return await Plugin.RunOnFramework(() =>
-            {
-                try
-                {
-                    _redrawObject.Invoke(objectIndex);
-                    return true;
-                }
-                catch (Exception e)
-                {
-                    Plugin.Log.Warning($"[PenumbraService] Redrawing failed unexpectedly, {e.Message}");
-                    return false;
-                }
-            }).ConfigureAwait(false);
-
-        Plugin.Log.Warning("[PenumbraService] Unable to redraw because penumbra is not available");
-        return false;
     }
 }

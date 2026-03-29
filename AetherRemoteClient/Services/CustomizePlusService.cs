@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
-using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.CustomizePlus;
 using AetherRemoteClient.Domain.CustomizePlus.Reflection;
 using AetherRemoteClient.Domain.CustomizePlus.Reflection.Domain;
@@ -24,7 +22,7 @@ namespace AetherRemoteClient.Services;
 /// <summary>
 ///     Provides access to CustomizePlus
 /// </summary>
-public class CustomizePlusService : IDisposable, IExternalPlugin
+public class CustomizePlusService : IAsyncDisposable, IExternalPlugin
 {
     // Const
     private const int ExpectedMajor = 6;
@@ -69,29 +67,37 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
         _customizePlusPlugin = null;
         ApiAvailable = false;
         
-        // Invoke Api
-        var version = await Plugin.RunOnFrameworkSafely(() => _getVersion.InvokeFunc()).ConfigureAwait(false);
-        
-        // Test for proper versioning
-        if (version.Item1 is not ExpectedMajor || version.Item2 < ExpectedMinor)
+        try
+        {
+            // Invoke Api
+            var version = await DalamudUtilities.RunOnFramework(() => _getVersion.InvokeFunc()).ConfigureAwait(false);
+            
+            // Test for proper versioning
+            if (version.Item1 is not ExpectedMajor || version.Item2 < ExpectedMinor)
+                return false;
+            
+            // Check to make sure the reflection process was successful
+            if (await DalamudUtilities.RunOnFramework(CustomizePlusPlugin.Create).ConfigureAwait(false) is not { } plugin)
+                return false;
+            
+            // Call the delete method for safety
+            await DeleteTemporaryCustomizeAsync().ConfigureAwait(false);
+            
+            // Mark as ready
+            _customizePlusPlugin = plugin;
+            ApiAvailable = true;
+            
+            // As a safety precaution, attempt to delete any lingering Aether Remote profiles that may exist
+            await DeleteTemporaryCustomizeAsync().ConfigureAwait(false);
+            
+            IpcReady?.Invoke(this, EventArgs.Empty);
+            return true;
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error($"[CustomizePlusService.TestIpcAvailability] {e}");
             return false;
-
-        // Check to make sure the reflection process was successful
-        if (await Plugin.RunOnFrameworkSafely(CustomizePlusPlugin.Create).ConfigureAwait(false) is not { } plugin)
-            return false;
-        
-        // Call the delete method for safety
-        await DeleteTemporaryCustomizeAsync().ConfigureAwait(false);
-        
-        // Mark as ready
-        _customizePlusPlugin = plugin;
-        ApiAvailable = true;
-        
-        // As a safety precaution, attempt to delete any lingering Aether Remote profiles that may exist
-        await DeleteTemporaryCustomizeAsync().ConfigureAwait(false);
-        
-        IpcReady?.Invoke(this, EventArgs.Empty);
-        return true;
+        }
     }
 
     /// <summary>
@@ -100,74 +106,12 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
     /// <returns></returns>
     public async Task<List<Profile>> GetProfilesPlain()
     {
-        var result = await Plugin.RunOnFramework(() => _getProfileList.InvokeFunc()).ConfigureAwait(false);
+        var result = await DalamudUtilities.RunOnFramework(() => _getProfileList.InvokeFunc()).ConfigureAwait(false);
         var profiles = new List<Profile>();
         foreach (var profile in result)
-            profiles.Add(new Profile(profile.Id, profile.Name));
-
+            profiles.Add(new Profile(profile.Id, profile.Name, profile.Path));
+        
         return profiles;
-    }
-
-    // TODO: Refactor this to just be what GetProfilesPlain does, this is doing more than it should
-    
-    /// <summary>
-    ///     Gets a list of all the customize plus profile identifiers
-    /// </summary>
-    public async Task<FolderNode<Profile>?> GetProfiles()
-    {
-        if (ApiAvailable is false)
-            return null;
-        
-        var result = await Plugin.RunOnFramework(() => _getProfileList.InvokeFunc()).ConfigureAwait(false);
-        var root = new FolderNode<Profile>("Root", null);
-        foreach (var path in result)
-        {
-            var parts = path.Path.Split('/', StringSplitOptions.RemoveEmptyEntries);
-            var current = root;
-
-            for (var i = 0; i < parts.Length; i++)
-            {
-                var part = parts[i];
-                if (current.Children.TryGetValue(part, out var node) is false)
-                {
-                    var design = i == parts.Length - 1
-                        ? new Profile(path.Id, path.Name)
-                        : null;
-                    
-                    node = new FolderNode<Profile>(part, design);
-                    current.Children[part] = node;
-                }
-                
-                current = node;
-            }
-        }
-
-        SortTree(root);
-        
-        return root;
-    }
-    
-    /// <summary>
-    ///     The dictionary returned by glamourer is not sorted, so we will recursively go through and sort the children
-    /// </summary>
-    private static void SortTree<T>(FolderNode<T> root)
-    {
-        // Copy all the children from this node and sort them by folder, then name
-        var sorted = root.Children.Values
-            .OrderByDescending(node => node.IsFolder)
-            .ThenBy(node => node.Name, StringComparer.OrdinalIgnoreCase)
-            .ToList();
-        
-        // Clear all the children with the values sorted and copied
-        root.Children.Clear();
-
-        // Reintroduce because dictionaries preserve insertion order
-        foreach (var node in sorted)
-            root.Children[node.Name] = node;
-        
-        // Recursively sort the remaining children
-        foreach (var child in root.Children.Values)
-            SortTree(child);
     }
     
     /// <summary>
@@ -180,7 +124,7 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
             if (ApiAvailable is false)
                 return null;
             
-            var tuple = await Plugin.RunOnFramework(() => _getProfileById.InvokeFunc(guid)).ConfigureAwait(false);
+            var tuple = await DalamudUtilities.RunOnFramework(() => _getProfileById.InvokeFunc(guid)).ConfigureAwait(false);
             return tuple.Item1 is 0 ? tuple.Item2 : null;
         }
         catch (Exception e)
@@ -188,15 +132,6 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
             Plugin.Log.Warning($"[CustomizePlusService.GetProfile] An error occurred, {e}");
             return null;
         }
-    }
-    
-    /// <summary>
-    ///     Tries to get the template data for the active profile on a provided character
-    /// </summary>
-    /// <returns>The JSON template data, same as if called via GetProfileIpc</returns>
-    public async Task<string?> TryGetActiveProfileOnCharacter(string characterNameToSearchFor)
-    {
-        return await Plugin.RunOnFrameworkSafely(() => _customizePlusPlugin?.ProfileManager.TryGetActiveIpcProfileOnCharacter(characterNameToSearchFor)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -228,7 +163,7 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
         if (_customizePlusPlugin is null)
             return false;
 
-        return await Plugin.RunOnFramework(() =>
+        return await DalamudUtilities.RunOnFramework(() =>
         {
             // Delete previous profile, then create and enable a blank one
             if (_customizePlusPlugin.ProfileManager.DeleteTemporaryProfile() is false) return false;
@@ -263,7 +198,7 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
         if (Plugin.CharacterConfiguration is not { } character)
             return false;
 
-        return await Plugin.RunOnFramework(() =>
+        return await DalamudUtilities.RunOnFramework(() =>
         {
             CustomizePlusProfile profile;
             if (_customizePlusPlugin.ProfileManager.TryGetActiveProfileOnCharacter(character.Name) is not { } activeProfile)
@@ -303,19 +238,20 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
         if (ApiAvailable is false)
             return false;
 
-        return await Plugin.RunOnFrameworkSafely(() => _customizePlusPlugin?.ProfileManager.DeleteTemporaryProfile() ?? false).ConfigureAwait(false);
-    }
-
-    public async void Dispose()
-    {
         try
         {
-            await DeleteTemporaryCustomizeAsync().ConfigureAwait(false);
-            GC.SuppressFinalize(this);
+            return await DalamudUtilities.RunOnFramework(() => _customizePlusPlugin?.ProfileManager.DeleteTemporaryProfile() ?? false).ConfigureAwait(false);
         }
-        catch (Exception)
+        catch (Exception e)
         {
-            GC.SuppressFinalize(this);
+            Plugin.Log.Error($"[CustomizePlusService.DeleteTemporaryCustomizeAsync] {e}");
+            return false;
         }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        await DeleteTemporaryCustomizeAsync().ConfigureAwait(false);
+        GC.SuppressFinalize(this);
     }
 }

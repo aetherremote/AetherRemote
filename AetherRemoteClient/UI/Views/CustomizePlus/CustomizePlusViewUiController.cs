@@ -111,9 +111,33 @@ public class CustomizePlusViewUiController : IDisposable
     {
         SelectedProfileId = Guid.Empty;
 
-        _sorted = await _customizePlusService.GetProfiles().ConfigureAwait(false) is { } unsorted
-            ? unsorted.Children.Values.ToList()
-            : null;
+        if (await _customizePlusService.GetProfilesPlain().ConfigureAwait(false) is not { } profiles)
+            return;
+        
+        var root = new FolderNode<Profile>("Root", null);
+        foreach (var profile in profiles)
+        {
+            var parts = profile.Path.Split('/', StringSplitOptions.RemoveEmptyEntries);
+            var current = root;
+
+            for (var i = 0; i < parts.Length; i++)
+            {
+                var part = parts[i];
+                if (current.Children.TryGetValue(part, out var node) is false)
+                {
+                    node = new FolderNode<Profile>(part, i == parts.Length - 1 ? profile : null);
+                    current.Children[part] = node;
+                }
+                
+                current = node;
+            }
+        }
+        
+        // The dictionary provided by customize is not sorted
+        FolderNode<Profile>.SortTree(root);
+        
+        // Assignment
+        _sorted = root.Children.Values.ToList();
     }
     
     /// <summary>
