@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Domain.Moodles;
+using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Moodles;
 using Dalamud.Plugin.Ipc;
 using MoodlesStatusInfo = (
@@ -74,18 +75,26 @@ public class MoodlesService : IExternalPlugin
     {
         // Set everything to disabled state
         ApiAvailable = false;
-        
-        // Invoke Api
-        var version = await Plugin.RunOnFrameworkSafely(() => _version.InvokeFunc()).ConfigureAwait(false);
-        
-        // Test for proper versioning
-        if (version < ExpectedMajor)
-            return false;
 
-        // Mark as ready
-        ApiAvailable = true;
-        IpcReady?.Invoke(this, EventArgs.Empty);
-        return true;
+        try
+        {
+            // Invoke Api
+            var version = await DalamudUtilities.RunOnFramework(() => _version.InvokeFunc()).ConfigureAwait(false);
+        
+            // Test for proper versioning
+            if (version < ExpectedMajor)
+                return false;
+
+            // Mark as ready
+            ApiAvailable = true;
+            IpcReady?.Invoke(this, EventArgs.Empty);
+            return true;
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error($"[MoodlesService.TestIpcAvailability] {e}");
+            return false;
+        }
     }
 
     /// <summary>

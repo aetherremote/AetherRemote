@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Services;
@@ -60,18 +59,17 @@ public partial class PossessionManager
         
         // Reset our lock
         _attemptingPossession = false;
-        
+
         // Now we can try to get the name of the character we are possessing to move our camera to them
-        var address = await Plugin.TryFindAddressByCharacter(response.CharacterName, response.CharacterWorld).ConfigureAwait(false);
-        if (address == IntPtr.Zero)
+        if (await DalamudUtilities.TryGetPlayerFromObjectTable(response.CharacterName, response.CharacterWorld).ConfigureAwait(false) is { } targetCharacter)
         {
-            // If we didn't find the target, display a notification that you're possessing without them nearby
-            NotificationHelper.Info("Remote Possession", "The person you are possessing is not nearby you, controlling them may be difficult.");
+            // We found the target, set the hooks to move our camera to them
+            _cameraTargetHook.Enable(targetCharacter.Address);
         }
         else
         {
-            // We found the target, set the hooks to move our camera to them
-            _cameraTargetHook.Enable(address);
+            // If we didn't find the target, display a notification that you're possessing without them nearby
+            NotificationHelper.Info("Remote Possession", "The person you are possessing is not nearby you, controlling them may be difficult.");
         }
 
         // Send a success back

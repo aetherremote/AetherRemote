@@ -22,7 +22,7 @@ namespace AetherRemoteClient.Services;
 /// <summary>
 ///     Provides access to CustomizePlus
 /// </summary>
-public class CustomizePlusService : IAsyncDisposable, IExternalPlugin
+public class CustomizePlusService : IDisposable, IExternalPlugin
 {
     // Const
     private const int ExpectedMajor = 6;
@@ -249,9 +249,16 @@ public class CustomizePlusService : IAsyncDisposable, IExternalPlugin
         }
     }
 
-    public async ValueTask DisposeAsync()
+    public async void Dispose()
     {
-        await DeleteTemporaryCustomizeAsync().ConfigureAwait(false);
-        GC.SuppressFinalize(this);
+        try
+        {
+            await DeleteTemporaryCustomizeAsync().ConfigureAwait(false);
+            GC.SuppressFinalize(this);
+        }
+        catch (Exception)
+        {
+            // Ignore until Dalamud introduces a proper async dispose
+        }
     }
 }

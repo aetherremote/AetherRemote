@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
@@ -30,7 +31,7 @@ public partial class NetworkHandler
         // If they're the one who sent the hypnosis request in the first place
         if (_hypnosisManager.Hypnotist?.FriendCode == request.SenderFriendCode)
         {
-            await Plugin.RunOnFramework((Action)(() => _hypnosisManager.Wake())).ConfigureAwait(false);
+            await DalamudUtilities.RunOnFramework((Action)(() => _hypnosisManager.Wake())).ConfigureAwait(false);
             _statusManager.ClearHypnosis();
             return ActionResultBuilder.Ok();
         }

@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using AetherRemoteClient.Utils;
 
 namespace AetherRemoteClient.Services;
 
@@ -12,7 +13,7 @@ public class GameSettingsService
     /// </summary>
     public static async Task SetMoveMode(uint moveMode)
     {
-        await Plugin.RunOnFramework(() => Plugin.GameConfig.UiControl.Set("MoveMode", moveMode)).ConfigureAwait(false);
+        await DalamudUtilities.RunOnFramework(() => Plugin.GameConfig.UiControl.Set("MoveMode", moveMode)).ConfigureAwait(false);
     }
 
     /// <summary>
@@ -20,6 +21,6 @@ public class GameSettingsService
     /// </summary>
     public static async Task<uint?> TryGetMoveMode()
     {
-        return await Plugin.RunOnFramework<uint?>(() => Plugin.GameConfig.UiControl.TryGetUInt("MoveMode", out var moveMode) ? moveMode : null).ConfigureAwait(false);
+        return await DalamudUtilities.RunOnFramework<uint?>(() => Plugin.GameConfig.UiControl.TryGetUInt("MoveMode", out var moveMode) ? moveMode : null).ConfigureAwait(false);
     }
 }
