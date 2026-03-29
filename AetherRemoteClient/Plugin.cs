@@ -1,6 +1,5 @@
 using System;
 using System.Reflection;
-using System.Threading.Tasks;
 using AetherRemoteClient.Domain.Configurations;
 using AetherRemoteClient.Handlers;
 using AetherRemoteClient.Handlers.Chat;
@@ -33,8 +32,6 @@ using AetherRemoteClient.UI.Views.Transformation;
 using AetherRemoteClient.UI.Views.Transformations;
 using AetherRemoteClient.UI.Views.Twinning;
 using AetherRemoteClient.Utils;
-using Dalamud.Game.ClientState.Objects.Enums;
-using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
@@ -217,75 +214,6 @@ public sealed class Plugin : IDalamudPlugin
     public void Dispose()
     {
         _services.Dispose();
-    }
-
-    /// <summary>
-    ///     Runs provided function on the XIV Framework. Await should never be used inside the <see cref="Func{T}"/>
-    ///     passed to this function.
-    /// </summary>
-    [Obsolete("Use DalamudUtilities version instead")]
-    public static async Task<T> RunOnFramework<T>(Func<T> func)
-    {
-        if (Framework.IsInFrameworkUpdateThread)
-            return func.Invoke();
-
-        return await Framework.RunOnFrameworkThread(func).ConfigureAwait(false);
-    }
-
-    [Obsolete("Use DalamudUtilities version instead")]
-    public static async Task RunOnFramework(Action func)
-    {
-        if (Framework.IsInFrameworkUpdateThread)
-        {
-            func.Invoke();
-        }
-        else
-        {
-            await Framework.RunOnFrameworkThread(func).ConfigureAwait(false);
-        }
-    }
-    
-    /// <summary>
-    ///     Runs provided function on the XIV Framework. Await should never be used inside the <see cref="Func{T}"/>
-    ///     passed to this function.
-    /// </summary>
-    [Obsolete("Do not use this, just try catch in your local scope")]
-    public static async Task<T> RunOnFrameworkSafely<T>(Func<T> func)
-    {
-        try
-        {
-            if (Framework.IsInFrameworkUpdateThread)
-                return func.Invoke();
-
-            return await Framework.RunOnFrameworkThread(func).ConfigureAwait(false);
-        }
-        catch (Exception e)
-        {
-            Log.Warning($"[DependencyManager.RunOnFrameworkSafely] An error occurred, {e}");
-            return Activator.CreateInstance<T>();
-        }
-    }
-    
-    /// <summary>
-    ///     Attempts to find a character in the object list by name
-    /// </summary>
-    [Obsolete("Do not use this, use the Dalamud Utilities version instead")]
-    public static async Task<IntPtr> TryFindAddressByCharacter(string characterName, string characterWorld)
-    {
-        return await RunOnFrameworkSafely(() =>
-        {
-            foreach (var entity in ObjectTable)
-            {
-                var player = entity.ObjectKind is ObjectKind.Player ? (IPlayerCharacter)entity : null;
-                if (player is null)
-                    continue;
-                
-                if (player.Name.ToString() == characterName && player.HomeWorld.Value.Name.ToString() == characterWorld)
-                    return player.Address;
-            }
-
-            return IntPtr.Zero;
-        }).ConfigureAwait(false);
     }
 
     /*

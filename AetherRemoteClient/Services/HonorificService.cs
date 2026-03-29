@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain.Honorific;
 using AetherRemoteClient.Domain.Interfaces;
+using AetherRemoteClient.Utils;
 using Dalamud.Plugin.Ipc;
 using Newtonsoft.Json;
 
@@ -62,7 +63,7 @@ public class HonorificService : IExternalPlugin
         
         try
         {
-            var (major, minor) = await Plugin.RunOnFramework(() => _apiVersion.InvokeFunc()).ConfigureAwait(false);
+            var (major, minor) = await DalamudUtilities.RunOnFramework(() => _apiVersion.InvokeFunc()).ConfigureAwait(false);
             if (major is not ExpectedMajor || minor < ExpectedMinor)
                 return false;
         
@@ -93,7 +94,7 @@ public class HonorificService : IExternalPlugin
     {
         try
         {
-            var json = await Plugin.RunOnFramework(() => _getCharacterTitle.InvokeFunc(characterObjectIndex)).ConfigureAwait(false);
+            var json = await DalamudUtilities.RunOnFramework(() => _getCharacterTitle.InvokeFunc(characterObjectIndex)).ConfigureAwait(false);
             return JsonConvert.DeserializeObject<HonorificCustomTitle>(json);
         }
         catch (Exception e)
@@ -177,7 +178,7 @@ public class HonorificService : IExternalPlugin
             sb.Append(ToHex(honorific.Glow.Value));
         }
 
-        return await Plugin.RunOnFramework(() => Plugin.CommandManager.ProcessCommand(sb.ToString())).ConfigureAwait(false);
+        return await DalamudUtilities.RunOnFramework(() => Plugin.CommandManager.ProcessCommand(sb.ToString())).ConfigureAwait(false);
     }
     
     private static string ToHex(Vector3 color)
