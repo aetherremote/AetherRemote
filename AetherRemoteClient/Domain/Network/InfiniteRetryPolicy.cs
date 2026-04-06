@@ -13,8 +13,8 @@ public class InfiniteRetryPolicy : IRetryPolicy
     public TimeSpan? NextRetryDelay(RetryContext context)
     {
         var retryCount = context.PreviousRetryCount;
-        if (retryCount > 6)
-            retryCount = 6;
+        if (retryCount > 10)
+            retryCount = 10;
         
         return TimeSpan.FromSeconds(Math.Pow(2, retryCount));
     }

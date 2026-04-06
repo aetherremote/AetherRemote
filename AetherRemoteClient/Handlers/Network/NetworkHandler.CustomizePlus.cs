@@ -27,7 +27,12 @@ public partial class NetworkHandler
         try
         {
             var json = Encoding.UTF8.GetString(request.JsonBoneDataBytes);
-
+            if (await _customizePlusService.DeleteTemporaryCustomizeAsync().ConfigureAwait(false) is false)
+            {
+                Plugin.Log.Warning("[CustomizePlusHandler] Unable to delete existing customize");
+                return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
+            }
+            
             if (request.Additive)
             {
                 if (await _customizePlusService.ApplyCustomizeAdditive(json).ConfigureAwait(false) is false)
@@ -38,12 +43,6 @@ public partial class NetworkHandler
             }
             else
             {
-                if (await _customizePlusService.DeleteTemporaryCustomizeAsync().ConfigureAwait(false) is false)
-                {
-                    Plugin.Log.Warning("[CustomizePlusHandler] Unable to delete existing customize");
-                    return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
-                }
-                
                 if (await _customizePlusService.ApplyCustomizeAsync(json).ConfigureAwait(false) is false)
                 {
                     Plugin.Log.Warning("[CustomizePlusHandler] Unable to apply customize");

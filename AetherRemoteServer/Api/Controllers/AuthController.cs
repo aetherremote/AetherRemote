@@ -1,6 +1,7 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using AetherRemoteCommon;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network.GetToken;
 using AetherRemoteCommon.Domain.Network.LoginAuthentication;
@@ -17,7 +18,7 @@ namespace AetherRemoteServer.Api.Controllers;
 public class AuthController(Configuration config, DatabaseService database) : ControllerBase
 {
     // Const
-    private static readonly Version ExpectedVersion = new(2, 9, 5, 2);
+    private static readonly Version ExpectedVersion = new(2, 9, 5, 3);
     
     // Instantiated
     private readonly SymmetricSecurityKey _key = new(Encoding.UTF8.GetBytes(config.SigningKey));
@@ -43,7 +44,7 @@ public class AuthController(Configuration config, DatabaseService database) : Co
         {
             Subject = new ClaimsIdentity(claims),
             SigningCredentials = new SigningCredentials(_key, SecurityAlgorithms.HmacSha256Signature),
-            Expires = DateTime.UtcNow.AddHours(4)
+            Expires = DateTime.UtcNow.AddHours(Constraints.TokenExpirationInHours)
         };
 
         return new JwtSecurityTokenHandler().CreateJwtSecurityToken(token);

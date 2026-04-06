@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain.Network;
 using AetherRemoteClient.Utils;
+using AetherRemoteCommon;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network.GetToken;
 using AetherRemoteCommon.Domain.Network.LoginAuthentication;
@@ -45,8 +46,16 @@ public class NetworkService : IDisposable
     private const string HubUrl = "https://foxitsvc.com:5006/primaryHub";
     private const string PostUrl = "https://foxitsvc.com:5006/api/auth/login";
 #endif
+    
+    // Token resources, used for caching access
+    private static string? _cachedToken;
+    private static DateTime _tokenExpiration;
 
+    // Serialization options for converting camel case to pascal case in deserialization
     private static readonly JsonSerializerOptions DeserializationOptions = new() { PropertyNameCaseInsensitive = true };
+    
+    // Long-lived HTTP Client
+    private static readonly HttpClient Client = new();
 
     /// <summary>
     ///     If the plugin has begun the connection process
@@ -65,7 +74,7 @@ public class NetworkService : IDisposable
     {
         Connection = new HubConnectionBuilder().WithUrl(HubUrl, options =>
             {
-                options.AccessTokenProvider = async () => await TryAuthenticateSecret().ConfigureAwait(false);
+                options.AccessTokenProvider = async () => await TryGetSecret().ConfigureAwait(false);
             })
             .WithAutomaticReconnect(new InfiniteRetryPolicy())
             .AddMessagePackProtocol(options =>
@@ -181,7 +190,25 @@ public class NetworkService : IDisposable
         Disconnected?.Invoke();
         return Task.CompletedTask;
     }
+    
+    private static async Task<string?> TryGetSecret()
+    {
+        // If we have a cached token, and it isn't expired, use it
+        if (_cachedToken is not null && DateTime.UtcNow < _tokenExpiration)
+            return _cachedToken;
 
+        // Try to actually get the token from the auth endpoint
+        if (await TryAuthenticateSecret().ConfigureAwait(false) is not { } token)
+            return null;
+        
+        // Cache the token and the expiration
+        _cachedToken = token;
+        _tokenExpiration = DateTime.UtcNow.AddHours(Constraints.TokenExpirationInHours);
+        
+        // Get a new token
+        return token;
+    }
+    
     private static async Task<string?> TryAuthenticateSecret()
     {
         if (Plugin.CharacterConfiguration?.Secret is null)
@@ -190,13 +217,12 @@ public class NetworkService : IDisposable
             return null;
         }
         
-        using var client = new HttpClient();
         var request = new GetTokenRequest(Plugin.CharacterConfiguration.Secret, Plugin.Version);
         var payload = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
 
         try
         {
-            var response = await client.PostAsync(PostUrl, payload).ConfigureAwait(false);
+            var response = await Client.PostAsync(PostUrl, payload).ConfigureAwait(false);
             var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             if (JsonSerializer.Deserialize<LoginAuthenticationResult>(content, DeserializationOptions) is not { } result)
             {

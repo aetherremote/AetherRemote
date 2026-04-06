@@ -20,6 +20,11 @@ public static class Constraints
     public const int FriendCodeMaximumLength = 16;
 
     /// <summary>
+    ///     The default number of hours an access token is valid for
+    /// </summary>
+    public const int TokenExpirationInHours = 4;
+
+    /// <summary>
     ///     Constraints relating to the speak command
     /// </summary>
     public static class Speak
