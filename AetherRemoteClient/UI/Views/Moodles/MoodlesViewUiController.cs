@@ -81,7 +81,7 @@ public class MoodlesViewUiController : IDisposable
             SelectedMoodleIndex = -1;
             
             // Request all the Moodles again
-            _moodles = await _moodlesService.GetMoodles().ConfigureAwait(false);
+            _moodles = await _moodlesService.GetMoodles().ConfigureAwait(false) ?? [];
         }
         catch (Exception)
         {

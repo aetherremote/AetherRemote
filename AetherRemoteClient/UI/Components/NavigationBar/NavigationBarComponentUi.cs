@@ -42,12 +42,7 @@ public class NavigationBarComponentUi(NetworkService networkService, ViewService
                 ImGui.TextUnformatted("Manipulations");
                 NavBarButton(FontAwesomeIcon.PeopleArrows, "Transformations", View.Transformations, size, offset);
                 NavBarButton(FontAwesomeIcon.Plus, "Customize+", View.CustomizePlus, size, offset);
-                
-                // TODO: Re-enable when Moodles IPC is reintroduced
-                ImGui.BeginDisabled();
                 NavBarButton(FontAwesomeIcon.Icons, "Moodles", View.Moodles, size, offset);
-                ImGui.EndDisabled();
-                
                 NavBarButton(FontAwesomeIcon.Crown, "Honorific", View.Honorific, size, offset);
                 
                 ImGui.TextUnformatted("Control");

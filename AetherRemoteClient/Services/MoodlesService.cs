@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain.Interfaces;
@@ -33,7 +34,7 @@ namespace AetherRemoteClient.Services;
 public class MoodlesService : IExternalPlugin
 {
     // Const
-    private const int ExpectedMajor = 3;
+    private const int ExpectedMajor = 4;
     
     // Moodles Version
     private readonly ICallGateSubscriber<int> _version;
@@ -44,7 +45,7 @@ public class MoodlesService : IExternalPlugin
     
     // Moodles Statuses
     private readonly ICallGateSubscriber<List<MoodlesStatusInfo>> _listMoodles;
-    private readonly ICallGateProvider<MoodlesStatusInfo, bool, object?> _applyMoodle;
+    private readonly ICallGateSubscriber<MoodlesStatusInfo, nint, object?> _applyMoodle;
     
     /// <summary>
     ///     Is Moodles available for use?
@@ -61,11 +62,16 @@ public class MoodlesService : IExternalPlugin
     /// </summary>
     public MoodlesService()
     {
+        // Moodles Version
         _version = Plugin.PluginInterface.GetIpcSubscriber<int>("Moodles.Version");
+        
+        // Moodles Status Managers
         _getStatusManager = Plugin.PluginInterface.GetIpcSubscriber<nint, string>("Moodles.GetStatusManagerByPtrV2");
         _setStatusManager = Plugin.PluginInterface.GetIpcSubscriber<nint, string, object>("Moodles.SetStatusManagerByPtrV2");
+        
+        // Moodles Statuses
         _listMoodles = Plugin.PluginInterface.GetIpcSubscriber<List<MoodlesStatusInfo>>("Moodles.GetStatusInfoListV2");
-        _applyMoodle = Plugin.PluginInterface.GetIpcProvider<MoodlesStatusInfo, bool, object?>("GagSpeak.ApplyStatusInfo");
+        _applyMoodle = Plugin.PluginInterface.GetIpcSubscriber<MoodlesStatusInfo, nint, object?>("Moodles.AddOrUpdateMoodleByDataByPtrV2");
     }
     
     /// <summary>
@@ -102,7 +108,21 @@ public class MoodlesService : IExternalPlugin
     /// </summary>
     public async Task<string?> GetStatusManager(nint address)
     {
-        return await ExecuteOnThread(() => _getStatusManager.InvokeFunc(address)).ConfigureAwait(false);
+        if (ApiAvailable is false)
+        {
+            Plugin.Log.Warning("[MoodlesService.GetStatusManager] Api not available");
+            return null;
+        }
+
+        try
+        {
+            return await DalamudUtilities.RunOnFramework(() => _getStatusManager.InvokeFunc(address)).ConfigureAwait(false);
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error($"[MoodlesService.GetStatusManager] {e}");
+            return null;
+        }
     }
 
     /// <summary>
@@ -110,20 +130,45 @@ public class MoodlesService : IExternalPlugin
     /// </summary>
     public async Task<bool> SetStatusManager(nint address, string status)
     { 
-        return await ExecuteOnThread(() => _setStatusManager.InvokeAction(address, status)).ConfigureAwait(false);
+        if (ApiAvailable is false)
+        {
+            Plugin.Log.Warning("[MoodlesService.SetStatusManager] Api not available");
+            return false;
+        }
+
+        try
+        {
+            await DalamudUtilities.RunOnFramework(() => _setStatusManager.InvokeAction(address, status)).ConfigureAwait(false);
+            return true;
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error($"[MoodlesService.SetStatusManager] {e}");
+            return false;
+        }
     }
 
     /// <summary>
     ///     Gets all the client's moodles
     /// </summary>
-    /// <returns></returns>
-    public async Task<List<Moodle>> GetMoodles()
+    public async Task<List<Moodle>?> GetMoodles()
     {
-        var results = new List<Moodle>();
-        foreach (var statusInfo in await ExecuteOnThread(() => _listMoodles.InvokeFunc()).ConfigureAwait(false) ?? [])
-            results.Add(ConvertStatusInfoToMoodle(statusInfo));
-
-        return results;
+        if (ApiAvailable is false)
+        {
+            Plugin.Log.Warning("[MoodlesService.GetMoodles] Api not available");
+            return null;
+        }
+        
+        try
+        {
+            var moodles = await DalamudUtilities.RunOnFramework(() => _listMoodles.InvokeFunc()).ConfigureAwait(false);
+            return moodles.Select(ConvertStatusInfoToMoodle).ToList();
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error($"[MoodlesService.GetMoodles] {e}");
+            return null;
+        }
     }
 
     /// <summary>
@@ -131,51 +176,26 @@ public class MoodlesService : IExternalPlugin
     /// </summary>
     public async Task<bool> ApplyMoodle(MoodleInfo moodle)
     {
-        return await ExecuteOnThread(() => _applyMoodle.SendMessage(ConvertMoodleToStatusInfo(moodle), false)).ConfigureAwait(false);
-    }
-    
-    /// <summary>
-    ///     Executes a Moodles command on the main thread
-    /// </summary>
-    private async Task<bool> ExecuteOnThread(Action action)
-    {
-        if (!ApiAvailable)
+        if (ApiAvailable is false)
         {
-            Plugin.Log.Warning("[MoodlesService] Api not available");
+            Plugin.Log.Warning("[MoodlesService.ApplyMoodle] Api not available");
             return false;
         }
-
+        
         try
         {
-            await Plugin.Framework.RunOnFrameworkThread(action).ConfigureAwait(false);
+            // Get the local player's pointer address
+            if (await DalamudUtilities.RunOnFramework(() => Plugin.ObjectTable.LocalPlayer?.Address).ConfigureAwait(false) is not { } pointer)
+                return false;
+
+            // Call Moodles
+            await DalamudUtilities.RunOnFramework(() => _applyMoodle.InvokeAction(ConvertMoodleToStatusInfo(moodle), pointer));
             return true;
         }
         catch (Exception e)
         {
-            Plugin.Log.Warning($"[MoodlesService] An expected error occurred, {e}");
+            Plugin.Log.Error($"[MoodlesService.ApplyMoodle] {e}");
             return false;
-        }
-    }
-
-    /// <summary>
-    ///     Executes a Moodles command on the main thread
-    /// </summary>
-    private async Task<T?> ExecuteOnThread<T>(Func<T> function)
-    {
-        if (!ApiAvailable)
-        {
-            Plugin.Log.Warning("[MoodlesService] Api not available");
-            return default;
-        }
-
-        try
-        {
-            return await Plugin.Framework.RunOnFrameworkThread(function).ConfigureAwait(false);
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Warning($"[MoodlesService] An expected error occurred, {e}");
-            return default;
         }
     }
     
@@ -234,6 +254,7 @@ public class MoodlesService : IExternalPlugin
         };
     }
     
+    // TODO: This should not exist here
     /// <summary>
     ///     Removes all text between a [ and a ] including the brackets themselves
     /// </summary>
