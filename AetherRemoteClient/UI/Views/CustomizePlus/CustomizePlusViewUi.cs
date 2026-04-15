@@ -10,6 +10,7 @@ using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
+using Dalamud.Interface.Colors;
 
 namespace AetherRemoteClient.UI.Views.CustomizePlus;
 
@@ -27,14 +28,13 @@ public class CustomizePlusViewUi(
         ImGui.BeginChild("CustomizePlusContent", AetherRemoteDimensions.ContentSize, false, AetherRemoteImGui.ContentFlags);
         
         var width = ImGui.GetWindowWidth();
-        var padding = new Vector2(ImGui.GetStyle().WindowPadding.X, 0);
 
         var begin = ImGui.GetCursorPosY();
         SharedUserInterfaces.ContentBox("ProfileSearch", AetherRemoteColors.PanelColor, true, () =>
         {
             SharedUserInterfaces.MediumText("Select Profile");
 
-            ImGui.SetNextItemWidth(width - padding.X * 4 - ImGui.GetFontSize());
+            ImGui.SetNextItemWidth(width - AetherRemoteImGui.WindowPadding.X * 4 - ImGui.GetFontSize());
             if (ImGui.InputTextWithHint("##ProfileSearchBar", "Search", ref controller.SearchTerm, 32))
                 controller.FilterProfilesBySearchTerm();
 
@@ -43,10 +43,11 @@ public class CustomizePlusViewUi(
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Sync, null, "Refresh Profiles"))
                 _ = controller.RefreshCustomizeProfiles();
         });
-
-        // TODO: Factor out ImGui calls -> AetherRemoteImGui
+        
         var headerHeight = ImGui.GetCursorPosY() - begin;
-        var profilesContextBoxSize = new Vector2(0, ImGui.GetWindowHeight() - headerHeight - padding.X * 6 - SendProfileButtonHeight * 1.75f);
+        var applyModeHeight = ImGui.GetFontSize() * 2 + AetherRemoteImGui.ItemSpacing.Y * 2; 
+        var padding = + AetherRemoteImGui.WindowPadding.Y * 7;
+        var profilesContextBoxSize = new Vector2(0, ImGui.GetWindowHeight() - headerHeight - AetherRemoteDimensions.SendCommandButtonHeight - applyModeHeight - padding);
         if (ImGui.BeginChild("##ProfilesContextBoxDisplay", profilesContextBoxSize, true, ImGuiWindowFlags.NoScrollbar))
         {
             if (controller.Profiles is { } profiles)
@@ -59,24 +60,28 @@ public class CustomizePlusViewUi(
         
         SharedUserInterfaces.ContentBox("CustomizePlusOptions", AetherRemoteColors.PanelColor, true, () =>
         {
-            var dimensions = new Vector2((width - padding.X * 3) * 0.5f, AetherRemoteDimensions.SendCommandButtonHeight * 0.75f);
-
-            // Snapshot the current mode
-            var value = controller.ShouldApplyAsAdditive;
-            
-            // Overwrite Existing
-            if (value is false) ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteColors.PrimaryColor);
-            if (ImGui.Button("Overwrite Existing", dimensions))
-                controller.ShouldApplyAsAdditive = false;
-            if (value is false) ImGui.PopStyleColor();
-            
+            ImGui.AlignTextToFramePadding();
+            ImGui.TextUnformatted("Apply Mode");
             ImGui.SameLine();
+            SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
+            if (ImGui.IsItemHovered())
+            {
+                ImGui.BeginTooltip();
+                ImGui.TextUnformatted("Apply mode refers to how the customize profile should be applied");
+                ImGui.Separator();
+                ImGui.TextUnformatted("Default");
+                ImGui.BulletText("Applies the profile as a new override of your current profiles");
+                
+                ImGui.TextUnformatted("Merge");
+                ImGui.BulletText("Applies the profile by creating a new profile with your current profiles, and the applied profile");
+
+                ImGui.TextColored(ImGuiColors.DalamudGrey, "Note: Profiles will not be edited or altered in any way");
+                ImGui.EndTooltip();
+            }
             
-            // Merge Into Existing
-            if (value) ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteColors.PrimaryColor);
-            if (ImGui.Button("Merge Into Existing", dimensions))
-                controller.ShouldApplyAsAdditive = true;
-            if (value) ImGui.PopStyleColor();
+            ImGui.RadioButton("Default", ref controller.ApplyMode, CustomizePlusViewUiController.ApplyModeAdditive);
+            ImGui.SameLine(width * 0.5f);
+            ImGui.RadioButton("Merge", ref controller.ApplyMode, CustomizePlusViewUiController.ApplyModeMerge);
         });
         
         SharedUserInterfaces.ContentBox("CustomizePlusSend", AetherRemoteColors.PanelColor, false, () =>
@@ -84,13 +89,13 @@ public class CustomizePlusViewUi(
             if (selectionManager.Selected.Count is 0)
             {
                 ImGui.BeginDisabled();
-                ImGui.Button("You must select at least one friend", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendProfileButtonHeight));
+                ImGui.Button("You must select at least one friend", new Vector2(ImGui.GetWindowWidth() - AetherRemoteImGui.WindowPadding.X * 2, SendProfileButtonHeight));
                 ImGui.EndDisabled();
             }
             else if (controller.MissingPermissionsForATarget())
             {
                 ImGui.BeginDisabled();
-                ImGui.Button("You lack permissions for one or more of your targets", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendProfileButtonHeight));
+                ImGui.Button("You lack permissions for one or more of your targets", new Vector2(ImGui.GetWindowWidth() - AetherRemoteImGui.WindowPadding.X * 2, SendProfileButtonHeight));
                 ImGui.EndDisabled();
             }
             else
@@ -98,12 +103,12 @@ public class CustomizePlusViewUi(
                 if (commandLockoutService.IsLocked)
                 {
                     ImGui.BeginDisabled();
-                    ImGui.Button("Send Customize Profile", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendProfileButtonHeight));
+                    ImGui.Button("Send Customize Profile", new Vector2(ImGui.GetWindowWidth() - AetherRemoteImGui.WindowPadding.X * 2, SendProfileButtonHeight));
                     ImGui.EndDisabled();
                 }
                 else
                 {
-                    if (ImGui.Button("Send Customize Profile", new Vector2(ImGui.GetWindowWidth() - padding.X * 2, SendProfileButtonHeight)))
+                    if (ImGui.Button("Send Customize Profile", new Vector2(ImGui.GetWindowWidth() - AetherRemoteImGui.WindowPadding.X * 2, SendProfileButtonHeight)))
                         _ = controller.SendCustomizeProfile().ConfigureAwait(false);
                 }
             }

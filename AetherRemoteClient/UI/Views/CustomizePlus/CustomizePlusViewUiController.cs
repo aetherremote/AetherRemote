@@ -16,6 +16,10 @@ namespace AetherRemoteClient.UI.Views.CustomizePlus;
 /// </summary>
 public class CustomizePlusViewUiController : IDisposable
 {
+    // Const
+    public const int ApplyModeAdditive = 0;
+    public const int ApplyModeMerge = 1;
+    
     // Injected
     private readonly CustomizePlusService _customizePlusService;
     private readonly NetworkCommandManager _networkCommandManager;
@@ -45,11 +49,11 @@ public class CustomizePlusViewUiController : IDisposable
     ///     The profiles to display in the Ui
     /// </summary>
     public List<FolderNode<Profile>>? Profiles => SearchTerm == string.Empty ? _sorted : _filtered;
-
+    
     /// <summary>
-    ///     Should this profile be added on top of existing ones?
+    ///     The application mode of how a customize profile should be applied
     /// </summary>
-    public bool ShouldApplyAsAdditive = false;
+    public int ApplyMode = 0;
     
     /// <summary>
     ///     <inheritdoc cref="CustomizePlusViewUiController"/>
@@ -168,8 +172,16 @@ public class CustomizePlusViewUiController : IDisposable
         if (await _customizePlusService.GetProfile(SelectedProfileId).ConfigureAwait(false) is not { } profile)
             return;
 
+        
         var bytes = Encoding.UTF8.GetBytes(profile);
-        await _networkCommandManager.SendCustomize(_selectionManager.GetSelectedFriendCodes(), bytes, ShouldApplyAsAdditive).ConfigureAwait(false);
+        var applyMode = ApplyMode switch
+        {
+            ApplyModeAdditive => true,
+            ApplyModeMerge => false,
+            _ => true
+        };
+        
+        await _networkCommandManager.SendCustomize(_selectionManager.GetSelectedFriendCodes(), bytes, applyMode).ConfigureAwait(false);
     }
     
     private void OnIpcReady(object? sender, EventArgs e)
