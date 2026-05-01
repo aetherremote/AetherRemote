@@ -8,6 +8,7 @@ using AetherRemoteClient.Domain.Honorific;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Utils;
 using Dalamud.Plugin.Ipc;
+using Dalamud.Plugin.Ipc.Exceptions;
 using Newtonsoft.Json;
 
 namespace AetherRemoteClient.Services;
@@ -71,6 +72,11 @@ public class HonorificService : IExternalPlugin
         
             IpcReady?.Invoke(this, EventArgs.Empty);
             return true;
+        }
+        catch (IpcNotReadyError)
+        {
+            // Exit gracefully
+            return false;
         }
         catch (Exception e)
         {

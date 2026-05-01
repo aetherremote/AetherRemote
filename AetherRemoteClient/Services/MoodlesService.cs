@@ -8,6 +8,7 @@ using AetherRemoteClient.Domain.Moodles;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Moodles;
 using Dalamud.Plugin.Ipc;
+using Dalamud.Plugin.Ipc.Exceptions;
 using MoodlesStatusInfo = (
     int Version,
     System.Guid Guid,
@@ -95,6 +96,11 @@ public class MoodlesService : IExternalPlugin
             ApiAvailable = true;
             IpcReady?.Invoke(this, EventArgs.Empty);
             return true;
+        }
+        catch (IpcNotReadyError)
+        {
+            // Exit gracefully
+            return false;
         }
         catch (Exception e)
         {

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Utils;
+using Dalamud.Plugin.Ipc.Exceptions;
 using Penumbra.Api.Enums;
 using Penumbra.Api.IpcSubscribers;
 
@@ -59,6 +60,11 @@ public class PenumbraService : IExternalPlugin
             ApiAvailable = true;
             IpcReady?.Invoke(this, EventArgs.Empty);
             return true;
+        }
+        catch (IpcNotReadyError)
+        {
+            // Exit gracefully
+            return false;
         }
         catch (Exception e)
         {

@@ -9,6 +9,7 @@ using AetherRemoteClient.Domain.Glamourer;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
+using Dalamud.Plugin.Ipc.Exceptions;
 using FFXIVClientStructs.FFXIV.Client.Game.Object;
 using Glamourer.Api.Enums;
 using Glamourer.Api.Helpers;
@@ -115,6 +116,11 @@ public class GlamourerService : IExternalPlugin, IDisposable
             ApiAvailable = true;
             IpcReady?.Invoke(this, EventArgs.Empty);
             return true;
+        }
+        catch (IpcNotReadyError)
+        {
+            // Exit gracefully
+            return false;
         }
         catch (Exception e)
         {

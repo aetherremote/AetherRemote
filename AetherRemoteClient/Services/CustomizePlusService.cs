@@ -7,6 +7,7 @@ using AetherRemoteClient.Domain.CustomizePlus.Reflection.Domain;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Utils;
 using Dalamud.Plugin.Ipc;
+using Dalamud.Plugin.Ipc.Exceptions;
 using ProfileData = (
     System.Guid Id,
     string Name,
@@ -66,32 +67,37 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
         // Set everything to disabled state
         _customizePlusPlugin = null;
         ApiAvailable = false;
-        
+
         try
         {
             // Invoke Api
             var version = await DalamudUtilities.RunOnFramework(() => _getVersion.InvokeFunc()).ConfigureAwait(false);
-            
+
             // Test for proper versioning
             if (version.Item1 is not ExpectedMajor || version.Item2 < ExpectedMinor)
                 return false;
-            
+
             // Check to make sure the reflection process was successful
             if (await DalamudUtilities.RunOnFramework(CustomizePlusPlugin.Create).ConfigureAwait(false) is not { } plugin)
                 return false;
-            
+
             // Call the delete method for safety
             await DeleteTemporaryCustomizeAsync().ConfigureAwait(false);
-            
+
             // Mark as ready
             _customizePlusPlugin = plugin;
             ApiAvailable = true;
-            
+
             // As a safety precaution, attempt to delete any lingering Aether Remote profiles that may exist
             await DeleteTemporaryCustomizeAsync().ConfigureAwait(false);
-            
+
             IpcReady?.Invoke(this, EventArgs.Empty);
             return true;
+        }
+        catch (IpcNotReadyError)
+        {
+            // Exit gracefully
+            return false;
         }
         catch (Exception e)
         {
