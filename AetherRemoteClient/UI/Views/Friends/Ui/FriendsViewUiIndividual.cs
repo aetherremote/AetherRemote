@@ -83,8 +83,7 @@ public partial class FriendsViewUi
             DrawIndividualPermissionRow("Body Swap", denyPosition, inheritPosition, allowPosition, ref controller.Individual.BodySwapValue);
             DrawIndividualPermissionRow("Customize+", denyPosition, inheritPosition, allowPosition, ref controller.Individual.CustomizePlusValue);
             DrawIndividualPermissionRow("Emote", denyPosition, inheritPosition, allowPosition, ref controller.Individual.EmoteValue);
-            DrawIndividualPermissionRow("Glamourer Customizations", denyPosition, inheritPosition, allowPosition, ref controller.Individual.GlamourerCustomizationsValue);
-            DrawIndividualPermissionRow("Glamourer Equipment", denyPosition, inheritPosition, allowPosition, ref controller.Individual.GlamourerEquipmentValue);
+            DrawIndividualPermissionRow("Glamourer", denyPosition, inheritPosition, allowPosition, ref controller.Individual.GlamourerValue);
             DrawIndividualPermissionRow("Honorific", denyPosition, inheritPosition, allowPosition, ref controller.Individual.HonorificValue);
             DrawIndividualPermissionRow("Hypnosis", denyPosition, inheritPosition, allowPosition, ref controller.Individual.HypnosisValue);
             DrawIndividualPermissionRow("Moodles", denyPosition, inheritPosition, allowPosition, ref controller.Individual.MoodlesValue);

@@ -14,8 +14,7 @@ public class GlobalPermissions
     public bool BodySwapValue;
     public bool CustomizePlusValue;
     public bool EmoteValue;
-    public bool GlamourerCustomizationsValue;
-    public bool GlamourerEquipmentValue;
+    public bool GlamourerValue;
     public bool HonorificValue;
     public bool HypnosisValue;
     public bool MoodlesValue;
@@ -54,8 +53,7 @@ public class GlobalPermissions
             BodySwapValue == other.BodySwapValue &&
             CustomizePlusValue == other.CustomizePlusValue &&
             EmoteValue == other.EmoteValue &&
-            GlamourerCustomizationsValue == other.GlamourerCustomizationsValue &&
-            GlamourerEquipmentValue == other.GlamourerEquipmentValue &&
+            GlamourerValue == other.GlamourerValue &&
             HonorificValue == other.HonorificValue &&
             HypnosisValue == other.HypnosisValue &&
             MoodlesValue == other.MoodlesValue &&
@@ -94,8 +92,7 @@ public class GlobalPermissions
             BodySwapValue = (permissions.Primary & PrimaryPermissions.BodySwap) == PrimaryPermissions.BodySwap,
             CustomizePlusValue = (permissions.Primary & PrimaryPermissions.CustomizePlus) == PrimaryPermissions.CustomizePlus,
             EmoteValue = (permissions.Primary & PrimaryPermissions.Emote) == PrimaryPermissions.Emote,
-            GlamourerCustomizationsValue = (permissions.Primary & PrimaryPermissions.GlamourerCustomization) == PrimaryPermissions.GlamourerCustomization,
-            GlamourerEquipmentValue = (permissions.Primary & PrimaryPermissions.GlamourerEquipment) == PrimaryPermissions.GlamourerEquipment,
+            GlamourerValue = (permissions.Primary & PrimaryPermissions.Glamourer) == PrimaryPermissions.Glamourer,
             HonorificValue = (permissions.Primary & PrimaryPermissions.Honorific) == PrimaryPermissions.Honorific,
             HypnosisValue = (permissions.Primary & PrimaryPermissions.Hypnosis) == PrimaryPermissions.Hypnosis,
             MoodlesValue = (permissions.Primary & PrimaryPermissions.Moodles) == PrimaryPermissions.Moodles,
@@ -156,8 +153,7 @@ public class GlobalPermissions
         if (permissions.BodySwapValue) primary |= PrimaryPermissions.BodySwap;
         if (permissions.CustomizePlusValue) primary |= PrimaryPermissions.CustomizePlus;
         if (permissions.EmoteValue) primary |= PrimaryPermissions.Emote;
-        if (permissions.GlamourerCustomizationsValue) primary |= PrimaryPermissions.GlamourerCustomization;
-        if (permissions.GlamourerEquipmentValue) primary |= PrimaryPermissions.GlamourerEquipment;
+        if (permissions.GlamourerValue) primary |= PrimaryPermissions.Glamourer;
         if (permissions.HonorificValue) primary |= PrimaryPermissions.Honorific;
         if (permissions.HypnosisValue) primary |= PrimaryPermissions.Hypnosis;
         if (permissions.MoodlesValue) primary |= PrimaryPermissions.Moodles;

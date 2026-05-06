@@ -25,8 +25,7 @@ public partial class FriendsViewUi
             DrawGlobalPermissionButton("Body Swap", offPosition, onPosition, ref controller.Global.BodySwapValue);
             DrawGlobalPermissionButton("Customize+", offPosition, onPosition, ref controller.Global.CustomizePlusValue);
             DrawGlobalPermissionButton("Emote", offPosition, onPosition, ref controller.Global.EmoteValue);
-            DrawGlobalPermissionButton("Glamourer Customizations", offPosition, onPosition, ref controller.Global.GlamourerCustomizationsValue);
-            DrawGlobalPermissionButton("Glamourer Equipment", offPosition, onPosition, ref controller.Global.GlamourerEquipmentValue);
+            DrawGlobalPermissionButton("Glamourer", offPosition, onPosition, ref controller.Global.GlamourerValue);
             DrawGlobalPermissionButton("Honorific", offPosition, onPosition, ref controller.Global.HonorificValue);
             DrawGlobalPermissionButton("Hypnosis", offPosition, onPosition, ref controller.Global.HypnosisValue);
             DrawGlobalPermissionButton("Moodles", offPosition, onPosition, ref controller.Global.MoodlesValue);

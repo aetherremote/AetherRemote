@@ -15,10 +15,10 @@ public static class GlamourerApplyFlagsExtensions
     {
         var permissions = PrimaryPermissions.None;
         if ((applyFlags & GlamourerApplyFlags.Customization) == GlamourerApplyFlags.Customization)
-            permissions |= PrimaryPermissions.GlamourerCustomization;
+            permissions |= PrimaryPermissions.Glamourer;
 
         if ((applyFlags & GlamourerApplyFlags.Equipment) == GlamourerApplyFlags.Equipment)
-            permissions |= PrimaryPermissions.GlamourerEquipment;
+            permissions |= PrimaryPermissions.Glamourer;
 
         return permissions;
     }

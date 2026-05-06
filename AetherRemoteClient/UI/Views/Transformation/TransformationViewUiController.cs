@@ -143,11 +143,11 @@ public class TransformationViewUiController : IDisposable
                 continue;
             
             if (ShouldApplyCustomization)
-                if ((friend.PermissionsGrantedByFriend.Primary & PrimaryPermissions.GlamourerCustomization) is not PrimaryPermissions.GlamourerCustomization)
+                if ((friend.PermissionsGrantedByFriend.Primary & PrimaryPermissions.Glamourer) is not PrimaryPermissions.Glamourer)
                     return true;
             
             if (ShouldApplyEquipment)
-                if ((friend.PermissionsGrantedByFriend.Primary & PrimaryPermissions.GlamourerEquipment) is not PrimaryPermissions.GlamourerEquipment)
+                if ((friend.PermissionsGrantedByFriend.Primary & PrimaryPermissions.Glamourer) is not PrimaryPermissions.Glamourer)
                     return true;
         }
         

@@ -68,8 +68,8 @@ public class TwinningViewUiController(CommandLockoutService commandLockout, Netw
     public bool MissingPermissionsForATarget()
     {
         var attributes = PrimaryPermissions.Twinning;
-        if (SwapGlamourerCustomization) attributes |= PrimaryPermissions.GlamourerCustomization;
-        if (SwapGlamourerEquipment) attributes |= PrimaryPermissions.GlamourerEquipment;
+        if (SwapGlamourerCustomization) attributes |= PrimaryPermissions.Glamourer;
+        if (SwapGlamourerEquipment) attributes |= PrimaryPermissions.Glamourer;
         if (SwapPenumbraMods) attributes |= PrimaryPermissions.Mods;
         if (SwapMoodles) attributes |= PrimaryPermissions.Moodles;
         if (SwapCustomizePlus) attributes |= PrimaryPermissions.CustomizePlus;

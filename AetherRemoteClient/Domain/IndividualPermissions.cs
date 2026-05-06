@@ -18,8 +18,7 @@ public class IndividualPermissions
     public PermissionValue BodySwapValue = PermissionValue.Inherit;
     public PermissionValue CustomizePlusValue = PermissionValue.Inherit;
     public PermissionValue EmoteValue = PermissionValue.Inherit;
-    public PermissionValue GlamourerCustomizationsValue = PermissionValue.Inherit;
-    public PermissionValue GlamourerEquipmentValue = PermissionValue.Inherit;
+    public PermissionValue GlamourerValue = PermissionValue.Inherit;
     public PermissionValue HonorificValue = PermissionValue.Inherit;
     public PermissionValue HypnosisValue = PermissionValue.Inherit;
     public PermissionValue MoodlesValue = PermissionValue.Inherit;
@@ -80,8 +79,7 @@ public class IndividualPermissions
             BodySwapValue == other.BodySwapValue && 
             CustomizePlusValue == other.CustomizePlusValue &&
             EmoteValue == other.EmoteValue &&
-            GlamourerCustomizationsValue == other.GlamourerCustomizationsValue &&
-            GlamourerEquipmentValue == other.GlamourerEquipmentValue &&
+            GlamourerValue == other.GlamourerValue &&
             HonorificValue == other.HonorificValue &&
             HypnosisValue == other.HypnosisValue &&
             MoodlesValue == other.MoodlesValue &&
@@ -120,8 +118,7 @@ public class IndividualPermissions
             BodySwapValue = ResolveFlag(PrimaryPermissions.BodySwap, permissions.PrimaryAllow, permissions.PrimaryDeny),
             CustomizePlusValue = ResolveFlag(PrimaryPermissions.CustomizePlus, permissions.PrimaryAllow, permissions.PrimaryDeny),
             EmoteValue = ResolveFlag(PrimaryPermissions.Emote, permissions.PrimaryAllow, permissions.PrimaryDeny),
-            GlamourerCustomizationsValue = ResolveFlag(PrimaryPermissions.GlamourerCustomization, permissions.PrimaryAllow, permissions.PrimaryDeny),
-            GlamourerEquipmentValue = ResolveFlag(PrimaryPermissions.GlamourerEquipment, permissions.PrimaryAllow, permissions.PrimaryDeny),
+            GlamourerValue = ResolveFlag(PrimaryPermissions.Glamourer, permissions.PrimaryAllow, permissions.PrimaryDeny),
             HonorificValue = ResolveFlag(PrimaryPermissions.Honorific, permissions.PrimaryAllow, permissions.PrimaryDeny),
             HypnosisValue = ResolveFlag(PrimaryPermissions.Hypnosis, permissions.PrimaryAllow, permissions.PrimaryDeny),
             MoodlesValue = ResolveFlag(PrimaryPermissions.Moodles, permissions.PrimaryAllow, permissions.PrimaryDeny),
@@ -189,8 +186,7 @@ public class IndividualPermissions
         Apply(PrimaryPermissions.BodySwap, permissions.BodySwapValue, ref primaryAllowMask, ref primaryDenyMask);
         Apply(PrimaryPermissions.CustomizePlus, permissions.CustomizePlusValue, ref primaryAllowMask, ref primaryDenyMask);
         Apply(PrimaryPermissions.Emote, permissions.EmoteValue, ref primaryAllowMask, ref primaryDenyMask);
-        Apply(PrimaryPermissions.GlamourerCustomization, permissions.GlamourerCustomizationsValue, ref primaryAllowMask, ref primaryDenyMask);
-        Apply(PrimaryPermissions.GlamourerEquipment, permissions.GlamourerEquipmentValue, ref primaryAllowMask, ref primaryDenyMask);
+        Apply(PrimaryPermissions.Glamourer, permissions.GlamourerValue, ref primaryAllowMask, ref primaryDenyMask);
         Apply(PrimaryPermissions.Honorific, permissions.HonorificValue, ref primaryAllowMask, ref primaryDenyMask);
         Apply(PrimaryPermissions.Hypnosis, permissions.HypnosisValue, ref primaryAllowMask, ref primaryDenyMask);
         Apply(PrimaryPermissions.Moodles, permissions.MoodlesValue, ref primaryAllowMask, ref primaryDenyMask);

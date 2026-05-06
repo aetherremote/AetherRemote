@@ -116,8 +116,8 @@ public class BodySwapViewUiController(
     public bool MissingPermissionsForATarget()
     {
         var attributes = PrimaryPermissions.BodySwap;
-        if (SwapGlamourerCustomization) attributes |= PrimaryPermissions.GlamourerCustomization;
-        if (SwapGlamourerEquipment) attributes |= PrimaryPermissions.GlamourerEquipment;
+        if (SwapGlamourerCustomization) attributes |= PrimaryPermissions.Glamourer;
+        if (SwapGlamourerEquipment) attributes |= PrimaryPermissions.Glamourer;
         if (SwapPenumbraMods) attributes |= PrimaryPermissions.Mods;
         if (SwapMoodles) attributes |= PrimaryPermissions.Moodles;
         if (SwapCustomizePlus) attributes |= PrimaryPermissions.CustomizePlus;

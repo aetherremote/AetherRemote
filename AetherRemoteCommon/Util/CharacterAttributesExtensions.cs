@@ -15,10 +15,10 @@ public static class CharacterAttributesExtensions
     {
         var permissions = PrimaryPermissions.None;
         if ((attributes & CharacterAttributes.GlamourerCustomization) is CharacterAttributes.GlamourerCustomization)
-            permissions |= PrimaryPermissions.GlamourerCustomization;
+            permissions |= PrimaryPermissions.Glamourer;
         
         if ((attributes & CharacterAttributes.GlamourerEquipment) is CharacterAttributes.GlamourerEquipment)
-            permissions |= PrimaryPermissions.GlamourerEquipment;
+            permissions |= PrimaryPermissions.Glamourer;
         
         if ((attributes & CharacterAttributes.PenumbraMods) is CharacterAttributes.PenumbraMods)
             permissions |= PrimaryPermissions.Mods;

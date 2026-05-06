@@ -1,11 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using AetherRemoteClient.Services;
-using AetherRemoteClient.Style;
 using AetherRemoteClient.Utils;
-using Dalamud.Game.Text.SeStringHandling;
-using Dalamud.Game.Text.SeStringHandling.Payloads;
 
 namespace AetherRemoteClient.Managers;
 
@@ -67,9 +63,6 @@ public class LoginManager : IDisposable
             
         // Set the event protection lines
         HasLoginFinished = true;
-
-        // TODO: Remove this after 2-3 weeks have passed since 03/27/2026
-        PrintStartUpMessage();
         
         // Ensure that all the values for various action responses and results are met (this check could go anywhere)
         ActionResponseParser.SanityCheck();
@@ -77,24 +70,6 @@ public class LoginManager : IDisposable
         // Initiate a connection to the server if auto login is set to true
         if (Plugin.CharacterConfiguration.AutoLogin is true)
             await _networkService.StartAsync().ConfigureAwait(false);
-    }
-
-    private bool _printedStartUpMessageThisSession;
-    private void PrintStartUpMessage()
-    {
-        if (_printedStartUpMessageThisSession)
-            return;
-
-        var payloads = new List<Payload>
-        {
-            new UIForegroundPayload(AetherRemoteColors.TextColorPurple),
-            new TextPayload("[AetherRemote] "),
-            UIForegroundPayload.UIForegroundOff,
-            new TextPayload("Permissions are changing! GlamourerCustomize and GlamourerEquipment will be merged into a single permission called Glamourer. You can find more information in the discord.")
-        };
-        
-        Plugin.ChatGui.Print(new SeString(payloads));
-        _printedStartUpMessageThisSession = true;
     }
     
     private void OnLogout(int type, int code) => _ = OnLogoutAsync().ConfigureAwait(false);
