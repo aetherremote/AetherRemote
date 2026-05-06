@@ -68,6 +68,9 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
         _customizePlusPlugin = null;
         ApiAvailable = false;
 
+        // Customize hotfix
+        return false;
+
         try
         {
             // Invoke Api
