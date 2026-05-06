@@ -41,9 +41,7 @@ public class NavigationBarComponentUi(NetworkService networkService, ViewService
                 
                 ImGui.TextUnformatted("Manipulations");
                 NavBarButton(FontAwesomeIcon.PeopleArrows, "Transformations", View.Transformations, size, offset);
-                ImGui.BeginDisabled(); // TODO: Remove when Customize is back
                 NavBarButton(FontAwesomeIcon.Plus, "Customize+", View.CustomizePlus, size, offset);
-                ImGui.EndDisabled();
                 NavBarButton(FontAwesomeIcon.Icons, "Moodles", View.Moodles, size, offset);
                 NavBarButton(FontAwesomeIcon.Crown, "Honorific", View.Honorific, size, offset);
                 

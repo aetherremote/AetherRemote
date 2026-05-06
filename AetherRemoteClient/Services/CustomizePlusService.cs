@@ -67,10 +67,7 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
         // Set everything to disabled state
         _customizePlusPlugin = null;
         ApiAvailable = false;
-
-        // Customize hotfix
-        return false;
-
+        
         try
         {
             // Invoke Api

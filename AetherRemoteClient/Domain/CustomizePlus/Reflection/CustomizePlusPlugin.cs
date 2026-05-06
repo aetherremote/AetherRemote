@@ -78,10 +78,10 @@ public class CustomizePlusPlugin
             }
 
             var instanceField = localPluginType.GetField("instance", BindingFlags.NonPublic | BindingFlags.Instance);
-            var assemblyNameProperty = localPluginType.GetProperty("AssemblyName");
+            var assemblyProperty = localPluginType.GetProperty("Assembly");
             var getAsServiceMethod = serviceHelperType.GetMethod("GetAsService");
 
-            if (instanceField is null || assemblyNameProperty is null || getAsServiceMethod is null)
+            if (instanceField is null || assemblyProperty is null || getAsServiceMethod is null)
             {
                 Plugin.Log.Error("[CustomizePlusPlugin.Create] One or more required reflected fields, properties, or methods are missing");
                 return null;
@@ -108,8 +108,8 @@ public class CustomizePlusPlugin
             }
 
             foreach (var plugin in installedPlugins)
-                if (assemblyNameProperty.GetValue(plugin) is AssemblyName assemblyName)
-                    if (assemblyName.Name?.Contains("CustomizePlus", StringComparison.OrdinalIgnoreCase) ?? false)
+                if (assemblyProperty.GetValue(plugin) is Assembly assembly)
+                    if (assembly.GetName().Name?.Contains("CustomizePlus", StringComparison.OrdinalIgnoreCase) ?? false)
                         if (instanceField.GetValue(plugin) is { } pluginInstance)
                             return pluginInstance;
             
