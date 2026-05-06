@@ -224,20 +224,13 @@ public class TransformationsViewUiController : IDisposable
         // Basic validation checks
         if (DesignSelectedId == Guid.Empty)
             return;
-
-        // Build the apply flags
-        var flags = GlamourerApplyFlags.Once;
-        if (SwapGlamourerCustomization)
-            flags |= GlamourerApplyFlags.Customization;
-        if (SwapGlamourerEquipment)
-            flags |= GlamourerApplyFlags.Equipment;
         
         // Get the glamourer design
         if (await _glamourerService.GetDesignAsync(DesignSelectedId).ConfigureAwait(false) is not { } design)
             return;
         
         // Send
-        await _networkCommandManager.SendTransformation(_selectionManager.GetSelectedFriendCodes(), design, flags).ConfigureAwait(false);
+        await _networkCommandManager.SendTransformation(_selectionManager.GetSelectedFriendCodes(), design, GlamourerApplyFlags.All).ConfigureAwait(false);
     }
     
     private async Task SendBodySwap()

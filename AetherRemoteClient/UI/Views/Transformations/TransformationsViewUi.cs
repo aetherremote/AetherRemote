@@ -105,10 +105,9 @@ public class TransformationsViewUi(FriendsListComponentUi friendsList, Transform
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Sync, null, "Refresh Designs"))
                 _ = controller.RefreshGlamourerDesigns();
         });
-
-        var optionsMenuHeight = fontSize + AetherRemoteImGui.FramePadding.Y * 2 + AetherRemoteImGui.WindowPadding.X * 3;
+        
         var sendMenuHeight = FooterHeight + AetherRemoteImGui.WindowPadding.X;
-        if (ImGui.BeginChild("##DesignsDisplayBox", new Vector2(0, -(optionsMenuHeight + sendMenuHeight)), true, ImGuiWindowFlags.NoScrollbar))
+        if (ImGui.BeginChild("##DesignsDisplayBox", new Vector2(0, -sendMenuHeight), true, ImGuiWindowFlags.NoScrollbar))
         {
             if (controller.Designs is { } designs)
                 DrawTree(designs);
@@ -117,33 +116,6 @@ public class TransformationsViewUi(FriendsListComponentUi friendsList, Transform
         }
         
         ImGui.Spacing();
-        
-        SharedUserInterfaces.ContentBox("TransformationOptions", AetherRemoteColors.PanelColor, true, () =>
-        {
-            var optionButtonDimensions = new Vector2((width - AetherRemoteImGui.WindowPadding.X * 3) * 0.5f, 0);
-
-            // Snapshot and check customization
-            var shouldSwapGlamourerCustomization = controller.SwapGlamourerCustomization;
-            if (shouldSwapGlamourerCustomization) ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteColors.PrimaryColor);
-            if (ImGui.Button("Customizations", optionButtonDimensions))
-                controller.SwapGlamourerCustomization = !controller.SwapGlamourerCustomization;
-            if (shouldSwapGlamourerCustomization) ImGui.PopStyleColor();
-            
-            if (ImGui.IsItemHovered())
-                ImGui.SetTooltip(shouldSwapGlamourerCustomization ? "Currently applying glamourer customizations" : "Currently not applying glamourer equipment");
-            
-            ImGui.SameLine();
-            
-            // Snapshot and check equipment
-            var shouldSwapGlamourerEquipment = controller.SwapGlamourerEquipment;
-            if (shouldSwapGlamourerEquipment) ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteColors.PrimaryColor);
-            if (ImGui.Button("Equipment", optionButtonDimensions))
-                controller.SwapGlamourerEquipment = !controller.SwapGlamourerEquipment;
-            if (shouldSwapGlamourerEquipment) ImGui.PopStyleColor();
-            
-            if (ImGui.IsItemHovered())
-                ImGui.SetTooltip(shouldSwapGlamourerCustomization ? "Currently applying glamourer equipment" : "Currently not applying glamourer equipment");
-        });
     }
 
     // Body Swap, Twinning, Mimicry
