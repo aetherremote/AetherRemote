@@ -22,11 +22,8 @@ public partial class DatabaseService
         // Inject
         _logger = logger;
 
-#if DEBUG
-        var path = configuration.BetaDatabasePath;
-#else
-        var path = configuration.ReleaseDatabasePath;
-#endif
+        // Database path configured
+        var path = configuration.DatabasePath;
 
         var connection = new SqliteConnectionStringBuilder
         {

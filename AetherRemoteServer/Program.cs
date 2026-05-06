@@ -1,14 +1,15 @@
-using System.Net;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using AetherRemoteServer.Domain;
+using AetherRemoteServer.Domain.Kestrel;
 using AetherRemoteServer.Managers;
 using AetherRemoteServer.Services;
 using AetherRemoteServer.Services.Database;
+using AetherRemoteServer.SignalR.Handlers;
 using AetherRemoteServer.SignalR.Hubs;
 using MessagePack;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
-using RequestHandler = AetherRemoteServer.SignalR.Handlers.RequestHandler;
 
 namespace AetherRemoteServer;
 
@@ -19,7 +20,7 @@ public class Program
     private static void Main(string[] args)
     {
         // Attempt to load configuration values
-        if (Configuration.Load() is not { } configuration)
+        if (ConfigurationService.Load() is not { } configuration)
         {
             Environment.Exit(1);
             return;
@@ -30,6 +31,9 @@ public class Program
 
         // Configuration Authentication and Authorization
         ConfigureJwtAuthentication(builder.Services, configuration);
+        
+        // Configure Kestrel based on environment
+        ConfigureKestrel(builder, configuration);
 
         // Add services to the container
         builder.Services.AddControllers();
@@ -49,30 +53,7 @@ public class Program
         // Handles
         builder.Services.AddSingleton<RequestHandler>();
 
-#if DEBUG
-        builder.WebHost.UseUrls("https://localhost:5006");
-        
-        /*
-        builder.WebHost.ConfigureKestrel(options =>
-        {
-            var ip = IPAddress.Parse("192.168.1.14");
-            options.Listen(ip, 5017, listenOptions =>
-            {
-                listenOptions.UseHttps($"{configuration.CertificatePath}", $"{configuration.CertificatePasswordPath}");
-            });
-        });
-        */
-#else
-        builder.WebHost.ConfigureKestrel(options =>
-        {
-            var ip = IPAddress.Parse("192.168.1.14");
-            options.Listen(ip, 5006, listenOptions =>
-            {
-                listenOptions.UseHttps($"{configuration.CertificatePath}", $"{configuration.CertificatePasswordPath}");
-            });
-        });
-#endif
-
+        // Finalize
         var app = builder.Build();
 
         // Configure the HTTP request pipeline
@@ -92,6 +73,32 @@ public class Program
         app.MapControllers();
 
         app.Run();
+    }
+    
+    private static void ConfigureKestrel(WebApplicationBuilder builder, Configuration configuration)
+    {
+        if (builder.Configuration.GetSection("Kestrel").Get<KestrelConfigurations>() is not { } configurations)
+            return;
+        
+        builder.WebHost.ConfigureKestrel(options =>
+        {
+            options.ListenAnyIP(configurations.Port, listenOptions =>
+            {
+                if (builder.Environment.IsDevelopment())
+                {
+                    listenOptions.UseHttps();
+                }
+                else
+                {
+                    var certificate = X509Certificate2.CreateFromPemFile(
+                        configuration.CertificateCrtPath, 
+                        configuration.CertificateKeyPath
+                    );
+                
+                    listenOptions.UseHttps(certificate);
+                }
+            });
+        });
     }
 
     private static void ConfigureJwtAuthentication(IServiceCollection services, Configuration configuration)
