@@ -143,10 +143,8 @@ public class TransformationsViewUi(FriendsListComponentUi friendsList, Transform
                 controller.SwapMoodles = !controller.SwapMoodles;
             
             ImGui.SameLine();
-            ImGui.BeginDisabled(); // TODO: Remove when Customize is back
             if (DrawAttributeButton(FontAwesomeIcon.Plus, rowTwoButtonWidth,"Customize+", controller.SwapCustomizePlus, RequiresCustomize))
                 controller.SwapCustomizePlus = !controller.SwapCustomizePlus;
-            ImGui.EndDisabled();
             
             // Spacing for new row
             ImGui.Spacing();

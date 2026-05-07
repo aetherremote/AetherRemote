@@ -5,7 +5,6 @@ namespace AetherRemoteClient.Domain;
 /// </summary>
 public enum View
 {
-    BodySwap,
     CustomizePlus,
     Debug,
     Emote,
@@ -21,7 +20,5 @@ public enum View
     Settings,
     Speak,
     Status,
-    Transformation,
-    Transformations,
-    Twinning,
+    Transformations
 }

@@ -11,7 +11,6 @@ using AetherRemoteClient.Services;
 using AetherRemoteClient.UI;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.UI.Components.NavigationBar;
-using AetherRemoteClient.UI.Views.BodySwap;
 using AetherRemoteClient.UI.Views.CustomizePlus;
 using AetherRemoteClient.UI.Views.Debug;
 using AetherRemoteClient.UI.Views.Emote;
@@ -28,9 +27,7 @@ using AetherRemoteClient.UI.Views.Possession;
 using AetherRemoteClient.UI.Views.Settings;
 using AetherRemoteClient.UI.Views.Speak;
 using AetherRemoteClient.UI.Views.Status;
-using AetherRemoteClient.UI.Views.Transformation;
 using AetherRemoteClient.UI.Views.Transformations;
-using AetherRemoteClient.UI.Views.Twinning;
 using AetherRemoteClient.Utils;
 using Dalamud.IoC;
 using Dalamud.Plugin;
@@ -132,7 +129,6 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<NavigationBarComponentUi>();
         
         // Ui - View Controllers
-        services.AddSingleton<BodySwapViewUiController>();
         services.AddSingleton<CustomizePlusViewUiController>();
         services.AddSingleton<HomeViewUiController>();
         services.AddSingleton<DebugViewUiController>();
@@ -148,12 +144,9 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<SettingsViewUiController>();
         services.AddSingleton<SpeakViewUiController>();
         services.AddSingleton<StatusViewUiController>();
-        services.AddSingleton<TransformationViewUiController>();
         services.AddSingleton<TransformationsViewUiController>();
-        services.AddSingleton<TwinningViewUiController>();
         
         // Ui - Views
-        services.AddSingleton<BodySwapViewUi>();
         services.AddSingleton<CustomizePlusViewUi>();
         services.AddSingleton<HomeViewUi>();
         services.AddSingleton<DebugViewUi>();
@@ -169,9 +162,7 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<SettingsViewUi>();
         services.AddSingleton<SpeakViewUi>();
         services.AddSingleton<StatusViewUi>();
-        services.AddSingleton<TransformationViewUi>();
         services.AddSingleton<TransformationsViewUi>();
-        services.AddSingleton<TwinningViewUi>();
         
         // Ui - Windows
         services.AddSingleton<MainWindow>();

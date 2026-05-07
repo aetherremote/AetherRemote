@@ -5,7 +5,6 @@ using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Handlers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.NavigationBar;
-using AetherRemoteClient.UI.Views.BodySwap;
 using AetherRemoteClient.UI.Views.CustomizePlus;
 using AetherRemoteClient.UI.Views.Debug;
 using AetherRemoteClient.UI.Views.Emote;
@@ -21,9 +20,7 @@ using AetherRemoteClient.UI.Views.Possession;
 using AetherRemoteClient.UI.Views.Settings;
 using AetherRemoteClient.UI.Views.Speak;
 using AetherRemoteClient.UI.Views.Status;
-using AetherRemoteClient.UI.Views.Transformation;
 using AetherRemoteClient.UI.Views.Transformations;
-using AetherRemoteClient.UI.Views.Twinning;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Windowing;
 
@@ -44,7 +41,6 @@ public class MainWindow : Window, IDisposable
     private readonly NavigationBarComponentUi _navigationBar;
 
     // Views
-    private readonly BodySwapViewUi _bodySwapView;
     private readonly CustomizePlusViewUi _customizePlusView;
     private readonly DebugViewUi _debugView;
     private readonly EmoteViewUi _emoteView;
@@ -60,15 +56,12 @@ public class MainWindow : Window, IDisposable
     private readonly SettingsViewUi _settingsView;
     private readonly SpeakViewUi _speakView;
     private readonly StatusViewUi _statusView;
-    private readonly TransformationViewUi _transformationView;
     private readonly TransformationsViewUi _transformationsView;
-    private readonly TwinningViewUi _twinningView;
 
     public MainWindow(
         ViewService viewService,
         DtrHandler dtrHandler,
         NavigationBarComponentUi navigationBarComponentUi,
-        BodySwapViewUi bodySwapView,
         CustomizePlusViewUi customizePlusView,
         DebugViewUi debugView,
         EmoteViewUi emoteView,
@@ -84,9 +77,7 @@ public class MainWindow : Window, IDisposable
         SettingsViewUi settingsView,
         SpeakViewUi speakView,
         StatusViewUi statusView,
-        TransformationViewUi transformationView,
-        TransformationsViewUi transformationsView,
-        TwinningViewUi twinningView) : base(MainWindowTitle)
+        TransformationsViewUi transformationsView) : base(MainWindowTitle)
     {
         SizeConstraints = new WindowSizeConstraints
         {
@@ -99,8 +90,7 @@ public class MainWindow : Window, IDisposable
         _dtrHandler = dtrHandler;
 
         _navigationBar = navigationBarComponentUi;
-
-        _bodySwapView = bodySwapView;
+        
         _customizePlusView = customizePlusView;
         _debugView = debugView;
         _emoteView = emoteView;
@@ -116,9 +106,7 @@ public class MainWindow : Window, IDisposable
         _settingsView = settingsView;
         _speakView = speakView;
         _statusView = statusView;
-        _transformationView = transformationView;
         _transformationsView = transformationsView;
-        _twinningView = twinningView;
 
         _dtrHandler.DtrClicked += OnDtrClicked;
     }
@@ -131,7 +119,6 @@ public class MainWindow : Window, IDisposable
 
         IDrawable view = _viewService.CurrentView switch
         {
-            View.BodySwap => _bodySwapView,
             View.CustomizePlus => _customizePlusView,
             View.Home => _homeView,
             View.Debug => _debugView,
@@ -147,9 +134,7 @@ public class MainWindow : Window, IDisposable
             View.Settings => _settingsView,
             View.Speak => _speakView,
             View.Status => _statusView,
-            View.Transformation => _transformationView,
             View.Transformations => _transformationsView,
-            View.Twinning => _twinningView,
             _ => _loginView
         };
 
