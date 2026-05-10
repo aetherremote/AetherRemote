@@ -41,13 +41,17 @@ public class NavigationBarComponentUi(NetworkService networkService, ViewService
                 
                 ImGui.TextUnformatted("Manipulations");
                 NavBarButton(FontAwesomeIcon.PeopleArrows, "Transformations", View.Transformations, size, offset);
+                ImGui.BeginDisabled();
                 NavBarButton(FontAwesomeIcon.Plus, "Customize+", View.CustomizePlus, size, offset);
                 NavBarButton(FontAwesomeIcon.Icons, "Moodles", View.Moodles, size, offset);
+                ImGui.EndDisabled();
                 NavBarButton(FontAwesomeIcon.Crown, "Honorific", View.Honorific, size, offset);
                 
                 ImGui.TextUnformatted("Control");
                 NavBarButton(FontAwesomeIcon.Stopwatch, "Hypnosis", View.Hypnosis, size, offset);
+                ImGui.BeginDisabled();
                 NavBarButton(FontAwesomeIcon.Ghost, "(Beta) Possession", View.Possession, size, offset);
+                ImGui.EndDisabled();
 
                 ImGui.TextUnformatted("Configuration");
                 NavBarButton(FontAwesomeIcon.History, "History", View.History, size, offset);

@@ -31,11 +31,8 @@ public class MoodlesViewUi(
     public void Draw()
     {
         ImGui.BeginChild("MoodlesContent", AetherRemoteDimensions.ContentSize, false, AetherRemoteImGui.ContentFlags);
-
-        if (AgreementsService.HasAgreedTo(AgreementsService.Agreements.MoodlesWarning))
-            DrawContent();
-        else
-            DrawWarning();
+        
+        DrawContent();
 
         ImGui.EndChild();
         ImGui.SameLine();
@@ -122,31 +119,6 @@ public class MoodlesViewUi(
                         controller.SendMoodle();
                 }
             }
-        });
-    }
-
-    private void DrawWarning()
-    {
-        SharedUserInterfaces.ContentBox("MoodlesWarning", AetherRemoteColors.PrimaryColor, true, () =>
-        {
-            SharedUserInterfaces.BigTextCentered("Warning");
-        });
-        
-        SharedUserInterfaces.ContentBox("MoodlesWarningText", AetherRemoteColors.PanelColor, true, () =>
-        {
-            ImGui.PushTextWrapPos(ImGui.GetWindowWidth() - AetherRemoteImGui.WindowPadding.X);
-            ImGui.TextWrapped("There is currently an issue in Moodles preventing syncing services from properly updating. This most commonly results is Moodles being shown to other players despite them being right-clicked off.");
-            ImGui.Spacing();
-            ImGui.TextWrapped("There is nothing I can do about this, and it seemingly happens at random.");
-            ImGui.Spacing();
-            ImGui.TextWrapped("If you suspect a Moodle is there that shouldn't be, visit the Cleanup Tab inside of Moodles by enabling Debug Mode in the Settings. Otherwise, you need to acknowledge the possibility that this may happen.");
-            ImGui.PopTextWrapPos();
-        });
-        
-        SharedUserInterfaces.ContentBox("MoodlesWarningAccept", AetherRemoteColors.PanelColor, false, () =>
-        {
-            if (ImGui.Button("I understand the risks", new Vector2(ImGui.GetWindowWidth() - AetherRemoteImGui.WindowPadding.X * 2, AetherRemoteDimensions.SendCommandButtonHeight)))
-                MoodlesViewUiController.AcceptMoodlesTermsOfService();
         });
     }
     

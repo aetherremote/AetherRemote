@@ -4,6 +4,8 @@ public enum PossessionResponseEc
 {
     Uninitialized,
     
+    Disabled,
+    
     TargetOffline,
     TargetNotFriends,
     LacksPermissions,

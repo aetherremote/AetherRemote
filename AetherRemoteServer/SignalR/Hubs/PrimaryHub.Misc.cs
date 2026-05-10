@@ -13,6 +13,7 @@ public partial class PrimaryHub
     [HubMethodName(HubMethod.CustomizePlus)]
     public async Task<ActionResponse> CustomizePlus(CustomizeRequest request)
     {
+        return new ActionResponse(ActionResponseEc.Disabled, []);
         return await requestHandler.HandleCustomizePlus(FriendCode, request, Clients);
     }
     
@@ -27,6 +28,7 @@ public partial class PrimaryHub
     [HubMethodName(HubMethod.Moodles)]
     public async Task<ActionResponse> Moodles(MoodlesRequest request)
     {
+        return new ActionResponse(ActionResponseEc.Disabled, []);
         var friendCode = FriendCode;
         LogWithBehavior($"[MoodlesRequest] Sender = {friendCode}, Targets = {string.Join(", ", request.TargetFriendCodes)}, Moodle = {request.Info.Title}", LogMode.Console);
         return await requestHandler.HandleMoodles(friendCode, request, Clients);

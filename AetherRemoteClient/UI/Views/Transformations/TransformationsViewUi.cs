@@ -139,12 +139,14 @@ public class TransformationsViewUi(FriendsListComponentUi friendsList, Transform
                 controller.SwapPenumbraMods = !controller.SwapPenumbraMods;
             ImGui.SameLine();
             
+            ImGui.BeginDisabled();
             if (DrawAttributeButton(FontAwesomeIcon.Icons, rowTwoButtonWidth,"Moodles", controller.SwapMoodles, RequiresMoodles))
                 controller.SwapMoodles = !controller.SwapMoodles;
             
             ImGui.SameLine();
             if (DrawAttributeButton(FontAwesomeIcon.Plus, rowTwoButtonWidth,"Customize+", controller.SwapCustomizePlus, RequiresCustomize))
                 controller.SwapCustomizePlus = !controller.SwapCustomizePlus;
+            ImGui.EndDisabled();
             
             // Spacing for new row
             ImGui.Spacing();

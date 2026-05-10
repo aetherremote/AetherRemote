@@ -13,6 +13,7 @@ public partial class PrimaryHub
     [HubMethodName(HubMethod.Possession.Begin)]
     public async Task<PossessionBeginResponse> PossessionBegin(PossessionBeginRequest request)
     {
+        return new PossessionBeginResponse(PossessionResponseEc.Disabled, PossessionResultEc.Unknown, string.Empty, string.Empty);
         // logger.LogInformation("{Request}", request);
         var friendCode = FriendCode;
         // LogWithBehavior($"[PossessionBegin] Sender = {friendCode}, Target = {request.TargetFriendCode}", LogMode.Console);
@@ -22,6 +23,7 @@ public partial class PrimaryHub
     [HubMethodName(HubMethod.Possession.Camera)]
     public async Task<PossessionResponse> PossessionCamera(PossessionCameraRequest request)
     {
+        return new PossessionResponse(PossessionResponseEc.Disabled, PossessionResultEc.Unknown);
         // logger.LogInformation("{Request}", request);
         var friendCode = FriendCode;
         // LogWithBehavior($"[PossessionCameraRequest] Sender = {friendCode}", LogMode.Console);
@@ -31,6 +33,7 @@ public partial class PrimaryHub
     [HubMethodName(HubMethod.Possession.Movement)]
     public async Task<PossessionResponse> PossessionMovement(PossessionMovementRequest request)
     {
+        return new PossessionResponse(PossessionResponseEc.Disabled, PossessionResultEc.Unknown);
         // logger.LogInformation("{Request}", request);
         var friendCode = FriendCode;
         // LogWithBehavior($"[PossessionMovementRequest] Sender = {friendCode}", LogMode.Console);
@@ -40,6 +43,7 @@ public partial class PrimaryHub
     [HubMethodName(HubMethod.Possession.End)]
     public async Task<PossessionResponse> PossessionEnd(PossessionEndRequest request)
     {
+        return new PossessionResponse(PossessionResponseEc.Disabled, PossessionResultEc.Unknown);
         // logger.LogInformation("{Request}", request);
         var friendCode = FriendCode;
         // LogWithBehavior($"[PossessionEndRequest] Sender = {friendCode}", LogMode.Console);
