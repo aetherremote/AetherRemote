@@ -2,7 +2,7 @@ using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
-using AetherRemoteClient.Style;
+using AetherRemoteClient.UI.Style;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;

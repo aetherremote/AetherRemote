@@ -3,7 +3,7 @@ using System.Numerics;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Services;
-using AetherRemoteClient.Style;
+using AetherRemoteClient.UI.Style;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using Dalamud.Bindings.ImGui;

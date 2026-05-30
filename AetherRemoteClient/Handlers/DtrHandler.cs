@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
-using AetherRemoteClient.Style;
+using AetherRemoteClient.UI.Style;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 

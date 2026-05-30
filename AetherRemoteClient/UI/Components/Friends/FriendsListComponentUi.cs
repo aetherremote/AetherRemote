@@ -5,7 +5,7 @@ using System.Text;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Enums;
 using AetherRemoteClient.Managers;
-using AetherRemoteClient.Style;
+using AetherRemoteClient.UI.Style;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;

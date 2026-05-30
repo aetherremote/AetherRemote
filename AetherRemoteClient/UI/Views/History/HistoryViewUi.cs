@@ -1,6 +1,6 @@
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
-using AetherRemoteClient.Style;
+using AetherRemoteClient.UI.Style;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
 

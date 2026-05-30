@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using AetherRemoteClient.Domain.Enums;
-using AetherRemoteClient.Style;
+using AetherRemoteClient.UI.Style;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;

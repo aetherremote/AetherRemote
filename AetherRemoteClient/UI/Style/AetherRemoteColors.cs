@@ -1,7 +1,7 @@
 using System.Numerics;
 using Dalamud.Bindings.ImGui;
 
-namespace AetherRemoteClient.Style;
+namespace AetherRemoteClient.UI.Style;
 
 public static class AetherRemoteColors
 {

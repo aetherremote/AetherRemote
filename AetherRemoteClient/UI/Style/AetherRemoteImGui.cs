@@ -3,7 +3,7 @@ using Dalamud.Bindings.ImGui;
 
 // ReSharper disable MemberCanBePrivate.Global
 
-namespace AetherRemoteClient.Style;
+namespace AetherRemoteClient.UI.Style;
 
 /// <summary>
 ///     Container for static values corresponding to ImGui values in an effort to reduce expensive calls

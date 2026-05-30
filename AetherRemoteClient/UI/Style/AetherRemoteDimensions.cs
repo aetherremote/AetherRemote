@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace AetherRemoteClient.Style;
+namespace AetherRemoteClient.UI.Style;
 
 /// <summary>
 ///     Container for various component sizes
