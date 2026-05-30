@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using AetherRemoteCommon.Domain.Enums;
 
 namespace AetherRemoteClient.Handlers.Chat;
 
@@ -33,19 +34,21 @@ public partial class ChatCommandHandler
         if (await TryGetProfileByProfileName(argsProfileName).ConfigureAwait(false) is not { } profileAsBytes)
             return;
         
-        // Grab the "should merge / additive" thing as well
-        var shouldApplyAsAdditive = false;
+        // Check to see if we should apply normally or merge them together
+        var applyMode = CustomizeApplyMode.Default;
         if (arguments.Length == 4)
-            shouldApplyAsAdditive = bool.TryParse(arguments[3], out var value) && value;
+            if (bool.TryParse(arguments[3], out var value) && value)
+                applyMode = CustomizeApplyMode.Merge;
      
         // Send
-        await _networkCommandManager.SendCustomize(targets.ToList(), profileAsBytes, shouldApplyAsAdditive).ConfigureAwait(false);
+        await _networkCommandManager.SendCustomize(targets.ToList(), profileAsBytes, applyMode).ConfigureAwait(false);
     }
 
     private async Task<byte[]?> TryGetProfileByProfileName(string profileName)
     {
         // Format Profile
-        var profiles = await _customizePlusService.GetProfilesPlain().ConfigureAwait(false);
+        if (await _customizePlusService.GetProfiles().ConfigureAwait(false) is not { } profiles)
+            return null;
         
         // Check to see if the profile name is one of our profiles
         var profileId = Guid.Empty;

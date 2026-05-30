@@ -21,7 +21,7 @@ public partial class RequestHandler
             return new ActionResponse(error, []);
         }
         
-        var forwardedRequest = new CustomizeCommand(senderFriendCode, request.JsonBoneDataBytes, request.Additive);
+        var forwardedRequest = new CustomizeCommand(senderFriendCode, request.JsonBoneDataBytes, request.ApplyMode);
         return await _forwardedRequestManager.CheckPermissionsAndSend(
             senderFriendCode, 
             request.TargetFriendCodes, 

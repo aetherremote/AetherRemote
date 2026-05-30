@@ -79,7 +79,7 @@ public class CustomizePlusViewUi(
                 ImGui.EndTooltip();
             }
             
-            ImGui.RadioButton("Default", ref controller.ApplyMode, CustomizePlusViewUiController.ApplyModeAdditive);
+            ImGui.RadioButton("Default", ref controller.ApplyMode, CustomizePlusViewUiController.ApplyModeDefault);
             ImGui.SameLine(width * 0.5f);
             ImGui.RadioButton("Merge", ref controller.ApplyMode, CustomizePlusViewUiController.ApplyModeMerge);
         });

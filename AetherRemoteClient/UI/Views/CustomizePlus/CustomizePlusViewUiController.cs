@@ -7,6 +7,7 @@ using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.CustomizePlus;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 
 namespace AetherRemoteClient.UI.Views.CustomizePlus;
@@ -17,7 +18,7 @@ namespace AetherRemoteClient.UI.Views.CustomizePlus;
 public class CustomizePlusViewUiController : IDisposable
 {
     // Const
-    public const int ApplyModeAdditive = 0;
+    public const int ApplyModeDefault = 0;
     public const int ApplyModeMerge = 1;
     
     // Injected
@@ -115,7 +116,7 @@ public class CustomizePlusViewUiController : IDisposable
     {
         SelectedProfileId = Guid.Empty;
 
-        if (await _customizePlusService.GetProfilesPlain().ConfigureAwait(false) is not { } profiles)
+        if (await _customizePlusService.GetProfiles().ConfigureAwait(false) is not { } profiles)
             return;
         
         var root = new FolderNode<Profile>("Root", null);
@@ -171,14 +172,13 @@ public class CustomizePlusViewUiController : IDisposable
 
         if (await _customizePlusService.GetProfile(SelectedProfileId).ConfigureAwait(false) is not { } profile)
             return;
-
         
         var bytes = Encoding.UTF8.GetBytes(profile);
         var applyMode = ApplyMode switch
         {
-            ApplyModeAdditive => true,
-            ApplyModeMerge => false,
-            _ => true
+            ApplyModeDefault => CustomizeApplyMode.Default,
+            ApplyModeMerge => CustomizeApplyMode.Merge,
+            _ => CustomizeApplyMode.Default
         };
         
         await _networkCommandManager.SendCustomize(_selectionManager.GetSelectedFriendCodes(), bytes, applyMode).ConfigureAwait(false);

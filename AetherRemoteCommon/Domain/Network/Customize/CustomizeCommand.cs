@@ -1,3 +1,4 @@
+using AetherRemoteCommon.Domain.Enums;
 using MessagePack;
 
 namespace AetherRemoteCommon.Domain.Network.Customize;
@@ -9,5 +10,5 @@ namespace AetherRemoteCommon.Domain.Network.Customize;
 public record CustomizeCommand(
     string SenderFriendCode,
     [property: Key(1)] byte[] JsonBoneDataBytes,
-    [property: Key(2)] bool Additive
+    [property: Key(2)] CustomizeApplyMode ApplyMode
 ) : ActionCommand(SenderFriendCode);

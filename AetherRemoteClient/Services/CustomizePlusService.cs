@@ -1,13 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain.CustomizePlus;
-using AetherRemoteClient.Domain.CustomizePlus.Reflection;
-using AetherRemoteClient.Domain.CustomizePlus.Reflection.Domain;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Utils;
+using Dalamud.Game.ClientState.Objects.SubKinds;
 using Dalamud.Plugin.Ipc;
 using Dalamud.Plugin.Ipc.Exceptions;
+using CustomizePlusWrapper = AetherRemoteClient.Reflection.CustomizePlusWrapper;
 using ProfileData = (
     System.Guid Id,
     string Name,
@@ -17,8 +18,6 @@ using ProfileData = (
     bool Enabled);
 
 namespace AetherRemoteClient.Services;
-
-// ReSharper disable RedundantBoolCompare
 
 /// <summary>
 ///     Provides access to CustomizePlus
@@ -35,9 +34,9 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
     private readonly ICallGateSubscriber<Guid, (int, string?)> _getProfileById;
     
     /// <summary>
-    ///     Reflected instance of CustomizePlus
+    ///     Reflected wrapper for Customize Plus
     /// </summary>
-    private CustomizePlusPlugin? _customizePlusPlugin;
+    private CustomizePlusWrapper? _customizePlusWrapper;
 
     /// <summary>
     ///     Is CustomizePlus available for use?
@@ -65,29 +64,26 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
     public async Task<bool> TestIpcAvailability()
     {
         // Set everything to disabled state
-        _customizePlusPlugin = null;
+        _customizePlusWrapper = null;
         ApiAvailable = false;
         
         try
         {
             // Invoke Api
-            var version = await DalamudUtilities.RunOnFramework(() => _getVersion.InvokeFunc()).ConfigureAwait(false);
+            var (major, minor) = await DalamudUtilities.RunOnFramework(() => _getVersion.InvokeFunc()).ConfigureAwait(false);
 
             // Test for proper versioning
-            if (version.Item1 is not ExpectedMajor || version.Item2 < ExpectedMinor)
+            if (major is not ExpectedMajor || minor < ExpectedMinor)
                 return false;
 
             // Check to make sure the reflection process was successful
-            if (await DalamudUtilities.RunOnFramework(CustomizePlusPlugin.Create).ConfigureAwait(false) is not { } plugin)
+            if (await DalamudUtilities.RunOnFramework(CustomizePlusWrapper.Wrap).ConfigureAwait(false) is not { } customizePlusWrapper)
                 return false;
 
-            // Call the delete method for safety
-            await DeleteTemporaryCustomizeAsync().ConfigureAwait(false);
-
             // Mark as ready
-            _customizePlusPlugin = plugin;
+            _customizePlusWrapper = customizePlusWrapper;
             ApiAvailable = true;
-
+            
             // As a safety precaution, attempt to delete any lingering Aether Remote profiles that may exist
             await DeleteTemporaryCustomizeAsync().ConfigureAwait(false);
 
@@ -105,33 +101,22 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
             return false;
         }
     }
-
-    /// <summary>
-    ///     Gets a list of all customize plus profiles
-    /// </summary>
-    /// <returns></returns>
-    public async Task<List<Profile>> GetProfilesPlain()
-    {
-        var result = await DalamudUtilities.RunOnFramework(() => _getProfileList.InvokeFunc()).ConfigureAwait(false);
-        var profiles = new List<Profile>();
-        foreach (var profile in result)
-            profiles.Add(new Profile(profile.Id, profile.Name, profile.Path));
-        
-        return profiles;
-    }
     
     /// <summary>
     ///     Gets a customize plus profile by guid
     /// </summary>
     public async Task<string?> GetProfile(Guid guid)
     {
+        if (ApiAvailable is false)
+        {
+            Plugin.Log.Warning("[CustomizePlusService.GetProfile] Api not available");
+            return null;
+        }
+        
         try
         {
-            if (ApiAvailable is false)
-                return null;
-            
-            var tuple = await DalamudUtilities.RunOnFramework(() => _getProfileById.InvokeFunc(guid)).ConfigureAwait(false);
-            return tuple.Item1 is 0 ? tuple.Item2 : null;
+            var (error, json) = await DalamudUtilities.RunOnFramework(() => _getProfileById.InvokeFunc(guid)).ConfigureAwait(false);
+            return error is 0 ? json : null;
         }
         catch (Exception e)
         {
@@ -141,14 +126,43 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
     }
 
     /// <summary>
+    ///     Gets a list of all customize plus profiles
+    /// </summary>
+    public async Task<List<Profile>?> GetProfiles()
+    {
+        if (ApiAvailable is false)
+        {
+            Plugin.Log.Warning("[CustomizePlusService.GetProfilesPlain] Api not available");
+            return null;
+        }
+
+        try
+        {
+            var result = await DalamudUtilities.RunOnFramework(() => _getProfileList.InvokeFunc()).ConfigureAwait(false);
+            return result.Select(profile => new Profile(profile.Id, profile.Name, profile.Path)).ToList();
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error($"[CustomizePlusService.GetProfilesPlain] {e}");
+            return null;
+        }
+    }
+
+    /// <summary>
     ///     Tries to get the template data for the active profile on a provided character
     /// </summary>
     /// <returns>The JSON template data, same as if called via GetProfileIpc</returns>
-    public async Task<string?> TryGetActiveProfileOnCharacter(string characterName, string characterWorld)
+    public async Task<string?> TryGetActiveProfileOnCharacter(IPlayerCharacter character)
     {
+        if (ApiAvailable is false || _customizePlusWrapper is null)
+        {
+            Plugin.Log.Warning("[CustomizePlusService.TryGetActiveProfileOnCharacter] Api not available");
+            return null;
+        }
+        
         try
         {
-            return await DalamudUtilities.RunOnFramework(() => _customizePlusPlugin?.ProfileManager.TryGetActiveIpcProfileOnCharacter(characterName, characterWorld)).ConfigureAwait(false);
+            return await DalamudUtilities.RunOnFramework(() => _customizePlusWrapper.GetIpcProfile(character)).ConfigureAwait(false);
         }
         catch (Exception e)
         {
@@ -160,80 +174,62 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
     /// <summary>
     ///     Apply a CustomizePlus profile to the local player
     /// </summary>
-    /// <param name="templateJson">Profile data, most commonly retrieved from <see cref="GetProfile"/> or via the "Copy Template" button in CustomizePlus UI</param>
-    public async Task<bool> ApplyCustomizeAsync(string? templateJson = null)
+    /// <param name="json">Template data, most commonly retrieved from <see cref="GetProfile"/> or via the "Copy Template" button in CustomizePlus UI</param>
+    public async Task<bool> ApplyCustomize(string? json = null)
     {
-        if (ApiAvailable is false)
-            return false;
-
-        if (_customizePlusPlugin is null)
-            return false;
-
-        return await DalamudUtilities.RunOnFramework(() =>
+        if (ApiAvailable is false || _customizePlusWrapper is null)
         {
-            // Delete previous profile, then create and enable a blank one
-            if (_customizePlusPlugin.ProfileManager.DeleteTemporaryProfile() is false) return false;
-            if (_customizePlusPlugin.ProfileManager.CreateProfile() is not { } profile) return false;
-            if (_customizePlusPlugin.ProfileManager.AddCharacter(profile) is false) return false;
-            if (_customizePlusPlugin.ProfileManager.SetPriority(profile) is false) return false;
-            if (_customizePlusPlugin.ProfileManager.SetEnabled(profile) is false) return false;
-
-            // If template data was not provided, end early
-            if (templateJson is null)
-                return true;
-
-            // Add the template data
-            if (_customizePlusPlugin.TemplateManager.DeserializeTemplate(templateJson) is not { } template) return false;
-            if (_customizePlusPlugin.ProfileManager.AddTemplate(profile, template) is false) return false;
-            return true;
-        }).ConfigureAwait(false);
+            Plugin.Log.Warning("[CustomizePlusService.ApplyCustomizeAsync] Api not available");
+            return false;
+        }
+        
+        try
+        {
+            return await DalamudUtilities.RunOnFramework(() => _customizePlusWrapper.DeleteTemporaryProfile() && _customizePlusWrapper.CreateTemporaryProfile(json)).ConfigureAwait(false);
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error($"[CustomizePlusService.ApplyCustomizeAsync] {e}");
+            return false;
+        }
     }
 
     /// <summary>
     ///     Apply a CustomizePlus profile to the local player in an additive way
     /// </summary>
-    /// <param name="templateJson">Profile data, most commonly retrieved from <see cref="GetProfile"/> or via the "Copy Template" button in CustomizePlus UI</param>
-    public async Task<bool> ApplyCustomizeAdditive(string? templateJson = null)
+    /// <param name="json">Template data, most commonly retrieved from <see cref="GetProfile"/> or via the "Copy Template" button in CustomizePlus UI</param>
+    public async Task<bool> ApplyMergeCustomize(string? json = null)
     {
-        if (ApiAvailable is false)
-            return false;
-
-        if (_customizePlusPlugin is null)
-            return false;
-        
-        if (Plugin.CharacterConfiguration is not { } character)
-            return false;
-
-        return await DalamudUtilities.RunOnFramework(() =>
+        if (ApiAvailable is false || _customizePlusWrapper is null)
         {
-            CustomizePlusProfile profile;
-            if (_customizePlusPlugin.ProfileManager.TryGetActiveProfileOnCharacter(character.Name) is not { } activeProfile)
+            Plugin.Log.Warning("[CustomizePlusService.ApplyCustomizeAsync] Api not available");
+            return false;
+        }
+        
+        if (await DalamudUtilities.TryGetLocalPlayer().ConfigureAwait(false) is not { } character)
+        {
+            Plugin.Log.Warning("[CustomizePlusService.ApplyCustomizeAsync] Unable to locate local character");
+            return false;
+        }
+        
+        try
+        {
+            return await DalamudUtilities.RunOnFramework(() =>
             {
-                // There is no active profile, so make one.
-                if (_customizePlusPlugin.ProfileManager.CreateProfile() is not { } newProfile) return false;
-                if (_customizePlusPlugin.ProfileManager.AddCharacter(newProfile) is false) return false;
-                if (_customizePlusPlugin.ProfileManager.SetPriority(newProfile) is false) return false;
-                if (_customizePlusPlugin.ProfileManager.SetEnabled(newProfile) is false) return false;
-                profile = newProfile;
-            }
-            else
-            {
-                // We have the existing profile, now copy it
-                if (_customizePlusPlugin.ProfileManager.Clone(activeProfile) is not { } cloned) return false;
-                if (_customizePlusPlugin.ProfileManager.SetPriority(cloned) is false) return false;
-                if (_customizePlusPlugin.ProfileManager.SetEnabled(cloned) is false) return false;
-                profile = cloned;
-            }
-
-            // If template data was not provided, end early
-            if (templateJson is null)
-                return true;
-
-            // Add the template data
-            if (_customizePlusPlugin.TemplateManager.DeserializeTemplate(templateJson) is not { } template) return false;
-            if (_customizePlusPlugin.ProfileManager.AddTemplate(profile, template) is false) return false;
-            return true;
-        }).ConfigureAwait(false);
+                var profile = _customizePlusWrapper.GetProfile(character);
+                
+                _customizePlusWrapper.DeleteTemporaryProfile();
+                
+                return profile is null
+                    ? _customizePlusWrapper.CreateTemporaryProfile(json)
+                    : _customizePlusWrapper.CloneTemporaryProfile(profile, json);
+            }).ConfigureAwait(false);
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error($"[CustomizePlusService.ApplyCustomizeAsync] {e}");
+            return false;
+        }
     }
     
     /// <summary>
@@ -241,12 +237,15 @@ public class CustomizePlusService : IDisposable, IExternalPlugin
     /// </summary>
     public async Task<bool> DeleteTemporaryCustomizeAsync()
     {
-        if (ApiAvailable is false)
+        if (ApiAvailable is false || _customizePlusWrapper is null)
+        {
+            Plugin.Log.Warning("[CustomizePlusService.DeleteTemporaryCustomizeAsync] Api not available");
             return false;
+        }
 
         try
         {
-            return await DalamudUtilities.RunOnFramework(() => _customizePlusPlugin?.ProfileManager.DeleteTemporaryProfile() ?? false).ConfigureAwait(false);
+            return await DalamudUtilities.RunOnFramework(() => _customizePlusWrapper.DeleteTemporaryProfile()).ConfigureAwait(false);
         }
         catch (Exception e)
         {

@@ -13,7 +13,6 @@ public partial class PrimaryHub
     [HubMethodName(HubMethod.CustomizePlus)]
     public async Task<ActionResponse> CustomizePlus(CustomizeRequest request)
     {
-        return new ActionResponse(ActionResponseEc.Disabled, []);
         return await requestHandler.HandleCustomizePlus(FriendCode, request, Clients);
     }
     

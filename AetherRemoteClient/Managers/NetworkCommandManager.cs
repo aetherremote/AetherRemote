@@ -59,10 +59,10 @@ public class NetworkCommandManager(CommandLockoutService commandLockoutService, 
     /// <summary>
     ///     Sends a <see cref="CustomizeRequest"/> to the server
     /// </summary>
-    public async Task SendCustomize(List<string> targets, byte[] profileStringAsBytes, bool shouldApplyAsAdditive)
+    public async Task SendCustomize(List<string> targets, byte[] profileStringAsBytes, CustomizeApplyMode applyMode)
     {
         commandLockoutService.Lock();
-        var request = new CustomizeRequest(targets, profileStringAsBytes, shouldApplyAsAdditive);
+        var request = new CustomizeRequest(targets, profileStringAsBytes, applyMode);
         var response = await network.InvokeAsync<ActionResponse>(HubMethod.CustomizePlus, request).ConfigureAwait(false);
         ActionResponseParser.Parse("Customize+", response);
     }

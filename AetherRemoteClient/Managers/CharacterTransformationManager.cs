@@ -5,10 +5,8 @@ using AetherRemoteClient.Domain.Honorific;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
-using Dalamud.Game.ClientState.Objects.Types;
+using Dalamud.Game.ClientState.Objects.SubKinds;
 using Newtonsoft.Json.Linq;
-
-// ReSharper disable InvertIf
 
 namespace AetherRemoteClient.Managers;
 
@@ -85,7 +83,7 @@ public class CharacterTransformationManager(
             return false;
         }
 
-        if (await StoreCharacterAttributes(characterName, characterWorld, targetPlayerObject, characterAttributes).ConfigureAwait(false) is not { } storedAttributes)
+        if (await StoreCharacterAttributes(targetPlayerObject, characterAttributes).ConfigureAwait(false) is not { } storedAttributes)
         {
             Plugin.Log.Error("[CharacterTransformationManager.ApplyFullScaleTransformation] Failed to store character attributes");
             return false;
@@ -115,7 +113,7 @@ public class CharacterTransformationManager(
     /// <summary>
     ///     Store all attributes of a given character to be applied
     /// </summary>
-    private async Task<StoredAttributes?> StoreCharacterAttributes(string characterName, string characterWorld, IGameObject playerObject, CharacterAttributes characterAttributes)
+    private async Task<StoredAttributes?> StoreCharacterAttributes(IPlayerCharacter playerObject, CharacterAttributes characterAttributes)
     {
         // Get a snapshot of what our target looks like now so it can be applied later
         var storedAttributes = new StoredAttributes();
@@ -178,7 +176,7 @@ public class CharacterTransformationManager(
         if ((characterAttributes & CharacterAttributes.CustomizePlus) is CharacterAttributes.CustomizePlus)
         {
             // This is an error state because we should have received them
-            if (await customizePlusService.TryGetActiveProfileOnCharacter(characterName, characterWorld).ConfigureAwait(false) is not { } profile)
+            if (await customizePlusService.TryGetActiveProfileOnCharacter(playerObject).ConfigureAwait(false) is not { } profile)
             {
                 Plugin.Log.Error("[CharacterTransformationManager.StoreCharacterAttributes] Unable to store customize+ data");
                 return null;
@@ -216,7 +214,7 @@ public class CharacterTransformationManager(
 
             // If the string was empty, that means we just didn't find a C+ profile on them, but we still can't deserialize it, so we set it to null
             var final = customizePlusTemplate == string.Empty ? null : customizePlusTemplate;
-            if (await customizePlusService.ApplyCustomizeAsync(final).ConfigureAwait(false) is false)
+            if (await customizePlusService.ApplyCustomize(final).ConfigureAwait(false) is false)
             {
                 Plugin.Log.Error("[CharacterTransformationManager.ApplyStoredAttributes] Unable to apply customize+ data");
                 await TryRevert().ConfigureAwait(false);
