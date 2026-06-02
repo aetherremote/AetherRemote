@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using Dalamud.Utility;
@@ -24,32 +25,25 @@ public class LoginViewUiController : IDisposable
         if (_loginManager.HasLoginFinished)
             OnLoginFinished();
     }
-    
-    public async void Connect()
-    {
-        try
-        {
-            // Only save if the configuration is set
-            if (Plugin.CharacterConfiguration is null)
-                return;
 
-            // Don't save if the string is empty
-            if (Secret == string.Empty)
-                return;
+    public async Task Connect()
+    {
+        // Only save if the configuration is set
+        if (Plugin.CharacterConfiguration is null)
+            return;
+
+        // Don't save if the string is empty
+        if (Secret == string.Empty)
+            return;
             
-            // Set the secret
-            Plugin.CharacterConfiguration.Secret = Secret;
+        // Set the secret
+        Plugin.CharacterConfiguration.Secret = Secret;
             
-            // Save the configuration
-            await Plugin.CharacterConfiguration.Save().ConfigureAwait(false);
+        // Save the configuration
+        await Plugin.CharacterConfiguration.Save().ConfigureAwait(false);
             
-            // Try to connect to the server
-            await _networkService.StartAsync();
-        }
-        catch (Exception)
-        {
-            // ignored
-        }
+        // Try to connect to the server
+        await _networkService.StartAsync(Secret).ConfigureAwait(false);
     }
     
     public static void OpenDiscordLink() => Util.OpenLink("https://discord.com/invite/aetherremote");

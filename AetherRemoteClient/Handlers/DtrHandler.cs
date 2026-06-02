@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain;
+using AetherRemoteClient.Domain.Enums;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Style;
@@ -10,7 +11,7 @@ using Dalamud.Game.Text.SeStringHandling.Payloads;
 namespace AetherRemoteClient.Handlers;
 
 /// <summary>
-///     TODO: Teehee :)
+///     Handles Dtr events and updates to display things like connectivity status
 /// </summary>
 public class DtrHandler : IDisposable
 {
@@ -41,11 +42,11 @@ public class DtrHandler : IDisposable
         _statusManager.StatusChanged += UpdateDtrBar;
         
         _networkService.Connected += UpdateDtrBarAsync;
-        if (_networkService.CurrentlyConnected)
+        if (_networkService.State is ConnectionState.Connected)
             UpdateDtrBarAsync();
         
         _networkService.Disconnected += UpdateDtrBarAsync;
-        if (_networkService.CurrentlyConnected is false)
+        if (_networkService.State is not ConnectionState.Connected)
             UpdateDtrBarAsync();
         
         _loginManager.LoginFinished += UpdateDtrBar;
@@ -61,7 +62,7 @@ public class DtrHandler : IDisposable
         if (Plugin.Configuration.ShowOnDtrBar is false)
             return;
         
-        BuildDtrBar(_networkService.CurrentlyConnected, _statusManager.GetStatusCount());
+        BuildDtrBar(_networkService.State is ConnectionState.Connected, _statusManager.GetStatusCount());
     }
 
     /// <summary>

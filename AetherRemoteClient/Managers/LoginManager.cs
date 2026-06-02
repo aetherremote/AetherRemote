@@ -69,7 +69,7 @@ public class LoginManager : IDisposable
             
         // Initiate a connection to the server if auto login is set to true
         if (Plugin.CharacterConfiguration.AutoLogin is true)
-            await _networkService.StartAsync().ConfigureAwait(false);
+            await _networkService.StartAsync(Plugin.CharacterConfiguration.Secret).ConfigureAwait(false);
     }
     
     private void OnLogout(int type, int code) => _ = OnLogoutAsync().ConfigureAwait(false);

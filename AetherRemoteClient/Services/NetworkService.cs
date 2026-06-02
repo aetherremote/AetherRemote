@@ -1,14 +1,19 @@
 using System;
+using System.Diagnostics;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using AetherRemoteClient.Domain.Enums;
 using AetherRemoteClient.Domain.Network;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon;
+using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.GetToken;
 using AetherRemoteCommon.Domain.Network.LoginAuthentication;
+using AetherRemoteCommon.Domain.Network.Possession;
 using MessagePack;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,21 +25,6 @@ namespace AetherRemoteClient.Services;
 /// </summary>
 public class NetworkService : IDisposable
 {
-    /// <summary>
-    ///     The Signal R connection
-    /// </summary>
-    public readonly HubConnection Connection;
-
-    /// <summary>
-    ///     Event fired when the server successfully connects, either by reconnection or manual connection
-    /// </summary>
-    public event Func<Task>? Connected;
-
-    /// <summary>
-    ///     Event fired when the server connection is lost, either by disruption or manual intervention
-    /// </summary>
-    public event Func<Task>? Disconnected;
-    
 #if DEBUG
     private const string HubUrl = "https://localhost:5006/primaryHub";
     private const string PostUrl = "https://localhost:5006/api/auth/login";
@@ -47,32 +37,50 @@ public class NetworkService : IDisposable
     private const string PostUrl = "https://foxitsvc.com:5006/api/auth/login";
 #endif
     
-    // Token resources, used for caching access
-    private static string? _cachedToken;
-    private static DateTime _tokenExpiration;
-
     // Serialization options for converting camel case to pascal case in deserialization
     private static readonly JsonSerializerOptions DeserializationOptions = new() { PropertyNameCaseInsensitive = true };
     
     // Long-lived HTTP Client
     private static readonly HttpClient Client = new();
-
-    /// <summary>
-    ///     If the plugin has begun the connection process
-    /// </summary>
-    public bool Connecting;
     
-    /// <summary>
-    ///     If we are currently connected to the server
-    /// </summary>
-    public bool CurrentlyConnected => Connection.State is HubConnectionState.Connected;
+    // Signal R
+    private readonly HubConnection _connection;
 
+    // Secret, used for getting the JWT
+    private string? _secret;
+    
+    // Token resources, used for caching access
+    private  string? _cachedToken;
+    private static DateTime _tokenExpiration;
+
+    /// <summary>
+    ///     Event fired when the server successfully connects, either by reconnection or manual connection
+    /// </summary>
+    public event Func<Task>? Connected;
+
+    /// <summary>
+    ///     Event fired when the server connection is lost, either by disruption or manual intervention
+    /// </summary>
+    public event Func<Task>? Disconnected;
+
+    /// <summary>
+    ///     The state of the connection to the server
+    /// </summary>
+    public ConnectionState State => _connection.State switch
+    {
+        HubConnectionState.Disconnected => ConnectionState.Disconnected,
+        HubConnectionState.Connected => ConnectionState.Connected,
+        HubConnectionState.Connecting => ConnectionState.Connecting,
+        HubConnectionState.Reconnecting => ConnectionState.Reconnecting,
+        _ => throw new UnreachableException($"[NetworkService.State] {nameof(_connection.State)}")
+    };
+    
     /// <summary>
     ///     <inheritdoc cref="NetworkService"/>
     /// </summary>
     public NetworkService()
     {
-        Connection = new HubConnectionBuilder().WithUrl(HubUrl, options =>
+        _connection = new HubConnectionBuilder().WithUrl(HubUrl, options =>
             {
                 options.AccessTokenProvider = async () => await TryGetSecret().ConfigureAwait(false);
             })
@@ -83,32 +91,35 @@ public class NetworkService : IDisposable
             })
             .Build();
 
-        Connection.Reconnected += OnReconnected;
-        Connection.Reconnecting += OnReconnecting;
-        Connection.Closed += OnClosed;
+        _connection.Reconnected += OnReconnected;
+        _connection.Reconnecting += OnReconnecting;
+        _connection.Closed += OnClosed;
     }
 
     /// <summary>
     ///     Begins a connection to the server
     /// </summary>
-    public async Task StartAsync()
+    public async Task StartAsync(string secret)
     {
-        if (Connection.State is not HubConnectionState.Disconnected)
-        {
-            Plugin.Log.Verbose("[NetworkService] Network connection is pending or already established");
+        if (_connection.State is not HubConnectionState.Disconnected)
             return;
+
+        // If this is a different secret from last time, invalidate what we have currently
+        if (_secret != secret)
+        {
+            _cachedToken = null;
+            _tokenExpiration = DateTime.MinValue;
         }
 
-        Connecting = true;
+        _secret = secret;
         
         try
         {
-            await Connection.StartAsync().ConfigureAwait(false);
+            await _connection.StartAsync().ConfigureAwait(false);
 
-            if (Connection.State is HubConnectionState.Connected)
+            if (_connection.State is HubConnectionState.Connected)
             {
                 Connected?.Invoke();
-                NotificationHelper.Success("[Aether Remote] Connected", string.Empty);
             }
             else
             { 
@@ -117,11 +128,9 @@ public class NetworkService : IDisposable
         }
         catch (Exception e)
         {
-            Plugin.Log.Warning($"[NetworkService] [StartAsync] {e.Message}]");
-            NotificationHelper.Warning("[Aether Remote] Could not connect", "See developer console for more information");
+            Plugin.Log.Warning($"[NetworkService.StartAsync] {e}");
+            NotificationHelper.Warning("[Aether Remote] Unable to connect", "See developer console for more information");
         }
-        
-        Connecting = false;
     }
 
     /// <summary>
@@ -129,19 +138,16 @@ public class NetworkService : IDisposable
     /// </summary>
     public async Task StopAsync()
     {
-        if (Connection.State is HubConnectionState.Disconnected)
-        {
-            Plugin.Log.Verbose("[NetworkService] Network connection is already disconnected");
+        if (_connection.State is HubConnectionState.Disconnected)
             return;
-        }
 
         try
         {
-            await Connection.StopAsync().ConfigureAwait(false);
+            await _connection.StopAsync().ConfigureAwait(false);
         }
         catch (Exception e)
         {
-            Plugin.Log.Warning($"[NetworkService] [StopAsync] Error, {e.Message}]");
+            Plugin.Log.Warning($"[NetworkService.StopAsync] {e}]");
         }
     }
 
@@ -153,25 +159,55 @@ public class NetworkService : IDisposable
     /// <returns></returns>
     public async Task<T> InvokeAsync<T>(string method, object request)
     {
-        if (Connection.State is not HubConnectionState.Connected)
+        if (_connection.State is not HubConnectionState.Connected)
         {
-            Plugin.Log.Warning("[NetworkService] No connection established");
+            Plugin.Log.Warning("[NetworkService.InvokeAsync] No connection established");
             return Activator.CreateInstance<T>();
         }
 
         try
         {
-            Plugin.Log.Verbose($"[NetworkService] Request: {request}");
-            var response = await Connection.InvokeAsync<T>(method, request);
-            Plugin.Log.Verbose($"[NetworkService] Response: {response}");
+            Plugin.Log.Verbose($"[NetworkService.InvokeAsync] Request: {request}");
+            var response = await _connection.InvokeAsync<T>(method, request).ConfigureAwait(false);
+            Plugin.Log.Verbose($"[NetworkService.InvokeAsync] Response: {response}");
             return response;
         }
         catch (Exception e)
         {
-            Plugin.Log.Warning($"[NetworkService] [InvokeAsync] {e}");
+            Plugin.Log.Warning($"[NetworkService.InvokeAsync] {e}");
             return Activator.CreateInstance<T>();
         }
     }
+    
+    /// <summary>
+    ///     Creates a listener for a specific method handled by provided method group
+    /// </summary>
+    public IDisposable ListenFunc<T>(string name, Func<T, ActionResult<Unit>> handler) => _connection.On(name, handler);
+    
+    /// <summary>
+    ///     <inheritdoc cref="ListenFunc"/>
+    /// </summary>
+    public IDisposable ListenFuncAsync<T>(string name, Func<T, Task<ActionResult<Unit>>> handler) => _connection.On(name, handler);
+    
+    /// <summary>
+    ///     <inheritdoc cref="ListenFunc"/>
+    /// </summary>
+    public IDisposable ListenAction<T>(string name, Action<T> handler) => _connection.On(name, handler);
+    
+    /// <summary>
+    ///     <inheritdoc cref="ListenFunc"/>
+    /// </summary>
+    public IDisposable ListenActionAsync<T>(string name, Action<Task<T>> handler) => _connection.On(name, handler);
+    
+    /// <summary>
+    ///     <inheritdoc cref="ListenFunc"/>
+    /// </summary>
+    public IDisposable ListenPossession<T>(string name, Func<T, PossessionResultEc> handler) => _connection.On(name, handler);
+    
+    /// <summary>
+    ///     <inheritdoc cref="ListenFunc"/>
+    /// </summary>
+    public IDisposable ListenPossessionAsync<T>(string name, Func<T, Task<PossessionResultEc>> handler) => _connection.On(name, handler);
 
     private Task OnReconnected(string? arg)
     {
@@ -191,33 +227,27 @@ public class NetworkService : IDisposable
         return Task.CompletedTask;
     }
     
-    private static async Task<string?> TryGetSecret()
+    private async Task<string?> TryGetSecret()
     {
         // If we have a cached token, and it isn't expired, use it
         if (_cachedToken is not null && DateTime.UtcNow < _tokenExpiration)
             return _cachedToken;
-
-        // Try to actually get the token from the auth endpoint
+        
         if (await TryAuthenticateSecret().ConfigureAwait(false) is not { } token)
             return null;
         
-        // Cache the token and the expiration
+        // Caching
         _cachedToken = token;
         _tokenExpiration = DateTime.UtcNow.AddHours(Constraints.TokenExpirationInHours);
         
-        // Get a new token
         return token;
     }
     
-    private static async Task<string?> TryAuthenticateSecret()
+    private async Task<string?> TryAuthenticateSecret()
     {
-        if (Plugin.CharacterConfiguration?.Secret is null)
-        {
-            Plugin.Log.Warning("[NetworkService.TryAuthenticateSecret] You do not have a secret to provide for authentication");
-            return null;
-        }
+        if (_secret is null) return null;
         
-        var request = new GetTokenRequest(Plugin.CharacterConfiguration.Secret, Plugin.Version);
+        var request = new GetTokenRequest(_secret, Plugin.Version);
         var payload = new StringContent(JsonSerializer.Serialize(request), Encoding.UTF8, "application/json");
 
         try
@@ -264,12 +294,12 @@ public class NetworkService : IDisposable
 
     public void Dispose()
     {
-        Connection.Reconnected -= OnReconnected;
-        Connection.Reconnecting -= OnReconnecting;
-        Connection.Closed -= OnClosed;
+        _connection.Reconnected -= OnReconnected;
+        _connection.Reconnecting -= OnReconnecting;
+        _connection.Closed -= OnClosed;
 
-        Connection.StopAsync().ConfigureAwait(false);
-        Connection.DisposeAsync().AsTask().GetAwaiter().GetResult();
+        _connection.StopAsync().ConfigureAwait(false);
+        _connection.DisposeAsync().AsTask().GetAwaiter().GetResult();
 
         GC.SuppressFinalize(this);
     }

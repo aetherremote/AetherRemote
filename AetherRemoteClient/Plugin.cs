@@ -175,6 +175,7 @@ public sealed class Plugin : IDalamudPlugin
         _services.GetRequiredService<WindowManager>();
         
         // Ui - Controllers
+        _services.GetRequiredService<NavigationBarComponentUi>();           // Required to listen to log in / log out events
         _services.GetRequiredService<LoginViewUiController>();              // Required to display secret once character configuration loads
         _services.GetRequiredService<MoodlesViewUiController>();            // Required to display UI elements when IPCs are loaded
         _services.GetRequiredService<TransformationsViewUiController>();    // Required to display UI elements when IPCs are loaded

@@ -1,4 +1,5 @@
 using System.Numerics;
+using AetherRemoteClient.Domain.Enums;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Style;
@@ -34,20 +35,20 @@ public class LoginViewUi(LoginViewUiController controller, NetworkService networ
                 shouldConnect = true;
 
             ImGui.SameLine();
-            if (networkService.Connecting)
+            if (networkService.State is ConnectionState.Disconnected)
+            {
+                if (ImGui.Button("Connect"))
+                    shouldConnect = true;
+            }
+            else
             {
                 ImGui.BeginDisabled();
                 ImGui.Button("Connect");
                 ImGui.EndDisabled();
             }
-            else
-            {
-                if (ImGui.Button("Connect"))
-                    shouldConnect = true;
-            }
 
             if (shouldConnect)
-                controller.Connect();
+                _ = controller.Connect().ConfigureAwait(false);
 
             ImGui.Spacing();
 
