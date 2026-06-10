@@ -5,6 +5,7 @@ using AetherRemoteClient.Handlers;
 using AetherRemoteClient.Handlers.Chat;
 using AetherRemoteClient.Handlers.Network;
 using AetherRemoteClient.Hooks;
+using AetherRemoteClient.Infrastructure.Database;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Managers.Possession;
 using AetherRemoteClient.Services;
@@ -72,6 +73,9 @@ public sealed class Plugin : IDalamudPlugin
         
         // Create a collection of services
         var services = new ServiceCollection();
+        
+        // Infrastructure
+        services.AddSingleton<DatabaseInfrastructure>();
         
         // Services
         services.AddSingleton<AccountService>();
