@@ -7,6 +7,6 @@ public class HomeViewUiController(NetworkService networkService)
 {
     public async Task Disconnect()
     {
-        await networkService.StopAsync().ConfigureAwait(false);
+        await networkService.DisconnectFromServerAsync().ConfigureAwait(false);
     }
 }

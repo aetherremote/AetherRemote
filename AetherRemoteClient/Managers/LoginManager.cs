@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using AetherRemoteClient.Infrastructure.Authentication;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 
@@ -11,7 +12,13 @@ namespace AetherRemoteClient.Managers;
 public class LoginManager : IDisposable
 {
     // Injected
+    private readonly AuthenticationInfrastructure _authenticationInfrastructure;
+    private readonly AgreementsService2 _agreementsService;
+    private readonly CharacterConfigurationService _characterConfigurationService;
     private readonly NetworkService _networkService;
+    private readonly NotesService _notesService;
+    private readonly SecretsService _secretsService;
+    private readonly SettingsService _settingsService;
 
     /// <summary>
     ///     If we have finished processing all the login events
@@ -26,10 +33,23 @@ public class LoginManager : IDisposable
     /// <summary>
     ///     <inheritdoc cref="LoginManager"/>
     /// </summary>
-    public LoginManager(NetworkService networkService)
+    public LoginManager(
+        AuthenticationInfrastructure authenticationInfrastructure,
+        AgreementsService2 agreementsService,
+        CharacterConfigurationService characterConfigurationService,
+        NetworkService networkService,
+        NotesService notesService,
+        SecretsService secretsService,
+        SettingsService settingsService)
     {
         // Store injected services
+        _authenticationInfrastructure = authenticationInfrastructure;
+        _agreementsService = agreementsService;
+        _characterConfigurationService = characterConfigurationService;
         _networkService = networkService;
+        _notesService = notesService;
+        _secretsService = secretsService;
+        _settingsService = settingsService;
         
         // Subscribe to log in events
         Plugin.ClientState.Login += OnLogin;
@@ -43,21 +63,29 @@ public class LoginManager : IDisposable
     private void OnLogin() => _ = OnLoginAsync().ConfigureAwait(false);
     private async Task OnLoginAsync()
     {
-        // Make sure the local player is present
-        if (await DalamudUtilities.RunOnFramework(() => Plugin.ObjectTable.LocalPlayer).ConfigureAwait(false) is not { } player)
+        // TODO: This is a pretty big one, but if something goes wrong here, the plugin is unusable.
+
+        // These three services are used by the plugin regardless
+        if (await _agreementsService.LoadAgreements().ConfigureAwait(false) is false) return;
+        if (await _notesService.LoadNotes().ConfigureAwait(false) is false) return;
+        if (await _secretsService.LoadSecrets().ConfigureAwait(false) is false) return;
+
+        // Load the character configuration. This will create a new configuration if it is the character's first time
+        if (await _characterConfigurationService.LoadCharacterConfiguration().ConfigureAwait(false) is false)
             return;
 
-        // Store the name and world for readability
-        var name = player.Name.ToString();
-        var world = player.HomeWorld.Value.Name.ToString();
+        // Now if the character has an associate secret, we can initialize things require for the plugin
+        if (_characterConfigurationService.Current?.SecretId is { } secretId)
+        {
+            if (_secretsService.Secrets.TryGetValue(secretId, out var secret))
+                _authenticationInfrastructure.SetSecret(secret.Value);
+            else
+                Plugin.Log.Warning($"[LoginManager.OnLoginAsync] SecretId {secretId} does not have corresponding secret");
 
-        // Load the character configuration
-        if (await ConfigurationService.LoadCharacterConfiguration(name, world).ConfigureAwait(false) is not { } characterConfiguration)
-            return;
-
-        // Set the character configuration
-        Plugin.CharacterConfiguration = characterConfiguration;
-
+            if (await _settingsService.LoadSettings(secretId).ConfigureAwait(false) is false)
+                Plugin.Log.Warning($"[LoginManager.OnLoginAsync] Failed to load settings for SecretId {secretId}");
+        }
+        
         // Emit an event
         LoginFinished?.Invoke();
             
@@ -67,15 +95,15 @@ public class LoginManager : IDisposable
         // Ensure that all the values for various action responses and results are met (this check could go anywhere)
         ActionResponseParser.SanityCheck();
             
-        // Initiate a connection to the server if auto login is set to true
-        if (Plugin.CharacterConfiguration.AutoLogin is true)
-            await _networkService.StartAsync(Plugin.CharacterConfiguration.Secret).ConfigureAwait(false);
+        // Check if this secret has auto login enabled, and connect if so
+        if (_settingsService.AutoLogin)
+            await _networkService.ConnectToServerAsync().ConfigureAwait(false);
     }
     
     private void OnLogout(int type, int code) => _ = OnLogoutAsync().ConfigureAwait(false);
     private async Task OnLogoutAsync()
     {
-        await _networkService.StopAsync();
+        await _networkService.DisconnectFromServerAsync().ConfigureAwait(false);
             
         // Reset event protection
         HasLoginFinished = false;

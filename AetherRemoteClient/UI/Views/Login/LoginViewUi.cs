@@ -5,15 +5,11 @@ using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Style;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface;
-using Dalamud.Interface.Colors;
 
 namespace AetherRemoteClient.UI.Views.Login;
 
-public class LoginViewUi(LoginViewUiController controller, NetworkService networkService) : IDrawable
+public class LoginViewUi(LoginViewUiController controller, NetworkService networkService, SecretsService secretsService) : IDrawable
 {
-    private const ImGuiInputTextFlags SecretInputFlags = ImGuiInputTextFlags.EnterReturnsTrue | ImGuiInputTextFlags.Password | ImGuiInputTextFlags.AutoSelectAll;
-    
     public void Draw()
     {
         ImGui.BeginChild("LoginContent", Vector2.Zero, false, AetherRemoteImGui.ContentFlags);
@@ -25,54 +21,40 @@ public class LoginViewUi(LoginViewUiController controller, NetworkService networ
             SharedUserInterfaces.BigTextCentered("Aether Remote");
             SharedUserInterfaces.TextCentered(Plugin.Version.ToString());
         });
-
-        SharedUserInterfaces.ContentBox("LoginSecret", AetherRemoteColors.PanelColor, true, () =>
+        
+        SharedUserInterfaces.ContentBox("LoginSecretSelect", AetherRemoteColors.PanelColor, true, () =>
         {
-            var shouldConnect = false;
+            SharedUserInterfaces.MediumText("Login with Secret");
 
-            SharedUserInterfaces.MediumText("Enter Secret");
-            if (ImGui.InputTextWithHint("##SecretInput", "Secret", ref controller.Secret, 120, SecretInputFlags))
-                shouldConnect = true;
-
+            var preview = controller.GetCurrentSecret()?.Name ?? string.Empty;
+            if (ImGui.BeginCombo("##SecretSelect", preview))
+            {
+                foreach (var secret in secretsService.Secrets)
+                    if (ImGui.Selectable(secret.Value.Name))
+                        _ = controller.SetSecret(secret.Value).ConfigureAwait(false);
+                
+                ImGui.EndCombo();
+            }
+            
             ImGui.SameLine();
-            if (networkService.State is ConnectionState.Disconnected)
-            {
-                if (ImGui.Button("Connect"))
-                    shouldConnect = true;
-            }
-            else
-            {
-                ImGui.BeginDisabled();
-                ImGui.Button("Connect");
-                ImGui.EndDisabled();
-            }
 
-            if (shouldConnect)
+            var disable = networkService.State is not ConnectionState.Disconnected;
+            if (disable) ImGui.BeginDisabled();
+            if (ImGui.Button("Connect"))
                 _ = controller.Connect().ConfigureAwait(false);
-
-            ImGui.Spacing();
-
+            if (disable) ImGui.EndDisabled();
+            
             ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(4, 0));
-
             ImGui.TextUnformatted("Need a secret? Join the");
             ImGui.SameLine();
             ImGui.PushStyleColor(ImGuiCol.Text, AetherRemoteColors.DiscordBlue);
             var size = ImGui.CalcTextSize("discord");
             if (ImGui.Selectable("discord", false, ImGuiSelectableFlags.None, size))
                 LoginViewUiController.OpenDiscordLink();
-
             ImGui.PopStyleColor();
             ImGui.SameLine();
-            ImGui.TextUnformatted("to generate one.");
-
+            ImGui.TextUnformatted("to generate one, then add it in the settings tab.");
             ImGui.PopStyleVar();
-        });
-
-        SharedUserInterfaces.ContentBox("CharacterConfiguration", AetherRemoteColors.PanelColor, true, () =>
-        {
-            SharedUserInterfaces.Icon(FontAwesomeIcon.ExclamationTriangle, ImGuiColors.DalamudYellow);
-            ImGui.SameLine();
-            ImGui.TextWrapped("Aether Remote now operates on a per-character configuration system.");
         });
 
         ImGui.EndChild();

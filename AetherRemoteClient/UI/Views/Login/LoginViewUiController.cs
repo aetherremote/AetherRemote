@@ -1,64 +1,44 @@
 using System;
 using System.Threading.Tasks;
-using AetherRemoteClient.Managers;
+using AetherRemoteClient.Infrastructure.Authentication;
+using AetherRemoteClient.Infrastructure.Database;
 using AetherRemoteClient.Services;
 using Dalamud.Utility;
 
 namespace AetherRemoteClient.UI.Views.Login;
 
-public class LoginViewUiController : IDisposable
+public class LoginViewUiController(
+    AuthenticationInfrastructure authenticationInfrastructure,
+    CharacterConfigurationService characterConfigurationService,
+    NetworkService networkService,
+    SecretsService secretsService) : IDisposable
 {
-    // Injected
-    private readonly NetworkService _networkService;
-    private readonly LoginManager _loginManager;
-    
-    /// <summary>
-    ///     User inputted secret
-    /// </summary>
-    public string Secret = string.Empty;
-    
-    public LoginViewUiController(NetworkService networkService, LoginManager loginManager)
+    public DatabaseInfrastructure.Secret? GetCurrentSecret()
     {
-        _networkService = networkService;
-        _loginManager = loginManager;
-        _loginManager.LoginFinished += OnLoginFinished;
-        if (_loginManager.HasLoginFinished)
-            OnLoginFinished();
+        if (characterConfigurationService.Current?.SecretId is not { } secretId)
+            return null;
+        
+        secretsService.Secrets.TryGetValue(secretId, out var secret);
+        return secret;
+    }
+
+    public async Task SetSecret(DatabaseInfrastructure.Secret secret)
+    {
+        if (await characterConfigurationService.SetSecretForCharacter(secret.Id).ConfigureAwait(false) is false)
+            return;
+        
+        authenticationInfrastructure.SetSecret(secret.Value);
     }
 
     public async Task Connect()
     {
-        // Only save if the configuration is set
-        if (Plugin.CharacterConfiguration is null)
-            return;
-
-        // Don't save if the string is empty
-        if (Secret == string.Empty)
-            return;
-            
-        // Set the secret
-        Plugin.CharacterConfiguration.Secret = Secret;
-            
-        // Save the configuration
-        await Plugin.CharacterConfiguration.Save().ConfigureAwait(false);
-            
-        // Try to connect to the server
-        await _networkService.StartAsync(Secret).ConfigureAwait(false);
+        await networkService.ConnectToServerAsync().ConfigureAwait(false);
     }
     
     public static void OpenDiscordLink() => Util.OpenLink("https://discord.com/invite/aetherremote");
-
-    private void OnLoginFinished()
-    {
-        if (Plugin.CharacterConfiguration is null)
-            return;
-        
-        Secret = Plugin.CharacterConfiguration.Secret;
-    }
     
     public void Dispose()
     {
-        _loginManager.LoginFinished -= OnLoginFinished;
         GC.SuppressFinalize(this);
     }
 }

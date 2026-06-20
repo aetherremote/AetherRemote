@@ -68,8 +68,11 @@ public class DtrHandler : IDisposable
     /// <summary>
     ///     Removes the AR Dtr entry
     /// </summary>
-    public static void RemoveDtrBar()
+    public void RemoveDtrBar()
     {
+        if (Plugin.Configuration.ShowOnDtrBar is false)
+            return;
+        
         Plugin.DtrBar.Remove(AetherRemoteDtrId);
     }
 

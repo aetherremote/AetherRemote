@@ -34,7 +34,8 @@ public static class SharedUserInterfaces
     private static IFontHandle? _bigFont;
 
     public const int MediumFontSize = 24;
-    private static IFontHandle? _mediumFont;
+    public static ImFontPtr MediumFont { get; private set; }
+    public static IFontHandle? _mediumFont;
     
     /// <summary>
     ///     Draws a tool tip for the last hovered ImGui component
@@ -311,6 +312,33 @@ public static class SharedUserInterfaces
         
         ImGui.SetCursorPosY(startCursorPos.Y + size.Y + (includeEndPadding ? padding.Y : 0));
     }
+    
+    // This could probably just be added to the one above, but I'm too lazy to check right now
+    public static void ContentBox2(string id, uint backgroundColor, bool includeEndPadding, Action contentToDraw)
+    {
+        var draw = ImGui.GetWindowDrawList();
+        var padding = AetherRemoteImGui.WindowPadding;
+        var startCursorPos = ImGui.GetCursorPos();
+        var startScreenPos = ImGui.GetCursorScreenPos();
+
+        if (ContextBoxSizeCache.TryGetValue(id, out var cached))
+            draw.AddRectFilled(startScreenPos, startScreenPos + cached, backgroundColor, AetherRemoteImGui.ChildRounding);
+        
+        ImGui.SetCursorPos(startCursorPos + padding);
+        
+        ImGui.BeginGroup();
+        contentToDraw();
+        ImGui.EndGroup();
+
+        var itemSize = ImGui.GetItemRectSize();
+        var size = new Vector2(ImGui.GetContentRegionAvail().X, itemSize.Y + padding.Y * 2);
+        
+        // Only cache if required, should ease dictionary hashing
+        if (size.Equals(cached) is false)
+            ContextBoxSizeCache[id] = size;
+        
+        ImGui.SetCursorPosY(startCursorPos.Y + size.Y + (includeEndPadding ? padding.Y : 0));
+    }
 
     /// <summary>
     /// Initializes the two additional font sizes used in the plugin
@@ -348,7 +376,14 @@ public static class SharedUserInterfaces
 
         _mediumFont = Plugin.PluginInterface.UiBuilder.FontAtlas.NewDelegateFontHandle(toolkit =>
         {
-            toolkit.OnPreBuild(preBuild => { preBuild.AddDalamudDefaultFont(MediumFontSize); });
+            toolkit.OnPreBuild(preBuild =>
+            {
+                MediumFont = dalamudFontDirectory is null
+                    ? preBuild.AddDalamudDefaultFont(MediumFontSize)
+                    : preBuild.AddFontFromFile(dalamudFontDirectory, DefaultFontConfig);
+                
+                preBuild.AddDalamudDefaultFont(MediumFontSize);
+            });
         });
 
         await _bigFont.WaitAsync().ConfigureAwait(false);

@@ -1,61 +1,107 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using AetherRemoteClient.Handlers;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Utils;
 
 namespace AetherRemoteClient.UI.Views.Settings;
 
-public class SettingsViewUiController(ActionQueueService actionQueueService, HypnosisManager hypnosisManager, DtrHandler dtrHandler)
+public class SettingsViewUiController(
+    ActionQueueService actionQueueService, 
+    CharacterConfigurationService characterConfigurationService,
+    SecretsService secretsService, 
+    SettingsService settingsService,
+    HypnosisManager hypnosisManager, 
+    DtrHandler dtrHandler)
 {
+    // For use with maintaining an accurate secret usage map
+    private static readonly TimeSpan OneSecond = TimeSpan.FromSeconds(1);
+    private DateTime _lastRefreshed = DateTime.UtcNow;
+    
     /// <summary>
-    ///     Updates safe mode, and clears all pending actions, spirals, etc...
+    ///     Dictionary containing a map of secret id to character usage
     /// </summary>
-    public async void EnterSafeMode(bool safeMode)
+    public readonly Dictionary<long, int> SecretUsageCharacterCount = [];
+    
+    public async Task AddSecret(string secretName, string secretValue)
     {
-        try
+        if (await secretsService.AddSecret(secretName, secretValue).ConfigureAwait(false))
         {
-            // Save the configuration always
-            await Plugin.Configuration.Save().ConfigureAwait(false);
-        
-            // Only proceed if safe mode is enabled
-            if (safeMode is false)
-                return;
-            
-            // Stop spirals
-            hypnosisManager.Wake();
-        
-            // Clear action queue
-            actionQueueService.Clear();
+            NotificationHelper.Success("Secret Added!", string.Empty);
         }
-        catch (Exception e)
+        else
         {
-            Plugin.Log.Error($"[SettingsViewUiController.EnterSafeMode] {e}");
+            NotificationHelper.Warning("Unable to Add Secret", "Make sure the name and secret are unique");
         }
     }
 
-    public async void SaveConfiguration()
+    public async Task RemoveSecret(long secretId)
     {
-        try
+        if (await secretsService.RemoveSecret(secretId).ConfigureAwait(false))
         {
-            if (Plugin.CharacterConfiguration is null)
-                return;
-            
-            await Plugin.CharacterConfiguration.Save().ConfigureAwait(false);
+            NotificationHelper.Success("Secret Removed!", string.Empty);
         }
-        catch (Exception e)
+        else
         {
-            Plugin.Log.Error($"[SettingsViewUiController.SaveConfiguration] {e}");
+            NotificationHelper.Warning("Unable to Remove Secret", "See more details in the developer console by typing /xllog");
         }
     }
 
-    public async Task SaveAndUpdateDtrBarSettings()
+    public async Task SetAutoLogin(bool autoLogin)
     {
-        await Plugin.Configuration.Save().ConfigureAwait(true);
-        
-        if (Plugin.Configuration.ShowOnDtrBar)
+        if (characterConfigurationService.Current?.SecretId is not { } secretId) return;
+        var value = autoLogin ? SettingsService.SettingValue.True : SettingsService.SettingValue.False;
+        await settingsService.SetSetting(secretId, SettingsService.SettingKey.AutoLogin, value).ConfigureAwait(false);
+    }
+
+    public async Task SetShowDtrBar(bool showDtrBar)
+    {
+        if (characterConfigurationService.Current?.SecretId is not { } secretId) return;
+        var value = showDtrBar ? SettingsService.SettingValue.True : SettingsService.SettingValue.False;
+        if (await settingsService.SetSetting(secretId, SettingsService.SettingKey.ShowDtrBar, value).ConfigureAwait(false) is false)
+            return;
+
+        if (showDtrBar)
             dtrHandler.UpdateDtrBar();
         else
-            DtrHandler.RemoveDtrBar();
+            dtrHandler.RemoveDtrBar();
+    }
+
+    public async Task SetSafeMode(bool safeMode)
+    {
+        if (characterConfigurationService.Current?.SecretId is not { } secretId) return;
+        var value = safeMode ? SettingsService.SettingValue.True : SettingsService.SettingValue.False;
+        if (await settingsService.SetSetting(secretId, SettingsService.SettingKey.SafeMode, value).ConfigureAwait(false) is false)
+            return;
+
+        // When we enter safe mode, we want to disable a lot of things, so turning it off means we can exit early
+        if (safeMode is false)
+            return;
+        
+        // These are the things we want to turn off, since they are still potentially 'active' even if incoming commands are blocked
+        hypnosisManager.Wake();
+        actionQueueService.Clear();
+    }
+    
+    /// <summary>
+    ///     Refreshed the cached count of secrets in use
+    /// </summary>
+    /// <remarks>The primary intent is to prevent the database from calling this every frame</remarks>
+    public async Task ShouldRefreshCharacterSecretUsage()
+    {
+        var now = DateTime.UtcNow;
+        var last = _lastRefreshed;
+        _lastRefreshed = now;
+        
+        if (now - last < OneSecond)
+            return;
+        
+        Plugin.Log.Verbose("[SettingsViewUiController.RefreshSecretUsage] Refreshing Secret Usage...");
+
+        SecretUsageCharacterCount.Clear();
+        foreach (var secret in secretsService.Secrets)
+            SecretUsageCharacterCount.Add(secret.Key, await secretsService.CountUsage(secret.Key).ConfigureAwait(false));
     }
 }

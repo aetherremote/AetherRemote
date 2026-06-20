@@ -105,7 +105,8 @@ public partial class DatabaseInfrastructure
                 CREATE TABLE IF NOT EXISTS "Secrets" (
             	    "Id"	                        INTEGER PRIMARY KEY AUTOINCREMENT,
             	    "Name"	                        TEXT NOT NULL UNIQUE,
-            	    "Secret"	                    TEXT NOT NULL UNIQUE
+            	    "Secret"	                    TEXT NOT NULL UNIQUE,
+            	    "CreatedAt"                     TEXT NOT NULL
                 );
             """;
 
@@ -115,6 +116,7 @@ public partial class DatabaseInfrastructure
             	    "SecretId"	                    INTEGER NOT NULL,
             	    "Name"	                        TEXT NOT NULL,
             	    "Value"	                        TEXT NOT NULL,
+            	    PRIMARY KEY (SecretId, Name)
             	    FOREIGN KEY("SecretId") REFERENCES "Secrets"("Id") ON DELETE CASCADE
                 );
             """;

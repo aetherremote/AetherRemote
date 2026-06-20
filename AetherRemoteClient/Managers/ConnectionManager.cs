@@ -44,7 +44,7 @@ public class ConnectionManager : IDisposable
         if (response.Result is not GetAccountDataEc.Success)
         {
             Plugin.Log.Fatal($"[ConnectionManager] Failed to get account data {response.Result}");
-            await _networkService.StopAsync().ConfigureAwait(false);
+            await _networkService.DisconnectFromServerAsync().ConfigureAwait(false);
             return;
         }
         

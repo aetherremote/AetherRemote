@@ -104,7 +104,7 @@ public partial class ChatCommandHandler : IDisposable
         {
             if (args == string.Empty)
             {
-                _mainWindow.IsOpen = true;
+                _mainWindow.Toggle();
                 return;
             }
 

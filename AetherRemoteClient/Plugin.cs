@@ -1,10 +1,13 @@
 using System;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using AetherRemoteClient.Domain.Configurations;
 using AetherRemoteClient.Handlers;
 using AetherRemoteClient.Handlers.Chat;
 using AetherRemoteClient.Handlers.Network;
 using AetherRemoteClient.Hooks;
+using AetherRemoteClient.Infrastructure.Authentication;
 using AetherRemoteClient.Infrastructure.Database;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Managers.Possession;
@@ -38,7 +41,7 @@ using Microsoft.Extensions.DependencyInjection;
 namespace AetherRemoteClient;
 
 // ReSharper disable once ClassNeverInstantiated.Global
-public sealed class Plugin : IDalamudPlugin
+public sealed class Plugin : IAsyncDalamudPlugin
 {
     [PluginService] internal static IDataManager DataManager { get; private set; } = null!;
     [PluginService] internal static IClientState ClientState { get; private set; } = null!;
@@ -64,30 +67,35 @@ public sealed class Plugin : IDalamudPlugin
     public static readonly Version Version = Assembly.GetExecutingAssembly().GetName().Version ?? new Version(0, 0, 0, 0);
     
     // Instantiated
-    private readonly ServiceProvider _services;
+    private ServiceProvider? _services;
     
-    public Plugin()
+    public async Task LoadAsync(CancellationToken cancellationToken)
     {
         // Load the default configuration
-        Configuration = ConfigurationService.LoadConfiguration().GetAwaiter().GetResult() ?? new Configuration();
+        Configuration = await ConfigurationService.LoadConfiguration().ConfigureAwait(false) ?? new Configuration();
         
         // Create a collection of services
         var services = new ServiceCollection();
         
         // Infrastructure
+        services.AddSingleton<AuthenticationInfrastructure>();
         services.AddSingleton<DatabaseInfrastructure>();
         
         // Services
         services.AddSingleton<AccountService>();
         services.AddSingleton<ActionQueueService>();
+        services.AddSingleton<AgreementsService2>();
+        services.AddSingleton<CharacterConfigurationService>();
         services.AddSingleton<CommandLockoutService>();
         services.AddSingleton<EmoteService>();
         services.AddSingleton<FriendsListService>();
         services.AddSingleton<GameSettingsService>();
         services.AddSingleton<LogService>();
         services.AddSingleton<NetworkService>();
+        services.AddSingleton<NotesService>();
         services.AddSingleton<PauseService>();
-        services.AddSingleton<StatusManager>();
+        services.AddSingleton<SecretsService>();
+        services.AddSingleton<SettingsService>();
         services.AddSingleton<TipService>();
         services.AddSingleton<ViewService>();
         services.AddSingleton<WorldService>();
@@ -116,6 +124,7 @@ public sealed class Plugin : IDalamudPlugin
         services.AddSingleton<NetworkCommandManager>();
         services.AddSingleton<PossessionManager>();
         services.AddSingleton<SelectionManager>();
+        services.AddSingleton<StatusManager>();
         
         // Handlers
         services.AddSingleton<ChatCommandHandler>();
@@ -204,12 +213,16 @@ public sealed class Plugin : IDalamudPlugin
         // Services
         _services.GetRequiredService<ActionQueueService>();
         
-        _ = SharedUserInterfaces.InitializeFonts().ConfigureAwait(false);
+        // Load fonts
+        await SharedUserInterfaces.InitializeFonts().ConfigureAwait(false);
     }
     
-    public void Dispose()
+    public async ValueTask DisposeAsync()
     {
-        _services.Dispose();
+        if (_services is null)
+            return;
+        
+        await _services.DisposeAsync().ConfigureAwait(false);
     }
 
     /*
