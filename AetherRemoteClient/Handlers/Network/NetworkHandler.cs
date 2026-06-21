@@ -30,9 +30,9 @@ namespace AetherRemoteClient.Handlers.Network;
 public partial class NetworkHandler : IDisposable
 {
     // Injected
-    
     private readonly AccountService _accountService;
     private readonly ActionQueueService _actionQueueService;
+    private readonly AgreementsService _agreementsService;
     private readonly CustomizePlusService _customizePlusService;
     private readonly EmoteService _emoteService;
     private readonly FriendsListService _friendsListService;
@@ -40,12 +40,12 @@ public partial class NetworkHandler : IDisposable
     private readonly LogService _logService;
     private readonly MoodlesService _moodlesService;
     private readonly PauseService _pauseService;
-    private readonly StatusManager _statusManager;
     
     private readonly CharacterTransformationManager _characterTransformationManager;
     private readonly HypnosisManager _hypnosisManager;
     private readonly PossessionManager _possessionManager;
     private readonly SelectionManager _selectionManager;
+    private readonly StatusManager _statusManager;
     
     // Instantiated
     private readonly List<IDisposable> _handlers = [];
@@ -53,6 +53,7 @@ public partial class NetworkHandler : IDisposable
     public NetworkHandler(
         AccountService accountService,
         ActionQueueService actionQueueService,
+        AgreementsService agreementsService,
         CustomizePlusService customizePlusService,
         EmoteService emoteService,
         FriendsListService friendsListService,
@@ -61,23 +62,22 @@ public partial class NetworkHandler : IDisposable
         MoodlesService moodlesService,
         NetworkService networkService,
         PauseService pauseService,
-        StatusManager statusManager,
         
         CharacterTransformationManager characterTransformationManager,
         HypnosisManager hypnosisManager,
         PossessionManager possessionManager,
-        SelectionManager selectionManager)
+        SelectionManager selectionManager,
+        StatusManager statusManager)
     {
-        // Injected
-        _customizePlusService = customizePlusService;
-        _honorificService = honorificService;
-        _moodlesService = moodlesService;
-        
         _accountService = accountService;
         _actionQueueService = actionQueueService;
+        _agreementsService = agreementsService;
+        _customizePlusService = customizePlusService;
         _emoteService = emoteService;
         _friendsListService = friendsListService;
+        _honorificService = honorificService;
         _logService = logService;
+        _moodlesService = moodlesService;
         _pauseService = pauseService;
         _statusManager = statusManager;
         

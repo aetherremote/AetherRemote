@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon;
 using AetherRemoteCommon.Domain;
@@ -25,7 +24,7 @@ public partial class NetworkHandler
         Plugin.Log.Verbose($"{command}");
         
         // If the client has not accepted the agreement
-        if (AgreementsService.HasAgreedTo(AgreementsService.Agreements.Possession) is false)
+        if (_agreementsService.AgreedToPossession is false)
             return PossessionResultEc.HasNotAcceptedAgreement;
         
         var sender = TryGetFriendWithCorrectPermissions("PossessionBegin", command.SenderFriendCode, PossessionBeginPermissions);

@@ -76,7 +76,7 @@ public partial class DatabaseInfrastructure
         private const string CreateAgreementsTable =
             """
                 CREATE TABLE IF NOT EXISTS "Agreements" (
-            		"Name"	                        TEXT PRIMARY KEY,
+            		"AgreementId"	                INTEGER PRIMARY KEY,
             		"Agreed"	                    INTEGER NOT NULL CHECK("Agreed" IN (1, 0))
                 );
             """;

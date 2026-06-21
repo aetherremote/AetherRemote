@@ -5,11 +5,15 @@ using AetherRemoteClient.Infrastructure.Database;
 
 namespace AetherRemoteClient.Services;
 
+/// <summary>
+///     Provides access to any secrets the user has 
+/// </summary>
 public class SecretsService(DatabaseInfrastructure database)
 {
     private Dictionary<long, DatabaseInfrastructure.Secret> _secrets = [];
     private bool _dirty;
     
+    /// <summary> List of all secrets the client has </summary>
     public ImmutableDictionary<long, DatabaseInfrastructure.Secret> Secrets
     {
         get
@@ -24,6 +28,8 @@ public class SecretsService(DatabaseInfrastructure database)
         }
     } = [];
     
+    /// <summary> Load all the secrets from the database </summary>
+    /// <remarks> Call this once when the plugin loads initially </remarks>
     public async Task<bool> LoadSecrets()
     {
         if (await database.GetSecrets().ConfigureAwait(false) is not { } secrets)
@@ -34,6 +40,7 @@ public class SecretsService(DatabaseInfrastructure database)
         return true;
     }
 
+    /// <summary> Add a new secret </summary>
     public async Task<bool> AddSecret(string secretName, string secretValue)
     {
         if (await database.AddSecret(secretName, secretValue).ConfigureAwait(false) is not { } secret)
@@ -44,6 +51,7 @@ public class SecretsService(DatabaseInfrastructure database)
         return true;
     }
     
+    /// <summary> Remove a secret </summary>
     public async Task<bool> RemoveSecret(long secretId)
     {
         if (await database.RemoveSecret(secretId).ConfigureAwait(false) is false)
@@ -54,5 +62,6 @@ public class SecretsService(DatabaseInfrastructure database)
         return true;
     }
 
+    /// <summary> Count the number of characters using a secret id </summary>
     public async Task<int> CountUsage(long secretId) => await database.GetCharacterUsingSecretCount(secretId).ConfigureAwait(false);
 }

@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Threading.Tasks;
+using AetherRemoteClient.Domain.Enums;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Managers.Possession;
 using AetherRemoteClient.Services;
@@ -9,7 +10,7 @@ using Dalamud.Utility;
 
 namespace AetherRemoteClient.UI.Views.Possession;
 
-public class PossessionViewUiController(PossessionManager possessions, SelectionManager selectionManager)
+public class PossessionViewUiController(AgreementsService agreementsService, PossessionManager possessions, SelectionManager selectionManager)
 {
     public static void OpenFeedbackLink() => Util.OpenLink("https://tenor.com/view/%E3%83%95%E3%83%AD%E3%83%BC%E3%83%A9%E3%82%A4%E3%83%88-flow-endfield-gif-12757389959336405366");
     
@@ -24,13 +25,14 @@ public class PossessionViewUiController(PossessionManager possessions, Selection
 
     public async Task Unpossess()
     {
-        if(await possessions.Unpossess(true).ConfigureAwait(false))
+        if (await possessions.Unpossess(true).ConfigureAwait(false))
             NotificationHelper.Success("Unpossess Successful", string.Empty);
     }
 
-    public static void AcceptPossessionTermsOfService()
+    public async Task AcceptPossessionTermsOfService()
     {
-        AgreementsService.AgreeTo(AgreementsService.Agreements.Possession);
+        if (await agreementsService.AgreeToAgreement(Agreement.Possession).ConfigureAwait(true) is false)
+            NotificationHelper.Warning("Unable to Accept Agreement", "To see more information, please type /xllog to open the developer console");
     }
 
     public bool MissingPermissionsForATarget()

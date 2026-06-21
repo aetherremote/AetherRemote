@@ -84,7 +84,7 @@ public sealed class Plugin : IAsyncDalamudPlugin
         // Services
         services.AddSingleton<AccountService>();
         services.AddSingleton<ActionQueueService>();
-        services.AddSingleton<AgreementsService2>();
+        services.AddSingleton<AgreementsService>();
         services.AddSingleton<CharacterConfigurationService>();
         services.AddSingleton<CommandLockoutService>();
         services.AddSingleton<EmoteService>();

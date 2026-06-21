@@ -5,11 +5,15 @@ using AetherRemoteClient.Infrastructure.Database;
 
 namespace AetherRemoteClient.Services;
 
+/// <summary>
+///     Provides access to any notes the user has 
+/// </summary>
 public class NotesService(DatabaseInfrastructure database)
 {
     private Dictionary<string, string> _notes = [];
     private bool _dirty;
     
+    /// <summary> List of all notes the client has </summary>
     public ImmutableDictionary<string, string> Notes
     {
         get
@@ -24,6 +28,8 @@ public class NotesService(DatabaseInfrastructure database)
         }
     } = [];
     
+    /// <summary> Load all the notes from the database </summary>
+    /// <remarks> Call this once when the plugin loads initially </remarks>
     public async Task<bool> LoadNotes()
     {
         if (await database.GetNotes().ConfigureAwait(false) is not { } notes)

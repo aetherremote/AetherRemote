@@ -13,7 +13,7 @@ public class LoginManager : IDisposable
 {
     // Injected
     private readonly AuthenticationInfrastructure _authenticationInfrastructure;
-    private readonly AgreementsService2 _agreementsService;
+    private readonly AgreementsService _agreementsService;
     private readonly CharacterConfigurationService _characterConfigurationService;
     private readonly NetworkService _networkService;
     private readonly NotesService _notesService;
@@ -35,7 +35,7 @@ public class LoginManager : IDisposable
     /// </summary>
     public LoginManager(
         AuthenticationInfrastructure authenticationInfrastructure,
-        AgreementsService2 agreementsService,
+        AgreementsService agreementsService,
         CharacterConfigurationService characterConfigurationService,
         NetworkService networkService,
         NotesService notesService,

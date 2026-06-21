@@ -14,6 +14,7 @@ namespace AetherRemoteClient.UI.Views.Possession;
 public class PossessionViewUi(
     FriendsListComponentUi friendsList,
     PossessionViewUiController controller,
+    AgreementsService agreementsService,
     CommandLockoutService commandLockoutService,
     PossessionManager possessionManager,
     SelectionManager selectionManager): IDrawable
@@ -22,7 +23,7 @@ public class PossessionViewUi(
     {
         ImGui.BeginChild("PossessionContent", AetherRemoteDimensions.ContentSize, false, AetherRemoteImGui.ContentFlags);
         
-        if (AgreementsService.HasAgreedTo(AgreementsService.Agreements.Possession))
+        if (agreementsService.AgreedToPossession)
             DrawContent();
         else
             DrawWarning();
@@ -144,7 +145,7 @@ public class PossessionViewUi(
         });
     }
 
-    private static void DrawWarning()
+    private void DrawWarning()
     {
         SharedUserInterfaces.ContentBox("PossessionWarning", AetherRemoteColors.PrimaryColor, true, () =>
         {
@@ -163,7 +164,7 @@ public class PossessionViewUi(
         SharedUserInterfaces.ContentBox("PossessionWarningAccept", AetherRemoteColors.PanelColor, false, () =>
         {
             if (ImGui.Button("I understand the risks", new Vector2(ImGui.GetWindowWidth() - AetherRemoteImGui.WindowPadding.X * 2, AetherRemoteDimensions.SendCommandButtonHeight)))
-                PossessionViewUiController.AcceptPossessionTermsOfService();
+                _ = controller.AcceptPossessionTermsOfService().ConfigureAwait(false);
         });
     }
 }
