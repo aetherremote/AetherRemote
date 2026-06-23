@@ -20,6 +20,7 @@ public class FriendsViewUiController : IDisposable
     private readonly AccountService _account;
     private readonly FriendsListService _friends;
     private readonly NetworkService _network;
+    private readonly NotesService _notesService;
     private readonly SelectionManager _selection;
     
     // Instantiated
@@ -41,11 +42,17 @@ public class FriendsViewUiController : IDisposable
         return Global.IsEqualTo(GlobalPermissions.From(_account.GlobalPermissions)) is false;
     }
 
-    public FriendsViewUiController(AccountService account, FriendsListService friends, NetworkService network, SelectionManager selection)
+    public FriendsViewUiController(
+        AccountService account, 
+        FriendsListService friends, 
+        NetworkService network, 
+        NotesService notesService,
+        SelectionManager selection)
     {
         _account = account;
         _friends = friends;
         _network = network;
+        _notesService = notesService;
         _selection = selection;
 
         _account.GlobalPermissionsUpdated += OnGlobalPermissionsUpdated;
@@ -84,16 +91,13 @@ public class FriendsViewUiController : IDisposable
         if (Individual.Note == string.Empty)
         {
             friend.Note = null;
-            Plugin.Configuration.Notes.Remove(friend.FriendCode);
+            await _notesService.RemoveNote(friend.FriendCode).ConfigureAwait(false);
         }
         else
         {
             friend.Note = Individual.Note;
-            Plugin.Configuration.Notes[friend.FriendCode] = friend.Note;
+            await _notesService.AddNote(friend.FriendCode, friend.Note).ConfigureAwait(false);
         }
-        
-        // Make sure to save
-        await Plugin.Configuration.Save();
 
         // Construct the request and send it
         var raw = IndividualPermissions.To(Individual);

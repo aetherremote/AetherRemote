@@ -13,18 +13,28 @@ namespace AetherRemoteClient.Managers;
 public class ConnectionManager : IDisposable
 {
     private readonly AccountService _accountService;
+    private readonly CharacterConfigurationService _characterConfigurationService;
     private readonly FriendsListService _friendsListService;
     private readonly NetworkService _networkService;
+    private readonly NotesService _notesService;
     private readonly ViewService _viewService;
     
     /// <summary>
     ///     <inheritdoc cref="ConnectionManager"/>
     /// </summary>
-    public ConnectionManager(AccountService accountService, FriendsListService friendsListService, NetworkService networkService, ViewService viewService)
+    public ConnectionManager(
+        AccountService accountService, 
+        CharacterConfigurationService characterConfigurationService,
+        FriendsListService friendsListService, 
+        NetworkService networkService, 
+        NotesService notesService,
+        ViewService viewService)
     {
         _accountService = accountService;
+        _characterConfigurationService = characterConfigurationService;
         _friendsListService = friendsListService;
         _networkService = networkService;
+        _notesService = notesService;
         _viewService = viewService;
 
         _networkService.Connected += OnConnected;
@@ -33,11 +43,11 @@ public class ConnectionManager : IDisposable
     
     private async Task OnConnected()
     {
-        if (Plugin.CharacterConfiguration is not { } character)
+        if (_characterConfigurationService.Current is not { } characterConfiguration)
             return;
         
         // Get account data from the server
-        var request = new GetAccountDataRequest(character.Name, character.World);
+        var request = new GetAccountDataRequest(characterConfiguration.Name, characterConfiguration.World);
         var response = await _networkService.InvokeAsync<GetAccountDataResponse>(HubMethod.GetAccountData, request).ConfigureAwait(false);
 
         // If there wasn't a success, don't stay connected; the plugin is not usable in this state
@@ -59,7 +69,7 @@ public class ConnectionManager : IDisposable
         foreach (var friend in response.AccountFriends)
         {
             // Try to extract the note
-            Plugin.Configuration.Notes.TryGetValue(friend.TargetFriendCode, out var note);
+            _notesService.Notes.TryGetValue(friend.TargetFriendCode, out var note);
             
             // Add the new friend with all the data required
             _friendsListService.Add(new Friend(friend.TargetFriendCode, friend.Status, note, friend.PermissionsGrantedTo, friend.PermissionsGrantedBy));

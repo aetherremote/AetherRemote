@@ -4,10 +4,19 @@ using AetherRemoteClient.Utils;
 
 namespace AetherRemoteClient.Services;
 
+/// <summary>
+///     Provides access to the character configuration's
+/// </summary>
 public class CharacterConfigurationService(DatabaseInfrastructure database)
 {
+    /// <summary>
+    ///     The currently loaded configuration
+    /// </summary>
     public DatabaseInfrastructure.CharacterConfiguration? Current { get; private set; }
 
+    /// <summary>
+    ///     Sets the secret this character will be associated with
+    /// </summary>
     public async Task<bool> SetSecretForCharacter(long secretId)
     {
         if (Current is null)
@@ -20,6 +29,9 @@ public class CharacterConfigurationService(DatabaseInfrastructure database)
         return true;
     }
     
+    /// <summary>
+    ///     Loads the character configuration associated with this character
+    /// </summary>
     public async Task<bool> LoadCharacterConfiguration()
     {
         if (await DalamudUtilities.TryGetLocalPlayer().ConfigureAwait(false) is not { } player)

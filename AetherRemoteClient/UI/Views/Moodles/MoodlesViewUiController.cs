@@ -19,12 +19,19 @@ public class MoodlesViewUiController : IDisposable
     private readonly CommandLockoutService _commandLockoutService;
     private readonly MoodlesService _moodlesService;
     private readonly NetworkService _networkService;
+    private readonly NotesService _notesService;
     private readonly SelectionManager _selectionManager;
 
-    public MoodlesViewUiController(CommandLockoutService commandLockoutService, NetworkService networkService, MoodlesService moodlesService, SelectionManager selectionManager)
+    public MoodlesViewUiController(
+        CommandLockoutService commandLockoutService, 
+        NetworkService networkService, 
+        NotesService notesService,
+        MoodlesService moodlesService, 
+        SelectionManager selectionManager)
     {
         _commandLockoutService =  commandLockoutService;
         _networkService = networkService;
+        _notesService = notesService;
         _moodlesService = moodlesService;
         _selectionManager = selectionManager;
 
@@ -102,7 +109,7 @@ public class MoodlesViewUiController : IDisposable
             var request = new MoodlesRequest(_selectionManager.GetSelectedFriendCodes(), moodle.Info);
             var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.Moodles, request).ConfigureAwait(false);
             
-            ActionResponseParser.Parse("Moodles", response);
+            ActionResponseParser.Parse("Moodles", response, _notesService.Notes);
         }
         catch (Exception e)
         {

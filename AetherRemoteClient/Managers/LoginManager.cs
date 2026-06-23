@@ -13,10 +13,8 @@ public class LoginManager : IDisposable
 {
     // Injected
     private readonly AuthenticationInfrastructure _authenticationInfrastructure;
-    private readonly AgreementsService _agreementsService;
     private readonly CharacterConfigurationService _characterConfigurationService;
     private readonly NetworkService _networkService;
-    private readonly NotesService _notesService;
     private readonly SecretsService _secretsService;
     private readonly SettingsService _settingsService;
 
@@ -35,19 +33,15 @@ public class LoginManager : IDisposable
     /// </summary>
     public LoginManager(
         AuthenticationInfrastructure authenticationInfrastructure,
-        AgreementsService agreementsService,
         CharacterConfigurationService characterConfigurationService,
         NetworkService networkService,
-        NotesService notesService,
         SecretsService secretsService,
         SettingsService settingsService)
     {
         // Store injected services
         _authenticationInfrastructure = authenticationInfrastructure;
-        _agreementsService = agreementsService;
         _characterConfigurationService = characterConfigurationService;
         _networkService = networkService;
-        _notesService = notesService;
         _secretsService = secretsService;
         _settingsService = settingsService;
         
@@ -64,12 +58,7 @@ public class LoginManager : IDisposable
     private async Task OnLoginAsync()
     {
         // TODO: This is a pretty big one, but if something goes wrong here, the plugin is unusable.
-
-        // These three services are used by the plugin regardless
-        if (await _agreementsService.LoadAgreements().ConfigureAwait(false) is false) return;
-        if (await _notesService.LoadNotes().ConfigureAwait(false) is false) return;
-        if (await _secretsService.LoadSecrets().ConfigureAwait(false) is false) return;
-
+        
         // Load the character configuration. This will create a new configuration if it is the character's first time
         if (await _characterConfigurationService.LoadCharacterConfiguration().ConfigureAwait(false) is false)
             return;

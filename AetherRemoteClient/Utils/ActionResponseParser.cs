@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Text;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
@@ -81,7 +82,7 @@ public static class ActionResponseParser
     /// <summary>
     ///     Parses the <see cref="ActionResponse"/> and displays a Dalamud notification with the success result
     /// </summary>
-    public static void Parse(string operation, ActionResponse response)
+    public static void Parse(string operation, ActionResponse response, ImmutableDictionary<string, string> notes)
     {
         if (response.Result is not ActionResponseEc.Success)
         {
@@ -105,7 +106,7 @@ public static class ActionResponseParser
             if (code is ActionResultEc.Success)
                 continue;
             
-            var note = Plugin.Configuration.Notes.GetValueOrDefault(target, target);
+            var note = notes.GetValueOrDefault(target, target);
             var message = ActionResultErrorMessages.GetValueOrDefault(code, "Unknown ActionResultEc");
             failureMessage.AppendLine(string.Concat(note, message));
             failureCount++;

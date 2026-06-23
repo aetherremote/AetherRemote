@@ -21,9 +21,11 @@ namespace AetherRemoteClient.UI.Views.Transformations;
 public class TransformationsViewUiController : IDisposable
 {
     // Injected
+    private readonly CharacterConfigurationService _characterConfigurationService;
     private readonly CommandLockoutService _commandLockoutService;
     private readonly GlamourerService _glamourerService;
     private readonly NetworkService _networkService;
+    private readonly NotesService _notesService;
     private readonly CharacterTransformationManager _characterTransformationManager;
     private readonly NetworkCommandManager _networkCommandManager;
     private readonly SelectionManager _selectionManager;
@@ -83,17 +85,21 @@ public class TransformationsViewUiController : IDisposable
     ///     <inheritdoc cref="TransformationsViewUiController"/>
     /// </summary>
     public TransformationsViewUiController(
+        CharacterConfigurationService characterConfigurationService,
         CommandLockoutService commandLockoutService, 
         GlamourerService glamourerService, 
         NetworkService networkService,
+        NotesService notesService,
         CharacterTransformationManager characterTransformationManager,
         NetworkCommandManager networkCommandManager, 
         SelectionManager selectionManager,
         StatusManager statusManager)
     {
+        _characterConfigurationService = characterConfigurationService;
         _commandLockoutService = commandLockoutService;
         _glamourerService = glamourerService;
         _networkService = networkService;
+        _notesService = notesService;
         _characterTransformationManager = characterTransformationManager;
         _networkCommandManager = networkCommandManager;
         _selectionManager = selectionManager;
@@ -236,7 +242,8 @@ public class TransformationsViewUiController : IDisposable
     private async Task SendBodySwap()
     {
         // Basic validation checks
-        if (Plugin.CharacterConfiguration is not { } character) return;
+        if (_characterConfigurationService.Current is not { } characterConfiguration)
+            return;
         
         // Build the attributes
         var attributes = CharacterAttributes.None;
@@ -254,11 +261,11 @@ public class TransformationsViewUiController : IDisposable
         _commandLockoutService.Lock();
         
         // Request the server
-        var request = new BodySwapRequest(_selectionManager.GetSelectedFriendCodes(), character.Name, character.World, attributes, null);
+        var request = new BodySwapRequest(_selectionManager.GetSelectedFriendCodes(), characterConfiguration.Name, characterConfiguration.World, attributes, null);
         var response = await _networkService.InvokeAsync<BodySwapResponse>(HubMethod.BodySwap, request);
         if (response.Result is not ActionResponseEc.Success)
         {
-            ActionResponseParser.Parse("Body Swap", response);
+            ActionResponseParser.Parse("Body Swap", response, _notesService.Notes);
             return;
         }
         
@@ -289,13 +296,14 @@ public class TransformationsViewUiController : IDisposable
         }
             
         // Process the results
-        ActionResponseParser.Parse("Body Swap", response);
+        ActionResponseParser.Parse("Body Swap", response, _notesService.Notes);
     }
     
     private async Task SendTwinning()
     {
         // Basic validation checks
-        if (Plugin.CharacterConfiguration is not { } character) return;
+        if (_characterConfigurationService.Current is not { } characterConfiguration)
+            return;
         
         // Build the attributes
         var attributes = CharacterAttributes.None;
@@ -310,7 +318,7 @@ public class TransformationsViewUiController : IDisposable
         NotificationHelper.Info("Beginning Twinning...", "You may need to wait up to 10 seconds for changes to take effect");
         
         // Send
-        await _networkCommandManager.SendTwinning(_selectionManager.GetSelectedFriendCodes(), character.Name, character.World, attributes).ConfigureAwait(false);
+        await _networkCommandManager.SendTwinning(_selectionManager.GetSelectedFriendCodes(), characterConfiguration.Name, characterConfiguration.World, attributes).ConfigureAwait(false);
     }
     
     /// <summary>

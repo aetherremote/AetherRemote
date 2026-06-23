@@ -114,9 +114,9 @@ public partial class DatabaseInfrastructure
             """
                 CREATE TABLE IF NOT EXISTS "Settings" (
             	    "SecretId"	                    INTEGER NOT NULL,
-            	    "Name"	                        TEXT NOT NULL,
+            	    "SettingId"	                    INTEGER NOT NULL,
             	    "Value"	                        TEXT NOT NULL,
-            	    PRIMARY KEY (SecretId, Name)
+            	    PRIMARY KEY (SecretId, SettingId)
             	    FOREIGN KEY("SecretId") REFERENCES "Secrets"("Id") ON DELETE CASCADE
                 );
             """;

@@ -1,92 +1,46 @@
-using System.Collections.Generic;
-using System.Collections.Immutable;
+using System;
 using System.Threading.Tasks;
+using AetherRemoteClient.Domain.Enums;
 using AetherRemoteClient.Infrastructure.Database;
 
 namespace AetherRemoteClient.Services;
 
+/// <summary>
+///     Provides access to the various settings in the plugin
+/// </summary>
+/// <remarks> All the settings must match those defined in <see cref="Setting"/> </remarks>
 public class SettingsService(DatabaseInfrastructure database)
 {
-    private Dictionary<string, string> _settings = [];
-    private bool _dirty;
-    
-    public bool AutoLogin => _settings.TryGetValue(SettingKey.AutoLogin, out var value) && value switch
-    {
-        SettingValue.True => true,
-        _ => false
-    };
-
-    public bool SafeMode => _settings.TryGetValue(SettingKey.SafeMode, out var value) && value switch
-    {
-        SettingValue.True => true,
-        _ => false
-    };
-    
-    public bool ShowDtrBar => _settings.TryGetValue(SettingKey.ShowDtrBar, out var value) && value switch
-    {
-        SettingValue.True => true,
-        _ => false
-    };
-    
-    public ImmutableDictionary<string, string> Settings
-    {
-        get
-        {
-            if (_dirty is false)
-                return field;
-
-            field = _settings.ToImmutableDictionary();
-            _dirty = false;
-
-            return field;
-        }
-    } = [];
+    public bool AutoLogin { get; private set; }
+    public bool SafeMode { get; private set; }
+    public bool ShowDtrBar { get; private set; }
     
     public async Task<bool> LoadSettings(long secretId)
     {
         if (await database.GetSettingsForSecretId(secretId).ConfigureAwait(false) is not { } settings)
             return false;
-        
-        _settings = settings;
-        
-        if (_settings.Count is 0)
-        {
-            if (await SetSetting(secretId, SettingKey.AutoLogin, SettingValue.False).ConfigureAwait(false) is false) return false;
-            if (await SetSetting(secretId, SettingKey.SafeMode, SettingValue.False).ConfigureAwait(false) is false) return false;
-            if (await SetSetting(secretId, SettingKey.ShowDtrBar, SettingValue.False).ConfigureAwait(false) is false) return false;
-        }
-        
-        _dirty = true;
+
+        AutoLogin = settings.TryGetValue(Setting.AutoLogin, out var autoLogin) && bool.Parse(autoLogin);
+        SafeMode = settings.TryGetValue(Setting.SafeMode, out var safeMode) && bool.Parse(safeMode);
+        ShowDtrBar = settings.TryGetValue(Setting.ShowDtrBar, out var showDtrBar) && bool.Parse(showDtrBar);
+
         return true;
     }
 
-    /// <summary>
-    ///     Set the value of a setting
-    /// </summary>
-    /// <param name="secretId">Which secret id should this setting apply to</param>
-    /// <param name="key">The name of the setting of which are in the <see cref="SettingKey"/> class</param>
-    /// <param name="value">The value of the setting of which are in the <see cref="SettingValue"/> class</param>
-    /// <returns></returns>
-    public async Task<bool> SetSetting(long secretId, string key, string value)
+    public Task<bool> SetAutoLogin(long secretId, bool value) => SetSetting(secretId, Setting.AutoLogin, value, v => AutoLogin = v);
+    public Task<bool> SetSafeMode(long secretId, bool value) => SetSetting(secretId, Setting.SafeMode, value, v => SafeMode = v);
+    public Task<bool> SetShowDtrBar(long secretId, bool value) => SetSetting(secretId, Setting.ShowDtrBar, value, v => ShowDtrBar = v);
+    
+    // Trick learned from the reflection in C#
+    private async Task<bool> SetSetting<T>(long secretId, Setting setting, T value, Action<T> setter)
     {
-        if (await database.SetSetting(secretId, key, value).ConfigureAwait(false) is false)
+        if (value?.ToString() is not { } stringValue)
             return false;
-
-        _settings[key] = value;
-        _dirty = true;
+        
+        if (await database.SetSetting(secretId, setting, stringValue).ConfigureAwait(false) is false)
+            return false;
+        
+        setter(value);
         return true;
-    }
-
-    public static class SettingKey
-    {
-        public const string SafeMode = "SafeMode";
-        public const string AutoLogin = "AutoLogin";
-        public const string ShowDtrBar = "ShowDtrBar";
-    }
-
-    public static class SettingValue
-    {
-        public const string True = "true";
-        public const string False = "false";
     }
 }

@@ -19,6 +19,7 @@ public class HonorificViewUiController : IDisposable
     private readonly CommandLockoutService _commandLockout;
     private readonly HonorificService _honorific;
     private readonly NetworkService _network;
+    private readonly NotesService _notesService;
     private readonly WorldService _world;
     private readonly SelectionManager _selection;
     
@@ -31,11 +32,18 @@ public class HonorificViewUiController : IDisposable
         ? _titles.ToDictionary()
         : FilterTitles();
     
-    public HonorificViewUiController(CommandLockoutService commandLockout, HonorificService honorific, NetworkService network, WorldService world, SelectionManager selection)
+    public HonorificViewUiController(
+        CommandLockoutService commandLockout, 
+        HonorificService honorific, 
+        NetworkService network, 
+        NotesService notesService,
+        WorldService world, 
+        SelectionManager selection)
     {
         _commandLockout = commandLockout;
         _honorific = honorific;
         _network = network;
+        _notesService = notesService;
         _world = world;
         _selection = selection;
 
@@ -86,7 +94,7 @@ public class HonorificViewUiController : IDisposable
             
         var request = new HonorificRequest(_selection.GetSelectedFriendCodes(), SelectedTitle.ToHonorificDto());
         var response = await _network.InvokeAsync<ActionResponse>(HubMethod.Honorific, request).ConfigureAwait(false);
-        ActionResponseParser.Parse("Honorific", response);
+        ActionResponseParser.Parse("Honorific", response, _notesService.Notes);
     }
     
     private void OnIpcReady(object? sender, EventArgs e)

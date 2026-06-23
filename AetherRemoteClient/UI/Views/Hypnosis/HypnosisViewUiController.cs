@@ -29,6 +29,7 @@ public class HypnosisViewUiController : IDisposable
 
     // Injected
     private readonly NetworkService _networkService;
+    private readonly NotesService _notesService;
     private readonly SelectionManager _selectionManager;
 
     // Configuration values
@@ -65,9 +66,10 @@ public class HypnosisViewUiController : IDisposable
     /// <summary>
     ///     <inheritdoc cref="HypnosisViewUiController"/>
     /// </summary>
-    public HypnosisViewUiController(NetworkService networkService, SelectionManager selectionManager)
+    public HypnosisViewUiController(NetworkService networkService, NotesService notesService, SelectionManager selectionManager)
     {
         _networkService = networkService;
+        _notesService = notesService;
         _selectionManager = selectionManager;
 
         _spiralRefreshCooldown.AutoReset = false;
@@ -312,7 +314,7 @@ public class HypnosisViewUiController : IDisposable
             var request = new HypnosisRequest(_selectionManager.GetSelectedFriendCodes(), data);
             var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.Hypnosis, request).ConfigureAwait(false);
         
-            ActionResponseParser.Parse("Hypnosis", response);
+            ActionResponseParser.Parse("Hypnosis", response, _notesService.Notes);
         }
         catch (Exception e)
         {
@@ -329,7 +331,7 @@ public class HypnosisViewUiController : IDisposable
         {
             var request = new HypnosisStopRequest(_selectionManager.GetSelectedFriendCodes());
             var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.HypnosisStop, request).ConfigureAwait(false);
-            ActionResponseParser.Parse("Hypnosis Stop", response);
+            ActionResponseParser.Parse("Hypnosis Stop", response, _notesService.Notes);
         }
         catch (Exception e)
         {

@@ -40,6 +40,7 @@ public partial class NetworkHandler : IDisposable
     private readonly LogService _logService;
     private readonly MoodlesService _moodlesService;
     private readonly PauseService _pauseService;
+    private readonly SettingsService _settingsService;
     
     private readonly CharacterTransformationManager _characterTransformationManager;
     private readonly HypnosisManager _hypnosisManager;
@@ -62,6 +63,7 @@ public partial class NetworkHandler : IDisposable
         MoodlesService moodlesService,
         NetworkService networkService,
         PauseService pauseService,
+        SettingsService settingsService,
         
         CharacterTransformationManager characterTransformationManager,
         HypnosisManager hypnosisManager,
@@ -79,12 +81,13 @@ public partial class NetworkHandler : IDisposable
         _logService = logService;
         _moodlesService = moodlesService;
         _pauseService = pauseService;
-        _statusManager = statusManager;
+        _settingsService = settingsService;
         
         _characterTransformationManager = characterTransformationManager;
         _hypnosisManager = hypnosisManager;
         _possessionManager = possessionManager;
         _selectionManager = selectionManager;
+        _statusManager = statusManager;
         
         // Synchronous Handlers
         _handlers.Add(networkService.ListenFunc<EmoteCommand>(HubMethod.Emote, HandleEmoteCommand));
@@ -121,7 +124,7 @@ public partial class NetworkHandler : IDisposable
         }
         
         // Plugin in safe mode
-        if (Plugin.Configuration.SafeMode)
+        if (_settingsService.SafeMode)
         {
             _logService.SafeMode(operation, friend.NoteOrFriendCode);
             return ActionResultBuilder.Fail<Friend>(ActionResultEc.ClientInSafeMode);

@@ -16,7 +16,10 @@ namespace AetherRemoteClient.Managers;
 ///     Class responsible for sending and processing command requests to the server
 /// </summary>
 /// <remarks>Specifically focusing on actions a user can do to another</remarks>
-public class NetworkCommandManager(CommandLockoutService commandLockoutService, NetworkService network)
+public class NetworkCommandManager(
+    CommandLockoutService commandLockoutService, 
+    NetworkService networkService,
+    NotesService notesService)
 {
     /// <summary>
     ///     Sends a <see cref="EmoteRequest"/> to the server
@@ -25,8 +28,8 @@ public class NetworkCommandManager(CommandLockoutService commandLockoutService, 
     {
         commandLockoutService.Lock();
         var request = new EmoteRequest(targets, emote, displayLogMessage);
-        var response = await network.InvokeAsync<ActionResponse>(HubMethod.Emote, request).ConfigureAwait(false);
-        ActionResponseParser.Parse("Emote", response);
+        var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.Emote, request).ConfigureAwait(false);
+        ActionResponseParser.Parse("Emote", response, notesService.Notes);
     }
     
     /// <summary>
@@ -36,7 +39,7 @@ public class NetworkCommandManager(CommandLockoutService commandLockoutService, 
     {
         commandLockoutService.Lock();
         var request = new SpeakRequest(targets, message, channel, extra);
-        var response = await network.InvokeAsync<ActionResponse>(HubMethod.Speak, request).ConfigureAwait(false);
+        var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.Speak, request).ConfigureAwait(false);
 
         if (channel == ChatChannel.Echo)
         {
@@ -47,13 +50,13 @@ public class NetworkCommandManager(CommandLockoutService commandLockoutService, 
                     if (result is not ActionResultEc.Success)
                         continue;
                     
-                    Plugin.Configuration.Notes.TryGetValue(friendCode, out var note);
+                    notesService.Notes.TryGetValue(friendCode, out var note);
                     Plugin.ChatGui.Print($"Echo sent to {note ?? friendCode} >> {message}");
                 }
             }
         }
         
-        ActionResponseParser.Parse("Speak", response);
+        ActionResponseParser.Parse("Speak", response, notesService.Notes);
     }
 
     /// <summary>
@@ -63,8 +66,8 @@ public class NetworkCommandManager(CommandLockoutService commandLockoutService, 
     {
         commandLockoutService.Lock();
         var request = new CustomizeRequest(targets, profileStringAsBytes, applyMode);
-        var response = await network.InvokeAsync<ActionResponse>(HubMethod.CustomizePlus, request).ConfigureAwait(false);
-        ActionResponseParser.Parse("Customize+", response);
+        var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.CustomizePlus, request).ConfigureAwait(false);
+        ActionResponseParser.Parse("Customize+", response, notesService.Notes);
     }
 
     /// <summary>
@@ -74,8 +77,8 @@ public class NetworkCommandManager(CommandLockoutService commandLockoutService, 
     {
         commandLockoutService.Lock();
         var request = new TransformRequest(targets, design, flags, null);
-        var response = await network.InvokeAsync<ActionResponse>(HubMethod.Transform, request).ConfigureAwait(false);
-        ActionResponseParser.Parse("Transform", response);
+        var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.Transform, request).ConfigureAwait(false);
+        ActionResponseParser.Parse("Transform", response, notesService.Notes);
     }
     
     /// <summary>
@@ -85,7 +88,7 @@ public class NetworkCommandManager(CommandLockoutService commandLockoutService, 
     {
         commandLockoutService.Lock();
         var request = new TwinningRequest(targets, characterName, characterWorld, attributes, null);
-        var response = await network.InvokeAsync<ActionResponse>(HubMethod.Twinning, request).ConfigureAwait(false);
-        ActionResponseParser.Parse("Twinning", response);
+        var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.Twinning, request).ConfigureAwait(false);
+        ActionResponseParser.Parse("Twinning", response, notesService.Notes);
     }
 }

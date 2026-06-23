@@ -52,15 +52,13 @@ public class SettingsViewUiController(
     public async Task SetAutoLogin(bool autoLogin)
     {
         if (characterConfigurationService.Current?.SecretId is not { } secretId) return;
-        var value = autoLogin ? SettingsService.SettingValue.True : SettingsService.SettingValue.False;
-        await settingsService.SetSetting(secretId, SettingsService.SettingKey.AutoLogin, value).ConfigureAwait(false);
+        await settingsService.SetAutoLogin(secretId, autoLogin).ConfigureAwait(false);
     }
 
     public async Task SetShowDtrBar(bool showDtrBar)
     {
         if (characterConfigurationService.Current?.SecretId is not { } secretId) return;
-        var value = showDtrBar ? SettingsService.SettingValue.True : SettingsService.SettingValue.False;
-        if (await settingsService.SetSetting(secretId, SettingsService.SettingKey.ShowDtrBar, value).ConfigureAwait(false) is false)
+        if (await settingsService.SetShowDtrBar(secretId, showDtrBar).ConfigureAwait(false) is false)
             return;
 
         if (showDtrBar)
@@ -72,8 +70,7 @@ public class SettingsViewUiController(
     public async Task SetSafeMode(bool safeMode)
     {
         if (characterConfigurationService.Current?.SecretId is not { } secretId) return;
-        var value = safeMode ? SettingsService.SettingValue.True : SettingsService.SettingValue.False;
-        if (await settingsService.SetSetting(secretId, SettingsService.SettingKey.SafeMode, value).ConfigureAwait(false) is false)
+        if (await settingsService.SetSafeMode(secretId, safeMode).ConfigureAwait(false) is false)
             return;
 
         // When we enter safe mode, we want to disable a lot of things, so turning it off means we can exit early

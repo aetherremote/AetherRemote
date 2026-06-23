@@ -19,8 +19,9 @@ public class DtrHandler : IDisposable
     private const string AetherRemoteDtrId = "AetherRemoteDtr";
 
     // Injected
-    private readonly ViewService _viewService;
     private readonly NetworkService _networkService;
+    private readonly SettingsService _settingsService;
+    private readonly ViewService _viewService;
     private readonly LoginManager _loginManager;
     private readonly StatusManager _statusManager;
     
@@ -32,10 +33,16 @@ public class DtrHandler : IDisposable
     /// <summary>
     ///     <inheritdoc cref="DtrHandler"/>
     /// </summary>
-    public DtrHandler(ViewService viewService, NetworkService networkService, LoginManager loginManager, StatusManager statusManager)
+    public DtrHandler(
+        NetworkService networkService,
+        SettingsService settingsService,
+        ViewService viewService, 
+        LoginManager loginManager, 
+        StatusManager statusManager)
     {
-        _viewService = viewService;
         _networkService = networkService;
+        _settingsService = settingsService;
+        _viewService = viewService;
         _loginManager = loginManager;
         _statusManager = statusManager;
 
@@ -59,7 +66,7 @@ public class DtrHandler : IDisposable
     /// </summary>
     public void UpdateDtrBar()
     {
-        if (Plugin.Configuration.ShowOnDtrBar is false)
+        if (_settingsService.ShowDtrBar is false)
             return;
         
         BuildDtrBar(_networkService.State is ConnectionState.Connected, _statusManager.GetStatusCount());
@@ -70,9 +77,6 @@ public class DtrHandler : IDisposable
     /// </summary>
     public void RemoveDtrBar()
     {
-        if (Plugin.Configuration.ShowOnDtrBar is false)
-            return;
-        
         Plugin.DtrBar.Remove(AetherRemoteDtrId);
     }
 

@@ -2,7 +2,6 @@ using System;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using AetherRemoteClient.Domain.Configurations;
 using AetherRemoteClient.Handlers;
 using AetherRemoteClient.Handlers.Chat;
 using AetherRemoteClient.Handlers.Network;
@@ -43,23 +42,21 @@ namespace AetherRemoteClient;
 // ReSharper disable once ClassNeverInstantiated.Global
 public sealed class Plugin : IAsyncDalamudPlugin
 {
-    [PluginService] internal static IDataManager DataManager { get; private set; } = null!;
-    [PluginService] internal static IClientState ClientState { get; private set; } = null!;
-    [PluginService] internal static ITargetManager TargetManager { get; private set; } = null!;
-    [PluginService] internal static IObjectTable ObjectTable { get; private set; } = null!;
-    [PluginService] internal static ICommandManager CommandManager { get; set; } = null!;
     [PluginService] internal static IChatGui ChatGui { get; private set; } = null!;
+    [PluginService] internal static IClientState ClientState { get; private set; } = null!;
+    [PluginService] internal static ICommandManager CommandManager { get; set; } = null!;
     [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
-    [PluginService] internal static IPluginLog Log { get; private set; } = null!;
-    [PluginService] internal static IFramework Framework { get; private set; } = null!;
-    [PluginService] internal static INotificationManager NotificationManager { get; private set; } = null!;
-    [PluginService] internal static ITextureProvider TextureProvider { get; private set; } = null!;
-    [PluginService] internal static IGameInteropProvider GameInteropProvider { get; private set; } = null!;
-    [PluginService] internal static ISigScanner SigScanner { get; private set; } = null!;
-    [PluginService] internal static IGameConfig GameConfig { get; private set; } = null!;
+    [PluginService] internal static IDataManager DataManager { get; private set; } = null!;
     [PluginService] internal static IDtrBar DtrBar { get; private set; } = null!;
-    internal static Configuration Configuration { get; private set; } = null!;
-    internal static CharacterConfiguration? CharacterConfiguration { get; set; }
+    [PluginService] internal static IFramework Framework { get; private set; } = null!;
+    [PluginService] internal static IGameConfig GameConfig { get; private set; } = null!;
+    [PluginService] internal static IGameInteropProvider GameInteropProvider { get; private set; } = null!;
+    [PluginService] internal static INotificationManager NotificationManager { get; private set; } = null!;
+    [PluginService] internal static IObjectTable ObjectTable { get; private set; } = null!;
+    [PluginService] internal static IPluginLog Log { get; private set; } = null!;
+    [PluginService] internal static ISigScanner SigScanner { get; private set; } = null!;
+    [PluginService] internal static ITargetManager TargetManager { get; private set; } = null!;
+    [PluginService] internal static ITextureProvider TextureProvider { get; private set; } = null!;
 
     /// <summary>
     ///     Internal plugin version
@@ -71,9 +68,6 @@ public sealed class Plugin : IAsyncDalamudPlugin
     
     public async Task LoadAsync(CancellationToken cancellationToken)
     {
-        // Load the default configuration
-        Configuration = await ConfigurationService.LoadConfiguration().ConfigureAwait(false) ?? new Configuration();
-        
         // Create a collection of services
         var services = new ServiceCollection();
         
@@ -213,7 +207,12 @@ public sealed class Plugin : IAsyncDalamudPlugin
         // Services
         _services.GetRequiredService<ActionQueueService>();
         
-        // Load fonts
+        // TODO: Examine what options there are for throwing exceptions in this method
+        // Async loading for required services. If any of these fail, the server should probably throw an exception...
+        await _services.GetRequiredService<AgreementsService>().LoadAgreements().ConfigureAwait(false);
+        await _services.GetRequiredService<NotesService>().LoadNotes().ConfigureAwait(false);
+        await _services.GetRequiredService<SecretsService>().LoadSecrets().ConfigureAwait(false);
+        
         await SharedUserInterfaces.InitializeFonts().ConfigureAwait(false);
     }
     

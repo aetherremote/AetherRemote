@@ -12,7 +12,7 @@ public class NotesService(DatabaseInfrastructure database)
 {
     private Dictionary<string, string> _notes = [];
     private bool _dirty;
-    
+
     /// <summary> List of all notes the client has </summary>
     public ImmutableDictionary<string, string> Notes
     {
@@ -27,7 +27,7 @@ public class NotesService(DatabaseInfrastructure database)
             return field;
         }
     } = [];
-    
+
     /// <summary> Load all the notes from the database </summary>
     /// <remarks> Call this once when the plugin loads initially </remarks>
     public async Task<bool> LoadNotes()
@@ -36,6 +36,32 @@ public class NotesService(DatabaseInfrastructure database)
             return false;
 
         _notes = notes;
+        _dirty = true;
+        return true;
+    }
+
+    /// <summary>
+    ///     Add a note
+    /// </summary>
+    public async Task<bool> AddNote(string friendCode, string note)
+    {
+        if (await database.SetNote(friendCode, note).ConfigureAwait(false) is false)
+            return false;
+        
+        _notes[friendCode] = note;
+        _dirty = true;
+        return true;
+    }
+
+    /// <summary>
+    ///     Remove a note
+    /// </summary>
+    public async Task<bool> RemoveNote(string friendCode)
+    {
+        if (await database.RemoveNote(friendCode).ConfigureAwait(false) is false)
+            return false;
+
+        _notes.Remove(friendCode);
         _dirty = true;
         return true;
     }

@@ -1,31 +1,31 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AetherRemoteClient.Domain.Enums;
 
 namespace AetherRemoteClient.Infrastructure.Database;
 
 public partial class DatabaseInfrastructure
 {
     /// <summary>
-    ///     Loads all the settings for a secret id from the table
+    ///     Loads all the settings for a secret id from the table in their raw data string
     /// </summary>
-    public async Task<Dictionary<string, string>?> GetSettingsForSecretId(long secretId)
+    public async Task<Dictionary<Setting, string>?> GetSettingsForSecretId(long secretId)
     {
         try
         {
             await using var command = _database.CreateCommand();
-            command.CommandText = "SELECT Name, Value FROM Settings WHERE SecretId = @SecretId";
+            command.CommandText = "SELECT SettingId, Value FROM Settings WHERE SecretId = @SecretId";
             command.Parameters.AddWithValue("@SecretId", secretId);
 
-            var results = new Dictionary<string, string>();
+            var results = new Dictionary<Setting, string>();
             
             await using var reader = await command.ExecuteReaderAsync();
             while (await reader.ReadAsync().ConfigureAwait(false))
             {
-                var name = reader.GetString(0);
+                var setting = (Setting)reader.GetInt16(0);
                 var value = reader.GetString(1);
-                
-                results.Add(name, value);
+                results.Add(setting, value);
             }
             
             return results;
@@ -40,14 +40,14 @@ public partial class DatabaseInfrastructure
     /// <summary>
     ///     Sets a note for a friend code
     /// </summary>
-    public async Task<bool> SetSetting(long secretId, string name, string value)
+    public async Task<bool> SetSetting(long secretId, Setting setting, string value)
     {
         try
         {
             await using var command = _database.CreateCommand();
-            command.CommandText = "INSERT INTO Settings VALUES (@SecretId, @Name, @Value) ON CONFLICT (SecretId, Name) DO UPDATE SET Value = @Value";
+            command.CommandText = "INSERT INTO Settings VALUES (@SecretId, @SettingId, @Value) ON CONFLICT (SecretId, SettingId) DO UPDATE SET Value = @Value";
             command.Parameters.AddWithValue("@SecretId", secretId);
-            command.Parameters.AddWithValue("@Name", name);
+            command.Parameters.AddWithValue("@SettingId", setting);
             command.Parameters.AddWithValue("@Value", value);
 
             return await command.ExecuteNonQueryAsync().ConfigureAwait(false) is 1;

@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Enums;
@@ -21,16 +20,20 @@ public class FriendsListComponentUiController : IDisposable
 {
     private readonly FriendsListService _friendsListService;
     private readonly NetworkService _networkService;
+    private readonly NotesService _notesService;
     private readonly SelectionManager _selectionManager;
     
     public readonly FilterFriends Filter;
-
-    public readonly List<Friend> Pending = [];
     
-    public FriendsListComponentUiController(FriendsListService friendsListService, NetworkService networkService, SelectionManager selectionManager)
+    public FriendsListComponentUiController(
+        FriendsListService friendsListService, 
+        NetworkService networkService, 
+        NotesService notesService,
+        SelectionManager selectionManager)
     {
         _friendsListService = friendsListService;
         _networkService = networkService;
+        _notesService = notesService;
         _selectionManager = selectionManager;
         
         Filter = new FilterFriends(() => _friendsListService.Friends);
@@ -77,7 +80,7 @@ public class FriendsListComponentUiController : IDisposable
             case AddFriendEc.Pending:
                 
                 // Try to get the name from our notes just in case they are a previous friend
-                Plugin.Configuration.Notes.TryGetValue(request.TargetFriendCode, out var note);
+                _notesService.Notes.TryGetValue(request.TargetFriendCode, out var note);
                 
                 // Create the new object with notes
                 var friend = new Friend(request.TargetFriendCode, response.Status, note, new RawPermissions(PrimaryPermissions.None, PrimaryPermissions.None, SpeakPermissions.None, SpeakPermissions.None, ElevatedPermissions.None, ElevatedPermissions.None), null);
