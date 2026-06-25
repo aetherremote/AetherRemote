@@ -1,5 +1,4 @@
 using AetherRemoteClient.Domain;
-using Serilog;
 
 namespace AetherRemoteClient.Services;
 
@@ -11,15 +10,23 @@ public class ViewService
     /// <summary>
     ///     The current view to draw
     /// </summary>
-    public View CurrentView { get; set; } = View.Login;
+    public View CurrentView { get; private set; } = View.Login;
+
+    /// <summary>
+    ///     Set the current view
+    /// </summary>
+    public void Navigate(View view)
+    {
+        if (CurrentView == view)
+            return;
+        
+        CurrentView = view;
+    }
 
     /// <summary>
     ///     Set the current view to whatever the 'Home' view should be
     /// </summary>
-    public void Home()
-    {
-        CurrentView = View.Home;
-    }
+    public void Home() => Navigate(View.Home);
 
     /// <summary>
     ///     Resets the view to login if it is not on the settings page or the login page
@@ -29,6 +36,6 @@ public class ViewService
         if (CurrentView is View.Settings or View.Login)
             return;
         
-        CurrentView = View.Login;
+        Navigate(View.Login);
     }
 }

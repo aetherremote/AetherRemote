@@ -124,7 +124,7 @@ public class NavigationBarComponentUi : IDisposable
         {
             if (ImGui.Button($"##{text}", size))
             {
-                _viewService.CurrentView = view;
+                _viewService.Navigate(view);
             
                 // Required to in cases where you move from things like Friends -> Speak, and the friend you were editing was offline
                 _selectionManager.ClearOfflineFriends();

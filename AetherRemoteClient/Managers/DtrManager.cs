@@ -118,11 +118,11 @@ public class DtrManager(NetworkService networkService, StatusService statusServi
         {
             if (online)
             {
-                viewService.CurrentView = statusCount is 0 ? View.Home : View.Status;
+                viewService.Navigate(statusCount is 0 ? View.Home : View.Status);
             }
             else
             {
-                viewService.CurrentView = online ? View.Status : View.Login;
+                viewService.Navigate(online ? View.Status : View.Login);
             }
 
             DtrClicked?.Invoke();
