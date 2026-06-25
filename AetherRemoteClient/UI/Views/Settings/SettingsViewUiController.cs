@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using AetherRemoteClient.Handlers;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
@@ -13,8 +12,8 @@ public class SettingsViewUiController(
     CharacterConfigurationService characterConfigurationService,
     SecretsService secretsService, 
     SettingsService settingsService,
-    HypnosisManager hypnosisManager, 
-    DtrHandler dtrHandler)
+    DtrManager dtrManager,
+    HypnosisManager hypnosisManager)
 {
     // For use with maintaining an accurate secret usage map
     private static readonly TimeSpan OneSecond = TimeSpan.FromSeconds(1);
@@ -62,9 +61,9 @@ public class SettingsViewUiController(
             return;
 
         if (showDtrBar)
-            dtrHandler.UpdateDtrBar();
+            dtrManager.EnableDtrBar();
         else
-            dtrHandler.RemoveDtrBar();
+            dtrManager.DisableDtrBar();
     }
 
     public async Task SetSafeMode(bool safeMode)

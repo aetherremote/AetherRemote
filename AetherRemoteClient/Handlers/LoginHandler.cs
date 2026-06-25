@@ -1,15 +1,16 @@
 using System;
 using System.Threading.Tasks;
 using AetherRemoteClient.Infrastructure.Authentication;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Utils;
 
-namespace AetherRemoteClient.Managers;
+namespace AetherRemoteClient.Handlers;
 
 /// <summary>
 ///     Provides a single entry point for logging into the game
 /// </summary>
-public class LoginManager : IDisposable
+public class LoginHandler : IDisposable
 {
     // Injected
     private readonly AuthenticationInfrastructure _authenticationInfrastructure;
@@ -17,26 +18,18 @@ public class LoginManager : IDisposable
     private readonly NetworkService _networkService;
     private readonly SecretsService _secretsService;
     private readonly SettingsService _settingsService;
-
-    /// <summary>
-    ///     If we have finished processing all the login events
-    /// </summary>
-    public event Action? LoginFinished;
-
-    /// <summary>
-    ///     Event protection for <see cref="LoginFinished"/>
-    /// </summary>
-    public bool HasLoginFinished { get; private set; }
+    private readonly DtrManager _dtrManager;
     
     /// <summary>
-    ///     <inheritdoc cref="LoginManager"/>
+    ///     <inheritdoc cref="LoginHandler"/>
     /// </summary>
-    public LoginManager(
+    public LoginHandler(
         AuthenticationInfrastructure authenticationInfrastructure,
         CharacterConfigurationService characterConfigurationService,
         NetworkService networkService,
         SecretsService secretsService,
-        SettingsService settingsService)
+        SettingsService settingsService,
+        DtrManager dtrManager)
     {
         // Store injected services
         _authenticationInfrastructure = authenticationInfrastructure;
@@ -44,6 +37,7 @@ public class LoginManager : IDisposable
         _networkService = networkService;
         _secretsService = secretsService;
         _settingsService = settingsService;
+        _dtrManager = dtrManager;
         
         // Subscribe to log in events
         Plugin.ClientState.Login += OnLogin;
@@ -75,15 +69,12 @@ public class LoginManager : IDisposable
                 Plugin.Log.Warning($"[LoginManager.OnLoginAsync] Failed to load settings for SecretId {secretId}");
         }
         
-        // Emit an event
-        LoginFinished?.Invoke();
-            
-        // Set the event protection lines
-        HasLoginFinished = true;
-        
         // Ensure that all the values for various action responses and results are met (this check could go anywhere)
         ActionResponseParser.SanityCheck();
-            
+        
+        if (_settingsService.ShowDtrBar)
+            _dtrManager.EnableDtrBar();
+        
         // Check if this secret has auto login enabled, and connect if so
         if (_settingsService.AutoLogin)
             await _networkService.ConnectToServerAsync().ConfigureAwait(false);
@@ -93,9 +84,6 @@ public class LoginManager : IDisposable
     private async Task OnLogoutAsync()
     {
         await _networkService.DisconnectFromServerAsync().ConfigureAwait(false);
-            
-        // Reset event protection
-        HasLoginFinished = false;
     }
 
     public void Dispose()

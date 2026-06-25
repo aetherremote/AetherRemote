@@ -2,95 +2,56 @@ using System;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Enums;
-using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Style;
 using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.Game.Text.SeStringHandling.Payloads;
 
-namespace AetherRemoteClient.Handlers;
+namespace AetherRemoteClient.Managers;
 
 /// <summary>
 ///     Handles Dtr events and updates to display things like connectivity status
 /// </summary>
-public class DtrHandler : IDisposable
+public class DtrManager(NetworkService networkService, StatusService statusService, ViewService viewService) : IDisposable
 {
     // Const
     private const string AetherRemoteDtrId = "AetherRemoteDtr";
-
-    // Injected
-    private readonly NetworkService _networkService;
-    private readonly SettingsService _settingsService;
-    private readonly StatusService _statusService;
-    private readonly ViewService _viewService;
-    private readonly LoginManager _loginManager;
     
     /// <summary>
     ///     Event fired when the Dtr bar is clicked
     /// </summary>
     public event Action? DtrClicked;
-    
-    /// <summary>
-    ///     <inheritdoc cref="DtrHandler"/>
-    /// </summary>
-    public DtrHandler(
-        NetworkService networkService,
-        SettingsService settingsService,
-        ViewService viewService, 
-        LoginManager loginManager, 
-        StatusService statusService)
-    {
-        _networkService = networkService;
-        _settingsService = settingsService;
-        _viewService = viewService;
-        _loginManager = loginManager;
-        _statusService = statusService;
 
-        _statusService.StatusChanged += UpdateDtrBar;
-        
-        _networkService.Connected += UpdateDtrBarAsync;
-        if (_networkService.State is ConnectionState.Connected)
-            UpdateDtrBarAsync();
-        
-        _networkService.Disconnected += UpdateDtrBarAsync;
-        if (_networkService.State is not ConnectionState.Connected)
-            UpdateDtrBarAsync();
-        
-        _loginManager.LoginFinished += UpdateDtrBar;
-        if (_loginManager.HasLoginFinished)
-            UpdateDtrBar();
-    }
-    
     /// <summary>
-    ///     Updates the Dtr bar with information from the network service and status managers
+    ///     Enables the AR Dtr Bar entry
     /// </summary>
-    public void UpdateDtrBar()
+    public void EnableDtrBar()
     {
-        if (_settingsService.ShowDtrBar is false)
-            return;
+        BuildDtrBar();
         
-        BuildDtrBar(_networkService.State is ConnectionState.Connected, _statusService.GetStatusCount());
+        statusService.StatusChanged += BuildDtrBar;
+        networkService.Connected += BuildDtrBarAsync;
+        networkService.Disconnected += BuildDtrBarAsync;
     }
 
     /// <summary>
-    ///     Removes the AR Dtr entry
+    ///     Disables the AR Dtr Bar entry 
     /// </summary>
-    public void RemoveDtrBar()
+    public void DisableDtrBar()
     {
+        statusService.StatusChanged -= BuildDtrBar;
+        networkService.Connected -= BuildDtrBarAsync;
+        networkService.Disconnected -= BuildDtrBarAsync;
+        
         Plugin.DtrBar.Remove(AetherRemoteDtrId);
     }
 
-    /// <summary>
-    ///     <inheritdoc cref="UpdateDtrBar"/>
-    /// </summary>
-    private Task UpdateDtrBarAsync()
+    private void BuildDtrBar() => _ = BuildDtrBarAsync().ConfigureAwait(false);
+    private Task BuildDtrBarAsync()
     {
-        UpdateDtrBar();
-        return Task.CompletedTask;
-    }
-    
-    private void BuildDtrBar(bool online, uint statusCount)
-    {
+        var online = networkService.State is ConnectionState.Connected;
+        var statusCount = statusService.GetStatusCount();
+        
         var title = new SeStringBuilder();
         if (online is false)
             title.AddUiGlow(AetherRemoteColors.TextColorRed);
@@ -112,31 +73,31 @@ public class DtrHandler : IDisposable
             tooltip.AddUiGlowOff();
             if (statusCount > 0)
             {
-                if (_statusService.CustomizePlus is not null)
+                if (statusService.CustomizePlus is not null)
                 {
                     tooltip.Add(new NewLinePayload());
                     tooltip.AddText(string.Concat("You have a Customize+ profile applied to you"));
                 }
                 
-                if (_statusService.GlamourerPenumbra is not null)
+                if (statusService.GlamourerPenumbra is not null)
                 {
                     tooltip.Add(new NewLinePayload());
                     tooltip.AddText(string.Concat("You have an altered appearance or collection"));
                 }
                 
-                if (_statusService.Honorific is not null)
+                if (statusService.Honorific is not null)
                 {
                     tooltip.Add(new NewLinePayload());
                     tooltip.AddText(string.Concat("You have an honorific applied to you"));
                 }
                 
-                if (_statusService.Hypnosis is not null)
+                if (statusService.Hypnosis is not null)
                 {
                     tooltip.Add(new NewLinePayload());
                     tooltip.AddText(string.Concat("You are being hypnotized"));
                 }
                 
-                if (_statusService.Possession is not null)
+                if (statusService.Possession is not null)
                 {
                     tooltip.Add(new NewLinePayload());
                     tooltip.AddText(string.Concat("You are being possessed"));
@@ -157,11 +118,11 @@ public class DtrHandler : IDisposable
         {
             if (online)
             {
-                _viewService.CurrentView = statusCount is 0 ? View.Home : View.Status;
+                viewService.CurrentView = statusCount is 0 ? View.Home : View.Status;
             }
             else
             {
-                _viewService.CurrentView = online ? View.Status : View.Login;
+                viewService.CurrentView = online ? View.Status : View.Login;
             }
 
             DtrClicked?.Invoke();
@@ -169,15 +130,13 @@ public class DtrHandler : IDisposable
         
         // Lastly, mark it as shown
         entry.Shown = true;
+        
+        return Task.CompletedTask;
     }
 
     public void Dispose()
     {
-        RemoveDtrBar();
-        _statusService.StatusChanged -= UpdateDtrBar;
-        _networkService.Connected -= UpdateDtrBarAsync;
-        _networkService.Disconnected -= UpdateDtrBarAsync;
-        _loginManager.LoginFinished -= UpdateDtrBar;
+        DisableDtrBar();
         GC.SuppressFinalize(this);
     }
 }

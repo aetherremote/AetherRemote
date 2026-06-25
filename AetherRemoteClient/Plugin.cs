@@ -114,18 +114,16 @@ public sealed class Plugin : IAsyncDalamudPlugin
         services.AddSingleton<CharacterTransformationManager>();
         services.AddSingleton<ConnectionManager>();
         services.AddSingleton<DependencyManager>();
+        services.AddSingleton<DtrManager>();
         services.AddSingleton<HypnosisManager>();
-        services.AddSingleton<LoginManager>();
         services.AddSingleton<NetworkCommandManager>();
         services.AddSingleton<PossessionManager>();
         services.AddSingleton<SelectionManager>();
         
         // Handlers
         services.AddSingleton<ChatCommandHandler>();
-        services.AddSingleton<DtrHandler>();
         services.AddSingleton<GlamourerEventHandler>();
-        
-        // Handlers Network
+        services.AddSingleton<LoginHandler>();
         services.AddSingleton<NetworkHandler>();
         
         // Ui - Component Controllers
@@ -191,17 +189,15 @@ public sealed class Plugin : IAsyncDalamudPlugin
         
         // Handlers
         _services.GetRequiredService<ChatCommandHandler>();
-        _services.GetRequiredService<ConnectionManager>();
-        _services.GetRequiredService<DtrHandler>();
         _services.GetRequiredService<GlamourerEventHandler>();
-        
-        // Handlers Network
+        _services.GetRequiredService<LoginHandler>();
         _services.GetRequiredService<NetworkHandler>();
         
         // Managers
+        _services.GetRequiredService<ConnectionManager>();
         _services.GetRequiredService<DependencyManager>();
+        _services.GetRequiredService<DtrManager>();
         _services.GetRequiredService<HypnosisManager>();
-        _services.GetRequiredService<LoginManager>();
         _services.GetRequiredService<PossessionManager>();
         
         // Services

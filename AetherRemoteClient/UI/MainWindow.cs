@@ -2,7 +2,7 @@ using System;
 using System.Numerics;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
-using AetherRemoteClient.Handlers;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Components.NavigationBar;
 using AetherRemoteClient.UI.Views.CustomizePlus;
@@ -35,7 +35,7 @@ public class MainWindow : Window, IDisposable
     private readonly ViewService _viewService;
     
     // Handlers
-    private readonly DtrHandler _dtrHandler;
+    private readonly DtrManager _dtrManager;
 
     // Components
     private readonly NavigationBarComponentUi _navigationBar;
@@ -60,7 +60,7 @@ public class MainWindow : Window, IDisposable
 
     public MainWindow(
         ViewService viewService,
-        DtrHandler dtrHandler,
+        DtrManager dtrManager,
         NavigationBarComponentUi navigationBarComponentUi,
         CustomizePlusViewUi customizePlusView,
         DebugViewUi debugView,
@@ -86,8 +86,7 @@ public class MainWindow : Window, IDisposable
         };
         
         _viewService = viewService;
-
-        _dtrHandler = dtrHandler;
+        _dtrManager = dtrManager;
 
         _navigationBar = navigationBarComponentUi;
         
@@ -108,7 +107,7 @@ public class MainWindow : Window, IDisposable
         _statusView = statusView;
         _transformationsView = transformationsView;
 
-        _dtrHandler.DtrClicked += OnDtrClicked;
+        _dtrManager.DtrClicked += OnDtrClicked;
     }
 
     public override void Draw()
@@ -148,7 +147,7 @@ public class MainWindow : Window, IDisposable
 
     public void Dispose()
     {
-        _dtrHandler.DtrClicked -= OnDtrClicked;
+        _dtrManager.DtrClicked -= OnDtrClicked;
         GC.SuppressFinalize(this);
     }
 }
