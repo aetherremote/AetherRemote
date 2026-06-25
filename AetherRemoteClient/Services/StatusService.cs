@@ -1,12 +1,12 @@
 using System;
 using AetherRemoteClient.Domain;
 
-namespace AetherRemoteClient.Managers;
+namespace AetherRemoteClient.Services;
 
 /// <summary>
 ///     Keep track of what parts of your character are modified
 /// </summary>
-public class StatusManager
+public class StatusService
 {
     /// <summary>
     ///     Event fired when a status is changed

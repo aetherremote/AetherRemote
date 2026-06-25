@@ -56,7 +56,7 @@ public partial class NetworkHandler
             else
             {
                 _logService.Custom($"You were possessed by {sender.Value.FriendCode}");
-                _statusManager.SetPossession(sender.Value);
+                _statusService.SetPossession(sender.Value);
             }
         }
         
@@ -128,7 +128,7 @@ public partial class NetworkHandler
             _logService.Custom($"{sender.Value?.FriendCode ?? string.Empty} expelled you from their body");
         }
 
-        _statusManager.ClearPossession();
+        _statusService.ClearPossession();
         return PossessionResultEc.Success;
     }
     

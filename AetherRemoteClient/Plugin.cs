@@ -90,6 +90,7 @@ public sealed class Plugin : IAsyncDalamudPlugin
         services.AddSingleton<PauseService>();
         services.AddSingleton<SecretsService>();
         services.AddSingleton<SettingsService>();
+        services.AddSingleton<StatusService>();
         services.AddSingleton<TipService>();
         services.AddSingleton<ViewService>();
         services.AddSingleton<WorldService>();
@@ -118,7 +119,6 @@ public sealed class Plugin : IAsyncDalamudPlugin
         services.AddSingleton<NetworkCommandManager>();
         services.AddSingleton<PossessionManager>();
         services.AddSingleton<SelectionManager>();
-        services.AddSingleton<StatusManager>();
         
         // Handlers
         services.AddSingleton<ChatCommandHandler>();

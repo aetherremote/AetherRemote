@@ -41,12 +41,12 @@ public partial class NetworkHandler : IDisposable
     private readonly MoodlesService _moodlesService;
     private readonly PauseService _pauseService;
     private readonly SettingsService _settingsService;
+    private readonly StatusService _statusService;
     
     private readonly CharacterTransformationManager _characterTransformationManager;
     private readonly HypnosisManager _hypnosisManager;
     private readonly PossessionManager _possessionManager;
     private readonly SelectionManager _selectionManager;
-    private readonly StatusManager _statusManager;
     
     // Instantiated
     private readonly List<IDisposable> _handlers = [];
@@ -69,7 +69,7 @@ public partial class NetworkHandler : IDisposable
         HypnosisManager hypnosisManager,
         PossessionManager possessionManager,
         SelectionManager selectionManager,
-        StatusManager statusManager)
+        StatusService statusService)
     {
         _accountService = accountService;
         _actionQueueService = actionQueueService;
@@ -87,7 +87,7 @@ public partial class NetworkHandler : IDisposable
         _hypnosisManager = hypnosisManager;
         _possessionManager = possessionManager;
         _selectionManager = selectionManager;
-        _statusManager = statusManager;
+        _statusService = statusService;
         
         // Synchronous Handlers
         _handlers.Add(networkService.ListenFunc<EmoteCommand>(HubMethod.Emote, HandleEmoteCommand));
@@ -177,13 +177,13 @@ public partial class NetworkHandler : IDisposable
     private void UpdateStatusServicePostBodySwapOrTwinning(Friend applier, CharacterAttributes attributes)
     {
         if ((attributes & CharacterAttributes.PenumbraMods) is CharacterAttributes.PenumbraMods)
-            _statusManager.SetGlamourerPenumbra(applier);
+            _statusService.SetGlamourerPenumbra(applier);
         
         if ((attributes & CharacterAttributes.CustomizePlus) is CharacterAttributes.CustomizePlus)
-            _statusManager.SetCustomizePlus(applier);
+            _statusService.SetCustomizePlus(applier);
         
         if ((attributes & CharacterAttributes.Honorific) is CharacterAttributes.Honorific)
-            _statusManager.SetHonorific(applier);
+            _statusService.SetHonorific(applier);
     }
     
     public void Dispose()

@@ -1,6 +1,5 @@
 using System.Numerics;
 using AetherRemoteClient.Domain.Interfaces;
-using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Style;
 using AetherRemoteClient.Utils;
@@ -9,7 +8,7 @@ using Dalamud.Interface;
 
 namespace AetherRemoteClient.UI.Views.Status;
 
-public class StatusViewUi(StatusViewUiController controller, StatusManager statusManager) : IDrawable
+public class StatusViewUi(StatusViewUiController controller, StatusService statusService) : IDrawable
 {
     public void Draw()
     {
@@ -29,7 +28,7 @@ public class StatusViewUi(StatusViewUiController controller, StatusManager statu
         // The size of the button beside the status
         var buttonSize = new Vector2(ImGui.GetFontSize() * 2 + AetherRemoteImGui.WindowPadding.Y + AetherRemoteImGui.ItemSpacing.Y);
         
-        if (statusManager.CustomizePlus is { } customizePlus)
+        if (statusService.CustomizePlus is { } customizePlus)
         {
             count++;
             SharedUserInterfaces.ContentBox("StatusCustomizePlus", AetherRemoteColors.PanelColor, true, () =>
@@ -45,7 +44,7 @@ public class StatusViewUi(StatusViewUiController controller, StatusManager statu
             });
         }
         
-        if (statusManager.GlamourerPenumbra is { } glamourerPenumbra)
+        if (statusService.GlamourerPenumbra is { } glamourerPenumbra)
         {
             count++;
             SharedUserInterfaces.ContentBox("StatusGlamourerPenumbra", AetherRemoteColors.PanelColor, true, () =>
@@ -61,7 +60,7 @@ public class StatusViewUi(StatusViewUiController controller, StatusManager statu
             });
         }
         
-        if (statusManager.Honorific is { } honorific)
+        if (statusService.Honorific is { } honorific)
         {
             count++;
             SharedUserInterfaces.ContentBox("StatusHonorific", AetherRemoteColors.PanelColor, true, () =>
@@ -77,7 +76,7 @@ public class StatusViewUi(StatusViewUiController controller, StatusManager statu
             });
         }
         
-        if (statusManager.Hypnosis is { } hypnosis)
+        if (statusService.Hypnosis is { } hypnosis)
         {
             count++;
             SharedUserInterfaces.ContentBox("StatusHypnosis", AetherRemoteColors.PanelColor, true, () =>
@@ -93,7 +92,7 @@ public class StatusViewUi(StatusViewUiController controller, StatusManager statu
             });
         }
         
-        if (statusManager.Possession is { } possession)
+        if (statusService.Possession is { } possession)
         {
             count++;
             SharedUserInterfaces.ContentBox("StatusPossession", AetherRemoteColors.PanelColor, true, () =>

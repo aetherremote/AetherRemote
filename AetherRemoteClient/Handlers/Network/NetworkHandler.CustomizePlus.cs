@@ -40,7 +40,7 @@ public partial class NetworkHandler
                 return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
             }
             
-            _statusManager.SetCustomizePlus(friend);
+            _statusService.SetCustomizePlus(friend);
             _logService.Custom($"{friend.NoteOrFriendCode} applied a customize plus template to you");
             return ActionResultBuilder.Ok();
         }

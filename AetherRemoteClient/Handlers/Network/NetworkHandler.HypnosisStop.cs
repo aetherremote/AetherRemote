@@ -32,7 +32,7 @@ public partial class NetworkHandler
         if (_hypnosisManager.Hypnotist?.FriendCode == request.SenderFriendCode)
         {
             await DalamudUtilities.RunOnFramework((Action)(() => _hypnosisManager.Wake())).ConfigureAwait(false);
-            _statusManager.ClearHypnosis();
+            _statusService.ClearHypnosis();
             return ActionResultBuilder.Ok();
         }
 

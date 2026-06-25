@@ -11,7 +11,7 @@ public class StatusViewUiController(
     GlamourerService glamourerService,
     HonorificService honorificService,
     PenumbraService penumbraService,
-    StatusManager statusManager,
+    StatusService statusService,
     HypnosisManager hypnosisManager,
     CharacterTransformationManager characterTransformationManager,
     PossessionManager possessionManager)
@@ -23,7 +23,7 @@ public class StatusViewUiController(
     {
         var result = await customizePlusService.DeleteTemporaryCustomizeAsync().ConfigureAwait(false);
         if (result)
-            statusManager.ClearCustomizePlus();
+            statusService.ClearCustomizePlus();
     }
     
     /// <summary>
@@ -43,7 +43,7 @@ public class StatusViewUiController(
                 return;
         
         // If the mod removal process succeeded or exited gracefully, we are now in the clear to reset the status
-        statusManager.ClearGlamourerPenumbra();
+        statusService.ClearGlamourerPenumbra();
     }
     
     /// <summary>
@@ -53,7 +53,7 @@ public class StatusViewUiController(
     {
         var result = honorificService.ClearCharacterTitle();
         if (result)
-            statusManager.ClearHonorific();
+            statusService.ClearHonorific();
     }
     
     /// <summary>
@@ -63,7 +63,7 @@ public class StatusViewUiController(
     {
         var result = hypnosisManager.Wake();
         if (result)
-            statusManager.ClearHypnosis();
+            statusService.ClearHypnosis();
     }
     
     /// <summary>
@@ -73,6 +73,6 @@ public class StatusViewUiController(
     {
         var result = await possessionManager.EndAllParanormalActivity(true).ConfigureAwait(false);
         if (result)
-            statusManager.ClearPossession();
+            statusService.ClearPossession();
     }
 }

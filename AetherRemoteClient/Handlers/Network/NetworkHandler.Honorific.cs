@@ -28,7 +28,7 @@ public partial class NetworkHandler
         {
             if (await _honorificService.SetCharacterTitle(request.Honorific.ToHonorificDto()).ConfigureAwait(false))
             {
-                _statusManager.SetHonorific(friend);
+                _statusService.SetHonorific(friend);
                 _logService.Custom($"{friend.NoteOrFriendCode} applied the {request.Honorific.Title} honorific to you");
                 return ActionResultBuilder.Ok();
             }

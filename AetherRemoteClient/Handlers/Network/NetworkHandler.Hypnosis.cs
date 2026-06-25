@@ -42,7 +42,7 @@ public partial class NetworkHandler
         await _hypnosisManager.Hypnotize(friend, request.Data);
         
         // Log
-        _statusManager.SetHypnosis(friend);
+        _statusService.SetHypnosis(friend);
         _logService.Custom($"{friend.NoteOrFriendCode} began to hypnotize you");
         return ActionResultBuilder.Ok();
     }

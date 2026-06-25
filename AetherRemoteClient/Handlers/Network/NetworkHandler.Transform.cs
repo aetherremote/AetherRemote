@@ -41,7 +41,7 @@ public partial class NetworkHandler
         }
         
         // Log the success
-        _statusManager.SetGlamourerPenumbra(friend);
+        _statusService.SetGlamourerPenumbra(friend);
         _logService.Custom($"{friend.NoteOrFriendCode} transformed you");
         return ActionResultBuilder.Ok();
     }

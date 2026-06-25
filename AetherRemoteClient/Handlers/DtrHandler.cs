@@ -21,9 +21,9 @@ public class DtrHandler : IDisposable
     // Injected
     private readonly NetworkService _networkService;
     private readonly SettingsService _settingsService;
+    private readonly StatusService _statusService;
     private readonly ViewService _viewService;
     private readonly LoginManager _loginManager;
-    private readonly StatusManager _statusManager;
     
     /// <summary>
     ///     Event fired when the Dtr bar is clicked
@@ -38,15 +38,15 @@ public class DtrHandler : IDisposable
         SettingsService settingsService,
         ViewService viewService, 
         LoginManager loginManager, 
-        StatusManager statusManager)
+        StatusService statusService)
     {
         _networkService = networkService;
         _settingsService = settingsService;
         _viewService = viewService;
         _loginManager = loginManager;
-        _statusManager = statusManager;
+        _statusService = statusService;
 
-        _statusManager.StatusChanged += UpdateDtrBar;
+        _statusService.StatusChanged += UpdateDtrBar;
         
         _networkService.Connected += UpdateDtrBarAsync;
         if (_networkService.State is ConnectionState.Connected)
@@ -69,7 +69,7 @@ public class DtrHandler : IDisposable
         if (_settingsService.ShowDtrBar is false)
             return;
         
-        BuildDtrBar(_networkService.State is ConnectionState.Connected, _statusManager.GetStatusCount());
+        BuildDtrBar(_networkService.State is ConnectionState.Connected, _statusService.GetStatusCount());
     }
 
     /// <summary>
@@ -112,31 +112,31 @@ public class DtrHandler : IDisposable
             tooltip.AddUiGlowOff();
             if (statusCount > 0)
             {
-                if (_statusManager.CustomizePlus is not null)
+                if (_statusService.CustomizePlus is not null)
                 {
                     tooltip.Add(new NewLinePayload());
                     tooltip.AddText(string.Concat("You have a Customize+ profile applied to you"));
                 }
                 
-                if (_statusManager.GlamourerPenumbra is not null)
+                if (_statusService.GlamourerPenumbra is not null)
                 {
                     tooltip.Add(new NewLinePayload());
                     tooltip.AddText(string.Concat("You have an altered appearance or collection"));
                 }
                 
-                if (_statusManager.Honorific is not null)
+                if (_statusService.Honorific is not null)
                 {
                     tooltip.Add(new NewLinePayload());
                     tooltip.AddText(string.Concat("You have an honorific applied to you"));
                 }
                 
-                if (_statusManager.Hypnosis is not null)
+                if (_statusService.Hypnosis is not null)
                 {
                     tooltip.Add(new NewLinePayload());
                     tooltip.AddText(string.Concat("You are being hypnotized"));
                 }
                 
-                if (_statusManager.Possession is not null)
+                if (_statusService.Possession is not null)
                 {
                     tooltip.Add(new NewLinePayload());
                     tooltip.AddText(string.Concat("You are being possessed"));
@@ -174,7 +174,7 @@ public class DtrHandler : IDisposable
     public void Dispose()
     {
         RemoveDtrBar();
-        _statusManager.StatusChanged -= UpdateDtrBar;
+        _statusService.StatusChanged -= UpdateDtrBar;
         _networkService.Connected -= UpdateDtrBarAsync;
         _networkService.Disconnected -= UpdateDtrBarAsync;
         _loginManager.LoginFinished -= UpdateDtrBar;

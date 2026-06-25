@@ -26,10 +26,10 @@ public class TransformationsViewUiController : IDisposable
     private readonly GlamourerService _glamourerService;
     private readonly NetworkService _networkService;
     private readonly NotesService _notesService;
+    private readonly StatusService _statusService;
     private readonly CharacterTransformationManager _characterTransformationManager;
     private readonly NetworkCommandManager _networkCommandManager;
     private readonly SelectionManager _selectionManager;
-    private readonly StatusManager _statusManager;
     
     /// <summary>
     ///     What mode the Ui will display, and how network events will be sent
@@ -93,7 +93,7 @@ public class TransformationsViewUiController : IDisposable
         CharacterTransformationManager characterTransformationManager,
         NetworkCommandManager networkCommandManager, 
         SelectionManager selectionManager,
-        StatusManager statusManager)
+        StatusService statusService)
     {
         _characterConfigurationService = characterConfigurationService;
         _commandLockoutService = commandLockoutService;
@@ -103,7 +103,7 @@ public class TransformationsViewUiController : IDisposable
         _characterTransformationManager = characterTransformationManager;
         _networkCommandManager = networkCommandManager;
         _selectionManager = selectionManager;
-        _statusManager = statusManager;
+        _statusService = statusService;
         
         _glamourerService.IpcReady += OnIpcReady;
         if (_glamourerService.ApiAvailable)
@@ -286,13 +286,13 @@ public class TransformationsViewUiController : IDisposable
          
             // TODO: This is just a copy from the NetworkHandler
             if ((attributes & CharacterAttributes.PenumbraMods) is CharacterAttributes.PenumbraMods)
-                _statusManager.SetGlamourerPenumbra(Friend.Self);
+                _statusService.SetGlamourerPenumbra(Friend.Self);
         
             if ((attributes & CharacterAttributes.CustomizePlus) is CharacterAttributes.CustomizePlus)
-                _statusManager.SetCustomizePlus(Friend.Self);
+                _statusService.SetCustomizePlus(Friend.Self);
         
             if ((attributes & CharacterAttributes.Honorific) is CharacterAttributes.Honorific)
-                _statusManager.SetHonorific(Friend.Self);
+                _statusService.SetHonorific(Friend.Self);
         }
             
         // Process the results
