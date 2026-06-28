@@ -26,7 +26,7 @@ public class LoginViewUi(LoginViewUiController controller, NetworkService networ
         {
             SharedUserInterfaces.MediumText("Login with Secret");
 
-            var preview = controller.GetCurrentSecret()?.Name ?? string.Empty;
+            var preview = controller.GetCurrentSecret()?.Name ?? "Select secret...";
             if (ImGui.BeginCombo("##SecretSelect", preview))
             {
                 foreach (var secret in secretsService.Secrets)

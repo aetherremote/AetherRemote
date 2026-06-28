@@ -10,6 +10,7 @@ namespace AetherRemoteClient.UI.Views.Settings;
 public class SettingsViewUiController(
     ActionQueueService actionQueueService, 
     CharacterConfigurationService characterConfigurationService,
+    GlobalSettingsService globalSettingsService,
     SecretsService secretsService, 
     SettingsService settingsService,
     DtrManager dtrManager,
@@ -56,8 +57,7 @@ public class SettingsViewUiController(
 
     public async Task SetShowDtrBar(bool showDtrBar)
     {
-        if (characterConfigurationService.Current?.SecretId is not { } secretId) return;
-        if (await settingsService.SetShowDtrBar(secretId, showDtrBar).ConfigureAwait(false) is false)
+        if (await globalSettingsService.SetShowOnDtrBar(showDtrBar).ConfigureAwait(false) is false)
             return;
 
         if (showDtrBar)
@@ -68,8 +68,7 @@ public class SettingsViewUiController(
 
     public async Task SetSafeMode(bool safeMode)
     {
-        if (characterConfigurationService.Current?.SecretId is not { } secretId) return;
-        if (await settingsService.SetSafeMode(secretId, safeMode).ConfigureAwait(false) is false)
+        if (await globalSettingsService.SetSafeMode(safeMode).ConfigureAwait(false) is false)
             return;
 
         // When we enter safe mode, we want to disable a lot of things, so turning it off means we can exit early

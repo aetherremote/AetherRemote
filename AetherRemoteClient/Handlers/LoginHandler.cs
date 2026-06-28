@@ -15,6 +15,7 @@ public class LoginHandler : IDisposable
     // Injected
     private readonly AuthenticationInfrastructure _authenticationInfrastructure;
     private readonly CharacterConfigurationService _characterConfigurationService;
+    private readonly GlobalSettingsService _globalSettingsService;
     private readonly NetworkService _networkService;
     private readonly SecretsService _secretsService;
     private readonly SettingsService _settingsService;
@@ -26,6 +27,7 @@ public class LoginHandler : IDisposable
     public LoginHandler(
         AuthenticationInfrastructure authenticationInfrastructure,
         CharacterConfigurationService characterConfigurationService,
+        GlobalSettingsService globalSettingsService,
         NetworkService networkService,
         SecretsService secretsService,
         SettingsService settingsService,
@@ -34,6 +36,7 @@ public class LoginHandler : IDisposable
         // Store injected services
         _authenticationInfrastructure = authenticationInfrastructure;
         _characterConfigurationService = characterConfigurationService;
+        _globalSettingsService = globalSettingsService;
         _networkService = networkService;
         _secretsService = secretsService;
         _settingsService = settingsService;
@@ -72,10 +75,9 @@ public class LoginHandler : IDisposable
         // Ensure that all the values for various action responses and results are met (this check could go anywhere)
         ActionResponseParser.SanityCheck();
         
-        if (_settingsService.ShowDtrBar)
+        if (_globalSettingsService.ShowOnDtrBar)
             _dtrManager.EnableDtrBar();
         
-        // Check if this secret has auto login enabled, and connect if so
         if (_settingsService.AutoLogin)
             await _networkService.ConnectToServerAsync().ConfigureAwait(false);
     }

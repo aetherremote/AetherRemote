@@ -2,11 +2,36 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Threading.Tasks;
+using AetherRemoteClient.Domain;
 
 namespace AetherRemoteClient.Infrastructure.Database;
 
 public partial class DatabaseInfrastructure
 {
+    /// <summary>
+    ///     Retrieves the secret id by the actual secret provided. This can be expanded to return the whole secret if needed.
+    /// </summary>
+    public async Task<long?> GetSecretId(string secret)
+    {
+        try
+        {
+            await using var command = _database.CreateCommand();
+            command.CommandText = "SELECT Id FROM Secrets WHERE Secret = @Secret LIMIT 1";
+            command.Parameters.AddWithValue("@Secret", secret);
+            
+            await using var reader = await command.ExecuteReaderAsync();
+            if (await reader.ReadAsync().ConfigureAwait(false) is false)
+                return null;
+            
+            return reader.GetInt64(0);
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error($"[DatabaseInfrastructure.GetSecret] {e}");
+            return null;
+        }
+    }
+    
     /// <summary>
     ///     Loads all the secrets from the table
     /// </summary>
@@ -38,27 +63,7 @@ public partial class DatabaseInfrastructure
             return null;
         }
     }
-
-    /// <summary>
-    ///     Counts all the characters using this secret
-    /// </summary>
-    public async Task<int> GetCharacterUsingSecretCount(long secretId)
-    {
-        try
-        {
-            await using var command = _database.CreateCommand();
-            command.CommandText = "SELECT COUNT(*) FROM Characters WHERE SecretId = @SecretId";
-            command.Parameters.AddWithValue("@SecretId", secretId);
-
-            return Convert.ToInt32(await command.ExecuteScalarAsync().ConfigureAwait(false));
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Error($"[DatabaseInfrastructure.GetCharacterUsingSecretCount] {e}");
-            return 0;
-        }
-    }
-
+    
     /// <summary>
     ///     Adds a secret
     /// </summary>
@@ -87,7 +92,7 @@ public partial class DatabaseInfrastructure
     /// <summary>
     ///     Removes a note for a friend, if it exists
     /// </summary>
-    public async Task<bool> RemoveSecret(long secretId)
+    public async Task<bool> DeleteSecret(long secretId)
     {
         try
         {
@@ -100,13 +105,28 @@ public partial class DatabaseInfrastructure
         }
         catch (Exception e)
         {
-            Plugin.Log.Error($"[DatabaseInfrastructure.RemoveSecret] {e}");
+            Plugin.Log.Error($"[DatabaseInfrastructure.DeleteSecret] {e}");
             return false;
         }
     }
-
+    
     /// <summary>
-    ///     An AR secret
+    ///     Counts the number of characters using this secret
     /// </summary>
-    public record Secret(long Id, string Name, string Value, DateTime CreatedAt);
+    public async Task<int> GetSecretUsageCount(long secretId)
+    {
+        try
+        {
+            await using var command = _database.CreateCommand();
+            command.CommandText = "SELECT COUNT(*) FROM Characters WHERE SecretId = @SecretId";
+            command.Parameters.AddWithValue("@SecretId", secretId);
+
+            return Convert.ToInt32(await command.ExecuteScalarAsync().ConfigureAwait(false));
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error($"[DatabaseInfrastructure.GetSecretUsageCount] {e}");
+            return 0;
+        }
+    }
 }

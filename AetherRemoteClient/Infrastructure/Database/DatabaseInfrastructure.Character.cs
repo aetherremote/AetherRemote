@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using AetherRemoteClient.Domain;
 
 namespace AetherRemoteClient.Infrastructure.Database;
 
@@ -21,7 +22,7 @@ public partial class DatabaseInfrastructure
 
             // If we didn't find anything attempt to create a new configuration for the local player since they will need it anyway
             if (await reader.ReadAsync().ConfigureAwait(false) is false)
-                return await CreateCharacterConfiguration(characterName, characterWorld).ConfigureAwait(false);
+                return await CreateCharacterConfiguration(characterName, characterWorld, null).ConfigureAwait(false);
             
             var id = reader.GetInt64(0);
             var secretId = reader.IsDBNull(1) ? (short?)null : reader.GetInt16(1);
@@ -59,30 +60,23 @@ public partial class DatabaseInfrastructure
     /// <summary>
     ///     Creates a new character configuration
     /// </summary>
-    private async Task<CharacterConfiguration?> CreateCharacterConfiguration(string characterName, string characterWorld)
+    public async Task<CharacterConfiguration?> CreateCharacterConfiguration(string characterName, string characterWorld, long? secretId)
     {
         try
         {
             await using var command = _database.CreateCommand();
-            command.CommandText = "INSERT INTO Characters (Name, World, SecretId) VALUES (@Name, @World, null) RETURNING Id";
+            command.CommandText = "INSERT INTO Characters (Name, World, SecretId) VALUES (@Name, @World, @SecretId) RETURNING Id";
             command.Parameters.AddWithValue("@Name", characterName);
             command.Parameters.AddWithValue("@World", characterWorld);
+            command.Parameters.AddWithValue("@SecretId", (object?)secretId ?? DBNull.Value);
 
             var id = Convert.ToInt64(await command.ExecuteScalarAsync().ConfigureAwait(false));
-            return new CharacterConfiguration(id, characterName, characterWorld, null);
+            return new CharacterConfiguration(id, characterName, characterWorld, secretId);
         }
         catch (Exception e)
         {
             Plugin.Log.Error($"[DatabaseInfrastructure.CreateCharacterConfiguration] {e}");
             return null;
         }
-    }
-
-    public class CharacterConfiguration(long id, string name, string world, long? secretId)
-    {
-        public readonly long Id = id;
-        public readonly string Name = name;
-        public readonly string World = world;
-        public long? SecretId = secretId;
     }
 }

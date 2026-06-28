@@ -70,6 +70,7 @@ public partial class DatabaseInfrastructure
             CreateSettingsTable,
             CreateTransformationsTable,
             CreateAgreementsTable,
+            CreateGlobalSettingsTable,
             CreateNotesTable
         ];
 
@@ -89,7 +90,15 @@ public partial class DatabaseInfrastructure
             	    "World"	                        TEXT NOT NULL,
             	    "SecretId"	                    INTEGER,
             	    FOREIGN KEY("SecretId") REFERENCES "Secrets"("Id") ON DELETE SET NULL
-                )
+                );
+            """;
+
+        private const string CreateGlobalSettingsTable =
+            """
+                CREATE TABLE IF NOT EXISTS "GlobalSettings" (
+                    "SettingId"	                    INTEGER PRIMARY KEY,
+                    "Value"	                        TEXT NOT NULL
+                );
             """;
 
         private const string CreateNotesTable =

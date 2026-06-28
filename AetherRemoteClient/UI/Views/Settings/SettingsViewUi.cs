@@ -1,5 +1,6 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using AetherRemoteClient.Domain.Enums;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Style;
@@ -17,7 +18,9 @@ public class SettingsViewUi(
     SettingsService settingsService,
     PenumbraService penumbraService, 
     GlamourerService glamourerService, 
+    GlobalSettingsService globalSettingsService,
     MoodlesService moodlesService, 
+    NetworkService networkService,
     CustomizePlusService customizePlusService,
     HonorificService honorificService) : IDrawable
 {
@@ -72,31 +75,29 @@ public class SettingsViewUi(
             return;
         }
 
-        if (characterConfigurationService.Current is null)
+        SharedUserInterfaces.MediumText("Global Settings");
+        
+        var safeMode = globalSettingsService.SafeMode;
+        if (ImGui.Checkbox("Safe Mode##SettingsSafeMode", ref safeMode))
+            _ = controller.SetSafeMode(safeMode).ConfigureAwait(false);
+        
+        var showOnDtrBar = globalSettingsService.ShowOnDtrBar;
+        if (ImGui.Checkbox("Show on Dtr Bar##SettingsShowDtrBar", ref showOnDtrBar))
+            _ = controller.SetShowDtrBar(showOnDtrBar).ConfigureAwait(false);
+        
+        SharedUserInterfaces.MediumText("Individual Settings");
+        
+        // TODO: Code smell
+        if (networkService.State is not ConnectionState.Connected || characterConfigurationService.Current is null)
         {
-            ImGui.TextWrapped("Assign a secret to this character in the Login tab, then return here to configure that secret's settings.");
+            ImGui.TextWrapped("You must be logged in to view individual settings.");
             return;
         }
-        
-        ImGui.Text("General Actions");
+
         var autoLogin = settingsService.AutoLogin;
         if (ImGui.Checkbox("Auto Login##SettingsAutoLogin", ref autoLogin))
             _ = controller.SetAutoLogin(autoLogin).ConfigureAwait(false);
-
-        var showDtrBar = settingsService.ShowDtrBar;
-        if (ImGui.Checkbox("Show on Dtr Bar##SettingsShowDtrBar", ref showDtrBar))
-            _ = controller.SetShowDtrBar(autoLogin).ConfigureAwait(false);
-        
-        ImGui.Spacing();
-        ImGui.Separator();
-        ImGui.Spacing();
-        
-        ImGui.Text("Emergency Actions");
-        var safeMode = settingsService.SafeMode;
-        if (ImGui.Checkbox("Safe Mode##SettingsSafeMode", ref safeMode))
-            _ = controller.SetSafeMode(autoLogin).ConfigureAwait(false);
     }
-
     
     private void DrawSecrets()
     {

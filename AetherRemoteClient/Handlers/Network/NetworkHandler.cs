@@ -36,11 +36,11 @@ public partial class NetworkHandler : IDisposable
     private readonly CustomizePlusService _customizePlusService;
     private readonly EmoteService _emoteService;
     private readonly FriendsListService _friendsListService;
+    private readonly GlobalSettingsService _globalSettingsService;
     private readonly HonorificService _honorificService;
     private readonly LogService _logService;
     private readonly MoodlesService _moodlesService;
     private readonly PauseService _pauseService;
-    private readonly SettingsService _settingsService;
     private readonly StatusService _statusService;
     
     private readonly CharacterTransformationManager _characterTransformationManager;
@@ -58,12 +58,12 @@ public partial class NetworkHandler : IDisposable
         CustomizePlusService customizePlusService,
         EmoteService emoteService,
         FriendsListService friendsListService,
+        GlobalSettingsService globalSettingsService,
         HonorificService honorificService,
         LogService logService,
         MoodlesService moodlesService,
         NetworkService networkService,
         PauseService pauseService,
-        SettingsService settingsService,
         
         CharacterTransformationManager characterTransformationManager,
         HypnosisManager hypnosisManager,
@@ -77,11 +77,11 @@ public partial class NetworkHandler : IDisposable
         _customizePlusService = customizePlusService;
         _emoteService = emoteService;
         _friendsListService = friendsListService;
+        _globalSettingsService = globalSettingsService;
         _honorificService = honorificService;
         _logService = logService;
         _moodlesService = moodlesService;
         _pauseService = pauseService;
-        _settingsService = settingsService;
         
         _characterTransformationManager = characterTransformationManager;
         _hypnosisManager = hypnosisManager;
@@ -124,7 +124,7 @@ public partial class NetworkHandler : IDisposable
         }
         
         // Plugin in safe mode
-        if (_settingsService.SafeMode)
+        if (_globalSettingsService.SafeMode)
         {
             _logService.SafeMode(operation, friend.NoteOrFriendCode);
             return ActionResultBuilder.Fail<Friend>(ActionResultEc.ClientInSafeMode);

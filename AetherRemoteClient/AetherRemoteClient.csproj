@@ -40,4 +40,9 @@
     <ItemGroup>
         <ProjectReference Include="..\AetherRemoteCommon\AetherRemoteCommon.csproj"/>
     </ItemGroup>
+
+    <ItemGroup>
+      <Compile Remove="Domain\Configurations\CharacterConfiguration.cs" />
+      <Compile Remove="Domain\Configurations\Configuration.cs" />
+    </ItemGroup>
 </Project>

@@ -28,11 +28,10 @@ public partial class ChatCommandHandler : IDisposable
     
     // Injected
     private readonly ActionQueueService _actionQueueService;
-    private readonly CharacterConfigurationService _characterConfigurationService;
     private readonly CustomizePlusService _customizePlusService;
     private readonly EmoteService _emoteService;
     private readonly GlamourerService _glamourerService;
-    private readonly SettingsService _settingsService;
+    private readonly GlobalSettingsService _globalSettingsService;
     private readonly HypnosisManager _hypnosisManager;
     private readonly NetworkCommandManager _networkCommandManager;
     private readonly PossessionManager _possessionManager;
@@ -40,22 +39,20 @@ public partial class ChatCommandHandler : IDisposable
     
     public ChatCommandHandler(
         ActionQueueService actionQueueService,
-        CharacterConfigurationService characterConfigurationService,
         CustomizePlusService customizePlusService,
         EmoteService emoteService,
         GlamourerService glamourerService,
-        SettingsService settingsService,
+        GlobalSettingsService globalSettingsService,
         HypnosisManager hypnosisManager,
         NetworkCommandManager networkCommandManager,
         PossessionManager possessionManager,
         MainWindow mainWindow)
     {
         _actionQueueService = actionQueueService;
-        _characterConfigurationService = characterConfigurationService;
         _customizePlusService = customizePlusService;
         _emoteService =  emoteService;
         _glamourerService = glamourerService;
-        _settingsService = settingsService;
+        _globalSettingsService = globalSettingsService;
         
         _hypnosisManager = hypnosisManager;
         _networkCommandManager = networkCommandManager;
@@ -143,14 +140,9 @@ public partial class ChatCommandHandler : IDisposable
                     
                     // Clear pending chat commands
                     _actionQueueService.Clear();
-
-                    // TODO: A deeper dive as to what is going on and how we want to handle using commands like this when you're not logged in / signed in
-                    if (_characterConfigurationService.Current?.SecretId is not { } secretId)
-                        return;
-
-                    // TODO: In addition, handle fail-states if this somehow fails
-                    if (await _settingsService.SetSafeMode(secretId, true).ConfigureAwait(false) is false)
-                        return;
+                    
+                    // TODO: Proper logging and fail stating
+                    await _globalSettingsService.SetSafeMode(true).ConfigureAwait(false);
                     
                     payloads.Add(new UIForegroundPayload(AetherRemoteColors.TextColorPurple));
                     payloads.Add(new TextPayload("[AetherRemote] "));

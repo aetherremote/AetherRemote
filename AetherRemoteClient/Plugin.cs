@@ -84,6 +84,8 @@ public sealed class Plugin : IAsyncDalamudPlugin
         services.AddSingleton<EmoteService>();
         services.AddSingleton<FriendsListService>();
         services.AddSingleton<GameSettingsService>();
+        services.AddSingleton<GlobalSettingsService>();
+        services.AddSingleton<LegacyConfigurationImportService>();
         services.AddSingleton<LogService>();
         services.AddSingleton<NetworkService>();
         services.AddSingleton<NotesService>();
@@ -176,6 +178,9 @@ public sealed class Plugin : IAsyncDalamudPlugin
         // Build the dependency injection framework
         _services = services.BuildServiceProvider();
         
+        // Upgrade legacy configuration files
+        await _services.GetRequiredService<LegacyConfigurationImportService>().ScanForConfigurationsAndImport().ConfigureAwait(false);
+        
         // Ui - Windows
         _services.GetRequiredService<WindowManager>();
         
@@ -206,6 +211,7 @@ public sealed class Plugin : IAsyncDalamudPlugin
         // TODO: Examine what options there are for throwing exceptions in this method
         // Async loading for required services. If any of these fail, the server should probably throw an exception...
         await _services.GetRequiredService<AgreementsService>().LoadAgreements().ConfigureAwait(false);
+        await _services.GetRequiredService<GlobalSettingsService>().LoadGlobalSettings().ConfigureAwait(false);
         await _services.GetRequiredService<NotesService>().LoadNotes().ConfigureAwait(false);
         await _services.GetRequiredService<SecretsService>().LoadSecrets().ConfigureAwait(false);
         

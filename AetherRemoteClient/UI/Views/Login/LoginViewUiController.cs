@@ -1,7 +1,7 @@
 using System;
 using System.Threading.Tasks;
+using AetherRemoteClient.Domain;
 using AetherRemoteClient.Infrastructure.Authentication;
-using AetherRemoteClient.Infrastructure.Database;
 using AetherRemoteClient.Services;
 using Dalamud.Utility;
 
@@ -13,7 +13,7 @@ public class LoginViewUiController(
     NetworkService networkService,
     SecretsService secretsService) : IDisposable
 {
-    public DatabaseInfrastructure.Secret? GetCurrentSecret()
+    public Secret? GetCurrentSecret()
     {
         if (characterConfigurationService.Current?.SecretId is not { } secretId)
             return null;
@@ -22,7 +22,7 @@ public class LoginViewUiController(
         return secret;
     }
 
-    public async Task SetSecret(DatabaseInfrastructure.Secret secret)
+    public async Task SetSecret(Secret secret)
     {
         if (await characterConfigurationService.SetSecretForCharacter(secret.Id).ConfigureAwait(false) is false)
             return;

@@ -58,7 +58,7 @@ public class NotesService(DatabaseInfrastructure database)
     /// </summary>
     public async Task<bool> RemoveNote(string friendCode)
     {
-        if (await database.RemoveNote(friendCode).ConfigureAwait(false) is false)
+        if (await database.DeleteNote(friendCode).ConfigureAwait(false) is false)
             return false;
 
         _notes.Remove(friendCode);

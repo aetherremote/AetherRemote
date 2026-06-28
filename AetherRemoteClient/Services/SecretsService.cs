@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Threading.Tasks;
+using AetherRemoteClient.Domain;
 using AetherRemoteClient.Infrastructure.Database;
 
 namespace AetherRemoteClient.Services;
@@ -10,11 +11,11 @@ namespace AetherRemoteClient.Services;
 /// </summary>
 public class SecretsService(DatabaseInfrastructure database)
 {
-    private Dictionary<long, DatabaseInfrastructure.Secret> _secrets = [];
+    private Dictionary<long, Secret> _secrets = [];
     private bool _dirty;
     
     /// <summary> List of all secrets the client has </summary>
-    public ImmutableDictionary<long, DatabaseInfrastructure.Secret> Secrets
+    public ImmutableDictionary<long, Secret> Secrets
     {
         get
         {
@@ -54,7 +55,7 @@ public class SecretsService(DatabaseInfrastructure database)
     /// <summary> Remove a secret </summary>
     public async Task<bool> RemoveSecret(long secretId)
     {
-        if (await database.RemoveSecret(secretId).ConfigureAwait(false) is false)
+        if (await database.DeleteSecret(secretId).ConfigureAwait(false) is false)
             return false;
         
         _secrets.Remove(secretId);
@@ -63,5 +64,5 @@ public class SecretsService(DatabaseInfrastructure database)
     }
 
     /// <summary> Count the number of characters using a secret id </summary>
-    public async Task<int> CountUsage(long secretId) => await database.GetCharacterUsingSecretCount(secretId).ConfigureAwait(false);
+    public async Task<int> CountUsage(long secretId) => await database.GetSecretUsageCount(secretId).ConfigureAwait(false);
 }

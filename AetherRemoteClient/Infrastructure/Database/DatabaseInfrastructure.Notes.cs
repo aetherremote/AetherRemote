@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Data.Sqlite;
 
 namespace AetherRemoteClient.Infrastructure.Database;
 
@@ -18,14 +19,9 @@ public partial class DatabaseInfrastructure
 
             var results = new Dictionary<string, string>();
             
-            await using var reader = await command.ExecuteReaderAsync();
+            await using var reader = await command.ExecuteReaderAsync().ConfigureAwait(false);
             while (await reader.ReadAsync().ConfigureAwait(false))
-            {
-                var friendCode = reader.GetString(0);
-                var note = reader.GetString(1);
-                
-                results.Add(friendCode, note);
-            }
+                results.Add(reader.GetString(0), reader.GetString(1));
             
             return results;
         }
@@ -39,8 +35,6 @@ public partial class DatabaseInfrastructure
     /// <summary>
     ///     Sets a note for a friend code
     /// </summary>
-    /// <param name="friendCode">The friend code of the person the note will be for</param>
-    /// <param name="note">The note for the friend code</param>
     public async Task<bool> SetNote(string friendCode, string note)
     {
         try
@@ -62,7 +56,7 @@ public partial class DatabaseInfrastructure
     /// <summary>
     ///     Removes a note for a friend, if it exists
     /// </summary>
-    public async Task<bool> RemoveNote(string friendCode)
+    public async Task<bool> DeleteNote(string friendCode)
     {
         try
         {

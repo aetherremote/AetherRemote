@@ -6,24 +6,23 @@ using AetherRemoteClient.Domain.Enums;
 namespace AetherRemoteClient.Infrastructure.Database;
 
 public partial class DatabaseInfrastructure
-{
+{   
     /// <summary>
-    ///     Loads all the settings for a secret id from the table in their raw data string
+    ///     Loads all the settings for the plugin
     /// </summary>
-    public async Task<Dictionary<Setting, string>?> GetSettingsForSecretId(long secretId)
+    public async Task<Dictionary<GlobalSetting, string>?> GetGlobalSettings()
     {
         try
         {
             await using var command = _database.CreateCommand();
-            command.CommandText = "SELECT SettingId, Value FROM Settings WHERE SecretId = @SecretId";
-            command.Parameters.AddWithValue("@SecretId", secretId);
-
-            var results = new Dictionary<Setting, string>();
+            command.CommandText = "SELECT SettingId, Value FROM GlobalSettings";
+            
+            var results = new Dictionary<GlobalSetting, string>();
             
             await using var reader = await command.ExecuteReaderAsync().ConfigureAwait(false);
             while (await reader.ReadAsync().ConfigureAwait(false))
             {
-                var setting = (Setting)reader.GetInt16(0);
+                var setting = (GlobalSetting)reader.GetInt16(0);
                 var value = reader.GetString(1);
                 results.Add(setting, value);
             }
@@ -32,29 +31,27 @@ public partial class DatabaseInfrastructure
         }
         catch (Exception e)
         {
-            Plugin.Log.Error($"[DatabaseInfrastructure.GetSettingsForSecretId] {e}");
+            Plugin.Log.Error($"[DatabaseInfrastructure.GetGlobalSettings] {e}");
             return null;
         }
     }
-    
+
     /// <summary>
-    ///     Sets a note for a friend code
+    ///     Sets a specific <see cref="GlobalSetting"/>'s value
     /// </summary>
-    public async Task<bool> SetSetting(long secretId, Setting setting, string value)
+    public async Task<bool> SetGlobalSetting(GlobalSetting setting, string value)
     {
         try
         {
             await using var command = _database.CreateCommand();
-            command.CommandText = "INSERT INTO Settings VALUES (@SecretId, @SettingId, @Value) ON CONFLICT (SecretId, SettingId) DO UPDATE SET Value = @Value";
-            command.Parameters.AddWithValue("@SecretId", secretId);
+            command.CommandText = "INSERT INTO GlobalSettings VALUES (@SettingId, @Value) ON CONFLICT (SettingId) DO UPDATE SET Value = @Value";
             command.Parameters.AddWithValue("@SettingId", setting);
             command.Parameters.AddWithValue("@Value", value);
-
             return await command.ExecuteNonQueryAsync().ConfigureAwait(false) is 1;
         }
         catch (Exception e)
         {
-            Plugin.Log.Error($"[DatabaseInfrastructure.SetSetting] {e}");
+            Plugin.Log.Error($"[DatabaseInfrastructure.SetGlobalSetting] {e}");
             return false;
         }
     }

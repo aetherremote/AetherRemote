@@ -1,4 +1,5 @@
 using System.Threading.Tasks;
+using AetherRemoteClient.Domain;
 using AetherRemoteClient.Infrastructure.Database;
 using AetherRemoteClient.Utils;
 
@@ -12,7 +13,7 @@ public class CharacterConfigurationService(DatabaseInfrastructure database)
     /// <summary>
     ///     The currently loaded configuration
     /// </summary>
-    public DatabaseInfrastructure.CharacterConfiguration? Current { get; private set; }
+    public CharacterConfiguration? Current { get; private set; }
 
     /// <summary>
     ///     Sets the secret this character will be associated with
