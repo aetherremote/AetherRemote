@@ -105,9 +105,9 @@ public class NavigationBarComponentUi : IDisposable
 #endif
 
             ImGui.PopStyleVar();
-            ImGui.EndChild();
         }
-
+        
+        ImGui.EndChild();
         ImGui.PopStyleVar(2);
     }
     

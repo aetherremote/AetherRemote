@@ -14,7 +14,7 @@ public class LoginHandler : IDisposable
 {
     // Injected
     private readonly AuthenticationInfrastructure _authenticationInfrastructure;
-    private readonly CharacterConfigurationService _characterConfigurationService;
+    private readonly ActiveSessionService _activeSessionService;
     private readonly GlobalSettingsService _globalSettingsService;
     private readonly NetworkService _networkService;
     private readonly SecretsService _secretsService;
@@ -22,11 +22,20 @@ public class LoginHandler : IDisposable
     private readonly DtrManager _dtrManager;
     
     /// <summary>
+    ///     Event fired when all plugin initialization for a logged-into-game character has completed.
+    /// </summary>
+    /// <remarks> Only Ui Controllers should react to this event </remarks>
+    public event Action? LoginInitializationCompleted;
+
+    /// <summary> Guard for the event </summary>
+    public bool HasLoginInitializationCompleted;
+    
+    /// <summary>
     ///     <inheritdoc cref="LoginHandler"/>
     /// </summary>
     public LoginHandler(
         AuthenticationInfrastructure authenticationInfrastructure,
-        CharacterConfigurationService characterConfigurationService,
+        ActiveSessionService activeSessionService,
         GlobalSettingsService globalSettingsService,
         NetworkService networkService,
         SecretsService secretsService,
@@ -35,7 +44,7 @@ public class LoginHandler : IDisposable
     {
         // Store injected services
         _authenticationInfrastructure = authenticationInfrastructure;
-        _characterConfigurationService = characterConfigurationService;
+        _activeSessionService = activeSessionService;
         _globalSettingsService = globalSettingsService;
         _networkService = networkService;
         _secretsService = secretsService;
@@ -56,13 +65,19 @@ public class LoginHandler : IDisposable
     {
         // TODO: This is a pretty big one, but if something goes wrong here, the plugin is unusable.
         
-        // Load the character configuration. This will create a new configuration if it is the character's first time
-        if (await _characterConfigurationService.LoadCharacterConfiguration().ConfigureAwait(false) is false)
+        if (await DalamudUtilities.TryGetLocalPlayer().ConfigureAwait(false) is not { } player)
             return;
+        
+        var name = player.Name.ToString();
+        var world = player.HomeWorld.Value.Name.ToString();
+        
+        // TODO: Decide on what should happen if this fails
+        await _activeSessionService.InitializeCharacter(name, world).ConfigureAwait(false);
 
         // Now if the character has an associate secret, we can initialize things require for the plugin
-        if (_characterConfigurationService.Current?.SecretId is { } secretId)
+        if (_activeSessionService.SecretId is { } secretId)
         {
+            // Don't need to set secret in the active session service because we only care about the secret's id which is already set there
             if (_secretsService.Secrets.TryGetValue(secretId, out var secret))
                 _authenticationInfrastructure.SetSecret(secret.Value);
             else
@@ -72,8 +87,9 @@ public class LoginHandler : IDisposable
                 Plugin.Log.Warning($"[LoginManager.OnLoginAsync] Failed to load settings for SecretId {secretId}");
         }
         
-        // Ensure that all the values for various action responses and results are met (this check could go anywhere)
-        ActionResponseParser.SanityCheck();
+        // Emit event for Ui controllers
+        LoginInitializationCompleted?.Invoke();
+        HasLoginInitializationCompleted = true;
         
         if (_globalSettingsService.ShowOnDtrBar)
             _dtrManager.EnableDtrBar();
@@ -86,6 +102,7 @@ public class LoginHandler : IDisposable
     private async Task OnLogoutAsync()
     {
         await _networkService.DisconnectFromServerAsync().ConfigureAwait(false);
+        HasLoginInitializationCompleted = false;
     }
 
     public void Dispose()

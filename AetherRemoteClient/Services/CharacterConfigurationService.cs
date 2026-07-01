@@ -23,7 +23,7 @@ public class CharacterConfigurationService(DatabaseInfrastructure database)
         if (Current is null)
             return false;
 
-        if (await database.SetCharacterConfigurationSecret(Current.Id, secretId).ConfigureAwait(false) is false)
+        if (await database.SetCharacterSecretId(Current.Id, secretId).ConfigureAwait(false) is false)
             return false;
         
         Current.SecretId = secretId;

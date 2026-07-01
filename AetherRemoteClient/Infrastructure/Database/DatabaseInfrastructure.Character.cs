@@ -39,7 +39,7 @@ public partial class DatabaseInfrastructure
     /// <summary>
     ///     Updates a known character configuration with the new secret id to use
     /// </summary>
-    public async Task<bool> SetCharacterConfigurationSecret(long id, long secretId)
+    public async Task<bool> SetCharacterSecretId(long id, long secretId)
     {
         try
         {

@@ -78,6 +78,7 @@ public sealed class Plugin : IAsyncDalamudPlugin
         // Services
         services.AddSingleton<AccountService>();
         services.AddSingleton<ActionQueueService>();
+        services.AddSingleton<ActiveSessionService>();
         services.AddSingleton<AgreementsService>();
         services.AddSingleton<CharacterConfigurationService>();
         services.AddSingleton<CommandLockoutService>();
@@ -216,6 +217,8 @@ public sealed class Plugin : IAsyncDalamudPlugin
         await _services.GetRequiredService<SecretsService>().LoadSecrets().ConfigureAwait(false);
         
         await SharedUserInterfaces.InitializeFonts().ConfigureAwait(false);
+        
+        ActionResponseParser.SanityCheck();
     }
     
     public async ValueTask DisposeAsync()

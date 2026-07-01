@@ -25,13 +25,13 @@ public class LoginViewUi(LoginViewUiController controller, NetworkService networ
         SharedUserInterfaces.ContentBox("LoginSecretSelect", AetherRemoteColors.PanelColor, true, () =>
         {
             SharedUserInterfaces.MediumText("Login with Secret");
-
-            var preview = controller.GetCurrentSecret()?.Name ?? "Select secret...";
+            
+            var preview = controller.SelectedSecret?.Name ?? "Select a secret to log in with";
             if (ImGui.BeginCombo("##SecretSelect", preview))
             {
                 foreach (var secret in secretsService.Secrets)
                     if (ImGui.Selectable(secret.Value.Name))
-                        _ = controller.SetSecret(secret.Value).ConfigureAwait(false);
+                        controller.SelectedSecret = secret.Value;
                 
                 ImGui.EndCombo();
             }
