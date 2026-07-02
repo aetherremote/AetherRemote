@@ -8,7 +8,7 @@ using AetherRemoteClient.UI.Components.NavigationBar;
 using AetherRemoteClient.UI.Views.CustomizePlus;
 using AetherRemoteClient.UI.Views.Debug;
 using AetherRemoteClient.UI.Views.Emote;
-using AetherRemoteClient.UI.Views.Friends.Ui;
+using AetherRemoteClient.UI.Views.Friends;
 using AetherRemoteClient.UI.Views.History;
 using AetherRemoteClient.UI.Views.Home;
 using AetherRemoteClient.UI.Views.Honorific;
@@ -41,43 +41,43 @@ public class MainWindow : Window, IDisposable
     private readonly NavigationBarComponentUi _navigationBar;
 
     // Views
-    private readonly CustomizePlusViewUi _customizePlusView;
-    private readonly DebugViewUi _debugView;
-    private readonly EmoteViewUi _emoteView;
-    private readonly FriendsViewUi _friendsView;
-    private readonly HistoryViewUi _historyView;
-    private readonly HomeViewUi _homeView;
-    private readonly HonorificViewUi _honorificView;
-    private readonly HypnosisViewUi _hypnosisView;
-    private readonly LoginViewUi _loginView;
-    private readonly MoodlesViewUi _moodlesView;
-    private readonly PauseViewUi _pauseView;
-    private readonly PossessionViewUi _possessionView;
-    private readonly SettingsViewUi _settingsView;
-    private readonly SpeakViewUi _speakView;
-    private readonly StatusViewUi _statusView;
-    private readonly TransformationsViewUi _transformationsView;
+    private readonly CustomizePlusView _customizePlusView;
+    private readonly DebugView _debugView;
+    private readonly EmoteView _emoteView;
+    private readonly FriendsView _friendsView;
+    private readonly HistoryView _historyView;
+    private readonly HomeView _homeView;
+    private readonly HonorificView _honorificView;
+    private readonly HypnosisView _hypnosisView;
+    private readonly LoginView _loginView;
+    private readonly MoodlesView _moodlesView;
+    private readonly PauseView _pauseView;
+    private readonly PossessionView _possessionView;
+    private readonly SettingsView _settingsView;
+    private readonly SpeakView _speakView;
+    private readonly StatusView _statusView;
+    private readonly TransformationsView _transformationsView;
 
     public MainWindow(
         ViewService viewService,
         DtrManager dtrManager,
         NavigationBarComponentUi navigationBarComponentUi,
-        CustomizePlusViewUi customizePlusView,
-        DebugViewUi debugView,
-        EmoteViewUi emoteView,
-        FriendsViewUi friendsView,
-        HistoryViewUi historyView,
-        HomeViewUi homeView,
-        HonorificViewUi honorificView,
-        HypnosisViewUi hypnosisView,
-        LoginViewUi loginView,
-        MoodlesViewUi moodlesView,
-        PossessionViewUi possessionView,
-        PauseViewUi pauseView,
-        SettingsViewUi settingsView,
-        SpeakViewUi speakView,
-        StatusViewUi statusView,
-        TransformationsViewUi transformationsView) : base(MainWindowTitle)
+        CustomizePlusView customizePlusView,
+        DebugView debugView,
+        EmoteView emoteView,
+        FriendsView friendsView,
+        HistoryView historyView,
+        HomeView homeView,
+        HonorificView honorificView,
+        HypnosisView hypnosisView,
+        LoginView loginView,
+        MoodlesView moodlesView,
+        PossessionView possessionView,
+        PauseView pauseView,
+        SettingsView settingsView,
+        SpeakView speakView,
+        StatusView statusView,
+        TransformationsView transformationsView) : base(MainWindowTitle)
     {
         SizeConstraints = new WindowSizeConstraints
         {

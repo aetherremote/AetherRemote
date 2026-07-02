@@ -1,9 +1,9 @@
-using AetherRemoteClient.UI.Views.Friends.Ui;
+using AetherRemoteClient.UI.Views.Friends;
 
 namespace AetherRemoteClient.Domain.Enums;
 
 /// <summary>
-///     A permission set for use in <see cref="FriendsViewUi"/>
+///     A permission set for use in <see cref="FriendsView"/>
 /// </summary>
 public enum PermissionValue
 {

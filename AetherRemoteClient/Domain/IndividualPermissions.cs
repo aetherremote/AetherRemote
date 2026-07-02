@@ -1,13 +1,13 @@
 using System;
 using AetherRemoteClient.Domain.Enums;
-using AetherRemoteClient.UI.Views.Friends.Ui;
+using AetherRemoteClient.UI.Views.Friends;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 
 namespace AetherRemoteClient.Domain;
 
 /// <summary>
-///     A permission set for individual permissions for use in <see cref="FriendsViewUi"/>
+///     A permission set for individual permissions for use in <see cref="FriendsView"/>
 /// </summary>
 public class IndividualPermissions
 {

@@ -18,7 +18,6 @@ using AetherRemoteClient.UI.Views.CustomizePlus;
 using AetherRemoteClient.UI.Views.Debug;
 using AetherRemoteClient.UI.Views.Emote;
 using AetherRemoteClient.UI.Views.Friends;
-using AetherRemoteClient.UI.Views.Friends.Ui;
 using AetherRemoteClient.UI.Views.History;
 using AetherRemoteClient.UI.Views.Home;
 using AetherRemoteClient.UI.Views.Honorific;
@@ -42,21 +41,21 @@ namespace AetherRemoteClient;
 // ReSharper disable once ClassNeverInstantiated.Global
 public sealed class Plugin : IAsyncDalamudPlugin
 {
-    [PluginService] internal static IChatGui ChatGui { get; private set; } = null!;
-    [PluginService] internal static IClientState ClientState { get; private set; } = null!;
-    [PluginService] internal static ICommandManager CommandManager { get; set; } = null!;
-    [PluginService] internal static IDalamudPluginInterface PluginInterface { get; private set; } = null!;
-    [PluginService] internal static IDataManager DataManager { get; private set; } = null!;
-    [PluginService] internal static IDtrBar DtrBar { get; private set; } = null!;
-    [PluginService] internal static IFramework Framework { get; private set; } = null!;
-    [PluginService] internal static IGameConfig GameConfig { get; private set; } = null!;
-    [PluginService] internal static IGameInteropProvider GameInteropProvider { get; private set; } = null!;
-    [PluginService] internal static INotificationManager NotificationManager { get; private set; } = null!;
-    [PluginService] internal static IObjectTable ObjectTable { get; private set; } = null!;
-    [PluginService] internal static IPluginLog Log { get; private set; } = null!;
-    [PluginService] internal static ISigScanner SigScanner { get; private set; } = null!;
-    [PluginService] internal static ITargetManager TargetManager { get; private set; } = null!;
-    [PluginService] internal static ITextureProvider TextureProvider { get; private set; } = null!;
+    [PluginService] internal static IChatGui ChatGui                                { get; private set; } = null!;
+    [PluginService] internal static IClientState ClientState                        { get; private set; } = null!;
+    [PluginService] internal static ICommandManager CommandManager                  { get; private set; } = null!;
+    [PluginService] internal static IDalamudPluginInterface PluginInterface         { get; private set; } = null!;
+    [PluginService] internal static IDataManager DataManager                        { get; private set; } = null!;
+    [PluginService] internal static IDtrBar DtrBar                                  { get; private set; } = null!;
+    [PluginService] internal static IFramework Framework                            { get; private set; } = null!;
+    [PluginService] internal static IGameConfig GameConfig                          { get; private set; } = null!;
+    [PluginService] internal static IGameInteropProvider GameInteropProvider        { get; private set; } = null!;
+    [PluginService] internal static INotificationManager NotificationManager        { get; private set; } = null!;
+    [PluginService] internal static IObjectTable ObjectTable                        { get; private set; } = null!;
+    [PluginService] internal static IPluginLog Log                                  { get; private set; } = null!;
+    [PluginService] internal static ISigScanner SigScanner                          { get; private set; } = null!;
+    [PluginService] internal static ITargetManager TargetManager                    { get; private set; } = null!;
+    [PluginService] internal static ITextureProvider TextureProvider                { get; private set; } = null!;
 
     /// <summary>
     ///     Internal plugin version
@@ -136,41 +135,23 @@ public sealed class Plugin : IAsyncDalamudPlugin
         services.AddSingleton<FriendsListComponentUi>();
         services.AddSingleton<NavigationBarComponentUi>();
         
-        // Ui - View Controllers
-        services.AddSingleton<CustomizePlusViewUiController>();
-        services.AddSingleton<HomeViewUiController>();
-        services.AddSingleton<DebugViewUiController>();
-        services.AddSingleton<EmoteViewUiController>();
-        services.AddSingleton<FriendsViewUiController>();
-        services.AddSingleton<HistoryViewUiController>();
-        services.AddSingleton<HonorificViewUiController>();
-        services.AddSingleton<HypnosisViewUiController>();
-        services.AddSingleton<LoginViewUiController>();
-        services.AddSingleton<MoodlesViewUiController>();
-        services.AddSingleton<PauseViewUiController>();
-        services.AddSingleton<PossessionViewUiController>();
-        services.AddSingleton<SettingsViewUiController>();
-        services.AddSingleton<SpeakViewUiController>();
-        services.AddSingleton<StatusViewUiController>();
-        services.AddSingleton<TransformationsViewUiController>();
-        
         // Ui - Views
-        services.AddSingleton<CustomizePlusViewUi>();
-        services.AddSingleton<HomeViewUi>();
-        services.AddSingleton<DebugViewUi>();
-        services.AddSingleton<EmoteViewUi>();
-        services.AddSingleton<FriendsViewUi>();
-        services.AddSingleton<HistoryViewUi>();
-        services.AddSingleton<HonorificViewUi>();
-        services.AddSingleton<HypnosisViewUi>();
-        services.AddSingleton<LoginViewUi>();
-        services.AddSingleton<MoodlesViewUi>();
-        services.AddSingleton<PauseViewUi>();
-        services.AddSingleton<PossessionViewUi>();
-        services.AddSingleton<SettingsViewUi>();
-        services.AddSingleton<SpeakViewUi>();
-        services.AddSingleton<StatusViewUi>();
-        services.AddSingleton<TransformationsViewUi>();
+        services.AddSingleton<CustomizePlusView>();
+        services.AddSingleton<DebugView>();
+        services.AddSingleton<EmoteView>();
+        services.AddSingleton<FriendsView>();
+        services.AddSingleton<HistoryView>();
+        services.AddSingleton<HomeView>();
+        services.AddSingleton<HonorificView>();
+        services.AddSingleton<HypnosisView>();
+        services.AddSingleton<LoginView>();
+        services.AddSingleton<MoodlesView>();
+        services.AddSingleton<PauseView>();
+        services.AddSingleton<PossessionView>();
+        services.AddSingleton<SettingsView>();
+        services.AddSingleton<SpeakView>();
+        services.AddSingleton<StatusView>();
+        services.AddSingleton<TransformationsView>();
         
         // Ui - Windows
         services.AddSingleton<MainWindow>();
@@ -185,13 +166,13 @@ public sealed class Plugin : IAsyncDalamudPlugin
         // Ui - Windows
         _services.GetRequiredService<WindowManager>();
         
-        // Ui - Controllers
+        // Ui - Views
         _services.GetRequiredService<NavigationBarComponentUi>();           // Required to listen to log in / log out events
-        _services.GetRequiredService<LoginViewUiController>();              // Required to display secret once character configuration loads
-        _services.GetRequiredService<MoodlesViewUiController>();            // Required to display UI elements when IPCs are loaded
-        _services.GetRequiredService<TransformationsViewUiController>();    // Required to display UI elements when IPCs are loaded
-        _services.GetRequiredService<CustomizePlusViewUiController>();      // Required to display UI elements when IPCs are loaded
-        _services.GetRequiredService<HonorificViewUiController>();          // Required to display UI elements when IPCs are loaded
+        _services.GetRequiredService<CustomizePlusView>();                  // Required to display UI elements when IPCs are loaded
+        _services.GetRequiredService<HonorificView>();                      // Required to display UI elements when IPCs are loaded
+        _services.GetRequiredService<LoginView>();                          // Required to display secret once character configuration loads
+        _services.GetRequiredService<MoodlesView>();                        // Required to display UI elements when IPCs are loaded
+        _services.GetRequiredService<TransformationsView>();                // Required to display UI elements when IPCs are loaded
         
         // Handlers
         _services.GetRequiredService<ChatCommandHandler>();
