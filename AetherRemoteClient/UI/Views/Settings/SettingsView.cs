@@ -1,11 +1,16 @@
+using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 
 namespace AetherRemoteClient.UI.Views.Settings;
 
-public partial class SettingsView : IDrawable
+public partial class SettingsView : IView
 {
+    // IView property
+    public View View => View.Settings;
+    
+    // Injected
     private readonly ActionQueueService _actionQueueService;
     private readonly CharacterConfigurationService _characterConfigurationService;
     private readonly CustomizePlusService _customizePlusService;

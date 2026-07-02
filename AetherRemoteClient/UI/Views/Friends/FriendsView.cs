@@ -1,4 +1,5 @@
 using System;
+using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
@@ -6,8 +7,12 @@ using AetherRemoteClient.UI.Components.Friends;
 
 namespace AetherRemoteClient.UI.Views.Friends;
 
-public partial class FriendsView : IDisposable, IDrawable
+public partial class FriendsView : IDisposable, IView
 {
+    // IView property
+    public View View => View.Friends;
+    
+    // Injected
     private readonly FriendsListComponentUi _friendsListComponentUi;
     private readonly AccountService _accountService;
     private readonly FriendsListService _friendsListService;

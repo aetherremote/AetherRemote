@@ -1,7 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Handlers;
 using AetherRemoteClient.Handlers.Chat;
 using AetherRemoteClient.Handlers.Network;
@@ -14,6 +16,7 @@ using AetherRemoteClient.Services;
 using AetherRemoteClient.UI;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.UI.Components.NavigationBar;
+using AetherRemoteClient.UI.Views;
 using AetherRemoteClient.UI.Views.CustomizePlus;
 using AetherRemoteClient.UI.Views.Debug;
 using AetherRemoteClient.UI.Views.Emote;
@@ -136,22 +139,23 @@ public sealed class Plugin : IAsyncDalamudPlugin
         services.AddSingleton<NavigationBarComponentUi>();
         
         // Ui - Views
-        services.AddSingleton<CustomizePlusView>();
-        services.AddSingleton<DebugView>();
-        services.AddSingleton<EmoteView>();
-        services.AddSingleton<FriendsView>();
-        services.AddSingleton<HistoryView>();
-        services.AddSingleton<HomeView>();
-        services.AddSingleton<HonorificView>();
-        services.AddSingleton<HypnosisView>();
-        services.AddSingleton<LoginView>();
-        services.AddSingleton<MoodlesView>();
-        services.AddSingleton<PauseView>();
-        services.AddSingleton<PossessionView>();
-        services.AddSingleton<SettingsView>();
-        services.AddSingleton<SpeakView>();
-        services.AddSingleton<StatusView>();
-        services.AddSingleton<TransformationsView>();
+        services.AddSingleton<IView, DebugView>();
+        services.AddSingleton<IView, EmoteView>();
+        services.AddSingleton<IView, FriendsView>();
+        services.AddSingleton<IView, HistoryView>();
+        services.AddSingleton<IView, HomeView>();
+        services.AddSingleton<IView, HypnosisView>();
+        services.AddSingleton<IView, LoginView>();
+        services.AddSingleton<IView, PauseView>();
+        services.AddSingleton<IView, PossessionView>();
+        services.AddSingleton<IView, SettingsView>();
+        services.AddSingleton<IView, SpeakView>();
+        services.AddSingleton<IView, StatusView>();
+        services.AddSingleton<IView, CustomizePlusView>();
+        services.AddSingleton<IView, HonorificView>();
+        services.AddSingleton<IView, MoodlesView>();
+        services.AddSingleton<IView, TransformationsView>();
+        services.AddSingleton<ViewRegistry>();
         
         // Ui - Windows
         services.AddSingleton<MainWindow>();
@@ -163,16 +167,12 @@ public sealed class Plugin : IAsyncDalamudPlugin
         // Upgrade legacy configuration files
         await _services.GetRequiredService<LegacyConfigurationImportService>().ScanForConfigurationsAndImport().ConfigureAwait(false);
         
+        // Initialize all the views
+        foreach (var service in _services.GetRequiredService<IEnumerable<IView>>())
+            service.Initialize();
+            
         // Ui - Windows
         _services.GetRequiredService<WindowManager>();
-        
-        // Ui - Views
-        _services.GetRequiredService<NavigationBarComponentUi>();           // Required to listen to log in / log out events
-        _services.GetRequiredService<CustomizePlusView>();                  // Required to display UI elements when IPCs are loaded
-        _services.GetRequiredService<HonorificView>();                      // Required to display UI elements when IPCs are loaded
-        _services.GetRequiredService<LoginView>();                          // Required to display secret once character configuration loads
-        _services.GetRequiredService<MoodlesView>();                        // Required to display UI elements when IPCs are loaded
-        _services.GetRequiredService<TransformationsView>();                // Required to display UI elements when IPCs are loaded
         
         // Handlers
         _services.GetRequiredService<ChatCommandHandler>();

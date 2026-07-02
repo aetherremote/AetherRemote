@@ -7,8 +7,12 @@ using AetherRemoteClient.UI.Components.Friends;
 
 namespace AetherRemoteClient.UI.Views.Emote;
 
-public partial class EmoteView : IDisposable, IDrawable
+public partial class EmoteView : IDisposable, IView
 {
+    // IView property
+    public View View => View.Emote;
+    
+    // Injected
     private readonly FriendsListComponentUi _friendsList;
     private readonly CommandLockoutService _commandLockoutService;
     private readonly EmoteService _emoteService;

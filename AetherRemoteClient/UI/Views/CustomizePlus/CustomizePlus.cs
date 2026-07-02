@@ -1,4 +1,5 @@
 using System;
+using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
@@ -6,8 +7,11 @@ using AetherRemoteClient.UI.Components.Friends;
 
 namespace AetherRemoteClient.UI.Views.CustomizePlus;
 
-public partial class CustomizePlusView : IDrawable, IDisposable
+public partial class CustomizePlusView : IDisposable, IView
 {
+    // IView property
+    public View View => View.CustomizePlus;
+
     // Injected
     private readonly FriendsListComponentUi _friendsListComponentUi;
     private readonly CommandLockoutService _commandLockoutService;
@@ -27,7 +31,10 @@ public partial class CustomizePlusView : IDrawable, IDisposable
         _customizePlusService = customizePlusService;
         _networkCommandManager = networkCommandManager;
         _selectionManager = selectionManager;
-
+    }
+    
+    public void Initialize()
+    {
         _customizePlusService.IpcReady += OnIpcReady;
         if (_customizePlusService.ApiAvailable)
             _ = RefreshCustomizeProfiles();

@@ -1,12 +1,17 @@
 using System;
+using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Infrastructure.Authentication;
 using AetherRemoteClient.Services;
 
 namespace AetherRemoteClient.UI.Views.Login;
 
-public partial class LoginView : IDisposable, IDrawable
+public partial class LoginView : IDisposable, IView
 {
+    // IView property
+    public View View => View.Login;
+    
+    // Injected
     private readonly AuthenticationInfrastructure _authenticationInfrastructure;
     private readonly ActiveSessionService _activeSessionService;
     private readonly SecretsService _secretsService;

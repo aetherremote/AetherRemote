@@ -10,8 +10,12 @@ using AetherRemoteCommon.Util;
 
 namespace AetherRemoteClient.UI.Views.Speak;
 
-public partial class SpeakView : IDrawable
+public partial class SpeakView : IView
 {
+    // IView property
+    public View View => View.Speak;
+    
+    // Injected
     private readonly FriendsListComponentUi _friendsListComponentUi;
     private readonly CommandLockoutService _commandLockoutService;
     private readonly WorldService _worldService;

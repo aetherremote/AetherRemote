@@ -7,8 +7,12 @@ using AetherRemoteClient.UI.Components.Friends;
 
 namespace AetherRemoteClient.UI.Views.Hypnosis;
 
-public partial class HypnosisView : IDisposable, IDrawable
+public partial class HypnosisView : IDisposable, IView
 {
+    // IView property
+    public View View => View.Hypnosis;
+    
+    // Injected
     private readonly FriendsListComponentUi _friendsListComponentUi;
     private readonly CommandLockoutService _commandLockoutService;
     private readonly NetworkService _networkService;

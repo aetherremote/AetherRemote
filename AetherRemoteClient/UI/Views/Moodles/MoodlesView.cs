@@ -1,4 +1,5 @@
 using System;
+using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
@@ -6,8 +7,12 @@ using AetherRemoteClient.UI.Components.Friends;
 
 namespace AetherRemoteClient.UI.Views.Moodles;
 
-public partial class MoodlesView : IDisposable, IDrawable
+public partial class MoodlesView : IDisposable, IView
 {
+    // IView property
+    public View View => View.Moodles;
+    
+    // Injected
     private readonly FriendsListComponentUi _friendsListComponentUi;
     private readonly CommandLockoutService _commandLockoutService;
     private readonly MoodlesService _moodlesService;
@@ -29,7 +34,10 @@ public partial class MoodlesView : IDisposable, IDrawable
         _networkService = networkService;
         _notesService = notesService;
         _selectionManager = selectionManager;
-        
+    }
+
+    public void Initialize()
+    {
         _moodlesService.IpcReady += OnIpcReady;
         if (_moodlesService.ApiAvailable)
             RefreshMoodles();

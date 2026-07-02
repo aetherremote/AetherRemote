@@ -1,4 +1,5 @@
 using System;
+using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
@@ -6,8 +7,12 @@ using AetherRemoteClient.UI.Components.Friends;
 
 namespace AetherRemoteClient.UI.Views.Transformations;
 
-public partial class TransformationsView : IDisposable, IDrawable
+public partial class TransformationsView : IDisposable, IView
 {
+    // IView property
+    public View View => View.Transformations;
+    
+    // Injected
     private readonly FriendsListComponentUi _friendsListComponentUi;
     private readonly CharacterConfigurationService _characterConfigurationService;
     private readonly CommandLockoutService _commandLockoutService;
@@ -41,7 +46,10 @@ public partial class TransformationsView : IDisposable, IDrawable
         _characterTransformationManager = characterTransformationManager;
         _networkCommandManager = networkCommandManager;
         _selectionManager = selectionManager;
-        
+    }
+    
+    public void Initialize()
+    {
         _glamourerService.IpcReady += OnIpcReady;
         if (_glamourerService.ApiAvailable)
             _ = RefreshGlamourerDesigns().ConfigureAwait(false);

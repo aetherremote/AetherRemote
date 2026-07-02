@@ -1,3 +1,4 @@
+using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Managers.Possession;
@@ -5,8 +6,12 @@ using AetherRemoteClient.Services;
 
 namespace AetherRemoteClient.UI.Views.Status;
 
-public partial class StatusView : IDrawable
+public partial class StatusView : IView
 {
+    // IView property
+    public View View => View.Status;
+    
+    // Injected
     private readonly CustomizePlusService _customizePlusService;
     private readonly GlamourerService _glamourerService;
     private readonly HonorificService _honorificService;

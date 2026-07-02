@@ -1,7 +1,6 @@
-using System;
 using System.Numerics;
-using System.Threading.Tasks;
 using AetherRemoteClient.Domain;
+using AetherRemoteClient.Domain.Enums;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.UI.Style;
@@ -11,42 +10,10 @@ using Dalamud.Interface;
 
 namespace AetherRemoteClient.UI.Components.NavigationBar;
 
-public class NavigationBarComponentUi : IDisposable
+public class NavigationBarComponentUi(NetworkService networkService, ViewService viewService, SelectionManager selection)
 {
     // Const
     private static readonly Vector2 AlignButtonTextLeft = new(0, 0.5f);
-    
-    // Injected
-    private readonly NetworkService _networkService; 
-    private readonly ViewService _viewService; 
-    private readonly SelectionManager _selectionManager;
-
-    /// <summary>
-    ///     Should we draw the connected version of the navigation bar
-    /// </summary>
-    private bool _drawConnectedMenu;
-    
-    public NavigationBarComponentUi(NetworkService networkService, ViewService viewService, SelectionManager selection)
-    {
-        _networkService = networkService;
-        _viewService = viewService;
-        _selectionManager = selection;
-
-        _networkService.Connected += OnConnected;
-        _networkService.Disconnected += OnDisconnected;
-    }
-
-    private Task OnConnected()
-    {
-        _drawConnectedMenu = true;
-        return Task.CompletedTask;
-    }
-    
-    private Task OnDisconnected()
-    {
-        _drawConnectedMenu = false;
-        return Task.CompletedTask;
-    }
     
     public void Draw()
     {
@@ -60,7 +27,7 @@ public class NavigationBarComponentUi : IDisposable
         {
             ImGui.PushStyleVar(ImGuiStyleVar.ButtonTextAlign, AlignButtonTextLeft);
 
-            if (_drawConnectedMenu)
+            if (networkService.State is ConnectionState.Connected)
             {
                 ImGui.TextUnformatted("General");
                 NavBarButton(FontAwesomeIcon.HouseChimney, "Home", View.Home, size, offset);
@@ -114,7 +81,7 @@ public class NavigationBarComponentUi : IDisposable
     private void NavBarButton(FontAwesomeIcon icon, string text, View view, Vector2 size, Vector2 offset)
     {
         var begin = ImGui.GetCursorPos();
-        if (_viewService.CurrentView == view)
+        if (viewService.CurrentView == view)
         {
             ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteColors.PrimaryColor);
             ImGui.Button($"##{text}", size);
@@ -124,10 +91,10 @@ public class NavigationBarComponentUi : IDisposable
         {
             if (ImGui.Button($"##{text}", size))
             {
-                _viewService.Navigate(view);
+                viewService.Navigate(view);
             
                 // Required to in cases where you move from things like Friends -> Speak, and the friend you were editing was offline
-                _selectionManager.ClearOfflineFriends();
+                selection.ClearOfflineFriends();
             }
         }
 
@@ -137,13 +104,5 @@ public class NavigationBarComponentUi : IDisposable
         ImGui.SameLine();
         ImGui.TextUnformatted(text);
         ImGui.SetCursorPos(begin + new Vector2(0, size.Y + AetherRemoteImGui.ItemSpacing.Y));
-    }
-
-    public void Dispose()
-    {
-        _networkService.Connected += OnConnected;
-        _networkService.Disconnected += OnDisconnected;
-        
-        GC.SuppressFinalize(this);
     }
 }

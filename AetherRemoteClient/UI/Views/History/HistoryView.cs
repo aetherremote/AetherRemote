@@ -4,8 +4,11 @@ using AetherRemoteClient.Services;
 
 namespace AetherRemoteClient.UI.Views.History;
 
-public partial class HistoryView : IDrawable
+public partial class HistoryView : IView
 {
+    // IView property
+    public View View => View.History;
+    
     public HistoryView(
         LogService logService)
     {

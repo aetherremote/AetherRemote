@@ -1,3 +1,4 @@
+using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Managers.Possession;
@@ -6,8 +7,12 @@ using AetherRemoteClient.UI.Components.Friends;
 
 namespace AetherRemoteClient.UI.Views.Possession;
 
-public partial class PossessionView : IDrawable
+public partial class PossessionView : IView
 {
+    // IView property
+    public View View => View.Possession;
+    
+    // Injected
     private readonly FriendsListComponentUi _friendsListComponentUi;
     private readonly AgreementsService _agreementsService;
     private readonly CommandLockoutService _commandLockoutService;
