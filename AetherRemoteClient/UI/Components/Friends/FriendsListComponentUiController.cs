@@ -5,6 +5,7 @@ using AetherRemoteClient.Domain.Enums;
 using AetherRemoteClient.Domain.Filters;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Services.Configuration;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums.Permissions;
@@ -18,22 +19,22 @@ namespace AetherRemoteClient.UI.Components.Friends;
 /// </summary>
 public class FriendsListComponentUiController : IDisposable
 {
+    private readonly ConfigurationService _configurationService;
     private readonly FriendsListService _friendsListService;
     private readonly NetworkService _networkService;
-    private readonly NotesService _notesService;
     private readonly SelectionManager _selectionManager;
     
     public readonly FilterFriends Filter;
     
     public FriendsListComponentUiController(
+        ConfigurationService configurationService,
         FriendsListService friendsListService, 
         NetworkService networkService, 
-        NotesService notesService,
         SelectionManager selectionManager)
     {
+        _configurationService = configurationService;
         _friendsListService = friendsListService;
         _networkService = networkService;
-        _notesService = notesService;
         _selectionManager = selectionManager;
         
         Filter = new FilterFriends(() => _friendsListService.Friends);
@@ -80,7 +81,7 @@ public class FriendsListComponentUiController : IDisposable
             case AddFriendEc.Pending:
                 
                 // Try to get the name from our notes just in case they are a previous friend
-                _notesService.Notes.TryGetValue(request.TargetFriendCode, out var note);
+                var note = _configurationService.GetNoteFor(request.TargetFriendCode);
                 
                 // Create the new object with notes
                 var friend = new Friend(request.TargetFriendCode, response.Status, note, new RawPermissions(PrimaryPermissions.None, PrimaryPermissions.None, SpeakPermissions.None, SpeakPermissions.None, ElevatedPermissions.None, ElevatedPermissions.None), null);

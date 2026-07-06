@@ -10,9 +10,6 @@ public enum ArAuthAuthenticationErrorCode
     /// <summary> <inheritdoc cref="LoginAuthenticationErrorCode.Uninitialized"/> </summary>
     Uninitialized,
     
-    /// <summary> <inheritdoc cref="LoginAuthenticationErrorCode.Success"/> </summary>
-    Success,
-    
     /// <summary> <inheritdoc cref="LoginAuthenticationErrorCode.VersionMismatch"/> </summary>
     VersionMismatch,
     

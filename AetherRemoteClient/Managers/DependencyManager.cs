@@ -4,6 +4,7 @@ using System.Linq;
 using System.Timers;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Services.Dependencies;
 using Dalamud.Plugin;
 
 namespace AetherRemoteClient.Managers;

@@ -60,18 +60,16 @@ public partial class DatabaseInfrastructure
     /// </summary>
     private static class Schema
     {
-        /// <summary>
-        ///     Table schema in required creation order  
-        /// </summary>
+        /// <summary> All required tables </summary>
         public static readonly string[] Tables =
         [
-            CreateSecretsTable,
-            CreateCharactersTable,
-            CreateSettingsTable,
-            CreateTransformationsTable,
             CreateAgreementsTable,
-            CreateGlobalSettingsTable,
-            CreateNotesTable
+            CreateCharactersTable,
+            CreateNotesTable,
+            CreateSecretsTable,
+            CreateSecretSettingsTable,
+            CreateSettingsTable,
+            CreateTransformationsTable
         ];
 
         private const string CreateAgreementsTable =
@@ -93,14 +91,6 @@ public partial class DatabaseInfrastructure
                 );
             """;
 
-        private const string CreateGlobalSettingsTable =
-            """
-                CREATE TABLE IF NOT EXISTS "GlobalSettings" (
-                    "SettingId"	                    INTEGER PRIMARY KEY,
-                    "Value"	                        TEXT NOT NULL
-                );
-            """;
-
         private const string CreateNotesTable =
             """
                 CREATE TABLE IF NOT EXISTS "Notes" (
@@ -119,14 +109,23 @@ public partial class DatabaseInfrastructure
                 );
             """;
 
-        private const string CreateSettingsTable =
+        // Settings tied to a secret (aka character settings)
+        private const string CreateSecretSettingsTable =
             """
-                CREATE TABLE IF NOT EXISTS "Settings" (
+                CREATE TABLE IF NOT EXISTS "SecretSettings" (
             	    "SecretId"	                    INTEGER NOT NULL,
             	    "SettingId"	                    INTEGER NOT NULL,
             	    "Value"	                        TEXT NOT NULL,
             	    PRIMARY KEY (SecretId, SettingId)
             	    FOREIGN KEY("SecretId") REFERENCES "Secrets"("Id") ON DELETE CASCADE
+                );
+            """;
+        
+        private const string CreateSettingsTable =
+            """
+                CREATE TABLE IF NOT EXISTS "Settings" (
+                    "SettingId"	                    INTEGER PRIMARY KEY,
+                    "Value"	                        TEXT NOT NULL
                 );
             """;
 

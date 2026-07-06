@@ -18,11 +18,12 @@ public partial class HomeView
         SharedUserInterfaces.ContentBox("HomeHeader", AetherRemoteColors.PanelColor, true, () =>
         {
             SharedUserInterfaces.PushBigFont();
-            
-            var size = ImGui.CalcTextSize(_accountService.FriendCode);
+
+            var friendCode = _activeSessionService.FriendCode ?? "<Unknown>";
+            var size = ImGui.CalcTextSize(friendCode);
             ImGui.SetCursorPosX((windowWidth - size.X) * 0.5f);
-            if (ImGui.Selectable(_accountService.FriendCode, false, ImGuiSelectableFlags.None, size))
-                ImGui.SetClipboardText(_accountService.FriendCode);
+            if (ImGui.Selectable(friendCode, false, ImGuiSelectableFlags.None, size))
+                ImGui.SetClipboardText(friendCode);
 
             SharedUserInterfaces.PopBigFont();
             SharedUserInterfaces.TextCentered("(click friend code to copy)", ImGuiColors.DalamudGrey);

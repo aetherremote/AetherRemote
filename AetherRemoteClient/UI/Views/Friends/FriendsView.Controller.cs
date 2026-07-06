@@ -28,8 +28,11 @@ public partial class FriendsView
 
     private bool PendingChangesGlobal()
     {
+        if (_activeSessionService.GlobalPermissions is null)
+            return false;
+        
         // TODO: This should definitely be cached...
-        return _global.IsEqualTo(GlobalPermissions.From(_accountService.GlobalPermissions)) is false;
+        return _global.IsEqualTo(GlobalPermissions.From(_activeSessionService.GlobalPermissions)) is false;
     }
 
     /// <summary>
@@ -48,7 +51,7 @@ public partial class FriendsView
         }
         
         NotificationHelper.Success("Successfully Updated Global Permissions", string.Empty);
-        _accountService.SetGlobalPermissions(resolved);
+        _activeSessionService.UpdateGlobalPermissions(resolved);
     }
 
     /// <summary>
@@ -64,12 +67,12 @@ public partial class FriendsView
         if (_individual.Note == string.Empty)
         {
             friend.Note = null;
-            await _notesService.RemoveNote(friend.FriendCode).ConfigureAwait(false);
+            await _configurationService.DeleteNote(friend.FriendCode).ConfigureAwait(false);
         }
         else
         {
             friend.Note = _individual.Note;
-            await _notesService.AddNote(friend.FriendCode, friend.Note).ConfigureAwait(false);
+            await _configurationService.AddNote(friend.FriendCode, friend.Note).ConfigureAwait(false);
         }
 
         // Construct the request and send it
@@ -123,10 +126,11 @@ public partial class FriendsView
     /// <summary>
     ///     Handle when the global permissions are updated
     /// </summary>
-    private Task OnGlobalPermissionsUpdated(ResolvedPermissions globalPermissions)
+    private void OnGlobalPermissionsChanged(ResolvedPermissions? globalPermissions)
     {
-        _global = GlobalPermissions.From(globalPermissions);
-        return Task.CompletedTask;
+        _global = globalPermissions is null
+            ? new GlobalPermissions()
+            : GlobalPermissions.From(globalPermissions);
     }
 
     /// <summary>

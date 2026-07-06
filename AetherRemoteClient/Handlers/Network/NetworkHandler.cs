@@ -4,6 +4,8 @@ using AetherRemoteClient.Domain;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Managers.Possession;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Services.Configuration;
+using AetherRemoteClient.Services.Dependencies;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
@@ -30,13 +32,12 @@ namespace AetherRemoteClient.Handlers.Network;
 public partial class NetworkHandler : IDisposable
 {
     // Injected
-    private readonly AccountService _accountService;
     private readonly ActionQueueService _actionQueueService;
-    private readonly AgreementsService _agreementsService;
+    private readonly ActiveSessionService _activeSessionService;
+    private readonly ConfigurationService _configurationService;
     private readonly CustomizePlusService _customizePlusService;
     private readonly EmoteService _emoteService;
     private readonly FriendsListService _friendsListService;
-    private readonly GlobalSettingsService _globalSettingsService;
     private readonly HonorificService _honorificService;
     private readonly LogService _logService;
     private readonly MoodlesService _moodlesService;
@@ -52,13 +53,12 @@ public partial class NetworkHandler : IDisposable
     private readonly List<IDisposable> _handlers = [];
     
     public NetworkHandler(
-        AccountService accountService,
         ActionQueueService actionQueueService,
-        AgreementsService agreementsService,
+        ActiveSessionService activeSessionService,
+        ConfigurationService configurationService,
         CustomizePlusService customizePlusService,
         EmoteService emoteService,
         FriendsListService friendsListService,
-        GlobalSettingsService globalSettingsService,
         HonorificService honorificService,
         LogService logService,
         MoodlesService moodlesService,
@@ -71,13 +71,12 @@ public partial class NetworkHandler : IDisposable
         SelectionManager selectionManager,
         StatusService statusService)
     {
-        _accountService = accountService;
         _actionQueueService = actionQueueService;
-        _agreementsService = agreementsService;
+        _activeSessionService = activeSessionService;
+        _configurationService = configurationService;
         _customizePlusService = customizePlusService;
         _emoteService = emoteService;
         _friendsListService = friendsListService;
-        _globalSettingsService = globalSettingsService;
         _honorificService = honorificService;
         _logService = logService;
         _moodlesService = moodlesService;
@@ -124,7 +123,7 @@ public partial class NetworkHandler : IDisposable
         }
         
         // Plugin in safe mode
-        if (_globalSettingsService.SafeMode)
+        if (_configurationService.SafeMode)
         {
             _logService.SafeMode(operation, friend.NoteOrFriendCode);
             return ActionResultBuilder.Fail<Friend>(ActionResultEc.ClientInSafeMode);
@@ -143,9 +142,15 @@ public partial class NetworkHandler : IDisposable
             _logService.FeaturePaused(operation, friend.NoteOrFriendCode);
             return ActionResultBuilder.Fail<Friend>(ActionResultEc.ClientHasFeaturePaused);
         }
+
+        if (_activeSessionService.GlobalPermissions is null)
+        {
+            Plugin.Log.Error("[NetworkHandler.TryGetFriendWithCorrectPermissions] GlobalPermissions not set.");
+            return ActionResultBuilder.Fail<Friend>(ActionResultEc.Unknown);
+        }
         
         // Resolve
-        var resolved = PermissionResolver.Resolve(_accountService.GlobalPermissions, friend.PermissionsGrantedToFriend);
+        var resolved = PermissionResolver.Resolve(_activeSessionService.GlobalPermissions, friend.PermissionsGrantedToFriend);
         
         // Test Primary Permissions
         if ((resolved.Primary & permissions.Primary) != permissions.Primary)

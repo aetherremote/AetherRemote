@@ -7,7 +7,7 @@ using Newtonsoft.Json.Linq;
 
 namespace AetherRemoteClient.Services;
 
-public static class ConfigurationService
+public static class HypnosisSaveService
 {
     // Hypnosis Profiles
     private const string HypnosisFolderName = "Hypnosis";

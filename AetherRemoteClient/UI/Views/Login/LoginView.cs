@@ -1,8 +1,9 @@
 using System;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
-using AetherRemoteClient.Infrastructure.Authentication;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Services.Configuration;
 
 namespace AetherRemoteClient.UI.Views.Login;
 
@@ -12,21 +13,21 @@ public partial class LoginView : IDisposable, IView
     public View View => View.Login;
     
     // Injected
-    private readonly AuthenticationInfrastructure _authenticationInfrastructure;
     private readonly ActiveSessionService _activeSessionService;
-    private readonly SecretsService _secretsService;
+    private readonly ConfigurationService _configurationService;
     private readonly NetworkService _networkService;
+    private readonly ConnectionManager _connectionManager;
     
     public LoginView(
-        AuthenticationInfrastructure authenticationInfrastructure,
         ActiveSessionService activeSessionService,
-        SecretsService secretsService,
-        NetworkService networkService)
+        ConfigurationService configurationService,
+        NetworkService networkService,
+        ConnectionManager connectionManager)
     {
-        _authenticationInfrastructure = authenticationInfrastructure;
         _activeSessionService = activeSessionService;
-        _secretsService = secretsService;
+        _configurationService = configurationService;
         _networkService = networkService;
+        _connectionManager = connectionManager;
     }
     
     public void Dispose()

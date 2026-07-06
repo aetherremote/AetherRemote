@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Services.Configuration;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.GetAccountData;
 
@@ -10,91 +11,71 @@ namespace AetherRemoteClient.Managers;
 /// <summary>
 ///     Manages connection and disconnection events from the server
 /// </summary>
-public class ConnectionManager : IDisposable
+public class ConnectionManager(
+    ActiveSessionService activeSessionService,
+    ConfigurationService configurationService,
+    FriendsListService friendsListService, 
+    NetworkService networkService, 
+    ViewService viewService) : IDisposable
 {
-    private readonly AccountService _accountService;
-    private readonly CharacterConfigurationService _characterConfigurationService;
-    private readonly FriendsListService _friendsListService;
-    private readonly NetworkService _networkService;
-    private readonly NotesService _notesService;
-    private readonly ViewService _viewService;
-    
     /// <summary>
-    ///     <inheritdoc cref="ConnectionManager"/>
+    ///     Attempt to connect to the server
     /// </summary>
-    public ConnectionManager(
-        AccountService accountService, 
-        CharacterConfigurationService characterConfigurationService,
-        FriendsListService friendsListService, 
-        NetworkService networkService, 
-        NotesService notesService,
-        ViewService viewService)
+    /// <remarks> Utilizes the SecretId in <see cref="ActiveSessionService"/> to retrieve the secret</remarks>
+    public async Task<bool> TryConnectToServerAsync()
     {
-        _accountService = accountService;
-        _characterConfigurationService = characterConfigurationService;
-        _friendsListService = friendsListService;
-        _networkService = networkService;
-        _notesService = notesService;
-        _viewService = viewService;
-
-        _networkService.Connected += OnConnected;
-        _networkService.Disconnected += OnDisconnected;
-    }
-    
-    private async Task OnConnected()
-    {
-        if (_characterConfigurationService.Current is not { } characterConfiguration)
-            return;
+        if (activeSessionService.PendingSecretId is not { } pendingSecretId || 
+            activeSessionService.CharacterName is not { } characterName || 
+            activeSessionService.CharacterWorld is not { } characterWorld)
+            return false;
         
-        // Get account data from the server
-        var request = new GetAccountDataRequest(characterConfiguration.Name, characterConfiguration.World);
-        var response = await _networkService.InvokeAsync<GetAccountDataResponse>(HubMethod.GetAccountData, request).ConfigureAwait(false);
-
-        // If there wasn't a success, don't stay connected; the plugin is not usable in this state
+        if (configurationService.Secrets.TryGetValue(pendingSecretId, out var secret) is false)
+            return false;
+        
+        if (await networkService.ConnectToServerAsync(secret.Value).ConfigureAwait(false) is false)
+            return false;
+        
+        networkService.Disconnected += OnDisconnected;
+        
+        var request = new GetAccountDataRequest(characterName, characterWorld);
+        var response = await networkService.InvokeAsync<GetAccountDataResponse>(HubMethod.GetAccountData, request).ConfigureAwait(false);
         if (response.Result is not GetAccountDataEc.Success)
         {
-            Plugin.Log.Fatal($"[ConnectionManager] Failed to get account data {response.Result}");
-            await _networkService.DisconnectFromServerAsync().ConfigureAwait(false);
-            return;
+            Plugin.Log.Fatal($"[ConnectionManager.TryConnectToServerAsync] Failed to get account data {response.Result}");
+            networkService.Disconnected -= OnDisconnected;
+            await networkService.DisconnectFromServerAsync().ConfigureAwait(false);
+            return false;
+        }
+
+        if (await activeSessionService.UpdateAccountDetails(response.AccountFriendCode, response.AccountGlobalPermissions).ConfigureAwait(false) is false)
+        {
+            Plugin.Log.Fatal($"[ConnectionManager.TryConnectToServerAsync] Failed to initialize account details");
+            networkService.Disconnected -= OnDisconnected;
+            await networkService.DisconnectFromServerAsync().ConfigureAwait(false);
+            return false;
         }
         
-        // Set our account information
-        _accountService.SetFriendCode(response.AccountFriendCode);
-        _accountService.SetGlobalPermissions(response.AccountGlobalPermissions);
-        
-        // Clear the friend list in preparation for adding friends returned from the server
-        _friendsListService.Clear();
-
-        // Iterate over all the relationships to transform them into domain models
+        friendsListService.Clear();
         foreach (var friend in response.AccountFriends)
         {
-            // Try to extract the note
-            _notesService.Notes.TryGetValue(friend.TargetFriendCode, out var note);
-            
-            // Add the new friend with all the data required
-            _friendsListService.Add(new Friend(friend.TargetFriendCode, friend.Status, note, friend.PermissionsGrantedTo, friend.PermissionsGrantedBy));
+            var note = configurationService.GetNoteFor(friend.TargetFriendCode);
+            friendsListService.Add(new Friend(friend.TargetFriendCode, friend.Status, note, friend.PermissionsGrantedTo, friend.PermissionsGrantedBy));
         }
-
-        // Set the view to the 'home screen'
-        _viewService.Home();
+        
+        viewService.Home();
+        return true;
     }
 
     private Task OnDisconnected()
     {
-        // Clear the friend list
-        _friendsListService.Clear();
-        
-        // Reset the view if required
-        _viewService.ResetView();
-        
-        // Return
+        viewService.ResetView();
+        networkService.Disconnected -= OnDisconnected;
         return Task.CompletedTask;
     }
 
     public void Dispose()
     {
-        _networkService.Connected -= OnConnected;
-        _networkService.Disconnected -= OnDisconnected;
+        networkService.Disconnected -= OnDisconnected;
         GC.SuppressFinalize(this);
     }
 }

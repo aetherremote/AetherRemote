@@ -7,7 +7,7 @@ using Dalamud.Plugin.Ipc.Exceptions;
 using Penumbra.Api.Enums;
 using Penumbra.Api.IpcSubscribers;
 
-namespace AetherRemoteClient.Services;
+namespace AetherRemoteClient.Services.Dependencies;
 
 /// <summary>
 ///     Provides access to Penumbra

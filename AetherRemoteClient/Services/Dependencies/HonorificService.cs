@@ -11,7 +11,7 @@ using Dalamud.Plugin.Ipc;
 using Dalamud.Plugin.Ipc.Exceptions;
 using Newtonsoft.Json;
 
-namespace AetherRemoteClient.Services;
+namespace AetherRemoteClient.Services.Dependencies;
 
 /// <summary>
 ///     Provides access to Honorific

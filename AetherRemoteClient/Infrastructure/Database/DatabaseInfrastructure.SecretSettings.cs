@@ -6,23 +6,24 @@ using AetherRemoteClient.Domain.Enums;
 namespace AetherRemoteClient.Infrastructure.Database;
 
 public partial class DatabaseInfrastructure
-{   
+{
     /// <summary>
-    ///     Loads all the settings for the plugin
+    ///     Loads all the settings for a secret id from the table in their raw data string
     /// </summary>
-    public async Task<Dictionary<GlobalSetting, string>?> GetSettings()
+    public async Task<Dictionary<Setting, string>?> GetSecretSettings(long secretId)
     {
         try
         {
             await using var command = _database.CreateCommand();
-            command.CommandText = "SELECT SettingId, Value FROM Settings";
-            
-            var results = new Dictionary<GlobalSetting, string>();
+            command.CommandText = "SELECT SettingId, Value FROM SecretSettings WHERE SecretId = @SecretId";
+            command.Parameters.AddWithValue("@SecretId", secretId);
+
+            var results = new Dictionary<Setting, string>();
             
             await using var reader = await command.ExecuteReaderAsync().ConfigureAwait(false);
             while (await reader.ReadAsync().ConfigureAwait(false))
             {
-                var setting = (GlobalSetting)reader.GetInt16(0);
+                var setting = (Setting)reader.GetInt16(0);
                 var value = reader.GetString(1);
                 results.Add(setting, value);
             }
@@ -31,22 +32,24 @@ public partial class DatabaseInfrastructure
         }
         catch (Exception e)
         {
-            Plugin.Log.Error($"[DatabaseInfrastructure.GetSettings] {e}");
+            Plugin.Log.Error($"[DatabaseInfrastructure.GetSecretSettings] {e}");
             return null;
         }
     }
-
+    
     /// <summary>
-    ///     Sets a specific <see cref="GlobalSetting"/>'s value
+    ///     Sets a specified setting for the provided secret id
     /// </summary>
-    public async Task<bool> SetSetting(GlobalSetting setting, string value)
+    public async Task<bool> SetSecretSetting(long secretId, Setting setting, string value)
     {
         try
         {
             await using var command = _database.CreateCommand();
-            command.CommandText = "INSERT INTO Settings VALUES (@SettingId, @Value) ON CONFLICT (SettingId) DO UPDATE SET Value = @Value";
+            command.CommandText = "INSERT INTO SecretSettings VALUES (@SecretId, @SettingId, @Value) ON CONFLICT (SecretId, SettingId) DO UPDATE SET Value = @Value";
+            command.Parameters.AddWithValue("@SecretId", secretId);
             command.Parameters.AddWithValue("@SettingId", setting);
             command.Parameters.AddWithValue("@Value", value);
+
             return await command.ExecuteNonQueryAsync().ConfigureAwait(false) is 1;
         }
         catch (Exception e)
@@ -55,4 +58,7 @@ public partial class DatabaseInfrastructure
             return false;
         }
     }
+    
+    /// <inheritdoc cref="SetSecretSetting(long, Setting, string)"/>
+    public async Task<bool> SetSecretSetting(long secretId, Setting setting, bool value) => await SetSecretSetting(secretId, setting, value.ToString());
 }

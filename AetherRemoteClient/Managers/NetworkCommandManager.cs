@@ -16,10 +16,7 @@ namespace AetherRemoteClient.Managers;
 ///     Class responsible for sending and processing command requests to the server
 /// </summary>
 /// <remarks>Specifically focusing on actions a user can do to another</remarks>
-public class NetworkCommandManager(
-    CommandLockoutService commandLockoutService, 
-    NetworkService networkService,
-    NotesService notesService)
+public class NetworkCommandManager(CommandLockoutService commandLockoutService, NetworkService networkService)
 {
     /// <summary>
     ///     Sends a <see cref="EmoteRequest"/> to the server
@@ -29,7 +26,7 @@ public class NetworkCommandManager(
         commandLockoutService.Lock();
         var request = new EmoteRequest(targets, emote, displayLogMessage);
         var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.Emote, request).ConfigureAwait(false);
-        ActionResponseParser.Parse("Emote", response, notesService.Notes);
+        ActionResponseParser.Parse("Emote", response, []); // TODO Fix []
     }
     
     /// <summary>
@@ -50,13 +47,15 @@ public class NetworkCommandManager(
                     if (result is not ActionResultEc.Success)
                         continue;
                     
-                    notesService.Notes.TryGetValue(friendCode, out var note);
+                    // TODO
+                    // notesService.Notes.TryGetValue(friendCode, out var note);
+                    string? note = null;
                     Plugin.ChatGui.Print($"Echo sent to {note ?? friendCode} >> {message}");
                 }
             }
         }
         
-        ActionResponseParser.Parse("Speak", response, notesService.Notes);
+        ActionResponseParser.Parse("Speak", response, []); // TODO Fix []
     }
 
     /// <summary>
@@ -67,7 +66,7 @@ public class NetworkCommandManager(
         commandLockoutService.Lock();
         var request = new CustomizeRequest(targets, profileStringAsBytes, applyMode);
         var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.CustomizePlus, request).ConfigureAwait(false);
-        ActionResponseParser.Parse("Customize+", response, notesService.Notes);
+        ActionResponseParser.Parse("Customize+", response, []); // TODO Fix []
     }
 
     /// <summary>
@@ -78,7 +77,7 @@ public class NetworkCommandManager(
         commandLockoutService.Lock();
         var request = new TransformRequest(targets, design, flags, null);
         var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.Transform, request).ConfigureAwait(false);
-        ActionResponseParser.Parse("Transform", response, notesService.Notes);
+        ActionResponseParser.Parse("Transform", response, []); // TODO Fix []
     }
     
     /// <summary>
@@ -89,6 +88,6 @@ public class NetworkCommandManager(
         commandLockoutService.Lock();
         var request = new TwinningRequest(targets, characterName, characterWorld, attributes, null);
         var response = await networkService.InvokeAsync<ActionResponse>(HubMethod.Twinning, request).ConfigureAwait(false);
-        ActionResponseParser.Parse("Twinning", response, notesService.Notes);
+        ActionResponseParser.Parse("Twinning", response, []); // TODO Fix []
     }
 }

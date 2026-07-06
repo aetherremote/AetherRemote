@@ -3,6 +3,8 @@ using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Services.Configuration;
+using AetherRemoteClient.Services.Dependencies;
 using AetherRemoteClient.UI.Components.Friends;
 
 namespace AetherRemoteClient.UI.Views.Moodles;
@@ -17,14 +19,12 @@ public partial class MoodlesView : IDisposable, IView
     private readonly CommandLockoutService _commandLockoutService;
     private readonly MoodlesService _moodlesService;
     private readonly NetworkService _networkService;
-    private readonly NotesService _notesService;
     private readonly SelectionManager _selectionManager;
     
     public MoodlesView(
         FriendsListComponentUi friendsListComponentUi,
         CommandLockoutService commandLockoutService,
         NetworkService networkService, 
-        NotesService notesService,
         MoodlesService moodlesService, 
         SelectionManager selectionManager)
     {
@@ -32,7 +32,6 @@ public partial class MoodlesView : IDisposable, IView
         _commandLockoutService = commandLockoutService;
         _moodlesService = moodlesService;
         _networkService = networkService;
-        _notesService = notesService;
         _selectionManager = selectionManager;
     }
 

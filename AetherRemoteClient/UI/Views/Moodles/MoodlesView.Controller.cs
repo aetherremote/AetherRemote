@@ -82,7 +82,7 @@ public partial class MoodlesView
             var request = new MoodlesRequest(_selectionManager.GetSelectedFriendCodes(), moodle.Info);
             var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.Moodles, request).ConfigureAwait(false);
             
-            ActionResponseParser.Parse("Moodles", response, _notesService.Notes);
+            ActionResponseParser.Parse("Moodles", response, []); // TODO: Fix []
         }
         catch (Exception e)
         {

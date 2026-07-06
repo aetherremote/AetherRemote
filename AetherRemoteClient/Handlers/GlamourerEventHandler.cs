@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using AetherRemoteClient.Domain.Events;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Services.Dependencies;
 
 namespace AetherRemoteClient.Handlers;
 

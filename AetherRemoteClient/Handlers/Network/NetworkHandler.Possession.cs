@@ -24,7 +24,7 @@ public partial class NetworkHandler
         Plugin.Log.Verbose($"{command}");
         
         // If the client has not accepted the agreement
-        if (_agreementsService.AgreedToPossession is false)
+        if (_configurationService.AgreedToPossession is false)
             return PossessionResultEc.HasNotAcceptedAgreement;
         
         var sender = TryGetFriendWithCorrectPermissions("PossessionBegin", command.SenderFriendCode, PossessionBeginPermissions);

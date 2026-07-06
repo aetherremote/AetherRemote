@@ -3,6 +3,7 @@ using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Services.Dependencies;
 using AetherRemoteClient.UI.Components.Friends;
 
 namespace AetherRemoteClient.UI.Views.CustomizePlus;

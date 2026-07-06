@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain.Honorific;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Services.Dependencies;
 using AetherRemoteClient.Utils;
 using AetherRemoteClient.Utils.Extensions;
 using AetherRemoteCommon.Domain.Enums.Permissions;
@@ -66,7 +67,7 @@ public partial class HonorificView
             
         var request = new HonorificRequest(_selectionManager.GetSelectedFriendCodes(), _selectedTitle.ToHonorificDto());
         var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.Honorific, request).ConfigureAwait(false);
-        ActionResponseParser.Parse("Honorific", response, _notesService.Notes);
+        ActionResponseParser.Parse("Honorific", response, []); // TODO: Fix []
     }
     
     private void OnIpcReady(object? sender, EventArgs e)

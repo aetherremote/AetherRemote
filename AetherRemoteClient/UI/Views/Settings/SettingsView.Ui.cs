@@ -1,6 +1,5 @@
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using AetherRemoteClient.Domain.Enums;
 using AetherRemoteClient.UI.Style;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
@@ -20,6 +19,10 @@ public partial class SettingsView
     // Modals
     private string _addSecretModalSecretName = string.Empty;
     private string _addSecretModalSecretValue = string.Empty;
+    
+    private string _renameSecretModalSecretName = string.Empty;
+    private long _renameSecretModalSecretId = -1;
+    
     private string _deleteSecretModalSecretName = string.Empty;
     private long _deleteSecretModalSecretId = -1;
     
@@ -56,32 +59,25 @@ public partial class SettingsView
     
     private void DrawSettings()
     {
-        if (_secretsService.Secrets.Count is 0)
-        {
-            ImGui.TextWrapped("You must add at least one secret to configure settings.");
-            return;
-        }
-
         SharedUserInterfaces.MediumText("Global Settings");
         
-        var safeMode = _globalSettingsService.SafeMode;
+        var safeMode = _configurationService.SafeMode;
         if (ImGui.Checkbox("Safe Mode##SettingsSafeMode", ref safeMode))
             _ = SetSafeMode(safeMode).ConfigureAwait(false);
         
-        var showOnDtrBar = _globalSettingsService.ShowOnDtrBar;
+        var showOnDtrBar = _configurationService.ShowOnDtrBar;
         if (ImGui.Checkbox("Show on Dtr Bar##SettingsShowDtrBar", ref showOnDtrBar))
             _ = SetShowDtrBar(showOnDtrBar).ConfigureAwait(false);
         
         SharedUserInterfaces.MediumText("Individual Settings");
         
-        // TODO: Code smell
-        if (_networkService.State is not ConnectionState.Connected || _characterConfigurationService.Current is null)
+        if (_activeSessionService.SecretId is null)
         {
             ImGui.TextWrapped("You must be logged in to view individual settings.");
             return;
         }
 
-        var autoLogin = _settingsService.AutoLogin;
+        var autoLogin = _activeSessionService.AutoLogin;
         if (ImGui.Checkbox("Auto Login##SettingsAutoLogin", ref autoLogin))
             _ = SetAutoLogin(autoLogin).ConfigureAwait(false);
     }
@@ -90,7 +86,7 @@ public partial class SettingsView
     {
         ImGui.Spacing();
         
-        if (_secretsService.Secrets.Count is 0)
+        if (_configurationService.Secrets.Count is 0)
         {
             ImGui.TextUnformatted("You have not added any secrets.");
         }
@@ -99,14 +95,23 @@ public partial class SettingsView
             // Still not a great name, but this function is in charge of making sure the 'used by' field for secrets is properly updated without killing the database
             _ = ShouldRefreshCharacterSecretUsage().ConfigureAwait(false);
             
-            foreach (var secret in _secretsService.Secrets)
+            foreach (var secret in _configurationService.Secrets)
             {
                 SharedUserInterfaces.ContentBox2($"{secret.Value.Value}", AetherRemoteColors.BackgroundColor, true, () =>
                 {
                     SharedUserInterfaces.MediumText(secret.Value.Name);
                     
-                    var characters = _secretUsageCharacterCount.TryGetValue(secret.Key, out var count) ? count : 0;
-                    ImGui.Text($"Used by {characters} characters");
+                    var names =_secretNamesInUse.TryGetValue(secret.Value.Id, out var namesUsingThisSecret) ? namesUsingThisSecret : [];
+                    var count = names.Count;
+                    
+                    ImGui.Text(string.Concat("Used by ", count, count is 1 ? " character" : " characters"));
+                    if (ImGui.IsItemHovered())
+                    {
+                        ImGui.BeginTooltip();
+                        foreach (var name in names)
+                            ImGui.Text(name);
+                        ImGui.EndTooltip();
+                    }
                     
                     var createdAt = $"Created at {secret.Value.CreatedAt.ToLocalTime()}";
                     var width = ImGui.CalcTextSize(createdAt);
@@ -121,7 +126,14 @@ public partial class SettingsView
 
         ImGui.SameLine();
 
-        var secrets = _secretsService.Secrets.Count;
+        var secrets = _configurationService.Secrets.Count;
+        if (secrets is 0) ImGui.BeginDisabled();
+        if (ImGui.Button("Rename Secret"))
+            ImGui.OpenPopup("RenameSecretPopup");
+        if (secrets is 0) ImGui.EndDisabled();
+        
+        ImGui.SameLine();
+        
         if (secrets is 0) ImGui.BeginDisabled();
         if (ImGui.Button("Delete Secret"))
             ImGui.OpenPopup("DeleteSecretPopup");
@@ -133,9 +145,14 @@ public partial class SettingsView
         if (DrawAddSecretModal("AddSecretPopup", out var secretName, out var secretValue))
             _ = AddSecret(secretName, secretValue).ConfigureAwait(false);
 
-        if (DrawDeleteSecretModal("DeleteSecretPopup", out var secretId))
-            _ = RemoveSecret(secretId).ConfigureAwait(false);
+        if (DrawRenameSecretModal("RenameSecretPopup", out var secretIdToRename, out var secretNameToRename))
+            _ = RenameSecret(secretIdToRename, secretNameToRename).ConfigureAwait(false);
+        
+        if (DrawDeleteSecretModal("DeleteSecretPopup", out var secretIdToDelete))
+            _ = RemoveSecret(secretIdToDelete).ConfigureAwait(false);
     }
+    
+    // TODO: Make "Enter Returns True" for all the modals
     
     private bool DrawAddSecretModal(string id, out string secretName, out string secretValue)
     {
@@ -201,6 +218,80 @@ public partial class SettingsView
         return saveButtonClicked;
     }
     
+    private bool DrawRenameSecretModal(string id, out long secretId, out string secretName)
+    {
+        secretId = -1;
+        secretName = string.Empty;
+        
+        var renameButtonClicked = false;
+        var shouldCloseCurrentPopup = false;
+
+        var viewport = ImGui.GetMainViewport();
+        ImGui.SetNextWindowPos(viewport.GetCenter(), ImGuiCond.Appearing, new Vector2(0.5f));
+        ImGui.SetNextWindowSize(ModalSize, ImGuiCond.Appearing);
+
+        if (ImGui.BeginPopupModal(id, ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoTitleBar))
+        {
+            var width = ModalSize.X - AetherRemoteImGui.WindowPadding.X * 2;
+            
+            ImGui.Text("Secret to Rename");
+            ImGui.SetNextItemWidth(width);
+            if (ImGui.BeginCombo("##SecretToRenameCombo", _renameSecretModalSecretName))
+            {
+                foreach (var secret in _configurationService.Secrets)
+                    if (ImGui.Selectable(secret.Value.Name))
+                    {
+                        _renameSecretModalSecretId = secret.Key;
+                        _renameSecretModalSecretName = secret.Value.Name;
+                    }
+                
+                ImGui.EndCombo();
+            }
+            
+            ImGui.Spacing();
+            
+            ImGui.Text("Rename To");
+            ImGui.SetNextItemWidth(width);
+            ImGui.InputTextWithHint("##RenameSecretModalSecretName", "Enter a new name for the secret", ref _renameSecretModalSecretName, 128);
+            
+            ImGui.Spacing();
+            
+            var size = new Vector2((width - AetherRemoteImGui.WindowPadding.X) * 0.5f, 0);
+            
+            var secretIdToRename = _renameSecretModalSecretId;
+            if (secretIdToRename < 0) ImGui.BeginDisabled();
+            if (ImGui.Button("Rename", size))
+            {
+                secretId = _renameSecretModalSecretId;
+                secretName = _renameSecretModalSecretName;
+                
+                _renameSecretModalSecretId = -1;
+                _renameSecretModalSecretName = string.Empty;
+                
+                renameButtonClicked = true;
+                shouldCloseCurrentPopup = true;
+            }
+            if (secretIdToRename < 0) ImGui.EndDisabled();
+            
+            ImGui.SameLine();
+            
+            if (ImGui.Button("Cancel", size))
+            {
+                _renameSecretModalSecretId = -1;
+                _renameSecretModalSecretName = string.Empty;
+                
+                shouldCloseCurrentPopup = true;
+            }
+            
+            if (shouldCloseCurrentPopup)
+                ImGui.CloseCurrentPopup();
+            
+            ImGui.EndPopup();
+        }
+
+        return renameButtonClicked;
+    }
+    
     private bool DrawDeleteSecretModal(string id, out long secretId)
     {
         secretId = -1;
@@ -220,7 +311,7 @@ public partial class SettingsView
             ImGui.SetNextItemWidth(width);
             if (ImGui.BeginCombo("##SecretToDeleteCombo", _deleteSecretModalSecretName))
             {
-                foreach (var secret in _secretsService.Secrets)
+                foreach (var secret in _configurationService.Secrets)
                     if (ImGui.Selectable(secret.Value.Name))
                     {
                         _deleteSecretModalSecretId = secret.Key;

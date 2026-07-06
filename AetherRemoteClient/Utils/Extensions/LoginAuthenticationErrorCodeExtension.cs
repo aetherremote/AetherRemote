@@ -13,7 +13,6 @@ public static class LoginAuthenticationErrorCodeExtension
             var translated = errorCode switch
             {
                 LoginAuthenticationErrorCode.Uninitialized => ArAuthAuthenticationErrorCode.Uninitialized,
-                LoginAuthenticationErrorCode.Success => ArAuthAuthenticationErrorCode.Success,
                 LoginAuthenticationErrorCode.VersionMismatch => ArAuthAuthenticationErrorCode.VersionMismatch,
                 LoginAuthenticationErrorCode.UnknownSecret => ArAuthAuthenticationErrorCode.UnknownSecret,
                 LoginAuthenticationErrorCode.Unknown => ArAuthAuthenticationErrorCode.Unknown,

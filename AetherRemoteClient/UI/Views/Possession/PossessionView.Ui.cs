@@ -12,7 +12,7 @@ public partial class PossessionView
     {
         ImGui.BeginChild("PossessionContent", AetherRemoteDimensions.ContentSize, false, AetherRemoteImGui.ContentFlags);
         
-        if (_agreementsService.AgreedToPossession)
+        if (_configurationService.AgreedToPossession)
             DrawContent();
         else
             DrawWarning();

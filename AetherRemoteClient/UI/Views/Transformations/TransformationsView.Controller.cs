@@ -200,7 +200,8 @@ public partial class TransformationsView
     private async Task SendBodySwap()
     {
         // Basic validation checks
-        if (_characterConfigurationService.Current is not { } characterConfiguration)
+        if (_activeSessionService.CharacterName is not { } name ||
+            _activeSessionService.CharacterWorld is not { } world)
             return;
         
         // Build the attributes
@@ -219,11 +220,11 @@ public partial class TransformationsView
         _commandLockoutService.Lock();
         
         // Request the server
-        var request = new BodySwapRequest(_selectionManager.GetSelectedFriendCodes(), characterConfiguration.Name, characterConfiguration.World, attributes, null);
+        var request = new BodySwapRequest(_selectionManager.GetSelectedFriendCodes(), name, world, attributes, null);
         var response = await _networkService.InvokeAsync<BodySwapResponse>(HubMethod.BodySwap, request);
         if (response.Result is not ActionResponseEc.Success)
         {
-            ActionResponseParser.Parse("Body Swap", response, _notesService.Notes);
+            ActionResponseParser.Parse("Body Swap", response, []); // TODO: Fix []
             return;
         }
         
@@ -254,13 +255,14 @@ public partial class TransformationsView
         }
             
         // Process the results
-        ActionResponseParser.Parse("Body Swap", response, _notesService.Notes);
+        ActionResponseParser.Parse("Body Swap", response, []); // TODO: Fix []
     }
     
     private async Task SendTwinning()
     {
         // Basic validation checks
-        if (_characterConfigurationService.Current is not { } characterConfiguration)
+        if (_activeSessionService.CharacterName is not { } name ||
+            _activeSessionService.CharacterWorld is not { } world)
             return;
         
         // Build the attributes
@@ -276,7 +278,7 @@ public partial class TransformationsView
         NotificationHelper.Info("Beginning Twinning...", "You may need to wait up to 10 seconds for changes to take effect");
         
         // Send
-        await _networkCommandManager.SendTwinning(_selectionManager.GetSelectedFriendCodes(), characterConfiguration.Name, characterConfiguration.World, attributes).ConfigureAwait(false);
+        await _networkCommandManager.SendTwinning(_selectionManager.GetSelectedFriendCodes(), name, world, attributes).ConfigureAwait(false);
     }
     
     /// <summary>

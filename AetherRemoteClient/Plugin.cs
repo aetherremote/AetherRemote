@@ -13,6 +13,8 @@ using AetherRemoteClient.Infrastructure.Database;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Managers.Possession;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Services.Configuration;
+using AetherRemoteClient.Services.Dependencies;
 using AetherRemoteClient.UI;
 using AetherRemoteClient.UI.Components.Friends;
 using AetherRemoteClient.UI.Components.NavigationBar;
@@ -78,23 +80,17 @@ public sealed class Plugin : IAsyncDalamudPlugin
         services.AddSingleton<DatabaseInfrastructure>();
         
         // Services
-        services.AddSingleton<AccountService>();
         services.AddSingleton<ActionQueueService>();
         services.AddSingleton<ActiveSessionService>();
-        services.AddSingleton<AgreementsService>();
-        services.AddSingleton<CharacterConfigurationService>();
         services.AddSingleton<CommandLockoutService>();
+        services.AddSingleton<ConfigurationService>();
         services.AddSingleton<EmoteService>();
         services.AddSingleton<FriendsListService>();
         services.AddSingleton<GameSettingsService>();
-        services.AddSingleton<GlobalSettingsService>();
         services.AddSingleton<LegacyConfigurationImportService>();
         services.AddSingleton<LogService>();
         services.AddSingleton<NetworkService>();
-        services.AddSingleton<NotesService>();
         services.AddSingleton<PauseService>();
-        services.AddSingleton<SecretsService>();
-        services.AddSingleton<SettingsService>();
         services.AddSingleton<StatusService>();
         services.AddSingleton<TipService>();
         services.AddSingleton<ViewService>();
@@ -167,6 +163,9 @@ public sealed class Plugin : IAsyncDalamudPlugin
         // Upgrade legacy configuration files
         await _services.GetRequiredService<LegacyConfigurationImportService>().ScanForConfigurationsAndImport().ConfigureAwait(false);
         
+        // Load all required settings
+        await _services.GetRequiredService<ConfigurationService>().LoadRequired().ConfigureAwait(false);
+        
         // Initialize all the views
         foreach (var service in _services.GetRequiredService<IEnumerable<IView>>())
             service.Initialize();
@@ -181,21 +180,9 @@ public sealed class Plugin : IAsyncDalamudPlugin
         _services.GetRequiredService<NetworkHandler>();
         
         // Managers
-        _services.GetRequiredService<ConnectionManager>();
         _services.GetRequiredService<DependencyManager>();
-        _services.GetRequiredService<DtrManager>();
         _services.GetRequiredService<HypnosisManager>();
         _services.GetRequiredService<PossessionManager>();
-        
-        // Services
-        _services.GetRequiredService<ActionQueueService>();
-        
-        // TODO: Examine what options there are for throwing exceptions in this method
-        // Async loading for required services. If any of these fail, the server should probably throw an exception...
-        await _services.GetRequiredService<AgreementsService>().LoadAgreements().ConfigureAwait(false);
-        await _services.GetRequiredService<GlobalSettingsService>().LoadGlobalSettings().ConfigureAwait(false);
-        await _services.GetRequiredService<NotesService>().LoadNotes().ConfigureAwait(false);
-        await _services.GetRequiredService<SecretsService>().LoadSecrets().ConfigureAwait(false);
         
         await SharedUserInterfaces.InitializeFonts().ConfigureAwait(false);
         

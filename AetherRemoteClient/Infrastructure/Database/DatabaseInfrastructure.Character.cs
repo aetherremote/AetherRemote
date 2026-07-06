@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain;
 
@@ -25,7 +26,7 @@ public partial class DatabaseInfrastructure
                 return await CreateCharacterConfiguration(characterName, characterWorld, null).ConfigureAwait(false);
             
             var id = reader.GetInt64(0);
-            var secretId = reader.IsDBNull(1) ? (short?)null : reader.GetInt16(1);
+            var secretId = reader.IsDBNull(1) ? (long?)null : reader.GetInt16(1);
             
             return new CharacterConfiguration(id, characterName, characterWorld, secretId);
         }
@@ -76,6 +77,38 @@ public partial class DatabaseInfrastructure
         catch (Exception e)
         {
             Plugin.Log.Error($"[DatabaseInfrastructure.CreateCharacterConfiguration] {e}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    ///     Gets all the character configurations that have a secret id set
+    /// </summary>
+    public async Task<Dictionary<long, CharacterConfiguration>?> GetCharacterConfigurations()
+    {
+        try
+        {
+            await using var command = _database.CreateCommand();
+            command.CommandText = "SELECT Id, Name, World, SecretId FROM Characters WHERE SecretId IS NOT NULL";
+            
+            var results = new Dictionary<long, CharacterConfiguration>();
+            
+            await using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync().ConfigureAwait(false))
+            {
+                var id = reader.GetInt64(0);
+                var name = reader.GetString(1);
+                var world = reader.GetString(2);
+                var secretId = reader.GetInt64(3);
+                
+                results.Add(id, new CharacterConfiguration(id, name, world, secretId));
+            }
+            
+            return results;
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error($"[DatabaseInfrastructure.CountOccurrences] {e}");
             return null;
         }
     }

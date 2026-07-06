@@ -27,7 +27,7 @@ using MoodlesStatusInfo = (
     string Dispeller,
     bool Permanent);
 
-namespace AetherRemoteClient.Services;
+namespace AetherRemoteClient.Services.Dependencies;
 
 /// <summary>
 ///     Provides access to Moodles

@@ -23,13 +23,18 @@ public partial class LoginView
         SharedUserInterfaces.ContentBox("LoginSecretSelect", AetherRemoteColors.PanelColor, true, () =>
         {
             SharedUserInterfaces.MediumText("Login with Secret");
+
+            var preview = _activeSessionService.PendingSecretId is not { } secretId
+                ? "Select a secret to log in with"
+                : _configurationService.Secrets.TryGetValue(secretId, out var value)
+                    ? value.Name
+                    : "<<Unable to find secret>>";
             
-            var preview = SelectedSecret?.Name ?? "Select a secret to log in with";
             if (ImGui.BeginCombo("##SecretSelect", preview))
             {
-                foreach (var secret in _secretsService.Secrets)
+                foreach (var secret in _configurationService.Secrets)
                     if (ImGui.Selectable(secret.Value.Name))
-                        SelectedSecret = secret.Value;
+                        _ = _activeSessionService.UpdatePendingSecretId(secret.Key).ConfigureAwait(false);
                 
                 ImGui.EndCombo();
             }

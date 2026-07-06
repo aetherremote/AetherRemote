@@ -1,8 +1,11 @@
 using System;
 using System.Collections.Generic;
+using AetherRemoteClient.Domain.Enums;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Managers.Possession;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Services.Configuration;
+using AetherRemoteClient.Services.Dependencies;
 using AetherRemoteClient.UI;
 using AetherRemoteClient.UI.Style;
 using Dalamud.Game.Command;
@@ -28,10 +31,10 @@ public partial class ChatCommandHandler : IDisposable
     
     // Injected
     private readonly ActionQueueService _actionQueueService;
+    private readonly ConfigurationService _configurationService;
     private readonly CustomizePlusService _customizePlusService;
     private readonly EmoteService _emoteService;
     private readonly GlamourerService _glamourerService;
-    private readonly GlobalSettingsService _globalSettingsService;
     private readonly HypnosisManager _hypnosisManager;
     private readonly NetworkCommandManager _networkCommandManager;
     private readonly PossessionManager _possessionManager;
@@ -39,20 +42,20 @@ public partial class ChatCommandHandler : IDisposable
     
     public ChatCommandHandler(
         ActionQueueService actionQueueService,
+        ConfigurationService configurationService,
         CustomizePlusService customizePlusService,
         EmoteService emoteService,
         GlamourerService glamourerService,
-        GlobalSettingsService globalSettingsService,
         HypnosisManager hypnosisManager,
         NetworkCommandManager networkCommandManager,
         PossessionManager possessionManager,
         MainWindow mainWindow)
     {
         _actionQueueService = actionQueueService;
+        _configurationService = configurationService;
         _customizePlusService = customizePlusService;
         _emoteService =  emoteService;
         _glamourerService = glamourerService;
-        _globalSettingsService = globalSettingsService;
         
         _hypnosisManager = hypnosisManager;
         _networkCommandManager = networkCommandManager;
@@ -142,7 +145,7 @@ public partial class ChatCommandHandler : IDisposable
                     _actionQueueService.Clear();
                     
                     // TODO: Proper logging and fail stating
-                    await _globalSettingsService.SetSafeMode(true).ConfigureAwait(false);
+                    await _configurationService.SetSetting(GlobalSetting.SafeMode, true).ConfigureAwait(false);
                     
                     payloads.Add(new UIForegroundPayload(AetherRemoteColors.TextColorPurple));
                     payloads.Add(new TextPayload("[AetherRemote] "));

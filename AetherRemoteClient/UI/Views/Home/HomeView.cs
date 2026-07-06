@@ -10,16 +10,16 @@ public partial class HomeView : IView
     public View View => View.Home;
     
     // Injected
-    private readonly AccountService _accountService;
+    private readonly ActiveSessionService _activeSessionService;
     private readonly NetworkService _networkService;
     private readonly TipService _tipService;
     
     public HomeView(
-        AccountService accountService,
+        ActiveSessionService activeSessionService,
         NetworkService networkService,
         TipService tipService)
     {
-        _accountService = accountService;
+        _activeSessionService = activeSessionService;
         _networkService = networkService;
         _tipService = tipService;
     }

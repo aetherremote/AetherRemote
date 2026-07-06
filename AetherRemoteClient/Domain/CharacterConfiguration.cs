@@ -1,5 +1,8 @@
 namespace AetherRemoteClient.Domain;
 
+/// <summary>
+///     Container for information that makes up a character's configuration
+/// </summary>
 public class CharacterConfiguration(long id, string name, string world, long? secretId)
 {
     public readonly long Id = id;

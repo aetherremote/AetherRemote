@@ -125,7 +125,7 @@ public partial class HypnosisView
             };
 
             // Save the profile
-            await ConfigurationService.SaveHypnosisProfile(profile).ConfigureAwait(false);
+            await HypnosisSaveService.SaveHypnosisProfile(profile).ConfigureAwait(false);
 
             // Notification
             NotificationHelper.Success("Successfully saved", string.Empty);
@@ -152,7 +152,7 @@ public partial class HypnosisView
                 return;
 
             // Only proceed if the load was successful
-            if (await ConfigurationService.LoadHypnosisProfile(_saveLoadSpiralSearchText).ConfigureAwait(false) is not { } hypnosisProfile)
+            if (await HypnosisSaveService.LoadHypnosisProfile(_saveLoadSpiralSearchText).ConfigureAwait(false) is not { } hypnosisProfile)
                 return;
 
             // Set the text to display the name of what you loaded
@@ -186,7 +186,7 @@ public partial class HypnosisView
                 return;
 
             // Attempt to delete the configuration
-            await ConfigurationService.DeleteHypnosisProfile(_saveLoadSpiralSearchText).ConfigureAwait(false);
+            await HypnosisSaveService.DeleteHypnosisProfile(_saveLoadSpiralSearchText).ConfigureAwait(false);
             
             // Clear text
             _saveLoadSpiralSearchText = string.Empty;
@@ -282,7 +282,7 @@ public partial class HypnosisView
             var request = new HypnosisRequest(_selectionManager.GetSelectedFriendCodes(), data);
             var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.Hypnosis, request).ConfigureAwait(false);
         
-            ActionResponseParser.Parse("Hypnosis", response, _notesService.Notes);
+            ActionResponseParser.Parse("Hypnosis", response, []); // TODO: Fix []
         }
         catch (Exception e)
         {
@@ -299,7 +299,7 @@ public partial class HypnosisView
         {
             var request = new HypnosisStopRequest(_selectionManager.GetSelectedFriendCodes());
             var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.HypnosisStop, request).ConfigureAwait(false);
-            ActionResponseParser.Parse("Hypnosis Stop", response, _notesService.Notes);
+            ActionResponseParser.Parse("Hypnosis Stop", response, []); // TODO: Fix []
         }
         catch (Exception e)
         {
@@ -315,14 +315,14 @@ public partial class HypnosisView
         try
         {
             // Only proceed if the folder exists
-            if (Directory.Exists(ConfigurationService.HypnosisFolderPath) is false)
+            if (Directory.Exists(HypnosisSaveService.HypnosisFolderPath) is false)
                 return;
         
             // Clear original list
             _saveLoadSpiralFileOptions.Clear();
 
             // Get all files in the folder
-            var filePaths = await Task.Run(() => Directory.GetFiles(ConfigurationService.HypnosisFolderPath)).ConfigureAwait(false);
+            var filePaths = await Task.Run(() => Directory.GetFiles(HypnosisSaveService.HypnosisFolderPath)).ConfigureAwait(false);
         
             // Add only the filename without extension to the list
             foreach (var file in filePaths)

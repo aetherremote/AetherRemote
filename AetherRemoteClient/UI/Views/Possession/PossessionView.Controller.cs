@@ -25,7 +25,7 @@ public partial class PossessionView
 
     private async Task AcceptPossessionTermsOfService()
     {
-        if (await _agreementsService.AgreeToAgreement(Agreement.Possession).ConfigureAwait(true) is false)
+        if (await _configurationService.AgreeTo(Agreement.Possession).ConfigureAwait(true) is false)
             NotificationHelper.Warning("Unable to Accept Agreement", "To see more information, please type /xllog to open the developer console");
     }
 

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AetherRemoteClient.Domain.Enums;
 using AetherRemoteClient.Utils;
 
 namespace AetherRemoteClient.UI.Views.Settings;
@@ -14,11 +15,11 @@ public partial class SettingsView
     /// <summary>
     ///     Dictionary containing a map of secret id to character usage
     /// </summary>
-    private readonly Dictionary<long, int> _secretUsageCharacterCount = [];
+    private readonly Dictionary<long, List<string>> _secretNamesInUse = [];
 
     private async Task AddSecret(string secretName, string secretValue)
     {
-        if (await _secretsService.AddSecret(secretName, secretValue).ConfigureAwait(false))
+        if (await _configurationService.AddSecret(secretName, secretValue).ConfigureAwait(false))
         {
             NotificationHelper.Success("Secret Added!", string.Empty);
         }
@@ -28,9 +29,21 @@ public partial class SettingsView
         }
     }
 
+    private async Task RenameSecret(long secretId, string newSecretName)
+    {
+        if (await _configurationService.RenameSecret(secretId, newSecretName).ConfigureAwait(false))
+        {
+            NotificationHelper.Success("Secret Renamed!", string.Empty);
+        }
+        else
+        {
+            NotificationHelper.Warning("Unable to Rename Secret", "Check /xllog for more information");
+        }
+    }
+
     private async Task RemoveSecret(long secretId)
     {
-        if (await _secretsService.RemoveSecret(secretId).ConfigureAwait(false))
+        if (await _configurationService.DeleteSecret(secretId).ConfigureAwait(false))
         {
             NotificationHelper.Success("Secret Removed!", string.Empty);
         }
@@ -42,13 +55,12 @@ public partial class SettingsView
 
     private async Task SetAutoLogin(bool autoLogin)
     {
-        if (_characterConfigurationService.Current?.SecretId is not { } secretId) return;
-        await _settingsService.SetAutoLogin(secretId, autoLogin).ConfigureAwait(false);
+        await _activeSessionService.SetAutoLogin(autoLogin).ConfigureAwait(false);
     }
 
     private async Task SetShowDtrBar(bool showDtrBar)
     {
-        if (await _globalSettingsService.SetShowOnDtrBar(showDtrBar).ConfigureAwait(false) is false)
+        if (await _configurationService.SetSetting(GlobalSetting.ShowOnDtrBar, showDtrBar).ConfigureAwait(false) is false)
             return;
 
         if (showDtrBar)
@@ -59,7 +71,7 @@ public partial class SettingsView
 
     private async Task SetSafeMode(bool safeMode)
     {
-        if (await _globalSettingsService.SetSafeMode(safeMode).ConfigureAwait(false) is false)
+        if (await _configurationService.SetSetting(GlobalSetting.SafeMode, safeMode).ConfigureAwait(false) is false)
             return;
 
         // When we enter safe mode, we want to disable a lot of things, so turning it off means we can exit early
@@ -85,9 +97,18 @@ public partial class SettingsView
             return;
         
         Plugin.Log.Verbose("[SettingsViewUiController.RefreshSecretUsage] Refreshing Secret Usage...");
-
-        _secretUsageCharacterCount.Clear();
-        foreach (var secret in _secretsService.Secrets)
-            _secretUsageCharacterCount.Add(secret.Key, await _secretsService.CountUsage(secret.Key).ConfigureAwait(false));
+        
+        _secretNamesInUse.Clear();
+        foreach (var (_, configuration) in await _databaseInfrastructure.GetCharacterConfigurations().ConfigureAwait(false) ?? [])
+        {
+            if (configuration.SecretId is not { } secretId) continue;
+            if (_secretNamesInUse.TryGetValue(secretId, out var list) is false)
+            {
+                list = [];
+                _secretNamesInUse.Add(secretId, list);
+            }
+            
+            list.Add(string.Concat(configuration.Name, " @ ", configuration.World));
+        }
     }
 }

@@ -89,6 +89,24 @@ public partial class DatabaseInfrastructure
         }
     }
     
+    public async Task<bool> RenameSecret(long secretId, string secretName)
+    {
+        try
+        {
+            await using var command = _database.CreateCommand();
+            command.CommandText = "UPDATE Secrets SET Name = @SecretName WHERE Id = @SecretId";
+            command.Parameters.AddWithValue("@SecretId", secretId);
+            command.Parameters.AddWithValue("@SecretName", secretName);
+            
+            return await command.ExecuteNonQueryAsync().ConfigureAwait(false) is 1;
+        }
+        catch (Exception e)
+        {
+            Plugin.Log.Error($"[DatabaseInfrastructure.RenameSecret] {e}");
+            return false;
+        }
+    }
+    
     /// <summary>
     ///     Removes a note for a friend, if it exists
     /// </summary>

@@ -3,6 +3,7 @@ using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Services.Dependencies;
 using AetherRemoteClient.UI.Components.Friends;
 
 namespace AetherRemoteClient.UI.Views.Transformations;
@@ -14,11 +15,10 @@ public partial class TransformationsView : IDisposable, IView
     
     // Injected
     private readonly FriendsListComponentUi _friendsListComponentUi;
-    private readonly CharacterConfigurationService _characterConfigurationService;
+    private readonly ActiveSessionService _activeSessionService;
     private readonly CommandLockoutService _commandLockoutService;
     private readonly GlamourerService _glamourerService;
     private readonly NetworkService _networkService;
-    private readonly NotesService _notesService;
     private readonly StatusService _statusService;
     private readonly CharacterTransformationManager _characterTransformationManager;
     private readonly NetworkCommandManager _networkCommandManager;
@@ -26,22 +26,20 @@ public partial class TransformationsView : IDisposable, IView
     
     public TransformationsView(
         FriendsListComponentUi friendsListComponentUi, 
-        CharacterConfigurationService characterConfigurationService,
+        ActiveSessionService activeSessionService,
         CommandLockoutService commandLockoutService, 
         GlamourerService glamourerService, 
         NetworkService networkService,
-        NotesService notesService,
         StatusService statusService,
         CharacterTransformationManager characterTransformationManager,
         NetworkCommandManager networkCommandManager, 
         SelectionManager selectionManager)
     {
         _friendsListComponentUi = friendsListComponentUi;
-        _characterConfigurationService = characterConfigurationService;
+        _activeSessionService = activeSessionService;
         _commandLockoutService = commandLockoutService;
         _glamourerService = glamourerService;
         _networkService = networkService;
-        _notesService = notesService;
         _statusService = statusService;
         _characterTransformationManager = characterTransformationManager;
         _networkCommandManager = networkCommandManager;

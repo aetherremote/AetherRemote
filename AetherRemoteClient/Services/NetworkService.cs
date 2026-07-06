@@ -5,6 +5,7 @@ using AetherRemoteClient.Domain.Enums;
 using AetherRemoteClient.Domain.Exceptions.Network;
 using AetherRemoteClient.Domain.Network;
 using AetherRemoteClient.Infrastructure.Authentication;
+using AetherRemoteClient.Managers;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Network;
@@ -31,6 +32,9 @@ public class NetworkService : IAsyncDisposable
     
     // SignalR hub connection, the entry point for all connectivity to the actual server
     private readonly HubConnection _connection;
+    
+    // Injected
+    private readonly AuthenticationInfrastructure _authenticationInfrastructure;
     
     /// <summary> Connected to the server successfully, either by reconnection or manual connection </summary>
     public event Func<Task>? Connected;
@@ -69,6 +73,8 @@ public class NetworkService : IAsyncDisposable
     /// <summary> <inheritdoc cref="NetworkService"/> </summary>
     public NetworkService(AuthenticationInfrastructure authenticationInfrastructure)
     {
+        _authenticationInfrastructure = authenticationInfrastructure;
+        
         _connection = new HubConnectionBuilder().WithUrl(HubUrl, options =>
             {
                 options.AccessTokenProvider = async () => await authenticationInfrastructure.GetTokenAsync().ConfigureAwait(false);
@@ -86,39 +92,45 @@ public class NetworkService : IAsyncDisposable
     }
     
     /// <summary> Attempts to connect to the SignalR server </summary>
-    public async Task ConnectToServerAsync()
+    /// <remarks> You probably shouldn't be calling this from anywhere except <see cref="ConnectionManager"/></remarks>
+    public async Task<bool> ConnectToServerAsync(string secret)
     {
-        if (_connection.State is not HubConnectionState.Disconnected) return;
-
+        if (_connection.State is not HubConnectionState.Disconnected)
+            return false;
+        
+        _authenticationInfrastructure.SetSecret(secret);
+        
         try
         {
             // All exceptions in this function stem from the AuthenticationInfrastructure class
             await _connection.StartAsync().ConfigureAwait(false);
+
+            var connected = _connection.State is HubConnectionState.Connected;
+            if (connected)
+                Connected?.Invoke();
+
+            return connected;
         }
         catch (ArAuthAuthenticationException e)
         {
+            await _connection.StopAsync().ConfigureAwait(false);
             switch (e.ErrorCode)
             {
-                // ==== Success cases, nothing to display to the client or log ====
-                case ArAuthAuthenticationErrorCode.Success:
-                    Plugin.Log.Info("[NetworkService.ConnectToServerAsync] Connected successfully");
-                    break;
-                
                 // ==== Failure cases, but the client should be notified meaningfully ====
                 case ArAuthAuthenticationErrorCode.UnknownSecret:
                     Plugin.Log.Warning("[NetworkService.ConnectToServerAsync] Invalid secret, this could be because the secret does not exist, or has been banned");
                     NotificationHelper.Warning("Invalid Secret", "The secret you tried to connect with doesn't exist");
-                    break;
+                    return false;
                 
                 case ArAuthAuthenticationErrorCode.AuthenticationServerUnreachable:
                     Plugin.Log.Warning("[NetworkService.ConnectToServerAsync] Servers are down, try again later");
                     NotificationHelper.Warning("Servers Down", "Unable to connect to servers, try again later");
-                    break;
+                    return false;
                 
                 case ArAuthAuthenticationErrorCode.VersionMismatch:
                     Plugin.Log.Warning("[NetworkService.ConnectToServerAsync] Version mismatch, update your client to latest version");
                     NotificationHelper.Warning("Outdated Client", "Please update your client to the latest version and try again");
-                    break;
+                    return false;
                 
                 // ==== Failure cases, but the heavy lifting should be in the console ====
                 case ArAuthAuthenticationErrorCode.Uninitialized:
@@ -129,17 +141,14 @@ public class NetworkService : IAsyncDisposable
                 default:
                     Plugin.Log.Warning($"[NetworkService.ConnectToServerAsync] {e}");
                     NotificationHelper.Warning("Unable to Connect to Server", "See more details by opening the developer console by typing /xllog");
-                    break;
+                    return false;
             }
         }
         catch (Exception e)
         {
+            await _connection.StopAsync().ConfigureAwait(false);
             Plugin.Log.Error($"[NetworkService.ConnectToServerAsync] {e}");
-        }
-        finally
-        {
-            if (_connection.State is HubConnectionState.Connected)
-                Connected?.Invoke();
+            return false;
         }
     }
     

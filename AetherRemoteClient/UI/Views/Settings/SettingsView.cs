@@ -1,7 +1,10 @@
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
+using AetherRemoteClient.Infrastructure.Database;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Services.Configuration;
+using AetherRemoteClient.Services.Dependencies;
 
 namespace AetherRemoteClient.UI.Views.Settings;
 
@@ -11,46 +14,40 @@ public partial class SettingsView : IView
     public View View => View.Settings;
     
     // Injected
+    private readonly DatabaseInfrastructure _databaseInfrastructure;
     private readonly ActionQueueService _actionQueueService;
-    private readonly CharacterConfigurationService _characterConfigurationService;
+    private readonly ActiveSessionService _activeSessionService;
+    private readonly ConfigurationService _configurationService;
     private readonly CustomizePlusService _customizePlusService;
     private readonly GlamourerService _glamourerService;
-    private readonly GlobalSettingsService _globalSettingsService;
     private readonly HonorificService _honorificService;
     private readonly MoodlesService _moodlesService;
-    private readonly NetworkService _networkService;
     private readonly PenumbraService _penumbraService;
-    private readonly SecretsService _secretsService;
-    private readonly SettingsService _settingsService;
     private readonly DtrManager _dtrManager;
     private readonly HypnosisManager _hypnosisManager;
     
     public SettingsView(
+        DatabaseInfrastructure databaseInfrastructure,
         ActionQueueService actionQueueService, 
-        CharacterConfigurationService characterConfigurationService,
+        ActiveSessionService activeSessionService,
+        ConfigurationService configurationService,
         CustomizePlusService customizePlusService,
         GlamourerService glamourerService, 
-        GlobalSettingsService globalSettingsService,
         HonorificService honorificService,
         MoodlesService moodlesService, 
-        NetworkService networkService,
         PenumbraService penumbraService, 
-        SecretsService secretsService,
-        SettingsService settingsService,
         DtrManager dtrManager,
         HypnosisManager hypnosisManager)
     {
+        _databaseInfrastructure = databaseInfrastructure;
         _actionQueueService = actionQueueService;
-        _characterConfigurationService = characterConfigurationService;
+        _activeSessionService = activeSessionService;
+        _configurationService = configurationService;
         _customizePlusService = customizePlusService;
         _glamourerService = glamourerService;
-        _globalSettingsService = globalSettingsService;
         _honorificService = honorificService;
         _moodlesService = moodlesService;
-        _networkService = networkService;
         _penumbraService = penumbraService;
-        _secretsService = secretsService;
-        _settingsService = settingsService;
         _dtrManager = dtrManager;
         _hypnosisManager = hypnosisManager;
     }

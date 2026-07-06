@@ -1,8 +1,8 @@
 using System;
 using System.Threading.Tasks;
-using AetherRemoteClient.Infrastructure.Authentication;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
+using AetherRemoteClient.Services.Configuration;
 using AetherRemoteClient.Utils;
 
 namespace AetherRemoteClient.Handlers;
@@ -13,42 +13,27 @@ namespace AetherRemoteClient.Handlers;
 public class LoginHandler : IDisposable
 {
     // Injected
-    private readonly AuthenticationInfrastructure _authenticationInfrastructure;
     private readonly ActiveSessionService _activeSessionService;
-    private readonly GlobalSettingsService _globalSettingsService;
+    private readonly ConfigurationService _configurationService;
     private readonly NetworkService _networkService;
-    private readonly SecretsService _secretsService;
-    private readonly SettingsService _settingsService;
+    private readonly ConnectionManager _connectionManager;
     private readonly DtrManager _dtrManager;
-    
-    /// <summary>
-    ///     Event fired when all plugin initialization for a logged-into-game character has completed.
-    /// </summary>
-    /// <remarks> Only Ui Controllers should react to this event </remarks>
-    public event Action? LoginInitializationCompleted;
-
-    /// <summary> Guard for the event </summary>
-    public bool HasLoginInitializationCompleted;
     
     /// <summary>
     ///     <inheritdoc cref="LoginHandler"/>
     /// </summary>
     public LoginHandler(
-        AuthenticationInfrastructure authenticationInfrastructure,
         ActiveSessionService activeSessionService,
-        GlobalSettingsService globalSettingsService,
+        ConfigurationService configurationService,
         NetworkService networkService,
-        SecretsService secretsService,
-        SettingsService settingsService,
+        ConnectionManager connectionManager,
         DtrManager dtrManager)
     {
         // Store injected services
-        _authenticationInfrastructure = authenticationInfrastructure;
         _activeSessionService = activeSessionService;
-        _globalSettingsService = globalSettingsService;
+        _configurationService = configurationService;
         _networkService = networkService;
-        _secretsService = secretsService;
-        _settingsService = settingsService;
+        _connectionManager = connectionManager;
         _dtrManager = dtrManager;
         
         // Subscribe to log in events
@@ -63,7 +48,9 @@ public class LoginHandler : IDisposable
     private void OnLogin() => _ = OnLoginAsync().ConfigureAwait(false);
     private async Task OnLoginAsync()
     {
-        // TODO: This is a pretty big one, but if something goes wrong here, the plugin is unusable.
+        // Able to safely do this before any failure states since the character is logged in
+        if (_configurationService.ShowOnDtrBar)
+            _dtrManager.EnableDtrBar();
         
         if (await DalamudUtilities.TryGetLocalPlayer().ConfigureAwait(false) is not { } player)
             return;
@@ -71,38 +58,19 @@ public class LoginHandler : IDisposable
         var name = player.Name.ToString();
         var world = player.HomeWorld.Value.Name.ToString();
         
-        // TODO: Decide on what should happen if this fails
-        await _activeSessionService.InitializeCharacter(name, world).ConfigureAwait(false);
-
-        // Now if the character has an associate secret, we can initialize things require for the plugin
-        if (_activeSessionService.SecretId is { } secretId)
-        {
-            // Don't need to set secret in the active session service because we only care about the secret's id which is already set there
-            if (_secretsService.Secrets.TryGetValue(secretId, out var secret))
-                _authenticationInfrastructure.SetSecret(secret.Value);
-            else
-                Plugin.Log.Warning($"[LoginManager.OnLoginAsync] SecretId {secretId} does not have corresponding secret");
-
-            if (await _settingsService.LoadSettings(secretId).ConfigureAwait(false) is false)
-                Plugin.Log.Warning($"[LoginManager.OnLoginAsync] Failed to load settings for SecretId {secretId}");
-        }
+        if (await _activeSessionService.StartNewSession(name, world) is false)
+            return;
         
-        // Emit event for Ui controllers
-        LoginInitializationCompleted?.Invoke();
-        HasLoginInitializationCompleted = true;
+        // This is a bit of a special case, since AutoLogin needs to be checked BEFORE 
         
-        if (_globalSettingsService.ShowOnDtrBar)
-            _dtrManager.EnableDtrBar();
-        
-        if (_settingsService.AutoLogin)
-            await _networkService.ConnectToServerAsync().ConfigureAwait(false);
+        if (_activeSessionService.AutoLogin)
+            await _connectionManager.TryConnectToServerAsync().ConfigureAwait(false);
     }
     
     private void OnLogout(int type, int code) => _ = OnLogoutAsync().ConfigureAwait(false);
     private async Task OnLogoutAsync()
     {
         await _networkService.DisconnectFromServerAsync().ConfigureAwait(false);
-        HasLoginInitializationCompleted = false;
     }
 
     public void Dispose()

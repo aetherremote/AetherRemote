@@ -17,7 +17,7 @@ using ProfileData = (
     int Priority,
     bool Enabled);
 
-namespace AetherRemoteClient.Services;
+namespace AetherRemoteClient.Services.Dependencies;
 
 /// <summary>
 ///     Provides access to CustomizePlus

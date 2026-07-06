@@ -16,7 +16,7 @@ using Glamourer.Api.Helpers;
 using Glamourer.Api.IpcSubscribers;
 using Newtonsoft.Json.Linq;
 
-namespace AetherRemoteClient.Services;
+namespace AetherRemoteClient.Services.Dependencies;
 
 /// <summary>
 ///     Provides access to Glamourer

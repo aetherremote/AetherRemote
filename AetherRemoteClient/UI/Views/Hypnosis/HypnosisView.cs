@@ -16,20 +16,17 @@ public partial class HypnosisView : IDisposable, IView
     private readonly FriendsListComponentUi _friendsListComponentUi;
     private readonly CommandLockoutService _commandLockoutService;
     private readonly NetworkService _networkService;
-    private readonly NotesService _notesService;
     private readonly SelectionManager _selectionManager;
     
     public HypnosisView(
         FriendsListComponentUi friendsListComponentUi,
         CommandLockoutService commandLockoutService,
         NetworkService networkService,
-        NotesService notesService,
         SelectionManager selectionManager)
     {
         _friendsListComponentUi = friendsListComponentUi;
         _commandLockoutService = commandLockoutService;
         _networkService = networkService;
-        _notesService = notesService;
         _selectionManager = selectionManager;
         
         _spiralRefreshCooldown.AutoReset = false;
