@@ -1,14 +1,13 @@
 using System;
-using System.Collections.Generic;
 
 namespace AetherRemoteClient.Domain.Enums;
 
 /// <summary>
-///     Settings for the plugin
+///     Settings for a specific secret (account) logged in in the plugin
 /// </summary>
 
 [Flags]
-public enum Setting
+public enum SecretSetting
 {
     // ============== WARNING ==============
     // This file is a database schema file.

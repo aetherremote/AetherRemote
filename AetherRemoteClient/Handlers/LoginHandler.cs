@@ -71,6 +71,8 @@ public class LoginHandler : IDisposable
     private async Task OnLogoutAsync()
     {
         await _networkService.DisconnectFromServerAsync().ConfigureAwait(false);
+        
+        _activeSessionService.ClearAllSessionData();
     }
 
     public void Dispose()

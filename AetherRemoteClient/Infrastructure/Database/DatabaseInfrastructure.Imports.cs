@@ -21,7 +21,7 @@ public partial class DatabaseInfrastructure
         await using var transaction = (SqliteTransaction)await _database.BeginTransactionAsync().ConfigureAwait(false);
 
         // Roll back if any fails so that the database isn't in a partial state and the error can be examined
-        if (await ImportGlobalSettings(transaction, safeMode, showOnDtrBar).ConfigureAwait(false) is false || 
+        if (await ImportSettings(transaction, safeMode, showOnDtrBar).ConfigureAwait(false) is false || 
             await ImportNotes(transaction, notes).ConfigureAwait(false) is false || 
             await ImportSecretsWithCharacters(transaction, secrets).ConfigureAwait(false) is false)
         {
@@ -68,24 +68,24 @@ public partial class DatabaseInfrastructure
     /// <summary>
     ///     Imports notes from a legacy configuration file
     /// </summary>
-    private async Task<bool> ImportGlobalSettings(SqliteTransaction transaction, bool safeMode, bool showOnDtrBar)
+    private async Task<bool> ImportSettings(SqliteTransaction transaction, bool safeMode, bool showOnDtrBar)
     {
         try
         {
             await using var command = _database.CreateCommand();
             command.Transaction = transaction;
-            command.CommandText = "INSERT INTO GlobalSettings VALUES (@SettingId, @Value) ON CONFLICT (SettingId) DO UPDATE SET Value = @Value";
+            command.CommandText = "INSERT INTO Settings VALUES (@SettingId, @Value) ON CONFLICT (SettingId) DO UPDATE SET Value = @Value";
             
             var settingIdParameter = command.Parameters.Add("@SettingId", SqliteType.Integer);
             var valueParameter = command.Parameters.Add("@Value", SqliteType.Text);
 
             var successes = 0;
             
-            settingIdParameter.Value = GlobalSetting.SafeMode;
+            settingIdParameter.Value = Settings.SafeMode;
             valueParameter.Value = safeMode.ToString();
             successes += await command.ExecuteNonQueryAsync().ConfigureAwait(false);
             
-            settingIdParameter.Value = GlobalSetting.ShowOnDtrBar;
+            settingIdParameter.Value = Settings.ShowOnDtrBar;
             valueParameter.Value = showOnDtrBar.ToString();
             successes += await command.ExecuteNonQueryAsync().ConfigureAwait(false);
             
@@ -93,7 +93,7 @@ public partial class DatabaseInfrastructure
         }
         catch (Exception e) 
         {
-            Plugin.Log.Error($"[DatabaseInfrastructure.ImportNotes] {e}");
+            Plugin.Log.Error($"[DatabaseInfrastructure.ImportSettings] {e}");
             return false;
         }
     }
@@ -124,12 +124,12 @@ public partial class DatabaseInfrastructure
             var createCharacterConfigurationWorld = createCharacterConfigurationCommand.Parameters.Add("@World", SqliteType.Text);
             var createCharacterConfigurationSecretId = createCharacterConfigurationCommand.Parameters.Add("@SecretId", SqliteType.Integer);
 
-            await using var setSettingCommand = _database.CreateCommand();
-            setSettingCommand.Transaction = transaction;
-            setSettingCommand.CommandText = "INSERT INTO Settings VALUES (@SecretId, @SettingId, @Value) ON CONFLICT (SecretId, SettingId) DO UPDATE SET Value = @Value";
-            var setSettingSecretId = setSettingCommand.Parameters.Add("@SecretId", SqliteType.Integer);
-            var setSettingSettingId = setSettingCommand.Parameters.Add("@SettingId", SqliteType.Integer);
-            var setSettingValue = setSettingCommand.Parameters.Add("@Value", SqliteType.Text);
+            await using var setSecretSettingCommand = _database.CreateCommand();
+            setSecretSettingCommand.Transaction = transaction;
+            setSecretSettingCommand.CommandText = "INSERT INTO SecretSettings VALUES (@SecretId, @SettingId, @Value) ON CONFLICT (SecretId, SettingId) DO UPDATE SET Value = @Value";
+            var setSettingSecretId = setSecretSettingCommand.Parameters.Add("@SecretId", SqliteType.Integer);
+            var setSettingSettingId = setSecretSettingCommand.Parameters.Add("@SettingId", SqliteType.Integer);
+            var setSettingValue = setSecretSettingCommand.Parameters.Add("@Value", SqliteType.Text);
 
             var counter = 1;
             foreach (var (secret, characters) in secrets)
@@ -159,9 +159,9 @@ public partial class DatabaseInfrastructure
 
                 setSettingSecretId.Value = secretId;
                 
-                setSettingSettingId.Value = Setting.AutoLogin;
+                setSettingSettingId.Value = SecretSetting.AutoLogin;
                 setSettingValue.Value = false.ToString();
-                await setSettingCommand.ExecuteNonQueryAsync().ConfigureAwait(false);
+                await setSecretSettingCommand.ExecuteNonQueryAsync().ConfigureAwait(false);
             }
 
             return true;

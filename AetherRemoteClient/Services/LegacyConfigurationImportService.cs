@@ -50,6 +50,8 @@ public class LegacyConfigurationImportService(DatabaseInfrastructure databaseInf
                 if (character["Name"]?.ToObject<string>() is not { } name) continue;
                 if (character["World"]?.ToObject<string>() is not { } world) continue;
                 if (character["Secret"]?.ToObject<string>() is not { } secret) continue;
+
+                if (string.IsNullOrEmpty(secret)) continue;
                 
                 if (secrets.TryGetValue(secret, out var characters) is false)
                 {

@@ -22,9 +22,10 @@ public class AuthenticationInfrastructure : IDisposable
 {
     // Where we should post for authentication
 #if DEBUG
-    private const string AuthenticationUrl = "https://localhost:5006/api/auth/login";
+    // private const string AuthenticationUrl = "https://localhost:5006/api/auth/login"; // Local
+    private const string AuthenticationUrl = "https://foxitsvc.com:5017/api/auth/login"; // Beta
 #else
-    private const string AuthenticationUrl = "https://foxitsvc.com:5006/api/auth/login";
+    private const string AuthenticationUrl = "https://foxitsvc.com:5006/api/auth/login"; // Prod
 #endif
     
     // Long-lived HttpClient

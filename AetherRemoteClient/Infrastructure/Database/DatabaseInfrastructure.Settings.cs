@@ -10,19 +10,19 @@ public partial class DatabaseInfrastructure
     /// <summary>
     ///     Loads all the settings for the plugin
     /// </summary>
-    public async Task<Dictionary<GlobalSetting, string>?> GetSettings()
+    public async Task<Dictionary<Settings, string>?> GetSettings()
     {
         try
         {
             await using var command = _database.CreateCommand();
             command.CommandText = "SELECT SettingId, Value FROM Settings";
             
-            var results = new Dictionary<GlobalSetting, string>();
+            var results = new Dictionary<Settings, string>();
             
             await using var reader = await command.ExecuteReaderAsync().ConfigureAwait(false);
             while (await reader.ReadAsync().ConfigureAwait(false))
             {
-                var setting = (GlobalSetting)reader.GetInt16(0);
+                var setting = (Settings)reader.GetInt16(0);
                 var value = reader.GetString(1);
                 results.Add(setting, value);
             }
@@ -37,9 +37,9 @@ public partial class DatabaseInfrastructure
     }
 
     /// <summary>
-    ///     Sets a specific <see cref="GlobalSetting"/>'s value
+    ///     Sets a specific <see cref="Settings"/>'s value
     /// </summary>
-    public async Task<bool> SetSetting(GlobalSetting setting, string value)
+    public async Task<bool> SetSetting(Settings setting, string value)
     {
         try
         {

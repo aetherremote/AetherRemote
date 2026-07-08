@@ -14,7 +14,7 @@ public partial class ConfigurationService
     /// <summary>
     ///     Sets the value of a particular settings to a value
     /// </summary>
-    public async Task<bool> SetSetting(GlobalSetting setting, bool value)
+    public async Task<bool> SetSetting(Settings setting, bool value)
     {
         if (await databaseInfrastructure.SetSetting(setting, value.ToString()).ConfigureAwait(false) is false)
             return false;
@@ -22,11 +22,11 @@ public partial class ConfigurationService
         // This is not very scalable but that is probably okay for now
         switch (setting)
         {
-            case GlobalSetting.SafeMode:
+            case Settings.SafeMode:
                 SafeMode = value;
                 return true;
             
-            case GlobalSetting.ShowOnDtrBar:
+            case Settings.ShowOnDtrBar:
                 ShowOnDtrBar = value;
                 return true;
             
@@ -44,8 +44,8 @@ public partial class ConfigurationService
         if (await databaseInfrastructure.GetSettings().ConfigureAwait(false) is not { } globalSettings)
             return false;
 
-        SafeMode = globalSettings.TryGetValue(GlobalSetting.SafeMode, out var safeMode) && bool.Parse(safeMode);
-        SafeMode = globalSettings.TryGetValue(GlobalSetting.ShowOnDtrBar, out var showOnDtrBar) && bool.Parse(showOnDtrBar);
+        SafeMode = globalSettings.TryGetValue(Settings.SafeMode, out var safeMode) && bool.Parse(safeMode);
+        SafeMode = globalSettings.TryGetValue(Settings.ShowOnDtrBar, out var showOnDtrBar) && bool.Parse(showOnDtrBar);
         return true;
     }
 }

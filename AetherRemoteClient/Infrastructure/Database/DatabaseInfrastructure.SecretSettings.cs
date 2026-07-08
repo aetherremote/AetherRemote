@@ -10,7 +10,7 @@ public partial class DatabaseInfrastructure
     /// <summary>
     ///     Loads all the settings for a secret id from the table in their raw data string
     /// </summary>
-    public async Task<Dictionary<Setting, string>?> GetSecretSettings(long secretId)
+    public async Task<Dictionary<SecretSetting, string>?> GetSecretSettings(long secretId)
     {
         try
         {
@@ -18,12 +18,12 @@ public partial class DatabaseInfrastructure
             command.CommandText = "SELECT SettingId, Value FROM SecretSettings WHERE SecretId = @SecretId";
             command.Parameters.AddWithValue("@SecretId", secretId);
 
-            var results = new Dictionary<Setting, string>();
+            var results = new Dictionary<SecretSetting, string>();
             
             await using var reader = await command.ExecuteReaderAsync().ConfigureAwait(false);
             while (await reader.ReadAsync().ConfigureAwait(false))
             {
-                var setting = (Setting)reader.GetInt16(0);
+                var setting = (SecretSetting)reader.GetInt16(0);
                 var value = reader.GetString(1);
                 results.Add(setting, value);
             }
@@ -40,14 +40,14 @@ public partial class DatabaseInfrastructure
     /// <summary>
     ///     Sets a specified setting for the provided secret id
     /// </summary>
-    public async Task<bool> SetSecretSetting(long secretId, Setting setting, string value)
+    public async Task<bool> SetSecretSetting(long secretId, SecretSetting secretSetting, string value)
     {
         try
         {
             await using var command = _database.CreateCommand();
             command.CommandText = "INSERT INTO SecretSettings VALUES (@SecretId, @SettingId, @Value) ON CONFLICT (SecretId, SettingId) DO UPDATE SET Value = @Value";
             command.Parameters.AddWithValue("@SecretId", secretId);
-            command.Parameters.AddWithValue("@SettingId", setting);
+            command.Parameters.AddWithValue("@SettingId", secretSetting);
             command.Parameters.AddWithValue("@Value", value);
 
             return await command.ExecuteNonQueryAsync().ConfigureAwait(false) is 1;
@@ -59,6 +59,6 @@ public partial class DatabaseInfrastructure
         }
     }
     
-    /// <inheritdoc cref="SetSecretSetting(long, Setting, string)"/>
-    public async Task<bool> SetSecretSetting(long secretId, Setting setting, bool value) => await SetSecretSetting(secretId, setting, value.ToString());
+    /// <inheritdoc cref="SetSecretSetting(long, SecretSetting, string)"/>
+    public async Task<bool> SetSecretSetting(long secretId, SecretSetting secretSetting, bool value) => await SetSecretSetting(secretId, secretSetting, value.ToString());
 }

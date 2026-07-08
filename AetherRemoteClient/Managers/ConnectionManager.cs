@@ -68,7 +68,10 @@ public class ConnectionManager(
 
     private Task OnDisconnected()
     {
+        activeSessionService.ClearOnlineSessionData();
+        
         viewService.ResetView();
+        
         networkService.Disconnected -= OnDisconnected;
         return Task.CompletedTask;
     }

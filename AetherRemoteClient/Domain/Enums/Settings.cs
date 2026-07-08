@@ -3,11 +3,11 @@ using System;
 namespace AetherRemoteClient.Domain.Enums;
 
 /// <summary>
-///     Global Settings for the plugin
+///     Settings for the plugin
 /// </summary>
 
 [Flags]
-public enum GlobalSetting
+public enum Settings
 {
     // ============== WARNING ==============
     // This file is a database schema file.

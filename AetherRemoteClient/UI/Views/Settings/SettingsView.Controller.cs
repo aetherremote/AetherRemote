@@ -60,7 +60,7 @@ public partial class SettingsView
 
     private async Task SetShowDtrBar(bool showDtrBar)
     {
-        if (await _configurationService.SetSetting(GlobalSetting.ShowOnDtrBar, showDtrBar).ConfigureAwait(false) is false)
+        if (await _configurationService.SetSetting(Domain.Enums.Settings.ShowOnDtrBar, showDtrBar).ConfigureAwait(false) is false)
             return;
 
         if (showDtrBar)
@@ -71,7 +71,7 @@ public partial class SettingsView
 
     private async Task SetSafeMode(bool safeMode)
     {
-        if (await _configurationService.SetSetting(GlobalSetting.SafeMode, safeMode).ConfigureAwait(false) is false)
+        if (await _configurationService.SetSetting(Domain.Enums.Settings.SafeMode, safeMode).ConfigureAwait(false) is false)
             return;
 
         // When we enter safe mode, we want to disable a lot of things, so turning it off means we can exit early

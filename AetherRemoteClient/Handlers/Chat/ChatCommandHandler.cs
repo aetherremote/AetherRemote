@@ -145,7 +145,7 @@ public partial class ChatCommandHandler : IDisposable
                     _actionQueueService.Clear();
                     
                     // TODO: Proper logging and fail stating
-                    await _configurationService.SetSetting(GlobalSetting.SafeMode, true).ConfigureAwait(false);
+                    await _configurationService.SetSetting(Settings.SafeMode, true).ConfigureAwait(false);
                     
                     payloads.Add(new UIForegroundPayload(AetherRemoteColors.TextColorPurple));
                     payloads.Add(new TextPayload("[AetherRemote] "));

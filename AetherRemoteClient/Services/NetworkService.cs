@@ -23,9 +23,9 @@ public class NetworkService : IAsyncDisposable
 {
     
 #if DEBUG
-    private const string HubUrl = "https://localhost:5006/primaryHub";
-    // private const string HubUrl = "https://foxitsvc.com:5017/primaryHub";
-    // private const string HubUrl = "https://foxitsvc.com:5006/primaryHub";
+    // private const string HubUrl = "https://localhost:5006/primaryHub"; // Local
+    private const string HubUrl = "https://foxitsvc.com:5017/primaryHub"; // Beta
+    // private const string HubUrl = "https://foxitsvc.com:5006/primaryHub"; // Prod
 #else
     private const string HubUrl = "https://foxitsvc.com:5006/primaryHub";
 #endif

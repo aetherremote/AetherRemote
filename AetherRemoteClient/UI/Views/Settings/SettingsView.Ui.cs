@@ -20,6 +20,7 @@ public partial class SettingsView
     private string _addSecretModalSecretName = string.Empty;
     private string _addSecretModalSecretValue = string.Empty;
     
+    private string _renameSecretModalSelectedSecretName = string.Empty;
     private string _renameSecretModalSecretName = string.Empty;
     private long _renameSecretModalSecretId = -1;
     
@@ -73,7 +74,7 @@ public partial class SettingsView
         
         if (_activeSessionService.SecretId is null)
         {
-            ImGui.TextWrapped("You must be logged in to view individual settings.");
+            ImGui.TextWrapped("To view these settings, you must be logged in with a secret.");
             return;
         }
 
@@ -236,13 +237,13 @@ public partial class SettingsView
             
             ImGui.Text("Secret to Rename");
             ImGui.SetNextItemWidth(width);
-            if (ImGui.BeginCombo("##SecretToRenameCombo", _renameSecretModalSecretName))
+            if (ImGui.BeginCombo("##SecretToRenameCombo", _renameSecretModalSelectedSecretName))
             {
                 foreach (var secret in _configurationService.Secrets)
                     if (ImGui.Selectable(secret.Value.Name))
                     {
                         _renameSecretModalSecretId = secret.Key;
-                        _renameSecretModalSecretName = secret.Value.Name;
+                        _renameSecretModalSelectedSecretName = secret.Value.Name;
                     }
                 
                 ImGui.EndCombo();
@@ -267,6 +268,7 @@ public partial class SettingsView
                 
                 _renameSecretModalSecretId = -1;
                 _renameSecretModalSecretName = string.Empty;
+                _renameSecretModalSelectedSecretName = string.Empty;
                 
                 renameButtonClicked = true;
                 shouldCloseCurrentPopup = true;
@@ -279,6 +281,7 @@ public partial class SettingsView
             {
                 _renameSecretModalSecretId = -1;
                 _renameSecretModalSecretName = string.Empty;
+                _renameSecretModalSelectedSecretName = string.Empty;
                 
                 shouldCloseCurrentPopup = true;
             }

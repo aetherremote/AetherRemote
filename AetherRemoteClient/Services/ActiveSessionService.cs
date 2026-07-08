@@ -29,7 +29,7 @@ public class ActiveSessionService(DatabaseInfrastructure databaseInfrastructure)
     public long? PendingSecretId { get; private set; }
 
     /// <summary> Settings loaded along with pending secret id for the case of AutoLogin </summary>
-    private Dictionary<Setting, string>? _pendingSettings;
+    private Dictionary<SecretSetting, string>? _pendingSettings;
     
     // ======== Online Session ========
 
@@ -57,7 +57,7 @@ public class ActiveSessionService(DatabaseInfrastructure databaseInfrastructure)
     /// </summary>
     public async Task<bool> StartNewSession(string characterName, string characterWorld)
     {
-        ClearSession();
+        ClearAllSessionData();
         
         if (await databaseInfrastructure.GetCharacterConfiguration(characterName, characterWorld).ConfigureAwait(false) is not { } configuration)
             return false;
@@ -90,7 +90,7 @@ public class ActiveSessionService(DatabaseInfrastructure databaseInfrastructure)
         SecretId = pendingSecretId;
         
         // Now we can set all the settings from our provided secret
-        AutoLogin = settings.TryGetValue(Setting.AutoLogin, out var autoLogin) && bool.Parse(autoLogin);
+        AutoLogin = settings.TryGetValue(SecretSetting.AutoLogin, out var autoLogin) && bool.Parse(autoLogin);
         
         FriendCode = friendCode;
         GlobalPermissions = globalPermissions;
@@ -129,14 +129,28 @@ public class ActiveSessionService(DatabaseInfrastructure databaseInfrastructure)
         if (SecretId is null)
             return false;
         
-        if (await databaseInfrastructure.SetSecretSetting(SecretId.Value, Setting.AutoLogin, autoLogin).ConfigureAwait(false) is false)
+        if (await databaseInfrastructure.SetSecretSetting(SecretId.Value, SecretSetting.AutoLogin, autoLogin).ConfigureAwait(false) is false)
             return false;
         
         AutoLogin = autoLogin;
         return true;
     }
+
+    /// <summary>
+    ///     Removes all information about an active offline session (FriendCode, SecretId, etc...)
+    /// </summary>
+    public void ClearOnlineSessionData()
+    {
+        SecretId = null;
+        AutoLogin = false;
+        FriendCode = null;
+        GlobalPermissions = null;
+    }
     
-    private void ClearSession()
+    /// <summary>
+    ///     Removes all information about the local character, and online session
+    /// </summary>
+    public void ClearAllSessionData()
     {
         CharacterName = null;
         CharacterWorld = null;
