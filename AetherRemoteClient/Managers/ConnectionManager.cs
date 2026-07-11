@@ -70,6 +70,8 @@ public class ConnectionManager(
     {
         activeSessionService.ClearOnlineSessionData();
         
+        friendsListService.Clear();
+        
         viewService.ResetView();
         
         networkService.Disconnected -= OnDisconnected;

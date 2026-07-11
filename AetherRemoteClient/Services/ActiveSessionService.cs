@@ -70,7 +70,13 @@ public class ActiveSessionService(DatabaseInfrastructure databaseInfrastructure)
         if (configuration.SecretId is not { } secretId)
             return true;
         
-        return await UpdatePendingSecretId(secretId).ConfigureAwait(false);
+        // AutoLogin is unique in that we need to test for this before actually fully loading the configuration
+        if (await databaseInfrastructure.GetSecretSettings(secretId).ConfigureAwait(false) is not { } settings)
+            return false;
+        
+        AutoLogin = settings.TryGetValue(SecretSetting.AutoLogin, out var autoLogin) && bool.Parse(autoLogin);
+
+        return UpdatePendingSecretId(secretId, settings);
     }
 
     /// <summary>
@@ -103,11 +109,17 @@ public class ActiveSessionService(DatabaseInfrastructure databaseInfrastructure)
     /// </summary>
     public async Task<bool> UpdatePendingSecretId(long secretId)
     {
-        if (await databaseInfrastructure.GetSecretSettings(secretId).ConfigureAwait(false) is not { } secretSettings)
+        if (await databaseInfrastructure.GetSecretSettings(secretId).ConfigureAwait(false) is not { } settings)
             return false;
-        
+
+        return UpdatePendingSecretId(secretId, settings);
+    }
+    
+    /// <inheritdoc cref="UpdatePendingSecretId"/>
+    private bool UpdatePendingSecretId(long secretId, Dictionary<SecretSetting, string>? settings)
+    {
         PendingSecretId = secretId;
-        _pendingSettings = secretSettings;
+        _pendingSettings = settings;
         return true;
     }
 

@@ -61,8 +61,6 @@ public class LoginHandler : IDisposable
         if (await _activeSessionService.StartNewSession(name, world) is false)
             return;
         
-        // This is a bit of a special case, since AutoLogin needs to be checked BEFORE 
-        
         if (_activeSessionService.AutoLogin)
             await _connectionManager.TryConnectToServerAsync().ConfigureAwait(false);
     }

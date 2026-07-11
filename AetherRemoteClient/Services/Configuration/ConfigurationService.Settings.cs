@@ -45,7 +45,7 @@ public partial class ConfigurationService
             return false;
 
         SafeMode = globalSettings.TryGetValue(Settings.SafeMode, out var safeMode) && bool.Parse(safeMode);
-        SafeMode = globalSettings.TryGetValue(Settings.ShowOnDtrBar, out var showOnDtrBar) && bool.Parse(showOnDtrBar);
+        ShowOnDtrBar = globalSettings.TryGetValue(Settings.ShowOnDtrBar, out var showOnDtrBar) && bool.Parse(showOnDtrBar);
         return true;
     }
 }
