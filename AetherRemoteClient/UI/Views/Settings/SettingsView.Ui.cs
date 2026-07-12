@@ -70,17 +70,23 @@ public partial class SettingsView
         if (ImGui.Checkbox("Show on Dtr Bar##SettingsShowDtrBar", ref showOnDtrBar))
             _ = SetShowDtrBar(showOnDtrBar).ConfigureAwait(false);
         
+        ImGui.Spacing();
+        ImGui.Separator();
         SharedUserInterfaces.MediumText("Individual Settings");
-        
-        if (_activeSessionService.SecretId is null)
+
+        var secretId = _activeSessionService.SecretId;
+        if (secretId is null)
         {
-            ImGui.TextWrapped("To view these settings, you must be logged in with a secret.");
-            return;
+            ImGui.TextWrapped("To edit these settings, you must be logged in with a secret.");
+            ImGui.BeginDisabled();
         }
 
         var autoLogin = _activeSessionService.AutoLogin;
         if (ImGui.Checkbox("Auto Login##SettingsAutoLogin", ref autoLogin))
             _ = SetAutoLogin(autoLogin).ConfigureAwait(false);
+        
+        if (secretId is null)
+            ImGui.EndDisabled();
     }
     
     private void DrawSecrets()
@@ -106,7 +112,7 @@ public partial class SettingsView
                     var count = names.Count;
                     
                     ImGui.Text(string.Concat("Used by ", count, count is 1 ? " character" : " characters"));
-                    if (ImGui.IsItemHovered())
+                    if (count > 0 & ImGui.IsItemHovered())
                     {
                         ImGui.BeginTooltip();
                         foreach (var name in names)

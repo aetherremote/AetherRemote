@@ -3,6 +3,8 @@ using AetherRemoteClient.Domain.Enums;
 using AetherRemoteClient.UI.Style;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
+using Dalamud.Interface.Colors;
 
 namespace AetherRemoteClient.UI.Views.Login;
 
@@ -56,10 +58,16 @@ public partial class LoginView
                 OpenDiscordLink();
             ImGui.PopStyleColor();
             ImGui.SameLine();
-            ImGui.TextUnformatted("to generate one, then add it in the settings tab.");
+            ImGui.TextUnformatted("to generate one.");
             ImGui.PopStyleVar();
         });
 
+        SharedUserInterfaces.ContentBox2("ConfigurationUpdateNotice", AetherRemoteColors.PanelColor, true, () =>
+        {
+            SharedUserInterfaces.MediumText("Configurations and Secrets");
+            ImGui.TextWrapped("There have been significant changes to configurations and secrets in AR. You can find the changes in the Settings tab.");
+        });
+        
         ImGui.EndChild();
     }
 }
