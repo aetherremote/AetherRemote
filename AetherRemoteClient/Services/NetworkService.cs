@@ -39,6 +39,12 @@ public class NetworkService : IAsyncDisposable
     /// <summary> Connected to the server successfully, either by reconnection or manual connection </summary>
     public event Func<Task>? Connected;
 
+    /// <summary> An established connection was interrupted, and is attempting to restore </summary>
+    public event Func<Task>? Reconnecting;
+    
+    /// <summary> An interrupted connection was successfully restored </summary>
+    public event Func<Task>? Reconnected;
+
     /// <summary> Disconnected from the server, either by disruption or manual intervention </summary>
     public event Func<Task>? Disconnected;
 
@@ -86,8 +92,8 @@ public class NetworkService : IAsyncDisposable
             })
             .Build();
 
-        _connection.Reconnected += OnConnected;
-        _connection.Reconnecting += OnDisconnected;
+        _connection.Reconnected += OnReconnected;
+        _connection.Reconnecting += OnReconnecting;
         _connection.Closed += OnDisconnected;
     }
     
@@ -196,13 +202,14 @@ public class NetworkService : IAsyncDisposable
     }
     
     // Connection event wrappers
-    private Task OnConnected(string? arg) => Connected?.Invoke() ?? Task.CompletedTask;
+    private Task OnReconnected(string? arg) => Reconnected?.Invoke() ?? Task.CompletedTask;
+    private Task OnReconnecting(Exception? arg) => Reconnecting?.Invoke() ?? Task.CompletedTask;
     private Task OnDisconnected(Exception? arg) => Disconnected?.Invoke() ?? Task.CompletedTask;
 
     public async ValueTask DisposeAsync()
     {
-        _connection.Reconnected -= OnConnected;
-        _connection.Reconnecting -= OnDisconnected;
+        _connection.Reconnected -= OnReconnected;
+        _connection.Reconnecting -= OnReconnecting;
         _connection.Closed -= OnDisconnected;
         
         await _connection.StopAsync().ConfigureAwait(false);

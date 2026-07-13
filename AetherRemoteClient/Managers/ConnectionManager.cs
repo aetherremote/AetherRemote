@@ -36,13 +36,15 @@ public class ConnectionManager(
             return false;
         
         networkService.Disconnected += OnDisconnected;
+        networkService.Reconnected += OnReconnected;
+        networkService.Reconnecting += OnReconnecting;
         
         var request = new GetAccountDataRequest(characterName, characterWorld);
         var response = await networkService.InvokeAsync<GetAccountDataResponse>(HubMethod.GetAccountData, request).ConfigureAwait(false);
         if (response.Result is not GetAccountDataEc.Success)
         {
             Plugin.Log.Fatal($"[ConnectionManager.TryConnectToServerAsync] Failed to get account data {response.Result}");
-            networkService.Disconnected -= OnDisconnected;
+            UnsubscribeFromEvents();
             await networkService.DisconnectFromServerAsync().ConfigureAwait(false);
             return false;
         }
@@ -50,7 +52,7 @@ public class ConnectionManager(
         if (await activeSessionService.UpdateAccountDetails(response.AccountFriendCode, response.AccountGlobalPermissions).ConfigureAwait(false) is false)
         {
             Plugin.Log.Fatal($"[ConnectionManager.TryConnectToServerAsync] Failed to initialize account details");
-            networkService.Disconnected -= OnDisconnected;
+            UnsubscribeFromEvents();
             await networkService.DisconnectFromServerAsync().ConfigureAwait(false);
             return false;
         }
@@ -74,8 +76,27 @@ public class ConnectionManager(
         
         viewService.ResetView();
         
-        networkService.Disconnected -= OnDisconnected;
+        UnsubscribeFromEvents();
         return Task.CompletedTask;
+    }
+    
+    private Task OnReconnected()
+    {
+        viewService.Home();
+        return Task.CompletedTask;
+    }
+
+    private Task OnReconnecting()
+    {
+        viewService.ResetView();
+        return Task.CompletedTask;
+    }
+
+    private void UnsubscribeFromEvents()
+    {
+        networkService.Disconnected -= OnDisconnected;
+        networkService.Reconnected -= OnReconnected;
+        networkService.Reconnecting -= OnReconnecting;
     }
 
     public void Dispose()

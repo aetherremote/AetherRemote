@@ -36,7 +36,7 @@ public partial class HomeView
         });
 
         if (SharedUserInterfaces.ContextBoxButton(FontAwesomeIcon.Plug, AetherRemoteImGui.WindowPadding, windowWidth))
-            _ = Disconnect();
+            _ = Disconnect().ConfigureAwait(false);
         
         SharedUserInterfaces.Tooltip("Disconnect");
         

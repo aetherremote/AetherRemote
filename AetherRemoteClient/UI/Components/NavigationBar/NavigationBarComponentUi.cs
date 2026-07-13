@@ -10,7 +10,7 @@ using Dalamud.Interface;
 
 namespace AetherRemoteClient.UI.Components.NavigationBar;
 
-public class NavigationBarComponentUi(NetworkService networkService, ViewService viewService, SelectionManager selection)
+public class NavigationBarComponentUi(ActiveSessionService activeSessionService, NetworkService networkService, ViewService viewService, SelectionManager selection)
 {
     // Const
     private static readonly Vector2 AlignButtonTextLeft = new(0, 0.5f);
@@ -27,7 +27,7 @@ public class NavigationBarComponentUi(NetworkService networkService, ViewService
         {
             ImGui.PushStyleVar(ImGuiStyleVar.ButtonTextAlign, AlignButtonTextLeft);
 
-            if (networkService.State is ConnectionState.Connected)
+            if (networkService.State is ConnectionState.Connected && activeSessionService.SecretId is not null)
             {
                 ImGui.TextUnformatted("General");
                 NavBarButton(FontAwesomeIcon.HouseChimney, "Home", View.Home, size, offset);
