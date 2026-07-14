@@ -1,4 +1,3 @@
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using AetherRemoteCommon;
@@ -9,6 +8,7 @@ using AetherRemoteServer.Domain;
 using AetherRemoteServer.Services.Database;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
 
 namespace AetherRemoteServer.Api.Controllers;
@@ -35,18 +35,18 @@ public class AuthController(Configuration config, DatabaseService database) : Co
 
         var token = GenerateJwtToken([new Claim(AuthClaimTypes.FriendCode, friendCode)]);
 
-        return StatusCode(StatusCodes.Status200OK, new LoginAuthenticationResult(LoginAuthenticationErrorCode.Success, token.RawData));
+        return StatusCode(StatusCodes.Status200OK, new LoginAuthenticationResult(LoginAuthenticationErrorCode.Success, token));
     }
-
-    private JwtSecurityToken GenerateJwtToken(List<Claim> claims)
+    
+    private string GenerateJwtToken(IEnumerable<Claim> claims)
     {
-        var token = new SecurityTokenDescriptor
+        var descriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(claims),
-            SigningCredentials = new SigningCredentials(_key, SecurityAlgorithms.HmacSha256Signature),
+            SigningCredentials = new SigningCredentials(_key, SecurityAlgorithms.HmacSha256),
             Expires = DateTime.UtcNow.AddHours(Constraints.TokenExpirationInHours)
         };
 
-        return new JwtSecurityTokenHandler().CreateJwtSecurityToken(token);
+        return new JsonWebTokenHandler().CreateToken(descriptor);
     }
 }
