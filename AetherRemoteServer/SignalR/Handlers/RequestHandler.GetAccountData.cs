@@ -16,8 +16,8 @@ public partial class RequestHandler
         _presenceService.Add(friendCode, presence);
         
         var results = new List<FriendDto>();
-        var global = await _databaseService.GetGlobalPermissions(friendCode);
-        var permissions = await _databaseService.GetAllPermissions(friendCode);
+        var global = await _databaseInfrastructure.GetGlobalPermissions(friendCode);
+        var permissions = await _databaseInfrastructure.GetAllPermissions(friendCode);
         foreach (var permission in permissions)
         {
             var online = permission.PermissionsGrantedBy is null

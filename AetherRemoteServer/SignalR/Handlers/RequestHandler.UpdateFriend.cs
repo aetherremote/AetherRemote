@@ -11,7 +11,7 @@ public partial class RequestHandler
 {
     public async Task<UpdateFriendResponse> HandleUpdateFriend(string friendCode, UpdateFriendRequest request, IHubCallerClients clients)
     {
-        var databaseResult = await _databaseService.UpdatePermissions(friendCode, request.TargetFriendCode, request.Permissions);
+        var databaseResult = await _databaseInfrastructure.UpdatePermissions(friendCode, request.TargetFriendCode, request.Permissions);
         var result = databaseResult switch
         {
             DatabaseResultEc.Success => UpdateFriendEc.Success,
@@ -23,7 +23,7 @@ public partial class RequestHandler
             return new UpdateFriendResponse(result);
         
         // TODO: Update failure state. This is not an expected state
-        if (await _databaseService.GetGlobalPermissions(friendCode) is not { } global)
+        if (await _databaseInfrastructure.GetGlobalPermissions(friendCode) is not { } global)
             return new UpdateFriendResponse(result);
         
         try

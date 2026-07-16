@@ -1,12 +1,12 @@
 using AetherRemoteServer.Managers;
 using AetherRemoteServer.Services;
-using AetherRemoteServer.Services.Database;
+using DatabaseInfrastructure = AetherRemoteServer.Infrastructure.Database.DatabaseInfrastructure;
 
 namespace AetherRemoteServer.SignalR.Handlers;
 
 public partial class RequestHandler
 {
-    private readonly DatabaseService _databaseService;
+    private readonly DatabaseInfrastructure _databaseInfrastructure;
     private readonly PresenceService _presenceService;
    
     private readonly PossessionManager _possessionManager;
@@ -17,13 +17,13 @@ public partial class RequestHandler
     private readonly ILogger<RequestHandler> _logger;
 
     public RequestHandler(
-        DatabaseService databaseService,
+        DatabaseInfrastructure databaseInfrastructure,
         PresenceService presenceService,
         PossessionManager possessionManager,
         ForwardedRequestManager forwardedRequestManager,
         ILogger<RequestHandler> logger)
     {
-        _databaseService = databaseService;
+        _databaseInfrastructure = databaseInfrastructure;
         _presenceService = presenceService;
         _possessionManager = possessionManager;
         _forwardedRequestManager = forwardedRequestManager;

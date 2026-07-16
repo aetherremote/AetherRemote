@@ -5,9 +5,9 @@ using AetherRemoteCommon.Util;
 using AetherRemoteServer.Domain;
 using Microsoft.Data.Sqlite;
 
-namespace AetherRemoteServer.Services.Database;
+namespace AetherRemoteServer.Infrastructure.Database;
 
-public partial class DatabaseService
+public partial class DatabaseInfrastructure
 {
     /// <summary>
     ///     Gets a raw permission set
@@ -42,7 +42,7 @@ public partial class DatabaseService
         }
         catch (Exception e)
         {
-            _logger.LogError("[GetPermissions] {Error}", e);
+            LoggerExtensions.LogError(_logger, "[GetPermissions] {Error}", e);
             return null;
         }
     }
@@ -158,7 +158,7 @@ public partial class DatabaseService
         }
         catch (Exception e)
         {
-            _logger.LogError("[GetAllPermissions] {Error}", e);
+            LoggerExtensions.LogError(_logger, "[GetAllPermissions] {Error}", e);
             return [];
         }
     }
@@ -216,7 +216,7 @@ public partial class DatabaseService
         }
         catch (Exception e)
         {
-            _logger.LogError("[AddOrAcceptFriendship] {Error}", e);
+            LoggerExtensions.LogError(_logger, "[AddOrAcceptFriendship] {Error}", e);
             await transaction.RollbackAsync();
             return DatabaseResultEc.Unknown;
         }
@@ -255,7 +255,7 @@ public partial class DatabaseService
         }
         catch (Exception e)
         {
-            _logger.LogWarning("Unable to update {FriendCode}'s permissions for {TargetFriendCode}, {Exception}", senderFriendCode, targetFriendCode, e.Message);
+            LoggerExtensions.LogWarning(_logger, "Unable to update {FriendCode}'s permissions for {TargetFriendCode}, {Exception}", senderFriendCode, targetFriendCode, e.Message);
             return DatabaseResultEc.Unknown;
         }
     }
@@ -276,7 +276,7 @@ public partial class DatabaseService
         }
         catch (Exception e)
         {
-            _logger.LogWarning("Unable to delete {FriendCode}'s permissions for {TargetFriendCode}, {Exception}", senderFriendCode, targetFriendCode, e);
+            LoggerExtensions.LogWarning(_logger, "Unable to delete {FriendCode}'s permissions for {TargetFriendCode}, {Exception}", senderFriendCode, targetFriendCode, e);
             return DatabaseResultEc.Unknown;
         }
     }

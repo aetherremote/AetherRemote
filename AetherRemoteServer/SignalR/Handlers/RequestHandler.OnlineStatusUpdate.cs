@@ -19,8 +19,8 @@ public partial class RequestHandler
         if (online is false)
             await HandleOffline(friendCode, clients);
         
-        var global = await _databaseService.GetGlobalPermissions(friendCode);
-        var permissions = await _databaseService.GetAllPermissions(friendCode);
+        var global = await _databaseInfrastructure.GetGlobalPermissions(friendCode);
+        var permissions = await _databaseInfrastructure.GetAllPermissions(friendCode);
         foreach (var permission in permissions)
         {
             // Ignore pending friends

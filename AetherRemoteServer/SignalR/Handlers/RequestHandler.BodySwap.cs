@@ -42,11 +42,11 @@ public partial class RequestHandler
                 return new BodySwapResponse(ActionResponseEc.TargetOffline, [], null, null);
 
             // Get the target's permissions for the sender
-            if (await _databaseService.GetSinglePermissions(targetFriendCode, senderFriendCode) is not { } targetPermissions)
+            if (await _databaseInfrastructure.GetSinglePermissions(targetFriendCode, senderFriendCode) is not { } targetPermissions)
                 return new BodySwapResponse(ActionResponseEc.TargetBodySwapIsNotFriends, [], null, null);
 
             // Get and resolve their permissions
-            var global = await _databaseService.GetGlobalPermissions(targetFriendCode);
+            var global = await _databaseInfrastructure.GetGlobalPermissions(targetFriendCode);
             var resolved = PermissionResolver.Resolve(global, targetPermissions);
             
             // Body swap will only every make use of primary and elevated permissions

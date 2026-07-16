@@ -4,12 +4,12 @@ using AetherRemoteServer.Domain;
 using AetherRemoteServer.Domain.Kestrel;
 using AetherRemoteServer.Managers;
 using AetherRemoteServer.Services;
-using AetherRemoteServer.Services.Database;
 using AetherRemoteServer.SignalR.Handlers;
 using AetherRemoteServer.SignalR.Hubs;
 using MessagePack;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using DatabaseInfrastructure = AetherRemoteServer.Infrastructure.Database.DatabaseInfrastructure;
 
 namespace AetherRemoteServer;
 
@@ -41,8 +41,11 @@ public class Program
             .AddMessagePackProtocol(options => options.SerializerOptions = MessagePackSerializerOptions.Standard.WithSecurity(MessagePackSecurity.UntrustedData));
         builder.Services.AddSingleton(configuration);
 
+        // Infrastructure
+        builder.Services.AddSingleton<DatabaseInfrastructure>();
+        
         // Services
-        builder.Services.AddSingleton<DatabaseService>();
+        builder.Services.AddSingleton<PermissionsService>();
         builder.Services.AddSingleton<PresenceService>();
         builder.Services.AddSingleton<RequestLoggingService>();
         

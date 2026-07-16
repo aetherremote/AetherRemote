@@ -19,7 +19,7 @@ public partial class RequestHandler
     public async Task<AddFriendResponse> HandleAddFriend(string friendCode, AddFriendRequest request, IHubCallerClients clients)
     {
         // Create the permissions in the database
-        var result = await _databaseService.CreatePermissions(friendCode, request.TargetFriendCode);
+        var result = await _databaseInfrastructure.CreatePermissions(friendCode, request.TargetFriendCode);
         
         // Map the result
         var code = result switch

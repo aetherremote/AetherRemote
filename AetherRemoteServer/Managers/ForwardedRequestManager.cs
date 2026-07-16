@@ -4,15 +4,15 @@ using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Domain.Network.Possession;
 using AetherRemoteCommon.Util;
 using AetherRemoteServer.Services;
-using AetherRemoteServer.Services.Database;
 using Microsoft.AspNetCore.SignalR;
+using DatabaseInfrastructure = AetherRemoteServer.Infrastructure.Database.DatabaseInfrastructure;
 
 namespace AetherRemoteServer.Managers;
 
 /// <summary>
 ///     TODO
 /// </summary>
-public class ForwardedRequestManager(DatabaseService database, PresenceService presence, ILogger<ForwardedRequestManager> logger)
+public class ForwardedRequestManager(DatabaseInfrastructure database, PresenceService presence, ILogger<ForwardedRequestManager> logger)
 {
     private static readonly TimeSpan TimeOutDuration = TimeSpan.FromSeconds(8);
 

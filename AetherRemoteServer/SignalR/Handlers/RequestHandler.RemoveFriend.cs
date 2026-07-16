@@ -13,7 +13,7 @@ public partial class RequestHandler
     /// </summary>
     public async Task<RemoveFriendResponse> HandleRemoveFriend(string senderFriendCode, RemoveFriendRequest request, IHubCallerClients clients)
     {
-        var result = await _databaseService.DeletePermissions(senderFriendCode, request.TargetFriendCode) switch
+        var result = await _databaseInfrastructure.DeletePermissions(senderFriendCode, request.TargetFriendCode) switch
         {
             DatabaseResultEc.NoOp => RemoveFriendEc.NotFriends,
             DatabaseResultEc.Success => RemoveFriendEc.Success,
@@ -29,7 +29,7 @@ public partial class RequestHandler
             return new RemoveFriendResponse(result);
         
         // If the target is online, but they don't have us added
-        if (await _databaseService.GetSinglePermissions(request.TargetFriendCode, senderFriendCode) is null)
+        if (await _databaseInfrastructure.GetSinglePermissions(request.TargetFriendCode, senderFriendCode) is null)
             return new RemoveFriendResponse(result);
         
         try

@@ -11,11 +11,11 @@ public partial class RequestHandler
 {
     public async Task<ActionResponseEc> HandleUpdateGlobalPermissions(string friendCode, UpdateGlobalPermissionsRequest request, IHubCallerClients clients)
     {
-        var databaseResultEc = await _databaseService.UpdateGlobalPermissions(friendCode, request.Permissions);
+        var databaseResultEc = await _databaseInfrastructure.UpdateGlobalPermissions(friendCode, request.Permissions);
         if (databaseResultEc == DatabaseResultEc.Unknown)
             return ActionResponseEc.Unknown;
         
-        var permissions = await _databaseService.GetAllPermissions(friendCode);
+        var permissions = await _databaseInfrastructure.GetAllPermissions(friendCode);
         foreach (var permission in permissions)
         {
             // Ignore pending friends

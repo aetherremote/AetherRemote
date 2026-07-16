@@ -1,23 +1,23 @@
 using AetherRemoteServer.Domain;
 using Microsoft.Data.Sqlite;
 
-namespace AetherRemoteServer.Services.Database;
+namespace AetherRemoteServer.Infrastructure.Database;
 
 /// <summary>
 ///     Provides methods for interacting with the underlying Sqlite3 database
 /// </summary>
-public partial class DatabaseService
+public partial class DatabaseInfrastructure
 {
     // Injected
-    private readonly ILogger<DatabaseService> _logger;
+    private readonly ILogger<Infrastructure.Database.DatabaseInfrastructure> _logger;
 
     // Instantiated
     private readonly SqliteConnection _database;
 
     /// <summary>
-    ///     <inheritdoc cref="DatabaseService"/>
+    ///     <inheritdoc cref="Infrastructure.Database.DatabaseInfrastructure"/>
     /// </summary>
-    public DatabaseService(Configuration configuration, ILogger<DatabaseService> logger)
+    public DatabaseInfrastructure(Configuration configuration, ILogger<Infrastructure.Database.DatabaseInfrastructure> logger)
     {
         // Inject
         _logger = logger;

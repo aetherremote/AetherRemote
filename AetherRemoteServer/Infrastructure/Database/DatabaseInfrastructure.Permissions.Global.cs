@@ -2,9 +2,9 @@ using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 
-namespace AetherRemoteServer.Services.Database;
+namespace AetherRemoteServer.Infrastructure.Database;
 
-public partial class DatabaseService
+public partial class DatabaseInfrastructure
 {
     /// <summary>
     ///     Gets a friend code's global permissions
@@ -33,7 +33,7 @@ public partial class DatabaseService
         }
         catch (Exception e)
         {
-            _logger.LogError("[GetGlobalPermissions] {Error}", e);
+            LoggerExtensions.LogError(_logger, "[GetGlobalPermissions] {Error}", e);
             return new ResolvedPermissions(PrimaryPermissions.None, SpeakPermissions.None, ElevatedPermissions.None);
         }
     }
@@ -63,7 +63,7 @@ public partial class DatabaseService
         }
         catch (Exception e)
         {
-            _logger.LogWarning("[UpdateGlobalPermissions] {Error}", e);
+            LoggerExtensions.LogWarning(_logger, "[UpdateGlobalPermissions] {Error}", e);
             return DatabaseResultEc.Unknown;
         }
     }

@@ -5,17 +5,17 @@ using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network.GetToken;
 using AetherRemoteCommon.Domain.Network.LoginAuthentication;
 using AetherRemoteServer.Domain;
-using AetherRemoteServer.Services.Database;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
+using DatabaseInfrastructure = AetherRemoteServer.Infrastructure.Database.DatabaseInfrastructure;
 
 namespace AetherRemoteServer.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController(Configuration config, DatabaseService database) : ControllerBase
+public class AuthController(Configuration config, DatabaseInfrastructure database) : ControllerBase
 {
     // Const
     private static readonly Version ExpectedVersion = new(2, 10, 2, 0);
