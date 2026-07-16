@@ -54,6 +54,7 @@ public class Program
         builder.Services.AddSingleton<PossessionManager>();
 
         // Handles
+        builder.Services.AddSingleton<RelayManager>();
         builder.Services.AddSingleton<RequestHandler>();
 
         // Finalize

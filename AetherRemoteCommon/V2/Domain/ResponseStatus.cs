@@ -21,5 +21,14 @@ public enum ResponseStatus
     TooManyRequests,
     
     /// <summary> The data in the request was invalid or malformed </summary>
-    BadRequest
+    BadRequest,
+    
+    /// <summary> One of the targets was offline </summary>
+    TargetOffline,
+    
+    /// <summary> One of the targets was not a friend of the sender </summary>
+    TargetNotFriends,
+    
+    /// <summary> One of the targets did not grant the sender adequate permissions </summary>
+    TargetHasNotGrantedPermissions
 }

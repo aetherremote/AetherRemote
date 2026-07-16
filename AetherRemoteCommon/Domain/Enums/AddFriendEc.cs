@@ -1,0 +1,22 @@
+namespace AetherRemoteCommon.Domain.Enums;
+
+public enum AddFriendEc
+{
+    /// <summary> Default value, never should be encountered </summary>
+    Uninitialized,
+    
+    /// <summary> Attempted to add a friend who does not exist </summary>
+    NoSuchFriendCode,
+    
+    /// <summary> Attempted to add a friend who already is a friend </summary>
+    AlreadyFriends,
+
+    /// <summary> Successfully added a user, but awaiting them to add you back </summary>
+    Pending,
+    
+    /// <summary> An unknown error occurred </summary>
+    Unknown,
+
+    /// <summary> The operation succeeded </summary>
+    Success
+}
