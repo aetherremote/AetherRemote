@@ -4,8 +4,8 @@ using MessagePack;
 namespace AetherRemoteCommon.V2.Network.Relays;
 
 [MessagePackObject]
-public record BodySwapPayload(
-    [property: Key(0)] CharacterAttributes SwapAttributes,
-    [property: Key(1)] bool IncludeSelf,
+public record TransformPayload(
+    [property: Key(0)] string GlamourerData,
+    [property: Key(1)] GlamourerApplyFlags GlamourerApplyType,
     [property: Key(2)] string? LockCode
 );

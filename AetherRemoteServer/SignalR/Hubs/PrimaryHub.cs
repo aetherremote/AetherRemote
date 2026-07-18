@@ -13,6 +13,7 @@ public partial class PrimaryHub(
     
     // Handler
     RequestHandler requestHandler,
+    V2RequestHandler v2RequestHandler,
 
     // Logger
     ILogger<PrimaryHub> logger) : Hub

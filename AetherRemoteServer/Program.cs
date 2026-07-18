@@ -52,9 +52,9 @@ public class Program
         // Managers
         builder.Services.AddSingleton<ForwardedRequestManager>();
         builder.Services.AddSingleton<PossessionManager>();
+        builder.Services.AddSingleton<RelayManager>();
 
         // Handles
-        builder.Services.AddSingleton<RelayManager>();
         builder.Services.AddSingleton<RequestHandler>();
 
         // Finalize

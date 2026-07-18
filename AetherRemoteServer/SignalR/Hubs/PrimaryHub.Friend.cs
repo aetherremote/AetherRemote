@@ -1,7 +1,7 @@
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Domain.Network.AddFriend;
 using AetherRemoteCommon.Domain.Network.RemoveFriend;
 using AetherRemoteCommon.Domain.Network.UpdateFriend;
+using AetherRemoteCommon.V2.Network.Commands;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AetherRemoteServer.SignalR.Hubs;
@@ -13,7 +13,7 @@ public partial class PrimaryHub
     {
         var friendCode = FriendCode;
         LogWithBehavior($"[AddFriendRequest] Sender = {friendCode}, Target = {request.TargetFriendCode}", LogMode.Both);
-        return await requestHandler.HandleAddFriend(friendCode, request, Clients);
+        return await v2RequestHandler.AddFriendHandler.Execute(friendCode, request, Clients);
     }
     
     [HubMethodName(HubMethod.RemoveFriend)]

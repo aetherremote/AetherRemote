@@ -1,6 +1,6 @@
-
 using AetherRemoteCommon.Domain.Enums;
 using MessagePack;
+using AddFriendEc = AetherRemoteCommon.V2.Domain.Enums.AddFriendEc;
 
 namespace AetherRemoteCommon.V2.Network.Commands;
 
