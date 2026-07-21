@@ -50,12 +50,29 @@ public class Program
         builder.Services.AddSingleton<RequestLoggingService>();
         
         // Managers
-        builder.Services.AddSingleton<ForwardedRequestManager>();
         builder.Services.AddSingleton<PossessionManager>();
         builder.Services.AddSingleton<RelayManager>();
-
-        // Handles
-        builder.Services.AddSingleton<RequestHandler>();
+        
+        // Handler Base
+        builder.Services.AddSingleton<AddFriendHandler>();
+        builder.Services.AddSingleton<BodySwapHandler>();
+        builder.Services.AddSingleton<CustomizePlusHandler>();
+        builder.Services.AddSingleton<EmoteHandler>();
+        builder.Services.AddSingleton<GetAccountDataHandler>();
+        builder.Services.AddSingleton<HonorificHandler>();
+        builder.Services.AddSingleton<HypnosisHandler>();
+        builder.Services.AddSingleton<HypnosisStopHandler>();
+        builder.Services.AddSingleton<MoodlesHandler>();
+        builder.Services.AddSingleton<OnlineStatusUpdateHandler>();
+        builder.Services.AddSingleton<RemoveFriendHandler>();
+        builder.Services.AddSingleton<SpeakHandler>();
+        builder.Services.AddSingleton<TransformationHandler>();
+        builder.Services.AddSingleton<TwinningHandler>();
+        builder.Services.AddSingleton<UpdateFriendHandler>();
+        builder.Services.AddSingleton<UpdateGlobalPermissionsHandler>();
+        
+        // Handler Aggregate
+        builder.Services.AddSingleton<AggregateRequestHandler>();
 
         // Finalize
         var app = builder.Build();

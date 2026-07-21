@@ -1,6 +1,6 @@
 using AetherRemoteCommon.Domain;
-using AetherRemoteCommon.V2;
-using AetherRemoteCommon.V2.Domain;
+using AetherRemoteCommon.Network.Domain;
+using AetherRemoteCommon.Network.Enums;
 using AetherRemoteServer.Services;
 using Microsoft.AspNetCore.SignalR;
 
@@ -33,7 +33,7 @@ public class RelayManager(PermissionsService permissionsService, PresenceService
 
             if (presenceService.TryGet(request.TargetFriendCodes[i]) is not { } presence)
             {
-                tasks[i] = Task.FromResult(new RoutedResponse<TResponse>(RoutedResponseStatus.NotOnline));
+                tasks[i] = Task.FromResult(new RoutedResponse<TResponse>(RoutedResponseStatus.TargetOffline));
                 continue;
             }
 

@@ -216,7 +216,7 @@ public partial class DatabaseInfrastructure
         }
         catch (Exception e)
         {
-            LoggerExtensions.LogError(_logger, "[AddOrAcceptFriendship] {Error}", e);
+            _logger.LogError("[AddOrAcceptFriendship] {Error}", e);
             await transaction.RollbackAsync();
             return DatabaseResultEc.Unknown;
         }
@@ -255,11 +255,12 @@ public partial class DatabaseInfrastructure
         }
         catch (Exception e)
         {
-            LoggerExtensions.LogWarning(_logger, "Unable to update {FriendCode}'s permissions for {TargetFriendCode}, {Exception}", senderFriendCode, targetFriendCode, e.Message);
+            _logger.LogWarning("Unable to update {FriendCode}'s permissions for {TargetFriendCode}, {Exception}", senderFriendCode, targetFriendCode, e.Message);
             return DatabaseResultEc.Unknown;
         }
     }
     
+    // TODO: Expand to check for things like friend code doesn't exist
     /// <summary>
     ///     Deletes a set of permissions between sender and target friend code
     /// </summary>
@@ -276,7 +277,7 @@ public partial class DatabaseInfrastructure
         }
         catch (Exception e)
         {
-            LoggerExtensions.LogWarning(_logger, "Unable to delete {FriendCode}'s permissions for {TargetFriendCode}, {Exception}", senderFriendCode, targetFriendCode, e);
+            _logger.LogWarning("Unable to delete {FriendCode}'s permissions for {TargetFriendCode}, {Exception}", senderFriendCode, targetFriendCode, e);
             return DatabaseResultEc.Unknown;
         }
     }

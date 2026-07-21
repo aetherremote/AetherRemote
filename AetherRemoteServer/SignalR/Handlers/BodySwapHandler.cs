@@ -1,13 +1,13 @@
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.Network.Domain;
+using AetherRemoteCommon.Network.Domain.Payloads;
+using AetherRemoteCommon.Network.Enums;
 using AetherRemoteCommon.Util;
-using AetherRemoteCommon.V2;
-using AetherRemoteCommon.V2.Domain;
-using AetherRemoteCommon.V2.Network.Relays;
+using AetherRemoteServer.Domain.Interfaces;
 using AetherRemoteServer.Infrastructure.Database;
 using AetherRemoteServer.Managers;
 using AetherRemoteServer.Services;
-using AetherRemoteServer.SignalR.Handlers.Base;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AetherRemoteServer.SignalR.Handlers;
@@ -88,7 +88,7 @@ public class BodySwapHandler(
             // Double-check the target is still online
             if (presenceService.TryGet(request.TargetFriendCodes[i]) is not { } connectionClient)
             {
-                pending[i] = Task.FromResult(new RoutedResponse<NoPayload>(RoutedResponseStatus.NotOnline));
+                pending[i] = Task.FromResult(new RoutedResponse<NoPayload>(RoutedResponseStatus.TargetOffline));
                 continue;
             }
             

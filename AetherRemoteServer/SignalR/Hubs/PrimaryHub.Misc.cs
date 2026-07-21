@@ -1,9 +1,7 @@
-using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Domain.Network.Customize;
-using AetherRemoteCommon.Domain.Network.Honorific;
-using AetherRemoteCommon.Domain.Network.Moodles;
-using AetherRemoteCommon.Domain.Network.UpdateGlobalPermissions;
+using AetherRemoteCommon.Network.Domain;
+using AetherRemoteCommon.Network.Domain.Payloads;
+using AetherRemoteCommon.Network.Enums;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AetherRemoteServer.SignalR.Hubs;
@@ -11,31 +9,26 @@ namespace AetherRemoteServer.SignalR.Hubs;
 public partial class PrimaryHub
 {
     [HubMethodName(HubMethod.CustomizePlus)]
-    public async Task<ActionResponse> CustomizePlus(CustomizeRequest request)
+    public async Task<Response<NoPayload>> CustomizePlus(Request<CustomizePlusPayload> request)
     {
-        return await requestHandler.HandleCustomizePlus(FriendCode, request, Clients);
+        return await requestHandler.CustomizePlusHandler.Execute(FriendCode, request, Clients);
     }
     
     [HubMethodName(HubMethod.Honorific)]
-    public async Task<ActionResponse> Honorific(HonorificRequest request)
+    public async Task<Response<NoPayload>> Honorific(Request<HonorificPayload> request)
     {
         var friendCode = FriendCode;
-        LogWithBehavior($"[HonorificRequest] Sender = {friendCode}, Targets = {string.Join(", ", request.TargetFriendCodes)}, Honorific = {request.Honorific.Title}", LogMode.Console);
-        return await requestHandler.HandleHonorific(friendCode, request, Clients);
+        LogWithBehavior($"[HonorificRequest] Sender = {friendCode}, Targets = {string.Join(", ", request.TargetFriendCodes)}, Honorific = {request.Payload.Data.Title}", LogMode.Console);
+        return await requestHandler.HonorificHandler.Execute(friendCode, request, Clients);
     }
     
     [HubMethodName(HubMethod.Moodles)]
-    public async Task<ActionResponse> Moodles(MoodlesRequest request)
+    public async Task<Response<NoPayload>> Moodles(Request<MoodlesPayload> request)
     {
-        return new ActionResponse(ActionResponseEc.Disabled, []);
+        return new Response<NoPayload>(ResponseStatus.Disabled, []);
+        
         var friendCode = FriendCode;
-        LogWithBehavior($"[MoodlesRequest] Sender = {friendCode}, Targets = {string.Join(", ", request.TargetFriendCodes)}, Moodle = {request.Info.Title}", LogMode.Console);
-        return await requestHandler.HandleMoodles(friendCode, request, Clients);
-    }
-    
-    [HubMethodName(HubMethod.UpdateGlobalPermissions)]
-    public async Task<ActionResponseEc> UpdateGlobalPermissions(UpdateGlobalPermissionsRequest request)
-    {
-        return await requestHandler.HandleUpdateGlobalPermissions(FriendCode, request, Clients);
+        LogWithBehavior($"[MoodlesRequest] Sender = {friendCode}, Targets = {string.Join(", ", request.TargetFriendCodes)}, Moodle = {request.Payload.Info.Title}", LogMode.Console);
+        return await requestHandler.MoodlesHandler.Execute(friendCode, request, Clients);
     }
 }

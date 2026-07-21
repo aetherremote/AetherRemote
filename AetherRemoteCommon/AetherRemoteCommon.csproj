@@ -20,8 +20,4 @@
     <Compile Remove="Domain\Network\BodySwapQueryResponse.cs" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Domain\ToDelete\" />
-  </ItemGroup>
-
 </Project>

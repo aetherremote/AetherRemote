@@ -12,8 +12,7 @@ public partial class PrimaryHub(
     RequestLoggingService requestLoggingService,
     
     // Handler
-    RequestHandler requestHandler,
-    V2RequestHandler v2RequestHandler,
+    AggregateRequestHandler requestHandler,
 
     // Logger
     ILogger<PrimaryHub> logger) : Hub
@@ -28,7 +27,7 @@ public partial class PrimaryHub(
     /// </summary>
     public override async Task OnConnectedAsync()
     {
-        await requestHandler.HandleOnlineStatusUpdate(FriendCode, true, Clients);
+        await requestHandler.OnlineStatusUpdateHandler.HandleOnlineStatusUpdate(FriendCode, true, Clients);
         await base.OnConnectedAsync();
     }
 
@@ -37,7 +36,7 @@ public partial class PrimaryHub(
     /// </summary>
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        await requestHandler.HandleOnlineStatusUpdate(FriendCode, false, Clients);
+        await requestHandler.OnlineStatusUpdateHandler.HandleOnlineStatusUpdate(FriendCode, false, Clients);
         await base.OnDisconnectedAsync(exception);
     }
 

@@ -9,7 +9,7 @@ namespace AetherRemoteServer.Infrastructure.Database;
 public partial class DatabaseInfrastructure
 {
     // Injected
-    private readonly ILogger<Infrastructure.Database.DatabaseInfrastructure> _logger;
+    private readonly ILogger<DatabaseInfrastructure> _logger;
 
     // Instantiated
     private readonly SqliteConnection _database;
@@ -17,7 +17,7 @@ public partial class DatabaseInfrastructure
     /// <summary>
     ///     <inheritdoc cref="Infrastructure.Database.DatabaseInfrastructure"/>
     /// </summary>
-    public DatabaseInfrastructure(Configuration configuration, ILogger<Infrastructure.Database.DatabaseInfrastructure> logger)
+    public DatabaseInfrastructure(Configuration configuration, ILogger<DatabaseInfrastructure> logger)
     {
         // Inject
         _logger = logger;

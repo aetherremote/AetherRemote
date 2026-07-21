@@ -33,7 +33,7 @@ public partial class DatabaseInfrastructure
         }
         catch (Exception e)
         {
-            LoggerExtensions.LogError(_logger, "[GetGlobalPermissions] {Error}", e);
+            _logger.LogError("[GetGlobalPermissions] {Error}", e);
             return new ResolvedPermissions(PrimaryPermissions.None, SpeakPermissions.None, ElevatedPermissions.None);
         }
     }
@@ -63,7 +63,7 @@ public partial class DatabaseInfrastructure
         }
         catch (Exception e)
         {
-            LoggerExtensions.LogWarning(_logger, "[UpdateGlobalPermissions] {Error}", e);
+            _logger.LogWarning("[UpdateGlobalPermissions] {Error}", e);
             return DatabaseResultEc.Unknown;
         }
     }

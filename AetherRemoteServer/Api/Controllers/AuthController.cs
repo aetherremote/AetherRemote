@@ -1,15 +1,14 @@
 using System.Security.Claims;
 using System.Text;
 using AetherRemoteCommon;
-using AetherRemoteCommon.Domain.Enums;
-using AetherRemoteCommon.Domain.Network.GetToken;
-using AetherRemoteCommon.Domain.Network.LoginAuthentication;
+using AetherRemoteCommon.Network.Domain.Api;
+using AetherRemoteCommon.Network.Enums.ErrorCodes;
 using AetherRemoteServer.Domain;
+using AetherRemoteServer.Infrastructure.Database;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Microsoft.IdentityModel.Tokens;
-using DatabaseInfrastructure = AetherRemoteServer.Infrastructure.Database.DatabaseInfrastructure;
 
 namespace AetherRemoteServer.Api.Controllers;
 
@@ -28,14 +27,14 @@ public class AuthController(Configuration config, DatabaseInfrastructure databas
     public async Task<IActionResult> Login([FromBody] GetTokenRequest request)
     {
         if (request.Version < ExpectedVersion)
-            return StatusCode(StatusCodes.Status409Conflict, new LoginAuthenticationResult(LoginAuthenticationErrorCode.VersionMismatch, null));
+            return StatusCode(StatusCodes.Status409Conflict, new GetTokenResponse(GetTokenEc.VersionMismatch, null));
         
         if (await database.GetFriendCodeBySecret(request.Secret) is not { } friendCode)
-            return StatusCode(StatusCodes.Status401Unauthorized, new LoginAuthenticationResult(LoginAuthenticationErrorCode.UnknownSecret, null));
+            return StatusCode(StatusCodes.Status401Unauthorized, new GetTokenResponse(GetTokenEc.UnknownSecret, null));
 
         var token = GenerateJwtToken([new Claim(AuthClaimTypes.FriendCode, friendCode)]);
 
-        return StatusCode(StatusCodes.Status200OK, new LoginAuthenticationResult(LoginAuthenticationErrorCode.Success, token));
+        return StatusCode(StatusCodes.Status200OK, new GetTokenResponse(GetTokenEc.Success, token));
     }
     
     private string GenerateJwtToken(IEnumerable<Claim> claims)

@@ -22,9 +22,9 @@ public class PresenceService
     /// <summary>
     ///     Try to add a friend code
     /// </summary>
-    public void Add(string friendCode, Presence presence)
+    public void Add(string friendCode, string connectionId, string characterName, string characterWorld)
     {
-        _presences.TryAdd(friendCode, presence);
+        _presences.TryAdd(friendCode, new Presence(connectionId, characterName, characterWorld));
     }
 
     /// <summary>
