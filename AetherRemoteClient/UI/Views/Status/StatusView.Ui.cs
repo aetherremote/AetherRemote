@@ -90,6 +90,7 @@ public partial class StatusView
             });
         }
         
+        /*
         if (_statusService.Possession is { } possession)
         {
             count++;
@@ -105,6 +106,7 @@ public partial class StatusView
                 ImGui.EndGroup();
             });
         }
+        */
 
         // If you haven't had any statuses applied
         if (count is 0)

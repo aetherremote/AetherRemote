@@ -33,7 +33,7 @@ public class RelayManager(PermissionsService permissionsService, PresenceService
 
             if (presenceService.TryGet(request.TargetFriendCodes[i]) is not { } presence)
             {
-                tasks[i] = Task.FromResult(new RoutedResponse<TResponse>(RoutedResponseStatus.TargetOffline));
+                tasks[i] = Task.FromResult(new RoutedResponse<TResponse>(RoutedResponseStatus.Offline));
                 continue;
             }
 

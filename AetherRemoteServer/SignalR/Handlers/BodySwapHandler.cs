@@ -88,7 +88,7 @@ public class BodySwapHandler(
             // Double-check the target is still online
             if (presenceService.TryGet(request.TargetFriendCodes[i]) is not { } connectionClient)
             {
-                pending[i] = Task.FromResult(new RoutedResponse<NoPayload>(RoutedResponseStatus.TargetOffline));
+                pending[i] = Task.FromResult(new RoutedResponse<NoPayload>(RoutedResponseStatus.Offline));
                 continue;
             }
             

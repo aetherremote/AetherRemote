@@ -10,7 +10,7 @@ public static class HonorificCustomTitleExtension
         return new HonorificDto(honorific.Title, honorific.IsPrefix, honorific.Color, honorific.Glow);
     }
     
-    public static HonorificCustomTitle ToHonorificDto(this HonorificDto honorific)
+    public static HonorificCustomTitle FromHonorificDto(this HonorificDto honorific)
     {
         return new HonorificCustomTitle(honorific.Title, honorific.IsPrefix, honorific.Color, honorific.Glow);
     }

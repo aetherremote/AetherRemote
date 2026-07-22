@@ -1,7 +1,6 @@
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
-using AetherRemoteClient.Managers.Possession;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Services.Dependencies;
 
@@ -20,7 +19,6 @@ public partial class StatusView : IView
     private readonly StatusService _statusService;
     private readonly HypnosisManager _hypnosisManager;
     private readonly CharacterTransformationManager _characterTransformationManager;
-    private readonly PossessionManager _possessionManager;
     
     public StatusView(
         CustomizePlusService customizePlusService,
@@ -29,8 +27,7 @@ public partial class StatusView : IView
         PenumbraService penumbraService,
         StatusService statusService,
         HypnosisManager hypnosisManager,
-        CharacterTransformationManager characterTransformationManager,
-        PossessionManager possessionManager)
+        CharacterTransformationManager characterTransformationManager)
     {
         _customizePlusService = customizePlusService;
         _glamourerService = glamourerService;
@@ -39,6 +36,5 @@ public partial class StatusView : IView
         _statusService = statusService;
         _hypnosisManager = hypnosisManager;
         _characterTransformationManager = characterTransformationManager;
-        _possessionManager = possessionManager;
     }
 }

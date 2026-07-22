@@ -10,7 +10,8 @@ using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Domain.Network.AddFriend;
+using AetherRemoteCommon.Network.Domain.Commands;
+using AetherRemoteCommon.Network.Enums.ErrorCodes;
 
 namespace AetherRemoteClient.UI.Components.Friends;
 

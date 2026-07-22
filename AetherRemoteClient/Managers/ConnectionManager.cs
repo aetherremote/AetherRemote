@@ -4,7 +4,8 @@ using AetherRemoteClient.Domain;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Services.Configuration;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Domain.Network.GetAccountData;
+using AetherRemoteCommon.Network.Domain.Commands;
+using AetherRemoteCommon.Network.Enums.ErrorCodes;
 
 namespace AetherRemoteClient.Managers;
 

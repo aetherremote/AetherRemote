@@ -3,6 +3,7 @@ using System.Numerics;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Hypnosis;
+using AetherRemoteClient.Services;
 using AetherRemoteCommon.Domain;
 using Dalamud.Bindings.ImGui;
 
@@ -13,6 +14,9 @@ namespace AetherRemoteClient.Managers;
 /// </summary>
 public class HypnosisManager : IDisposable
 {
+    // Injected
+    private readonly StatusService _statusService;
+    
     // Instantiated
     private readonly HypnosisRenderer _hypnosisRenderer = new();
     
@@ -34,8 +38,10 @@ public class HypnosisManager : IDisposable
     /// <summary>
     ///     <inheritdoc cref="HypnosisManager"/>
     /// </summary>
-    public HypnosisManager()
+    public HypnosisManager(StatusService statusService)
     {
+        _statusService = statusService;
+        
         Plugin.PluginInterface.UiBuilder.Draw += OnDraw;
     }
 
@@ -63,6 +69,7 @@ public class HypnosisManager : IDisposable
     public bool Wake()
     {
         _hypnosisData = null;
+        _statusService.ClearHypnosis();
         return true;
     }
     

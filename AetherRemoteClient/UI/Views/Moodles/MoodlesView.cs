@@ -3,7 +3,6 @@ using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Interfaces;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
-using AetherRemoteClient.Services.Configuration;
 using AetherRemoteClient.Services.Dependencies;
 using AetherRemoteClient.UI.Components.Friends;
 
@@ -18,20 +17,20 @@ public partial class MoodlesView : IDisposable, IView
     private readonly FriendsListComponentUi _friendsListComponentUi;
     private readonly CommandLockoutService _commandLockoutService;
     private readonly MoodlesService _moodlesService;
-    private readonly NetworkService _networkService;
+    private readonly NetworkRequestManager _networkRequestManager;
     private readonly SelectionManager _selectionManager;
     
     public MoodlesView(
         FriendsListComponentUi friendsListComponentUi,
         CommandLockoutService commandLockoutService,
-        NetworkService networkService, 
         MoodlesService moodlesService, 
+        NetworkRequestManager networkRequestManager,
         SelectionManager selectionManager)
     {
         _friendsListComponentUi = friendsListComponentUi;
         _commandLockoutService = commandLockoutService;
         _moodlesService = moodlesService;
-        _networkService = networkService;
+        _networkRequestManager = networkRequestManager;
         _selectionManager = selectionManager;
     }
 
@@ -39,7 +38,7 @@ public partial class MoodlesView : IDisposable, IView
     {
         _moodlesService.IpcReady += OnIpcReady;
         if (_moodlesService.ApiAvailable)
-            RefreshMoodles();
+            _ = RefreshMoodles().ConfigureAwait(false);
     }
     
     public void Dispose()

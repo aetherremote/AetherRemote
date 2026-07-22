@@ -7,9 +7,8 @@ using AetherRemoteClient.Domain.Network;
 using AetherRemoteClient.Infrastructure.Authentication;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Utils;
-using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Domain.Network.Possession;
+using AetherRemoteCommon.Network.Domain;
 using MessagePack;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
@@ -57,24 +56,13 @@ public class NetworkService : IAsyncDisposable
         HubConnectionState.Reconnecting => ConnectionState.Reconnecting,
         _ => throw new UnreachableException($"[NetworkService.State] {nameof(_connection.State)}")
     };
+
+    public IDisposable ListenReal<T>(string name, Action<T> handler) => _connection.On(name, handler);
+    public IDisposable ListenReal<T, TU>(string name, Func<T, TU> handler) => _connection.On(name, handler);
     
-    /// <summary> Creates a listener for a specific method handled by provided method group </summary>
-    public IDisposable ListenFunc<T>(string name, Func<T, ActionResult<Unit>> handler) => _connection.On(name, handler);
-    
-    /// <summary> <inheritdoc cref="ListenFunc"/> </summary>
-    public IDisposable ListenFuncAsync<T>(string name, Func<T, Task<ActionResult<Unit>>> handler) => _connection.On(name, handler);
-    
-    /// <summary> <inheritdoc cref="ListenFunc"/> </summary>
-    public IDisposable ListenAction<T>(string name, Action<T> handler) => _connection.On(name, handler);
-    
-    /// <summary> <inheritdoc cref="ListenFunc"/> </summary>
-    public IDisposable ListenActionAsync<T>(string name, Action<Task<T>> handler) => _connection.On(name, handler);
-    
-    /// <summary> <inheritdoc cref="ListenFunc"/> </summary>
-    public IDisposable ListenPossession<T>(string name, Func<T, PossessionResultEc> handler) => _connection.On(name, handler);
-    
-    /// <summary> <inheritdoc cref="ListenFunc"/> </summary>
-    public IDisposable ListenPossessionAsync<T>(string name, Func<T, Task<PossessionResultEc>> handler) => _connection.On(name, handler);
+    public IDisposable Listen<T>(string name, Action<T> handler) => _connection.On(name, handler);
+    public IDisposable Listen<T, TU>(string name, Func<RoutedRequest<T>, RoutedResponse<TU>> handler) => _connection.On(name, handler);
+    public IDisposable ListenAsync<T, TU>(string name, Func<RoutedRequest<T>, Task<RoutedResponse<TU>>> handler) => _connection.On(name, handler);
     
     /// <summary> <inheritdoc cref="NetworkService"/> </summary>
     public NetworkService(AuthenticationInfrastructure authenticationInfrastructure)
@@ -145,7 +133,7 @@ public class NetworkService : IAsyncDisposable
                 case ArAuthAuthenticationErrorCode.Unknown:
                 case ArAuthAuthenticationErrorCode.UnboundScope:
                 default:
-                    Plugin.Log.Warning($"[NetworkService.ConnectToServerAsync] {e}");
+                    Plugin.Log.Warning($"[NetworkService.ConnectToServerAsync] {e.ErrorCode}");
                     NotificationHelper.Warning("Unable to Connect to Server", "See more details by opening the developer console by typing /xllog");
                     return false;
             }

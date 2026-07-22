@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using AetherRemoteClient.Domain.Enums;
 using AetherRemoteClient.Managers;
-using AetherRemoteClient.Managers.Possession;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Services.Configuration;
 using AetherRemoteClient.Services.Dependencies;
@@ -36,8 +35,7 @@ public partial class ChatCommandHandler : IDisposable
     private readonly EmoteService _emoteService;
     private readonly GlamourerService _glamourerService;
     private readonly HypnosisManager _hypnosisManager;
-    private readonly NetworkCommandManager _networkCommandManager;
-    private readonly PossessionManager _possessionManager;
+    private readonly NetworkRequestManager _networkRequestManager;
     private readonly MainWindow _mainWindow;
     
     public ChatCommandHandler(
@@ -47,8 +45,7 @@ public partial class ChatCommandHandler : IDisposable
         EmoteService emoteService,
         GlamourerService glamourerService,
         HypnosisManager hypnosisManager,
-        NetworkCommandManager networkCommandManager,
-        PossessionManager possessionManager,
+        NetworkRequestManager networkRequestManager,
         MainWindow mainWindow)
     {
         _actionQueueService = actionQueueService;
@@ -58,8 +55,7 @@ public partial class ChatCommandHandler : IDisposable
         _glamourerService = glamourerService;
         
         _hypnosisManager = hypnosisManager;
-        _networkCommandManager = networkCommandManager;
-        _possessionManager = possessionManager;
+        _networkRequestManager = networkRequestManager;
         _mainWindow = mainWindow;
         
         Plugin.CommandManager.AddHandler(CommandNameShort, new CommandInfo(OnCommand)
@@ -138,9 +134,6 @@ public partial class ChatCommandHandler : IDisposable
                     // Stop any spirals
                     _hypnosisManager.Wake();
                     
-                    // Stops possessing or being possessed
-                    await _possessionManager.EndAllParanormalActivity(true).ConfigureAwait(false);
-                    
                     // Clear pending chat commands
                     _actionQueueService.Clear();
                     
@@ -157,8 +150,6 @@ public partial class ChatCommandHandler : IDisposable
                     break;
                 
                 case Unpossess:
-                    await _possessionManager.EndAllParanormalActivity(true).ConfigureAwait(false);
-                    
                     payloads.Add(new UIForegroundPayload(AetherRemoteColors.TextColorPurple));
                     payloads.Add(new TextPayload("[AetherRemote] "));
                     payloads.Add(UIForegroundPayload.UIForegroundOff);

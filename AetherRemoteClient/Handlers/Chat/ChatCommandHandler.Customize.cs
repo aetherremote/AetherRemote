@@ -3,6 +3,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.Network.Domain;
+using AetherRemoteCommon.Network.Domain.Payloads;
 
 namespace AetherRemoteClient.Handlers.Chat;
 
@@ -39,9 +42,9 @@ public partial class ChatCommandHandler
         if (arguments.Length == 4)
             if (bool.TryParse(arguments[3], out var value) && value)
                 applyMode = CustomizeApplyMode.Merge;
-     
-        // Send
-        await _networkCommandManager.SendCustomize(targets.ToList(), profileAsBytes, applyMode).ConfigureAwait(false);
+        
+        var payload = new CustomizePlusPayload(profileAsBytes, applyMode);
+        await _networkRequestManager.Send<CustomizePlusPayload, NoPayload>(targets.ToList(), HubMethod.CustomizePlus, payload).ConfigureAwait(false);
     }
 
     private async Task<byte[]?> TryGetProfileByProfileName(string profileName)

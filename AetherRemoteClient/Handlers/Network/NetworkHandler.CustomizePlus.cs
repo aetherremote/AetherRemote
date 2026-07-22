@@ -4,8 +4,9 @@ using System.Threading.Tasks;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
-using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Domain.Network.Customize;
+using AetherRemoteCommon.Network.Domain;
+using AetherRemoteCommon.Network.Domain.Payloads;
+using AetherRemoteCommon.Network.Enums;
 
 namespace AetherRemoteClient.Handlers.Network;
 
@@ -13,21 +14,20 @@ public partial class NetworkHandler
 {
     private static readonly ResolvedPermissions CustomizePlusPermissions = new(PrimaryPermissions.CustomizePlus, SpeakPermissions.None, ElevatedPermissions.None);
     
-    private async Task<ActionResult<Unit>> HandleCustomizePlus(CustomizeCommand request)
+    private async Task<RoutedResponse<NoPayload>> HandleCustomizePlus(RoutedRequest<CustomizePlusPayload> request)
     {
         Plugin.Log.Verbose($"{request}");
         
-        var sender = TryGetFriendWithCorrectPermissions("Customize+", request.SenderFriendCode, CustomizePlusPermissions);
-        if (sender.Result is not ActionResultEc.Success)
-            return ActionResultBuilder.Fail(sender.Result);
-        
-        if (sender.Value is not { } friend)
-            return ActionResultBuilder.Fail(ActionResultEc.ValueNotSet);
+        if (_friendsListService.Get(request.SenderFriendCode) is not { } sender)
+            return new RoutedResponse<NoPayload>(RoutedResponseStatus.NotFriends);
+
+        if (GetValidationError("CustomizePlus", sender, CustomizePlusPermissions) is { } error)
+            return new RoutedResponse<NoPayload>(error);
 
         try
         {
-            var json = Encoding.UTF8.GetString(request.JsonBoneDataBytes);
-            var success = request.ApplyMode switch
+            var json = Encoding.UTF8.GetString(request.Payload.JsonBoneDataBytes);
+            var success = request.Payload.ApplyMode switch
             {
                 CustomizeApplyMode.Default => await _customizePlusService.ApplyCustomize(json).ConfigureAwait(false),
                 CustomizeApplyMode.Merge => await _customizePlusService.ApplyMergeCustomize(json).ConfigureAwait(false),
@@ -37,18 +37,18 @@ public partial class NetworkHandler
             if (success is false)
             {
                 Plugin.Log.Warning("[CustomizePlusHandler] Unable to apply customize");
-                return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
+                return new RoutedResponse<NoPayload>(RoutedResponseStatus.RuntimeError);
             }
             
-            _statusService.SetCustomizePlus(friend);
-            _logService.Custom($"{friend.NoteOrFriendCode} applied a customize plus template to you");
-            return ActionResultBuilder.Ok();
+            _statusService.SetCustomizePlus(sender);
+            _logService.Custom($"{sender.NoteOrFriendCode} applied a customize plus template to you");
+            return new RoutedResponse<NoPayload>(RoutedResponseStatus.Success);
         }
         catch (Exception e)
         {
-            _logService.Custom($"{friend.NoteOrFriendCode} tried to apply a customization template to you but failed unexpectedly");
+            _logService.Custom($"{sender.NoteOrFriendCode} tried to apply a customization template to you but failed unexpectedly");
             Plugin.Log.Error($"Unexpected exception while handling customize plus action, {e.Message}");
-            return ActionResultBuilder.Fail(ActionResultEc.Unknown);
+            return new  RoutedResponse<NoPayload>(RoutedResponseStatus.Unknown);
         }
     }
 }

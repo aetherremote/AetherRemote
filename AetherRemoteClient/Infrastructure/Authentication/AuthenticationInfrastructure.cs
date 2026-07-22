@@ -7,9 +7,8 @@ using System.Threading.Tasks;
 using AetherRemoteClient.Domain.Enums;
 using AetherRemoteClient.Domain.Exceptions.Network;
 using AetherRemoteClient.Utils.Extensions;
-using AetherRemoteCommon.Domain.Enums;
-using AetherRemoteCommon.Domain.Network.GetToken;
-using AetherRemoteCommon.Domain.Network.LoginAuthentication;
+using AetherRemoteCommon.Network.Domain.Api;
+using AetherRemoteCommon.Network.Enums.ErrorCodes;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Newtonsoft.Json;
 
@@ -90,12 +89,12 @@ public class AuthenticationInfrastructure : IDisposable
             var response = await Client.PostAsync(AuthenticationUrl, payload).ConfigureAwait(false);
             var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
-            if (JsonConvert.DeserializeObject<LoginAuthenticationResult>(content) is not { } result)
+            if (JsonConvert.DeserializeObject<GetTokenResponse>(content) is not { } result)
                 throw new ArAuthAuthenticationException(ArAuthAuthenticationErrorCode.InvalidOrMalformedToken);
 
             // This is one of the more regular failure paths for things like version mismatch, unknown secret, etc.
-            if (result.ErrorCode is not LoginAuthenticationErrorCode.Success)
-                throw new ArAuthAuthenticationException(result.ErrorCode.ToArAuthAuthenticationErrorCode());
+            if (result.Result is not GetTokenEc.Success)
+                throw new ArAuthAuthenticationException(result.Result.ToArAuthAuthenticationErrorCode());
 
             if (JwtTokenHandler.CanReadToken(result.Secret) is false)
                 throw new ArAuthAuthenticationException(ArAuthAuthenticationErrorCode.InvalidOrMalformedToken);

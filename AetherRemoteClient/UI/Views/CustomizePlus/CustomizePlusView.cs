@@ -17,20 +17,20 @@ public partial class CustomizePlusView : IDisposable, IView
     private readonly FriendsListComponentUi _friendsListComponentUi;
     private readonly CommandLockoutService _commandLockoutService;
     private readonly CustomizePlusService _customizePlusService;
-    private readonly NetworkCommandManager _networkCommandManager;
+    private readonly NetworkRequestManager _networkRequestManager;
     private readonly SelectionManager _selectionManager;
     
     public CustomizePlusView(
         FriendsListComponentUi friendsList, 
         CommandLockoutService commandLockoutService, 
         CustomizePlusService customizePlusService,
-        NetworkCommandManager networkCommandManager,
+        NetworkRequestManager networkRequestManager,
         SelectionManager selectionManager)
     {
         _friendsListComponentUi = friendsList;
         _commandLockoutService = commandLockoutService;
         _customizePlusService = customizePlusService;
-        _networkCommandManager = networkCommandManager;
+        _networkRequestManager = networkRequestManager;
         _selectionManager = selectionManager;
     }
     

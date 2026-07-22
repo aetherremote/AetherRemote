@@ -54,14 +54,4 @@ public partial class StatusView
         if (result)
             _statusService.ClearHypnosis();
     }
-    
-    /// <summary>
-    ///     Removes the status and clears any affected resources
-    /// </summary>
-    private async Task ClearPossession()
-    {
-        var result = await _possessionManager.EndAllParanormalActivity(true).ConfigureAwait(false);
-        if (result)
-            _statusService.ClearPossession();
-    }
 }

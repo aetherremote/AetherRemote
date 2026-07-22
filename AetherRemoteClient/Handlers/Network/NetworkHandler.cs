@@ -2,29 +2,15 @@ using System;
 using System.Collections.Generic;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Managers;
-using AetherRemoteClient.Managers.Possession;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Services.Configuration;
 using AetherRemoteClient.Services.Dependencies;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Domain.Network.BodySwap;
-using AetherRemoteCommon.Domain.Network.Customize;
-using AetherRemoteCommon.Domain.Network.Emote;
-using AetherRemoteCommon.Domain.Network.Honorific;
-using AetherRemoteCommon.Domain.Network.Hypnosis;
-using AetherRemoteCommon.Domain.Network.HypnosisStop;
-using AetherRemoteCommon.Domain.Network.Moodles;
-using AetherRemoteCommon.Domain.Network.Possession.Begin;
-using AetherRemoteCommon.Domain.Network.Possession.Camera;
-using AetherRemoteCommon.Domain.Network.Possession.End;
-using AetherRemoteCommon.Domain.Network.Possession.Movement;
-using AetherRemoteCommon.Domain.Network.Speak;
-using AetherRemoteCommon.Domain.Network.SyncOnlineStatus;
-using AetherRemoteCommon.Domain.Network.SyncPermissions;
-using AetherRemoteCommon.Domain.Network.Transform;
-using AetherRemoteCommon.Domain.Network.Twinning;
+using AetherRemoteCommon.Network.Domain;
+using AetherRemoteCommon.Network.Domain.Payloads;
+using AetherRemoteCommon.Network.Enums;
 using AetherRemoteCommon.Util;
 
 namespace AetherRemoteClient.Handlers.Network;
@@ -46,7 +32,6 @@ public partial class NetworkHandler : IDisposable
     
     private readonly CharacterTransformationManager _characterTransformationManager;
     private readonly HypnosisManager _hypnosisManager;
-    private readonly PossessionManager _possessionManager;
     private readonly SelectionManager _selectionManager;
     
     // Instantiated
@@ -67,7 +52,6 @@ public partial class NetworkHandler : IDisposable
         
         CharacterTransformationManager characterTransformationManager,
         HypnosisManager hypnosisManager,
-        PossessionManager possessionManager,
         SelectionManager selectionManager,
         StatusService statusService)
     {
@@ -84,96 +68,62 @@ public partial class NetworkHandler : IDisposable
         
         _characterTransformationManager = characterTransformationManager;
         _hypnosisManager = hypnosisManager;
-        _possessionManager = possessionManager;
         _selectionManager = selectionManager;
         _statusService = statusService;
         
-        // Synchronous Handlers
-        _handlers.Add(networkService.ListenFunc<EmoteCommand>(HubMethod.Emote, HandleEmoteCommand));
-        _handlers.Add(networkService.ListenFunc<SpeakCommand>(HubMethod.Speak, HandleSpeak));
+        // Messages - Things the server just updates us on
+        _handlers.Add(networkService.Listen<Message<SyncOnlineStatusPayload>>(HubMethod.SyncOnlineStatus, HandleSyncOnlineStatus));
+        _handlers.Add(networkService.Listen<Message<SyncPermissionsPayload>>(HubMethod.SyncPermissions, HandleSyncPermissions));
         
-        // Asynchronous Handlers
-        _handlers.Add(networkService.ListenAction<SyncOnlineStatusCommand>(HubMethod.SyncOnlineStatus, HandleSyncOnlineStatus));
-        _handlers.Add(networkService.ListenAction<SyncPermissionsCommand>(HubMethod.SyncPermissions, HandleSyncPermissions));
-        _handlers.Add(networkService.ListenFuncAsync<BodySwapCommand>(HubMethod.BodySwap, HandleBodySwap));
-        _handlers.Add(networkService.ListenFuncAsync<CustomizeCommand>(HubMethod.CustomizePlus, HandleCustomizePlus));
-        _handlers.Add(networkService.ListenFuncAsync<HonorificCommand>(HubMethod.Honorific, HandleHonorific));
-        _handlers.Add(networkService.ListenFuncAsync<HypnosisCommand>(HubMethod.Hypnosis, HandleHypnosis));
-        _handlers.Add(networkService.ListenFuncAsync<HypnosisStopCommand>(HubMethod.HypnosisStop, HandleHypnosisStop));
-        _handlers.Add(networkService.ListenFuncAsync<MoodlesCommand>(HubMethod.Moodles, HandleMoodles));
-        _handlers.Add(networkService.ListenFuncAsync<TransformCommand>(HubMethod.Transform, HandleTransform));
-        _handlers.Add(networkService.ListenFuncAsync<TwinningCommand>(HubMethod.Twinning, HandleTwinning));
-        
-        // Synchronous Possession Handlers
-        _handlers.Add(networkService.ListenPossession<PossessionCameraCommand>(HubMethod.Possession.Camera, HandlePossessionCamera));
-        _handlers.Add(networkService.ListenPossession<PossessionMovementCommand>(HubMethod.Possession.Movement, HandlePossessionMovement));
-        
-        // Asynchronous Possession Handlers
-        _handlers.Add(networkService.ListenPossessionAsync<PossessionBeginCommand>(HubMethod.Possession.Begin, HandlePossessionBegin));
-        _handlers.Add(networkService.ListenPossessionAsync<PossessionEndCommand>(HubMethod.Possession.End, HandlePossessionEnd));
+        // Handles - Requests from other clients we are expected to act upon
+        _handlers.Add(networkService.Listen<EmotePayload, NoPayload>(HubMethod.Emote, HandleEmoteCommand));
+        _handlers.Add(networkService.Listen<SpeakPayload, NoPayload>(HubMethod.Speak, HandleSpeak));
+        _handlers.Add(networkService.ListenAsync<BodySwapRoutedPayload, NoPayload>(HubMethod.BodySwap, HandleBodySwap));
+        _handlers.Add(networkService.ListenAsync<CustomizePlusPayload, NoPayload>(HubMethod.CustomizePlus, HandleCustomizePlus));
+        _handlers.Add(networkService.ListenAsync<HonorificPayload, NoPayload>(HubMethod.Honorific, HandleHonorific));
+        _handlers.Add(networkService.ListenAsync<HypnosisPayload, NoPayload>(HubMethod.Hypnosis, HandleHypnosis));
+        _handlers.Add(networkService.ListenAsync<HypnosisStopPayload, NoPayload>(HubMethod.HypnosisStop, HandleHypnosisStop));
+        _handlers.Add(networkService.ListenAsync<MoodlesPayload, NoPayload>(HubMethod.Moodles, HandleMoodles));
+        _handlers.Add(networkService.ListenAsync<TransformationPayload, NoPayload>(HubMethod.Transform, HandleTransform));
+        _handlers.Add(networkService.ListenAsync<TwinningPayload, NoPayload>(HubMethod.Twinning, HandleTwinning));
     }
 
-    private ActionResult<Friend> TryGetFriendWithCorrectPermissions(string operation, string friendCode, ResolvedPermissions permissions)
+    private RoutedResponseStatus? GetValidationError(string operation, Friend friend, ResolvedPermissions permissions)
     {
-        // Not friends
-        if (_friendsListService.Get(friendCode) is not { } friend)
-        {
-            _logService.NotFriends(operation, friendCode);
-            return ActionResultBuilder.Fail<Friend>(ActionResultEc.ClientNotFriends);
-        }
-        
-        // Plugin in safe mode
         if (_configurationService.SafeMode)
         {
             _logService.SafeMode(operation, friend.NoteOrFriendCode);
-            return ActionResultBuilder.Fail<Friend>(ActionResultEc.ClientInSafeMode);
+            return RoutedResponseStatus.SafeMode;
         }
-
-        // Friend Paused
+        
         if (_pauseService.IsFriendPaused(friend.FriendCode))
         {
             _logService.FriendPaused(operation, friend.NoteOrFriendCode);
-            return ActionResultBuilder.Fail<Friend>(ActionResultEc.ClientHasSenderPaused);
+            return RoutedResponseStatus.Paused;
         }
-
-        // Feature Paused
+        
         if (_pauseService.IsFeaturePaused(permissions))
         {
             _logService.FeaturePaused(operation, friend.NoteOrFriendCode);
-            return ActionResultBuilder.Fail<Friend>(ActionResultEc.ClientHasFeaturePaused);
+            return RoutedResponseStatus.Paused;
         }
 
         if (_activeSessionService.GlobalPermissions is null)
         {
-            Plugin.Log.Error("[NetworkHandler.TryGetFriendWithCorrectPermissions] GlobalPermissions not set.");
-            return ActionResultBuilder.Fail<Friend>(ActionResultEc.Unknown);
+            Plugin.Log.Error("[NetworkHandler.BasicValidation] GlobalPermissions not set.");
+            return RoutedResponseStatus.Unknown;
         }
         
-        // Resolve
         var resolved = PermissionResolver.Resolve(_activeSessionService.GlobalPermissions, friend.PermissionsGrantedToFriend);
-        
-        // Test Primary Permissions
-        if ((resolved.Primary & permissions.Primary) != permissions.Primary)
+        if ((resolved.Primary & permissions.Primary) != permissions.Primary || 
+            (resolved.Speak & permissions.Speak) != permissions.Speak || 
+            (resolved.Elevated & permissions.Elevated) != permissions.Elevated)
         {
             _logService.LackingPermissions(operation, friend.NoteOrFriendCode);
-            return ActionResultBuilder.Fail<Friend>(ActionResultEc.ClientHasNotGrantedSenderPermissions);
+            return RoutedResponseStatus.LackingPermissions;
         }
-        
-        // Test Speak Permissions
-        if ((resolved.Speak & permissions.Speak) != permissions.Speak)
-        {
-            _logService.LackingPermissions(operation, friend.NoteOrFriendCode);
-            return ActionResultBuilder.Fail<Friend>(ActionResultEc.ClientHasNotGrantedSenderPermissions);
-        }
-        
-        // Test Elevated Permissions
-        if ((resolved.Elevated & permissions.Elevated) != permissions.Elevated)
-        {
-            _logService.LackingPermissions(operation, friend.NoteOrFriendCode);
-            return ActionResultBuilder.Fail<Friend>(ActionResultEc.ClientHasNotGrantedSenderPermissions);
-        }
-        
-        return ActionResultBuilder.Ok(friend);
+
+        return null;
     }
     
     /// <summary>

@@ -2,6 +2,9 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.Network.Domain;
+using AetherRemoteCommon.Network.Domain.Payloads;
 
 namespace AetherRemoteClient.Handlers.Chat;
 
@@ -43,8 +46,8 @@ public partial class ChatCommandHandler
                 _ => GlamourerApplyFlags.All | GlamourerApplyFlags.Once
             };
 
-        // Send
-        await _networkCommandManager.SendTransformation(targets.ToList(), design, applyType).ConfigureAwait(false);
+        var payload = new TransformationPayload(design, applyType, null);
+        await _networkRequestManager.Send<TransformationPayload, NoPayload>(targets.ToList(), HubMethod.Transform, payload).ConfigureAwait(false);
     }
     
     private async Task<string?> TryGetDesignByName(string designName)

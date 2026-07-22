@@ -2,6 +2,9 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.Network.Domain;
+using AetherRemoteCommon.Network.Domain.Payloads;
 
 namespace AetherRemoteClient.Handlers.Chat;
 
@@ -105,6 +108,7 @@ public partial class ChatCommandHandler
             extra = null;
         }
         
-        await _networkCommandManager.SendSpeak(targets.ToList(), argsMessage, channel, extra);
+        var payload = new SpeakPayload(argsMessage, channel, extra);
+        await _networkRequestManager.Send<SpeakPayload, NoPayload>(targets.ToList(), HubMethod.Speak, payload).ConfigureAwait(false);
     }
 }
