@@ -35,23 +35,25 @@ public class NetworkRequestManager(
 
     private static readonly Dictionary<RoutedResponseStatus, string> RoutedResponseStatusCodes = new()
     {
-        [RoutedResponseStatus.Uninitialized]                = "- Uninitialized, contact the developer",
-        [RoutedResponseStatus.Success]                      = "- Success",
-        [RoutedResponseStatus.Unknown]                      = "- An unknown error occurred",
-        [RoutedResponseStatus.Timeout]                      = "- The request timed out",
-        [RoutedResponseStatus.Offline]                      = "- This target was offline",
-        [RoutedResponseStatus.NotFriends]                   = "- This target is not your friend",
-        [RoutedResponseStatus.LackingPermissions]           = "- This target did not grant you permissions",
-        [RoutedResponseStatus.SafeMode]                     = "- This target is not accepting commands",
-        [RoutedResponseStatus.Paused]                       = "- This target is not accepting commands",
-        [RoutedResponseStatus.BadRequest]                   = "- This target rejected the request",
-        [RoutedResponseStatus.RuntimeError]                 = "- This target encountered an error while executing your request",
-        [RoutedResponseStatus.BeingHypnotized]              = "- This target is being hypnotized"
+        [RoutedResponseStatus.Uninitialized]                = " - Uninitialized, contact the developer",
+        [RoutedResponseStatus.Success]                      = " - Success",
+        [RoutedResponseStatus.Unknown]                      = " - An unknown error occurred",
+        [RoutedResponseStatus.Timeout]                      = " - The request timed out",
+        [RoutedResponseStatus.Offline]                      = " - is offline",
+        [RoutedResponseStatus.NotFriends]                   = " - is not your friend",
+        [RoutedResponseStatus.LackingPermissions]           = " - did not grant you permissions",
+        [RoutedResponseStatus.SafeMode]                     = " - is not accepting commands",
+        [RoutedResponseStatus.Paused]                       = " - is not accepting commands",
+        [RoutedResponseStatus.BadRequest]                   = " - rejected the request",
+        [RoutedResponseStatus.RuntimeError]                 = " - encountered an error while executing your request",
+        [RoutedResponseStatus.BeingHypnotized]              = " - is being hypnotized"
     };
     
     /// <summary>
-    ///     TODO
+    ///     Wraps the provided payload in a Request, and sends it to the server. The server will then return a response payload wrapped in a Response.
+    ///     When the response is returned, it will be automatically parsed and a notification will be displayed based on the results.
     /// </summary>
+    /// <remarks> See <see cref="Request{TPayload}"/> and <see cref="Response{TPayload}"/> for more details. </remarks>
     public async Task<Response<TResponse>> Send<TPayload, TResponse>(List<string> targets, string method, TPayload payload)
     {
         commandLockoutService.Lock();
@@ -85,15 +87,15 @@ public class NetworkRequestManager(
 
         if (failureCount is 0)
         {
-            Notify("Request Succeeded", string.Empty, NotificationType.Success);
+            Notify($"{method} Request Succeeded", string.Empty, NotificationType.Success);
         }
         else if (failureCount == response.Results.Count)
         {
-            Notify("Request Failed", failureMessage.ToString(), NotificationType.Error);
+            Notify($"{method} Request Failed", failureMessage.ToString(), NotificationType.Error);
         }
         else
         {
-            Notify("Request Partially Failed", failureMessage.ToString(), NotificationType.Warning);
+            Notify($"{method} Request Partially Failed", failureMessage.ToString(), NotificationType.Warning);
         }
     }
 

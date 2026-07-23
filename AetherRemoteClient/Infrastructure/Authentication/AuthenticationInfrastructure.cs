@@ -21,8 +21,8 @@ public class AuthenticationInfrastructure : IDisposable
 {
     // Where we should post for authentication
 #if DEBUG
-    private const string AuthenticationUrl = "https://localhost:5006/api/auth/login"; // Local
-    // private const string AuthenticationUrl = "https://foxitsvc.com:5017/api/auth/login"; // Beta
+    // private const string AuthenticationUrl = "https://localhost:5006/api/auth/login"; // Local
+    private const string AuthenticationUrl = "https://foxitsvc.com:5017/api/auth/login"; // Beta
 #else
     private const string AuthenticationUrl = "https://foxitsvc.com:5006/api/auth/login"; // Prod
 #endif
@@ -48,8 +48,7 @@ public class AuthenticationInfrastructure : IDisposable
         _secret = secret;
         
         // Invalidate tokens here to prevent a sign-out & sign-in from using the previous session's cached token
-        _token = null;
-        _expiresAtUtc = DateTimeOffset.MinValue;
+        InvalidateToken();
     }
 
     /// <summary> Gets or refreshes a token using the secret provided from <see cref="SetSecret"/></summary>
@@ -74,6 +73,15 @@ public class AuthenticationInfrastructure : IDisposable
         {
             _lock.Release();
         }
+    }
+
+    /// <summary>
+    ///     Invalidate any current tokens
+    /// </summary>
+    public void InvalidateToken()
+    {
+        _token = null;
+        _expiresAtUtc = DateTimeOffset.MinValue;
     }
 
     private async Task RefreshToken()
@@ -118,7 +126,7 @@ public class AuthenticationInfrastructure : IDisposable
             return false;
         
         // Include a 10-minute buffer just to refresh early since tokens last 4 hours
-        return _expiresAtUtc <= DateTimeOffset.UtcNow.AddMinutes(10);
+        return _expiresAtUtc > DateTimeOffset.UtcNow.AddMinutes(10);
     }
 
     public void Dispose()

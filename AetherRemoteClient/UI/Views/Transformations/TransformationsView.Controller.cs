@@ -227,7 +227,7 @@ public partial class TransformationsView
         
         _commandLockoutService.Lock();
         var payload = new BodySwapPayload(attributes, true, null);
-        var response = await _networkRequestManager.Send<BodySwapPayload, BodySwapResponse>(targets, HubMethod.Transform, payload).ConfigureAwait(false);
+        var response = await _networkRequestManager.Send<BodySwapPayload, BodySwapResponse>(targets, HubMethod.BodySwap, payload).ConfigureAwait(false);
 
         if (response.Status is not ResponseStatus.Success)
             return;

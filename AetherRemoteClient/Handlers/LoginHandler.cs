@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using AetherRemoteClient.Infrastructure.Authentication;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Services.Configuration;
@@ -13,6 +14,7 @@ namespace AetherRemoteClient.Handlers;
 public class LoginHandler : IDisposable
 {
     // Injected
+    private readonly AuthenticationInfrastructure _authenticationInfrastructure;
     private readonly ActiveSessionService _activeSessionService;
     private readonly ConfigurationService _configurationService;
     private readonly NetworkService _networkService;
@@ -23,6 +25,7 @@ public class LoginHandler : IDisposable
     ///     <inheritdoc cref="LoginHandler"/>
     /// </summary>
     public LoginHandler(
+        AuthenticationInfrastructure authenticationInfrastructure,
         ActiveSessionService activeSessionService,
         ConfigurationService configurationService,
         NetworkService networkService,
@@ -30,6 +33,7 @@ public class LoginHandler : IDisposable
         DtrManager dtrManager)
     {
         // Store injected services
+        _authenticationInfrastructure = authenticationInfrastructure;
         _activeSessionService = activeSessionService;
         _configurationService = configurationService;
         _networkService = networkService;
@@ -71,6 +75,7 @@ public class LoginHandler : IDisposable
         await _networkService.DisconnectFromServerAsync().ConfigureAwait(false);
         
         _activeSessionService.ClearAllSessionData();
+        _authenticationInfrastructure.InvalidateToken();
     }
 
     public void Dispose()

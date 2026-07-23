@@ -28,7 +28,6 @@ public class TwinningHandler(
             return new Response<NoPayload>(error, []);
         }
         
-        // TODO: Does this need None permission checking...?
         var primaryPermissions = request.Payload.SwapAttributes.ToPrimaryPermissions();
         primaryPermissions |= PrimaryPermissions.Twinning;
         

@@ -68,7 +68,7 @@ public class BodySwapHandler(
                 return new Response<BodySwapResponse>(ResponseStatus.Unknown, []);
             }
             
-            characters.Add(new Character(sender.CharacterName, sender.CharacterName));
+            characters.Add(new Character(sender.CharacterName, sender.CharacterWorld));
         }
         
         // Shuffle everyone around

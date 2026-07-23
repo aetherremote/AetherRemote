@@ -45,4 +45,9 @@
       <Compile Remove="Domain\Configurations\CharacterConfiguration.cs" />
       <Compile Remove="Domain\Configurations\Configuration.cs" />
     </ItemGroup>
+
+    <PropertyGroup>
+        <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    </PropertyGroup>
+    
 </Project>

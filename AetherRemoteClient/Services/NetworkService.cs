@@ -22,8 +22,8 @@ public class NetworkService : IAsyncDisposable
 {
     
 #if DEBUG
-    private const string HubUrl = "https://localhost:5006/primaryHub"; // Local
-    // private const string HubUrl = "https://foxitsvc.com:5017/primaryHub"; // Beta
+    // private const string HubUrl = "https://localhost:5006/primaryHub"; // Local
+    private const string HubUrl = "https://foxitsvc.com:5017/primaryHub"; // Beta
     // private const string HubUrl = "https://foxitsvc.com:5006/primaryHub"; // Prod
 #else
     private const string HubUrl = "https://foxitsvc.com:5006/primaryHub";
@@ -56,9 +56,6 @@ public class NetworkService : IAsyncDisposable
         HubConnectionState.Reconnecting => ConnectionState.Reconnecting,
         _ => throw new UnreachableException($"[NetworkService.State] {nameof(_connection.State)}")
     };
-
-    public IDisposable ListenReal<T>(string name, Action<T> handler) => _connection.On(name, handler);
-    public IDisposable ListenReal<T, TU>(string name, Func<T, TU> handler) => _connection.On(name, handler);
     
     public IDisposable Listen<T>(string name, Action<T> handler) => _connection.On(name, handler);
     public IDisposable Listen<T, TU>(string name, Func<RoutedRequest<T>, RoutedResponse<TU>> handler) => _connection.On(name, handler);
@@ -73,7 +70,7 @@ public class NetworkService : IAsyncDisposable
             {
                 options.AccessTokenProvider = async () => await authenticationInfrastructure.GetTokenAsync().ConfigureAwait(false);
             })
-            .WithAutomaticReconnect(new InfiniteRetryPolicy())
+            .WithAutomaticReconnect(new ReconnectRetryPolicy())
             .AddMessagePackProtocol(options =>
             {
                 options.SerializerOptions = MessagePackSerializerOptions.Standard.WithSecurity(MessagePackSecurity.UntrustedData);
@@ -90,7 +87,7 @@ public class NetworkService : IAsyncDisposable
     public async Task<bool> ConnectToServerAsync(string secret)
     {
         if (_connection.State is not HubConnectionState.Disconnected)
-            return false;
+            await DisconnectFromServerAsync().ConfigureAwait(false);
         
         _authenticationInfrastructure.SetSecret(secret);
         
@@ -164,9 +161,8 @@ public class NetworkService : IAsyncDisposable
     /// <summary>
     ///     Invokes a method on the server and awaits a result
     /// </summary>
-    /// <param name="method">Hub Method Name (More details in <see cref="HubMethod"/>)</param>
-    /// <param name="request">Request Payload (More details in <see cref="ActionRequest"/>)</param>
-    /// <returns>Response Payload (More details in <see cref="ActionResponse"/>)</returns>
+    /// <param name="method"> Hub Method Name (More details in <see cref="HubMethod"/>) </param>
+    /// <param name="request"> Request, be it a raw request, or a request wrapping a payload </param>
     public async Task<T> InvokeAsync<T>(string method, object request)
     {
         if (_connection.State is not HubConnectionState.Connected)
