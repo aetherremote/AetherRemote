@@ -14,7 +14,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 
 public class CustomizePlusHandler(
     ILogger<CustomizePlusHandler> logger,
-    PresenceService presenceService,
+    SessionService sessionService,
     RelayManager relayManager) : IRelayHandler<CustomizePlusPayload, NoPayload>
 {
     private const string Method = HubMethod.CustomizePlus;
@@ -34,7 +34,7 @@ public class CustomizePlusHandler(
 
     private ResponseStatus? ValidateRequest(string senderFriendCode, Request<CustomizePlusPayload> request)
     {
-        if (presenceService.IsUserExceedingCooldown(senderFriendCode))
+        if (sessionService.GetSession(senderFriendCode)?.GeneralBucket.TryConsumeToken() is not true)
             return ResponseStatus.TooManyRequests;
         
         if (VerificationUtilities.ValidFriendCodes(request.TargetFriendCodes) is false)

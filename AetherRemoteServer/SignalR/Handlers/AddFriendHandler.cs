@@ -16,7 +16,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 public class AddFriendHandler(
     ILogger<AddFriendHandler> logger, 
     DatabaseInfrastructure databaseInfrastructure, 
-    PresenceService presenceService) : ICommandHandler<AddFriendRequest, AddFriendResponse>
+    SessionService sessionService) : ICommandHandler<AddFriendRequest, AddFriendResponse>
 {
     private static readonly ResolvedPermissions EmptyPermissions = new(PrimaryPermissions.None, SpeakPermissions.None, ElevatedPermissions.None);
     
@@ -39,14 +39,14 @@ public class AddFriendHandler(
                 : new AddFriendResponse(code, FriendOnlineStatus.Offline);
         }
         
-        if (presenceService.TryGet(request.TargetFriendCode) is not { } target)
+        if (sessionService.GetSession(request.TargetFriendCode) is not { } session)
             return new AddFriendResponse(code, FriendOnlineStatus.Offline);
         
         try
         {
             var payload = new SyncOnlineStatusPayload(FriendOnlineStatus.Online, EmptyPermissions);
             var message = new Message<SyncOnlineStatusPayload>(senderFriendCode, payload);
-            await clients.Client(target.ConnectionId).SendAsync(HubMethod.SyncOnlineStatus, message);
+            await clients.Client(session.ConnectionId).SendAsync(HubMethod.SyncOnlineStatus, message);
         }
         catch (Exception e)
         {

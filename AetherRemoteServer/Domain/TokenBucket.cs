@@ -5,43 +5,65 @@ namespace AetherRemoteServer.Domain;
 /// <summary>
 ///     A bucket for managing tokens for accessing the network
 /// </summary>
-public class TokenBucket(int maxTokens)
+public class TokenBucket
 {
     /// <summary>
     ///     The maximum number of tokens this bucket can have 
     /// </summary>
-    public float Capacity = maxTokens;
-    
+    public int Capacity { get; }
+
+    /// <summary>
+    ///     Refill rate per second
+    /// </summary>
+    public double RefillRate { get; }
+
     /// <summary>
     ///     The current number of tokens this bucket has 
     /// </summary>
-    public float Tokens = maxTokens;
+    public double Tokens { get; private set; }
     
     /// <summary>
     ///     The last time in ticks this bucket was refilled 
     /// </summary>
-    public long LastRefillTicks = Stopwatch.GetTimestamp();
+    private long _lastRefillTicks = Stopwatch.GetTimestamp();
 
+    /// <inheritdoc cref="TokenBucket"/>
+    /// <param name="capacity"> How many tokens this bucket can hold </param>
+    /// <param name="refillRate"> How many tokens this bucket restores per second </param>
+    public TokenBucket(int capacity, double refillRate)
+    {
+        Capacity = capacity;
+        Tokens = capacity;
+        RefillRate = refillRate;
+    }
+    
+    private readonly Lock _lock = new();
+    
     /// <summary>
     ///     Attempts to consume a token for any given request
     /// </summary>
     /// <returns>True if token was consumed, false if not</returns>
     public bool TryConsumeToken()
     {
-        var now = Stopwatch.GetTimestamp();
-        var seconds = (now - LastRefillTicks) / (float)Stopwatch.Frequency;
-
-        if (seconds > 0)
+        lock (_lock)
         {
-            // Refill
-            Tokens = Math.Min(Capacity, Tokens + Capacity * seconds);
-            LastRefillTicks = now;
+            Refill();
+            
+            if (Tokens < 1.0)
+                return false;
+
+            Tokens--;
+            return true;
         }
 
-        if (Tokens < 1.0f)
-            return false;
+        // I will continue to try these local functions...
+        void Refill()
+        {
+            var now = Stopwatch.GetTimestamp();
+            var elapsedSeconds = (now - _lastRefillTicks) / (double)Stopwatch.Frequency;
 
-        Tokens--;
-        return true;
+            Tokens = Math.Min(Capacity, Tokens + elapsedSeconds * RefillRate);
+            _lastRefillTicks = now;
+        }
     }
 }

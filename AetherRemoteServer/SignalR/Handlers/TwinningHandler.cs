@@ -15,7 +15,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 
 public class TwinningHandler(
     ILogger<TwinningHandler> logger,
-    PresenceService presenceService,
+    SessionService sessionService,
     RelayManager relayManager) : IRelayHandler<TwinningPayload, NoPayload>
 {
     private const string Method = HubMethod.Twinning;
@@ -42,7 +42,7 @@ public class TwinningHandler(
     
     private ResponseStatus? ValidateRequest(string senderFriendCode, Request<TwinningPayload> request)
     {
-        if (presenceService.IsUserExceedingCooldown(senderFriendCode))
+        if (sessionService.GetSession(senderFriendCode)?.GeneralBucket.TryConsumeToken() is not true)
             return ResponseStatus.TooManyRequests;
         
         if (VerificationUtilities.ValidFriendCodes(request.TargetFriendCodes) is false)

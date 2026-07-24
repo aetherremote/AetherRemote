@@ -14,7 +14,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 
 public class HypnosisStopHandler(
     ILogger<HypnosisStopHandler> logger,
-    PresenceService presenceService,
+    SessionService sessionService,
     RelayManager relayManager) : IRelayHandler<HypnosisStopPayload, NoPayload>
 {    
     private const string Method = HubMethod.HypnosisStop;
@@ -34,7 +34,7 @@ public class HypnosisStopHandler(
     
     private ResponseStatus? ValidateRequest(string senderFriendCode, Request<HypnosisStopPayload> request)
     {
-        if (presenceService.IsUserExceedingCooldown(senderFriendCode))
+        if (sessionService.GetSession(senderFriendCode)?.GeneralBucket.TryConsumeToken() is not true)
             return ResponseStatus.TooManyRequests;
         
         if (VerificationUtilities.ValidFriendCodes(request.TargetFriendCodes) is false)

@@ -14,7 +14,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 
 public class MoodlesHandler(
     ILogger<MoodlesHandler> logger,
-    PresenceService presenceService,
+    SessionService sessionService,
     RelayManager relayManager) : IRelayHandler<MoodlesPayload, NoPayload>
 {
     private const string Method = HubMethod.Moodles;
@@ -34,7 +34,7 @@ public class MoodlesHandler(
     
     private ResponseStatus? ValidateRequest(string senderFriendCode, Request<MoodlesPayload> request)
     {
-        if (presenceService.IsUserExceedingCooldown(senderFriendCode))
+        if (sessionService.GetSession(senderFriendCode)?.GeneralBucket.TryConsumeToken() is not true)
             return ResponseStatus.TooManyRequests;
         
         if (VerificationUtilities.ValidFriendCodes(request.TargetFriendCodes) is false)

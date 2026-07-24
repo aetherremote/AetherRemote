@@ -9,6 +9,7 @@ using AetherRemoteClient.Managers;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Network;
 using AetherRemoteCommon.Network.Domain;
+using AetherRemoteCommon.Network.Domain.Commands;
 using MessagePack;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
@@ -147,9 +148,10 @@ public class NetworkService : IAsyncDisposable
     public async Task DisconnectFromServerAsync()
     {
         if (_connection.State is HubConnectionState.Disconnected) return;
-
+        
         try
         {
+            await _connection.SendAsync(HubMethod.TerminateSession, new TerminateSessionRequest()).ConfigureAwait(false);
             await _connection.StopAsync().ConfigureAwait(false);
         }
         catch (Exception e)

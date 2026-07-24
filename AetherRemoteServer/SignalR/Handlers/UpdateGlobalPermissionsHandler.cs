@@ -15,7 +15,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 public class UpdateGlobalPermissionsHandler(
     ILogger<UpdateGlobalPermissionsHandler> logger,
     DatabaseInfrastructure databaseInfrastructure,
-    PresenceService presenceService) : ICommandHandler<UpdateGlobalPermissionsRequest, UpdateGlobalPermissionsResponse>
+    SessionService sessionService) : ICommandHandler<UpdateGlobalPermissionsRequest, UpdateGlobalPermissionsResponse>
 {
     public async Task<UpdateGlobalPermissionsResponse> Execute(string senderFriendCode, UpdateGlobalPermissionsRequest request, IHubCallerClients clients)
     {
@@ -31,7 +31,7 @@ public class UpdateGlobalPermissionsHandler(
                 continue;
             
             // Only evaluate online friends
-            if (presenceService.TryGet(permission.TargetFriendCode) is not { } target)
+            if (sessionService.GetSession(permission.TargetFriendCode) is not { } session)
                 continue;
             
             try
@@ -39,7 +39,7 @@ public class UpdateGlobalPermissionsHandler(
                 var resolved = PermissionResolver.Resolve(request.Permissions, permission.PermissionsGrantedTo);
                 var payload = new SyncPermissionsPayload(resolved);
                 var message = new Message<SyncPermissionsPayload>(senderFriendCode, payload);
-                await clients.Client(target.ConnectionId).SendAsync(HubMethod.SyncPermissions, message);
+                await clients.Client(session.ConnectionId).SendAsync(HubMethod.SyncPermissions, message);
             }
             catch (Exception e)
             {

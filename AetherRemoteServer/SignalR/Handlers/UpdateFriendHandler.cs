@@ -15,7 +15,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 public class UpdateFriendHandler(
     ILogger<UpdateFriendHandler> logger,
     DatabaseInfrastructure databaseInfrastructure,
-    PresenceService presenceService) : ICommandHandler<UpdateFriendRequest, UpdateFriendResponse>
+    SessionService sessionService) : ICommandHandler<UpdateFriendRequest, UpdateFriendResponse>
 {
     public async Task<UpdateFriendResponse> Execute(string senderFriendCode, UpdateFriendRequest request, IHubCallerClients clients)
     {
@@ -27,7 +27,7 @@ public class UpdateFriendHandler(
             _ => UpdateFriendEc.Unknown
         };
         
-        if (presenceService.TryGet(request.TargetFriendCode) is not { } connectedClient)
+        if (sessionService.GetSession(request.TargetFriendCode) is not { } session)
             return new UpdateFriendResponse(result);
         
         // TODO: Update failure state. This is not an expected state
@@ -40,7 +40,7 @@ public class UpdateFriendHandler(
             var resolved = PermissionResolver.Resolve(global, request.Permissions);
             var payload = new SyncPermissionsPayload(resolved);
             var message = new Message<SyncPermissionsPayload>(senderFriendCode, payload);
-            await clients.Client(connectedClient.ConnectionId).SendAsync(HubMethod.SyncPermissions, message);
+            await clients.Client(session.ConnectionId).SendAsync(HubMethod.SyncPermissions, message);
         }
         catch (Exception e)
         {

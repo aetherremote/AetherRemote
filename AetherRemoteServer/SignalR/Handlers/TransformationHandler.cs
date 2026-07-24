@@ -15,7 +15,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 
 public class TransformationHandler(
     ILogger<TransformationHandler> logger,
-    PresenceService presenceService,
+    SessionService sessionService,
     RelayManager relayManager) : IRelayHandler<TransformationPayload, NoPayload>
 {
     private const string Method = HubMethod.Transform;
@@ -47,7 +47,7 @@ public class TransformationHandler(
     
     private ResponseStatus? ValidateRequest(string senderFriendCode, Request<TransformationPayload> request)
     {
-        if (presenceService.IsUserExceedingCooldown(senderFriendCode))
+        if (sessionService.GetSession(senderFriendCode)?.GeneralBucket.TryConsumeToken() is not true)
             return ResponseStatus.TooManyRequests;
         
         if (VerificationUtilities.ValidFriendCodes(request.TargetFriendCodes) is false)

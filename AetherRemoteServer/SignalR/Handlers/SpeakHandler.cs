@@ -16,7 +16,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 
 public class SpeakHandler(
     ILogger<SpeakHandler> logger,
-    PresenceService presenceService,
+    SessionService sessionService,
     RelayManager relayManager) : IRelayHandler<SpeakPayload, NoPayload>
 {
     private const string Method = HubMethod.Speak;
@@ -43,7 +43,7 @@ public class SpeakHandler(
     
     private ResponseStatus? ValidateRequest(string senderFriendCode, Request<SpeakPayload> request)
     {
-        if (presenceService.IsUserExceedingCooldown(senderFriendCode))
+        if (sessionService.GetSession(senderFriendCode)?.GeneralBucket.TryConsumeToken() is not true)
             return ResponseStatus.TooManyRequests;
         
         if (VerificationUtilities.ValidFriendCodes(request.TargetFriendCodes) is false)

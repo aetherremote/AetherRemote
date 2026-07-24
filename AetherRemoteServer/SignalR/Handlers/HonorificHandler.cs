@@ -14,7 +14,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 
 public class HonorificHandler(
     ILogger<HonorificHandler> logger,
-    PresenceService presenceService,
+    SessionService sessionService,
     RelayManager relayManager) : IRelayHandler<HonorificPayload, NoPayload>
 {
     private const string Method = HubMethod.Honorific;
@@ -34,7 +34,7 @@ public class HonorificHandler(
     
     private ResponseStatus? ValidateRequest(string senderFriendCode, Request<HonorificPayload> request)
     {
-        if (presenceService.IsUserExceedingCooldown(senderFriendCode))
+        if (sessionService.GetSession(senderFriendCode)?.GeneralBucket.TryConsumeToken() is not true)
             return ResponseStatus.TooManyRequests;
         
         if (VerificationUtilities.ValidFriendCodes(request.TargetFriendCodes) is false)

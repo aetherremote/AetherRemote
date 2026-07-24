@@ -46,8 +46,8 @@ public class Program
         
         // Services
         builder.Services.AddSingleton<PermissionsService>();
-        builder.Services.AddSingleton<PresenceService>();
         builder.Services.AddSingleton<RequestLoggingService>();
+        builder.Services.AddSingleton<SessionService>();
         
         // Managers
         builder.Services.AddSingleton<PossessionManager>();
@@ -58,14 +58,14 @@ public class Program
         builder.Services.AddSingleton<BodySwapHandler>();
         builder.Services.AddSingleton<CustomizePlusHandler>();
         builder.Services.AddSingleton<EmoteHandler>();
-        builder.Services.AddSingleton<GetAccountDataHandler>();
         builder.Services.AddSingleton<HonorificHandler>();
         builder.Services.AddSingleton<HypnosisHandler>();
         builder.Services.AddSingleton<HypnosisStopHandler>();
+        builder.Services.AddSingleton<InitializeSessionHandler>();
         builder.Services.AddSingleton<MoodlesHandler>();
-        builder.Services.AddSingleton<OnlineStatusUpdateHandler>();
         builder.Services.AddSingleton<RemoveFriendHandler>();
         builder.Services.AddSingleton<SpeakHandler>();
+        builder.Services.AddSingleton<TerminateSessionHandler>();
         builder.Services.AddSingleton<TransformationHandler>();
         builder.Services.AddSingleton<TwinningHandler>();
         builder.Services.AddSingleton<UpdateFriendHandler>();

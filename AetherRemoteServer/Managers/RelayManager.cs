@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.SignalR;
 
 namespace AetherRemoteServer.Managers;
 
-public class RelayManager(PermissionsService permissionsService, PresenceService presenceService)
+public class RelayManager(PermissionsService permissionsService, SessionService sessionService)
 {
     private readonly TimeSpan _timeOutDuration = TimeSpan.FromSeconds(8);
 
@@ -30,14 +30,14 @@ public class RelayManager(PermissionsService permissionsService, PresenceService
                 tasks[i] = Task.FromResult(new RoutedResponse<TResponse>(error));
                 continue;
             }
-
-            if (presenceService.TryGet(request.TargetFriendCodes[i]) is not { } presence)
+            
+            if (sessionService.GetSession(request.TargetFriendCodes[i])?.ConnectionId is not { } connectionId)
             {
                 tasks[i] = Task.FromResult(new RoutedResponse<TResponse>(RoutedResponseStatus.Offline));
                 continue;
             }
 
-            tasks[i] = Send<TPayload, TResponse>(hubMethod, routed, clients.Client(presence.ConnectionId));
+            tasks[i] = Send<TPayload, TResponse>(hubMethod, routed, clients.Client(connectionId));
         }
 
         var completed = await Task.WhenAll(tasks);

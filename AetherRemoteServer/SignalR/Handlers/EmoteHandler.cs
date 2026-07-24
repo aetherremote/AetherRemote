@@ -15,7 +15,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 
 public class EmoteHandler(
     ILogger<EmoteHandler> logger,
-    PresenceService presenceService,
+    SessionService sessionService,
     RelayManager relayManager) : IRelayHandler<EmotePayload, NoPayload>
 {
     private const string Method = HubMethod.Emote;
@@ -35,7 +35,7 @@ public class EmoteHandler(
     
     private ResponseStatus? ValidateRequest(string senderFriendCode, Request<EmotePayload> request)
     {
-        if (presenceService.IsUserExceedingCooldown(senderFriendCode))
+        if (sessionService.GetSession(senderFriendCode)?.GeneralBucket.TryConsumeToken() is not true)
             return ResponseStatus.TooManyRequests;
         
         if (VerificationUtilities.ValidFriendCodes(request.TargetFriendCodes) is false)

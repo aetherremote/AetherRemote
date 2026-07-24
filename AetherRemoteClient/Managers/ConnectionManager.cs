@@ -40,8 +40,8 @@ public class ConnectionManager(
         networkService.Reconnected += OnReconnected;
         networkService.Reconnecting += OnReconnecting;
         
-        var request = new GetAccountDataRequest(characterName, characterWorld);
-        var response = await networkService.InvokeAsync<GetAccountDataResponse>(HubMethod.GetAccountData, request).ConfigureAwait(false);
+        var request = new InitializeSessionRequest(characterName, characterWorld);
+        var response = await networkService.InvokeAsync<InitializeSessionResponse>(HubMethod.InitializeSession, request).ConfigureAwait(false);
         if (response.Result is not GetAccountDataEc.Success)
         {
             Plugin.Log.Fatal($"[ConnectionManager.TryConnectToServerAsync] Failed to get account data {response.Result}");

@@ -15,7 +15,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 public class RemoveFriendHandler(
     ILogger<RemoveFriendHandler> logger,
     DatabaseInfrastructure databaseInfrastructure,
-    PresenceService presenceService) : ICommandHandler<RemoveFriendRequest, RemoveFriendResponse>
+    SessionService sessionService) : ICommandHandler<RemoveFriendRequest, RemoveFriendResponse>
 {
     public async Task<RemoveFriendResponse> Execute(string senderFriendCode, RemoveFriendRequest request, IHubCallerClients clients)
     {
@@ -36,7 +36,7 @@ public class RemoveFriendHandler(
         if (result is not RemoveFriendEc.Success)
             return new RemoveFriendResponse(result);
         
-        if (presenceService.TryGet(request.TargetFriendCode) is not { } friend)
+        if (sessionService.GetSession(request.TargetFriendCode) is not { } session)
             return new RemoveFriendResponse(result);
         
         if (await databaseInfrastructure.GetSinglePermissions(request.TargetFriendCode, senderFriendCode) is null)
@@ -46,7 +46,7 @@ public class RemoveFriendHandler(
         {
             var payload = new SyncOnlineStatusPayload(FriendOnlineStatus.Pending);
             var message = new Message<SyncOnlineStatusPayload>(senderFriendCode, payload);
-            await clients.Client(friend.ConnectionId).SendAsync(HubMethod.SyncOnlineStatus, message);
+            await clients.Client(session.ConnectionId).SendAsync(HubMethod.SyncOnlineStatus, message);
         }
         catch (Exception e)
         {
@@ -58,7 +58,7 @@ public class RemoveFriendHandler(
     
     private RemoveFriendEc? ValidateRequest(string senderFriendCode, RemoveFriendRequest request)
     {
-        if (presenceService.IsUserExceedingCooldown(senderFriendCode))
+        if (sessionService.GetSession(senderFriendCode)?.GeneralBucket.TryConsumeToken() is not true)
             return RemoveFriendEc.TooManyRequests;
         
         if (VerificationUtilities.ValidFriendCode(request.TargetFriendCode) is false)

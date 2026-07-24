@@ -15,7 +15,7 @@ namespace AetherRemoteServer.SignalR.Handlers;
 public class BodySwapHandler(
     ILogger<BodySwapHandler> logger, 
     DatabaseInfrastructure databaseInfrastructure, 
-    PresenceService presenceService, 
+    SessionService sessionService, 
     RelayManager relayManager) : IRelayHandler<BodySwapPayload, BodySwapResponse>
 {
     private record Character(string Name, string World);
@@ -41,7 +41,7 @@ public class BodySwapHandler(
         var characters = new List<Character>();
         foreach (var targetFriendCode in request.TargetFriendCodes)
         {
-            if (presenceService.TryGet(targetFriendCode) is not { } target)
+            if (sessionService.GetSession(targetFriendCode) is not { } session)
                 return new Response<BodySwapResponse>(ResponseStatus.TargetOffline, []);
 
             // Get the target's permissions for the sender
@@ -56,19 +56,19 @@ public class BodySwapHandler(
             if ((resolved.Primary & primary) != primary || (resolved.Elevated & elevated) != elevated)
                 return new Response<BodySwapResponse>(ResponseStatus.TargetHasNotGrantedPermissions, []);
             
-            characters.Add(new Character(target.CharacterName, target.CharacterWorld));
+            characters.Add(new Character(session.CharacterName, session.CharacterWorld));
         }
 
         // Handle the case where we want ourselves swapped too
         if (request.Payload.IncludeSelf)
         {
-            if (presenceService.TryGet(senderFriendCode) is not { } sender)
+            if (sessionService.GetSession(senderFriendCode) is not { } session)
             {
                 logger.LogWarning("{Sender} did not have a presence", senderFriendCode);
                 return new Response<BodySwapResponse>(ResponseStatus.Unknown, []);
             }
             
-            characters.Add(new Character(sender.CharacterName, sender.CharacterWorld));
+            characters.Add(new Character(session.CharacterName, session.CharacterWorld));
         }
         
         // Shuffle everyone around
@@ -86,7 +86,7 @@ public class BodySwapHandler(
             var routed = new RoutedRequest<BodySwapRoutedPayload>(senderFriendCode, payload);
 
             // Double-check the target is still online
-            if (presenceService.TryGet(request.TargetFriendCodes[i]) is not { } connectionClient)
+            if (sessionService.GetSession(request.TargetFriendCodes[i]) is not { } session)
             {
                 pending[i] = Task.FromResult(new RoutedResponse<NoPayload>(RoutedResponseStatus.Offline));
                 continue;
@@ -94,7 +94,7 @@ public class BodySwapHandler(
             
             try
             {
-                var client = clients.Client(connectionClient.ConnectionId);
+                var client = clients.Client(session.ConnectionId);
                 pending[i] = relayManager.Send<BodySwapRoutedPayload, NoPayload>(HubMethod.BodySwap, routed, client);
             }
             catch (Exception e)
@@ -118,7 +118,7 @@ public class BodySwapHandler(
     
     private ResponseStatus? ValidateBodySwapRequest(string senderFriendCode, Request<BodySwapPayload> request)
     {
-        if (presenceService.IsUserExceedingCooldown(senderFriendCode))
+        if (sessionService.GetSession(senderFriendCode)?.GeneralBucket.TryConsumeToken() is not true)
             return ResponseStatus.TooManyRequests;
         
         // This function does not function if the sender includes themselves in the target
