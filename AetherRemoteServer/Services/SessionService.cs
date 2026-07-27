@@ -39,15 +39,19 @@ public class SessionService
     /// </summary>
     public bool IsOnline(string friendCode)
     {
-        return _sessions.ContainsKey(friendCode);
+        return _sessions.TryGetValue(friendCode, out var session) && session.OnlineStatus == OnlineStatus.Online;
     }
     
-    public void UpdateConnectivityStatus(string friendCode, OnlineStatus status)
+    /// <summary>
+    ///     Updates the connectivity status for a friend code, useful for tracking connections, reconnections, and disconnections
+    /// </summary>
+    public void UpdateConnectivityStatus(string friendCode, OnlineStatus status, string? connectionId = null)
     {
         if (_sessions.TryGetValue(friendCode, out var session) is false)
             return;
-        
+
         session.OnlineStatus = status;
+        session.ConnectionId = connectionId ?? session.ConnectionId;
     }
 
     /// <summary>

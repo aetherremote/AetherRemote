@@ -10,7 +10,7 @@ namespace AetherRemoteClient.Handlers.Network;
 
 public partial class NetworkHandler
 {
-    private static readonly ResolvedPermissions RequiredPermissions = new(PrimaryPermissions.Emote, SpeakPermissions.None, ElevatedPermissions.None);
+    private static readonly ResolvedPermissions EmotePermissions = new(PrimaryPermissions.Emote, SpeakPermissions.None, ElevatedPermissions.None);
 
     private RoutedResponse<NoPayload> HandleEmoteCommand(RoutedRequest<EmotePayload> request)
     {
@@ -19,7 +19,7 @@ public partial class NetworkHandler
         if (_friendsListService.Get(request.SenderFriendCode) is not { } sender)
             return new RoutedResponse<NoPayload>(RoutedResponseStatus.NotFriends);
 
-        if (GetValidationError("Emote", sender, RequiredPermissions) is { } error)
+        if (GetValidationError("Emote", sender, EmotePermissions) is { } error)
             return new RoutedResponse<NoPayload>(error);
         
         // Check if real emote

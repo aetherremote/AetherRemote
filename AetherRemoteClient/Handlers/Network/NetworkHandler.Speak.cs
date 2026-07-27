@@ -21,7 +21,7 @@ public partial class NetworkHandler
         if (_friendsListService.Get(request.SenderFriendCode) is not { } sender)
             return new RoutedResponse<NoPayload>(RoutedResponseStatus.NotFriends);
 
-        if (GetValidationError("Emote", sender, RequiredPermissions) is { } error)
+        if (GetValidationError("Emote", sender, permissions) is { } error)
             return new RoutedResponse<NoPayload>(error);
 
         // Add the action to the action queue to be sent when available

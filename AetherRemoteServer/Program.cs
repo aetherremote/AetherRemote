@@ -63,6 +63,7 @@ public class Program
         builder.Services.AddSingleton<HypnosisStopHandler>();
         builder.Services.AddSingleton<InitializeSessionHandler>();
         builder.Services.AddSingleton<MoodlesHandler>();
+        builder.Services.AddSingleton<OnlineNotificationHandler>();
         builder.Services.AddSingleton<RemoveFriendHandler>();
         builder.Services.AddSingleton<SpeakHandler>();
         builder.Services.AddSingleton<TerminateSessionHandler>();

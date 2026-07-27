@@ -147,7 +147,7 @@ public class NetworkService : IAsyncDisposable
     /// <summary> Attempts to disconnect from the SignalR server </summary>
     public async Task DisconnectFromServerAsync()
     {
-        if (_connection.State is HubConnectionState.Disconnected) return;
+        if (_connection.State is not HubConnectionState.Disconnected) return;
         
         try
         {
@@ -198,7 +198,7 @@ public class NetworkService : IAsyncDisposable
         _connection.Reconnecting -= OnReconnecting;
         _connection.Closed -= OnDisconnected;
         
-        await _connection.StopAsync().ConfigureAwait(false);
+        await DisconnectFromServerAsync().ConfigureAwait(false);
         await _connection.DisposeAsync().ConfigureAwait(false);
         
         GC.SuppressFinalize(this);

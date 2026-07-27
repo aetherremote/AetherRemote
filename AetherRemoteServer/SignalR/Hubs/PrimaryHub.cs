@@ -28,7 +28,7 @@ public partial class PrimaryHub(
     /// </summary>
     public override Task OnConnectedAsync()
     {
-        sessionService.UpdateConnectivityStatus(FriendCode, OnlineStatus.Online);
+        sessionService.UpdateConnectivityStatus(FriendCode, OnlineStatus.Online, Context.ConnectionId);
         return base.OnConnectedAsync();
     }
 
@@ -41,7 +41,7 @@ public partial class PrimaryHub(
         var disconnectedConnectionId = Context.ConnectionId;
         sessionService.UpdateConnectivityStatus(friendCode, OnlineStatus.Disconnected);
 
-        await Task.Delay(15 * 1000, Context.ConnectionAborted);
+        await Task.Delay(15 * 1000);
 
         if (sessionService.GetSession(friendCode) is not { } session)
             return;

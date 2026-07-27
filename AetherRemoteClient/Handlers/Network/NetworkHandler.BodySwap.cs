@@ -1,5 +1,4 @@
 using System.Threading.Tasks;
-using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Network.Domain;
