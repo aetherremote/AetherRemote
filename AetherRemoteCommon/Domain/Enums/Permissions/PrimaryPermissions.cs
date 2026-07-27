@@ -17,5 +17,6 @@ public enum PrimaryPermissions
     CustomizePlus = 1 << 5,
     Moodles = 1 << 6,
     Hypnosis = 1 << 7,
-    Honorific = 1 << 8
+    Honorific = 1 << 8,
+    Mimicry = 1 << 9
 }

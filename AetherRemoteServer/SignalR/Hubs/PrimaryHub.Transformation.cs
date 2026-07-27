@@ -34,4 +34,13 @@ public partial class PrimaryHub
         
         return await requestHandler.TwinningHandler.Execute(FriendCode, request, Clients);
     }
+    
+    [HubMethodName(HubMethod.Mimicry)]
+    public async Task<Response<MimicryResponse>> Mimicry(Request<MimicryPayload> request)
+    {
+        if (request.Payload.LockCode is not null)
+            return new Response<MimicryResponse>(ResponseStatus.Disabled, []);
+        
+        return await requestHandler.MimicryHandler.Execute(FriendCode, request, Clients);
+    }
 }

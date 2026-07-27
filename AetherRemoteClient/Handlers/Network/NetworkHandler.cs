@@ -83,6 +83,7 @@ public partial class NetworkHandler : IDisposable
         _handlers.Add(networkService.ListenAsync<HonorificPayload, NoPayload>(HubMethod.Honorific, HandleHonorific));
         _handlers.Add(networkService.ListenAsync<HypnosisPayload, NoPayload>(HubMethod.Hypnosis, HandleHypnosis));
         _handlers.Add(networkService.ListenAsync<HypnosisStopPayload, NoPayload>(HubMethod.HypnosisStop, HandleHypnosisStop));
+        _handlers.Add(networkService.ListenAsync<MimicryPayload, NoPayload>(HubMethod.Mimicry, HandleMimicry));
         _handlers.Add(networkService.ListenAsync<MoodlesPayload, NoPayload>(HubMethod.Moodles, HandleMoodles));
         _handlers.Add(networkService.ListenAsync<TransformationPayload, NoPayload>(HubMethod.Transform, HandleTransform));
         _handlers.Add(networkService.ListenAsync<TwinningPayload, NoPayload>(HubMethod.Twinning, HandleTwinning));

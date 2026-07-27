@@ -66,7 +66,6 @@ public partial class TransformationsView
             SharedUserInterfaces.Icon(FontAwesomeIcon.QuestionCircle);
             if (ImGui.IsItemHovered())
             {
-                //ImGui.SetNextWindowSize(new Vector2(600, 0));
                 ImGui.BeginTooltip();
                 ImGui.TextUnformatted("\"Mode\" refers to how the transformation will be handled.");
                 ImGui.TextUnformatted("• Transform - Sends glamourer data, be that of a player, or npc (WIP)");
@@ -81,9 +80,7 @@ public partial class TransformationsView
             DrawHeaderNavButton(TransformationMode.Transform, "Transform##NavButtonTransformation", headerButtonDimensions, value); ImGui.SameLine();
             DrawHeaderNavButton(TransformationMode.BodySwap, "Body Swap##NavButtonTransformation", headerButtonDimensions, value); ImGui.SameLine();
             DrawHeaderNavButton(TransformationMode.Twinning, "Twinning##NavButtonTransformation", headerButtonDimensions, value); ImGui.SameLine();
-            ImGui.BeginDisabled();
-            DrawHeaderNavButton(TransformationMode.Mimicry, "Mimicry", headerButtonDimensions, value);
-            ImGui.EndDisabled();
+            DrawHeaderNavButton(TransformationMode.Mimicry, "Mimicry##NavButtonTransformation", headerButtonDimensions, value);
         });
     }
 
@@ -309,7 +306,6 @@ public partial class TransformationsView
             if (node.Content is null)
             {
                 // Create the node
-                // ReSharper disable once InvertIf
                 if (ImGui.TreeNodeEx(node.Name, ImGuiTreeNodeFlags.SpanAvailWidth | ImGuiTreeNodeFlags.Framed))
                 {
                     // Recursively draw the children inside the tree node

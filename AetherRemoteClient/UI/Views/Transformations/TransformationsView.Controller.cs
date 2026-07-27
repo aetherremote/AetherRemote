@@ -164,8 +164,8 @@ public partial class TransformationsView
     {
         switch (_mode)
         {
-            // We don't want to operate on this yet
             case TransformationMode.Mimicry:
+                await SendMimicry().ConfigureAwait(false);
                 return;
             
             case TransformationMode.Transform:
@@ -206,21 +206,15 @@ public partial class TransformationsView
     
     private async Task SendBodySwap()
     {
-        // Build the attributes
-        var attributes = CharacterAttributes.None;
-        if (_swapGlamourerCustomization) attributes |= CharacterAttributes.GlamourerCustomization;
-        if (_swapGlamourerEquipment) attributes |= CharacterAttributes.GlamourerEquipment;
-        if (_swapPenumbraMods) attributes |= CharacterAttributes.PenumbraMods;
-        if (_swapMoodles) attributes |= CharacterAttributes.Moodles;
-        if (_swapCustomizePlus) attributes |= CharacterAttributes.CustomizePlus;
-        if (_swapHonorific) attributes |= CharacterAttributes.Honorific;
-        
-        // Notification to help convey intent
-        NotificationHelper.Info("Beginning Body Swap...", "You may need to wait up to 10 seconds for changes to take effect");
-        
         var targets = _selectionManager.GetSelectedFriendCodes();
         if (targets.Count is 0)
             return;
+        
+        // Build the attributes
+        var attributes = BuildAttributes();
+        
+        // Notification to help convey intent
+        NotificationHelper.Info("Beginning Body Swap...", "You may need to wait up to 10 seconds for changes to take effect");
         
         // TODO: Always including self for now, I will decouple the transformation operations
         //          This will also need to solve A, B, and C
@@ -257,7 +251,57 @@ public partial class TransformationsView
             _activeSessionService.CharacterWorld is not { } world)
             return;
         
+        var targets = _selectionManager.GetSelectedFriendCodes();
+        if (targets.Count is 0)
+            return;
+        
         // Build the attributes
+        var attributes = BuildAttributes();
+        
+        // Notification to help convey intent
+        NotificationHelper.Info("Beginning Twinning...", "You may need to wait up to 10 seconds for changes to take effect");
+        
+        _commandLockoutService.Lock();
+        var payload = new TwinningPayload(name, world, attributes, null);
+        await _networkRequestManager.Send<TwinningPayload, NoPayload>(targets, HubMethod.Twinning, payload).ConfigureAwait(false);
+    }
+
+    private async Task SendMimicry()
+    {
+        var targets = _selectionManager.GetSelectedFriendCodes();
+        if (targets.Count is 0)
+            return;
+        
+        // Build the attributes
+        var attributes = BuildAttributes();
+        
+        // Notification to help convey intent
+        NotificationHelper.Info("Beginning Mimicry...", "You may need to wait up to 10 seconds for changes to take effect");
+        
+        _commandLockoutService.Lock();
+        var payload = new MimicryPayload(attributes, null);
+        var response = await _networkRequestManager.Send<MimicryPayload, MimicryResponse>(targets, HubMethod.Mimicry, payload).ConfigureAwait(false);
+        
+        if (response.Status is not ResponseStatus.Success)
+            return;
+        
+        if (response.Payload is not { } mimicryResponse)
+            return;
+        
+        await _characterTransformationManager.ApplyFullScaleTransformation(mimicryResponse.CharacterName, mimicryResponse.CharacterWorld, attributes).ConfigureAwait(false);
+        
+        if ((attributes & CharacterAttributes.PenumbraMods) is CharacterAttributes.PenumbraMods)
+            _statusService.SetGlamourerPenumbra(Friend.Self);
+        
+        if ((attributes & CharacterAttributes.CustomizePlus) is CharacterAttributes.CustomizePlus)
+            _statusService.SetCustomizePlus(Friend.Self);
+        
+        if ((attributes & CharacterAttributes.Honorific) is CharacterAttributes.Honorific)
+            _statusService.SetHonorific(Friend.Self);
+    }
+
+    private CharacterAttributes BuildAttributes()
+    {
         var attributes = CharacterAttributes.None;
         if (_swapGlamourerCustomization) attributes |= CharacterAttributes.GlamourerCustomization;
         if (_swapGlamourerEquipment) attributes |= CharacterAttributes.GlamourerEquipment;
@@ -265,17 +309,7 @@ public partial class TransformationsView
         if (_swapMoodles) attributes |= CharacterAttributes.Moodles;
         if (_swapCustomizePlus) attributes |= CharacterAttributes.CustomizePlus;
         if (_swapHonorific) attributes |= CharacterAttributes.Honorific;
-        
-        // Notification to help convey intent
-        NotificationHelper.Info("Beginning Twinning...", "You may need to wait up to 10 seconds for changes to take effect");
-        
-        var targets = _selectionManager.GetSelectedFriendCodes();
-        if (targets.Count is 0)
-            return;
-        
-        _commandLockoutService.Lock();
-        var payload = new TwinningPayload(name, world, attributes, null);
-        await _networkRequestManager.Send<TwinningPayload, NoPayload>(targets, HubMethod.Twinning, payload).ConfigureAwait(false);
+        return attributes;
     }
     
     /// <summary>

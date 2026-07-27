@@ -9,6 +9,7 @@ public class AggregateRequestHandler(
     HypnosisHandler hypnosisHandler,
     HypnosisStopHandler hypnosisStopHandler,
     InitializeSessionHandler initializeSessionHandler,
+    MimicryHandler mimicryHandler,
     MoodlesHandler moodlesHandler,
     OnlineNotificationHandler onlineNotificationHandler,
     RemoveFriendHandler removeFriendHandler,
@@ -27,6 +28,7 @@ public class AggregateRequestHandler(
     public readonly HypnosisHandler HypnosisHandler = hypnosisHandler;
     public readonly HypnosisStopHandler HypnosisStopHandler = hypnosisStopHandler;
     public readonly InitializeSessionHandler InitializeSessionHandler = initializeSessionHandler;
+    public readonly MimicryHandler MimicryHandler = mimicryHandler;
     public readonly MoodlesHandler MoodlesHandler = moodlesHandler;
     public readonly OnlineNotificationHandler OnlineNotificationHandler = onlineNotificationHandler;
     public readonly RemoveFriendHandler RemoveFriendHandler = removeFriendHandler;

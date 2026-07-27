@@ -14,6 +14,7 @@ public static class HubMethod
     public const string Transform = "Transform";
     public const string BodySwap = "BodySwap";
     public const string Twinning = "Twinning";
+    public const string Mimicry = "Mimicry";
     
     public const string InitializeSession = "InitializeSession";
     public const string TerminateSession = "TerminateSession";
