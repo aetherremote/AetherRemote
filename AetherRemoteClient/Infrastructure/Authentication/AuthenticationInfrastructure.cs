@@ -7,9 +7,8 @@ using System.Threading.Tasks;
 using AetherRemoteClient.Domain.Enums;
 using AetherRemoteClient.Domain.Exceptions.Network;
 using AetherRemoteClient.Utils.Extensions;
-using AetherRemoteCommon.Domain.Enums;
-using AetherRemoteCommon.Domain.Network.GetToken;
-using AetherRemoteCommon.Domain.Network.LoginAuthentication;
+using AetherRemoteCommon.Network.Domain.Api;
+using AetherRemoteCommon.Network.Enums.ErrorCodes;
 using Microsoft.IdentityModel.JsonWebTokens;
 using Newtonsoft.Json;
 
@@ -22,8 +21,8 @@ public class AuthenticationInfrastructure : IDisposable
 {
     // Where we should post for authentication
 #if DEBUG
-    private const string AuthenticationUrl = "https://localhost:5006/api/auth/login"; // Local
-    // private const string AuthenticationUrl = "https://foxitsvc.com:5017/api/auth/login"; // Beta
+    // private const string AuthenticationUrl = "https://localhost:5006/api/auth/login"; // Local
+    private const string AuthenticationUrl = "https://foxitsvc.com:5017/api/auth/login"; // Beta
 #else
     private const string AuthenticationUrl = "https://foxitsvc.com:5006/api/auth/login"; // Prod
 #endif
@@ -49,8 +48,7 @@ public class AuthenticationInfrastructure : IDisposable
         _secret = secret;
         
         // Invalidate tokens here to prevent a sign-out & sign-in from using the previous session's cached token
-        _token = null;
-        _expiresAtUtc = DateTimeOffset.MinValue;
+        InvalidateToken();
     }
 
     /// <summary> Gets or refreshes a token using the secret provided from <see cref="SetSecret"/></summary>
@@ -77,6 +75,15 @@ public class AuthenticationInfrastructure : IDisposable
         }
     }
 
+    /// <summary>
+    ///     Invalidate any current tokens
+    /// </summary>
+    public void InvalidateToken()
+    {
+        _token = null;
+        _expiresAtUtc = DateTimeOffset.MinValue;
+    }
+
     private async Task RefreshToken()
     {
         if (string.IsNullOrWhiteSpace(_secret))
@@ -90,12 +97,12 @@ public class AuthenticationInfrastructure : IDisposable
             var response = await Client.PostAsync(AuthenticationUrl, payload).ConfigureAwait(false);
             var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
-            if (JsonConvert.DeserializeObject<LoginAuthenticationResult>(content) is not { } result)
+            if (JsonConvert.DeserializeObject<GetTokenResponse>(content) is not { } result)
                 throw new ArAuthAuthenticationException(ArAuthAuthenticationErrorCode.InvalidOrMalformedToken);
 
             // This is one of the more regular failure paths for things like version mismatch, unknown secret, etc.
-            if (result.ErrorCode is not LoginAuthenticationErrorCode.Success)
-                throw new ArAuthAuthenticationException(result.ErrorCode.ToArAuthAuthenticationErrorCode());
+            if (result.Result is not GetTokenEc.Success)
+                throw new ArAuthAuthenticationException(result.Result.ToArAuthAuthenticationErrorCode());
 
             if (JwtTokenHandler.CanReadToken(result.Secret) is false)
                 throw new ArAuthAuthenticationException(ArAuthAuthenticationErrorCode.InvalidOrMalformedToken);
@@ -119,7 +126,7 @@ public class AuthenticationInfrastructure : IDisposable
             return false;
         
         // Include a 10-minute buffer just to refresh early since tokens last 4 hours
-        return _expiresAtUtc <= DateTimeOffset.UtcNow.AddMinutes(10);
+        return _expiresAtUtc > DateTimeOffset.UtcNow.AddMinutes(10);
     }
 
     public void Dispose()

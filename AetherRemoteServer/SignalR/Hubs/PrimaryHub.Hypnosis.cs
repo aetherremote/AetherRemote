@@ -1,6 +1,6 @@
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Domain.Network.Hypnosis;
-using AetherRemoteCommon.Domain.Network.HypnosisStop;
+using AetherRemoteCommon.Network.Domain;
+using AetherRemoteCommon.Network.Domain.Payloads;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AetherRemoteServer.SignalR.Hubs;
@@ -8,16 +8,16 @@ namespace AetherRemoteServer.SignalR.Hubs;
 public partial class PrimaryHub
 {
     [HubMethodName(HubMethod.Hypnosis)]
-    public async Task<ActionResponse> Hypnosis(HypnosisRequest request)
+    public async Task<Response<NoPayload>> Hypnosis(Request<HypnosisPayload> request)
     {
         var friendCode = FriendCode;
-        LogWithBehavior($"[HypnosisRequest] Sender = {friendCode}, Targets = {string.Join(", ", request.TargetFriendCodes)}, Words = {string.Join(", ", request.Data.TextWords)}", LogMode.Both);
-        return await requestHandler.HandleHypnosis(friendCode, request, Clients);
+        LogWithBehavior($"[HypnosisRequest] Sender = {friendCode}, Targets = {string.Join(", ", request.TargetFriendCodes)}, Words = {string.Join(", ", request.Payload.Data.TextWords)}", LogMode.Both);
+        return await requestHandler.HypnosisHandler.Execute(friendCode, request, Clients);
     }
     
     [HubMethodName(HubMethod.HypnosisStop)]
-    public async Task<ActionResponse> HypnosisStop(HypnosisStopRequest request)
+    public async Task<Response<NoPayload>> HypnosisStop(Request<HypnosisStopPayload> request)
     {
-        return await requestHandler.HandleHypnosisStop(FriendCode, request, Clients);
+        return await requestHandler.HypnosisStopHandler.Execute(FriendCode, request, Clients);
     }
 }

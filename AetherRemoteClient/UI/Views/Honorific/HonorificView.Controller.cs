@@ -3,13 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using AetherRemoteClient.Domain.Honorific;
-using AetherRemoteClient.Services;
 using AetherRemoteClient.Services.Dependencies;
-using AetherRemoteClient.Utils;
 using AetherRemoteClient.Utils.Extensions;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Domain.Network.Honorific;
+using AetherRemoteCommon.Network.Domain;
+using AetherRemoteCommon.Network.Domain.Payloads;
 
 namespace AetherRemoteClient.UI.Views.Honorific;
 
@@ -62,12 +61,14 @@ public partial class HonorificView
     {
         if (_selectedTitle == null)
             return;
-            
+        
+        var targets = _selectionManager.GetSelectedFriendCodes();
+        if (targets.Count is 0)
+            return;
+        
         _commandLockoutService.Lock();
-            
-        var request = new HonorificRequest(_selectionManager.GetSelectedFriendCodes(), _selectedTitle.ToHonorificDto());
-        var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.Honorific, request).ConfigureAwait(false);
-        ActionResponseParser.Parse("Honorific", response, []); // TODO: Fix []
+        var payload = new HonorificPayload(_selectedTitle.ToHonorificDto());
+        await _networkRequestManager.Send<HonorificPayload, NoPayload>(targets, HubMethod.Honorific, payload).ConfigureAwait(false);
     }
     
     private void OnIpcReady(object? sender, EventArgs e)

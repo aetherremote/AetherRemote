@@ -7,9 +7,9 @@ using AetherRemoteClient.Domain.Network;
 using AetherRemoteClient.Infrastructure.Authentication;
 using AetherRemoteClient.Managers;
 using AetherRemoteClient.Utils;
-using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Domain.Network.Possession;
+using AetherRemoteCommon.Network.Domain;
+using AetherRemoteCommon.Network.Domain.Commands;
 using MessagePack;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,8 +23,8 @@ public class NetworkService : IAsyncDisposable
 {
     
 #if DEBUG
-    private const string HubUrl = "https://localhost:5006/primaryHub"; // Local
-    // private const string HubUrl = "https://foxitsvc.com:5017/primaryHub"; // Beta
+    // private const string HubUrl = "https://localhost:5006/primaryHub"; // Local
+    private const string HubUrl = "https://foxitsvc.com:5017/primaryHub"; // Beta
     // private const string HubUrl = "https://foxitsvc.com:5006/primaryHub"; // Prod
 #else
     private const string HubUrl = "https://foxitsvc.com:5006/primaryHub";
@@ -58,23 +58,9 @@ public class NetworkService : IAsyncDisposable
         _ => throw new UnreachableException($"[NetworkService.State] {nameof(_connection.State)}")
     };
     
-    /// <summary> Creates a listener for a specific method handled by provided method group </summary>
-    public IDisposable ListenFunc<T>(string name, Func<T, ActionResult<Unit>> handler) => _connection.On(name, handler);
-    
-    /// <summary> <inheritdoc cref="ListenFunc"/> </summary>
-    public IDisposable ListenFuncAsync<T>(string name, Func<T, Task<ActionResult<Unit>>> handler) => _connection.On(name, handler);
-    
-    /// <summary> <inheritdoc cref="ListenFunc"/> </summary>
-    public IDisposable ListenAction<T>(string name, Action<T> handler) => _connection.On(name, handler);
-    
-    /// <summary> <inheritdoc cref="ListenFunc"/> </summary>
-    public IDisposable ListenActionAsync<T>(string name, Action<Task<T>> handler) => _connection.On(name, handler);
-    
-    /// <summary> <inheritdoc cref="ListenFunc"/> </summary>
-    public IDisposable ListenPossession<T>(string name, Func<T, PossessionResultEc> handler) => _connection.On(name, handler);
-    
-    /// <summary> <inheritdoc cref="ListenFunc"/> </summary>
-    public IDisposable ListenPossessionAsync<T>(string name, Func<T, Task<PossessionResultEc>> handler) => _connection.On(name, handler);
+    public IDisposable Listen<T>(string name, Action<T> handler) => _connection.On(name, handler);
+    public IDisposable Listen<T, TU>(string name, Func<RoutedRequest<T>, RoutedResponse<TU>> handler) => _connection.On(name, handler);
+    public IDisposable ListenAsync<T, TU>(string name, Func<RoutedRequest<T>, Task<RoutedResponse<TU>>> handler) => _connection.On(name, handler);
     
     /// <summary> <inheritdoc cref="NetworkService"/> </summary>
     public NetworkService(AuthenticationInfrastructure authenticationInfrastructure)
@@ -85,7 +71,7 @@ public class NetworkService : IAsyncDisposable
             {
                 options.AccessTokenProvider = async () => await authenticationInfrastructure.GetTokenAsync().ConfigureAwait(false);
             })
-            .WithAutomaticReconnect(new InfiniteRetryPolicy())
+            .WithAutomaticReconnect(new ReconnectRetryPolicy())
             .AddMessagePackProtocol(options =>
             {
                 options.SerializerOptions = MessagePackSerializerOptions.Standard.WithSecurity(MessagePackSecurity.UntrustedData);
@@ -102,7 +88,7 @@ public class NetworkService : IAsyncDisposable
     public async Task<bool> ConnectToServerAsync(string secret)
     {
         if (_connection.State is not HubConnectionState.Disconnected)
-            return false;
+            await DisconnectFromServerAsync().ConfigureAwait(false);
         
         _authenticationInfrastructure.SetSecret(secret);
         
@@ -145,7 +131,7 @@ public class NetworkService : IAsyncDisposable
                 case ArAuthAuthenticationErrorCode.Unknown:
                 case ArAuthAuthenticationErrorCode.UnboundScope:
                 default:
-                    Plugin.Log.Warning($"[NetworkService.ConnectToServerAsync] {e}");
+                    Plugin.Log.Warning($"[NetworkService.ConnectToServerAsync] {e.ErrorCode}");
                     NotificationHelper.Warning("Unable to Connect to Server", "See more details by opening the developer console by typing /xllog");
                     return false;
             }
@@ -162,9 +148,10 @@ public class NetworkService : IAsyncDisposable
     public async Task DisconnectFromServerAsync()
     {
         if (_connection.State is HubConnectionState.Disconnected) return;
-
+        
         try
         {
+            await _connection.SendAsync(HubMethod.TerminateSession, new TerminateSessionRequest()).ConfigureAwait(false);
             await _connection.StopAsync().ConfigureAwait(false);
         }
         catch (Exception e)
@@ -176,9 +163,8 @@ public class NetworkService : IAsyncDisposable
     /// <summary>
     ///     Invokes a method on the server and awaits a result
     /// </summary>
-    /// <param name="method">Hub Method Name (More details in <see cref="HubMethod"/>)</param>
-    /// <param name="request">Request Payload (More details in <see cref="ActionRequest"/>)</param>
-    /// <returns>Response Payload (More details in <see cref="ActionResponse"/>)</returns>
+    /// <param name="method"> Hub Method Name (More details in <see cref="HubMethod"/>) </param>
+    /// <param name="request"> Request, be it a raw request, or a request wrapping a payload </param>
     public async Task<T> InvokeAsync<T>(string method, object request)
     {
         if (_connection.State is not HubConnectionState.Connected)

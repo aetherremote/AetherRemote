@@ -188,18 +188,12 @@ public partial class HypnosisView
             else
             {
                 if (ImGui.Button("Hypnotize", size))
-                {
-                    SendHypnosis();
-                    _commandLockoutService.Lock();
-                }
+                    _ = SendHypnosis().ConfigureAwait(false);
                 
                 ImGui.SameLine();
 
                 if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Square, IconSize, "Send a command to your targets to stop any current spirals if you issued them."))
-                {
-                    StopHypnosis();
-                    _commandLockoutService.Lock();
-                }
+                    _ = StopHypnosis().ConfigureAwait(false);
             }
         });
         

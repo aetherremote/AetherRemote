@@ -12,15 +12,11 @@ public partial class PossessionView
     {
         if (_selectionManager.Selected.FirstOrDefault() is not { } friend)
             return;
-            
-        if (await _possessionManager.Possess(friend).ConfigureAwait(false))
-            NotificationHelper.Success("Possession Successful", "Enjoy your new body!");
     }
 
     private async Task Unpossess()
     {
-        if (await _possessionManager.Unpossess(true).ConfigureAwait(false))
-            NotificationHelper.Success("Unpossess Successful", string.Empty);
+
     }
 
     private async Task AcceptPossessionTermsOfService()

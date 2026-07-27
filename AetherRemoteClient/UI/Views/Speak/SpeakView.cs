@@ -19,20 +19,20 @@ public partial class SpeakView : IView
     private readonly FriendsListComponentUi _friendsListComponentUi;
     private readonly CommandLockoutService _commandLockoutService;
     private readonly WorldService _worldService;
-    private readonly NetworkCommandManager _networkCommandManager;
+    private readonly NetworkRequestManager _networkRequestManager;
     private readonly SelectionManager _selectionManager;
     
     public SpeakView(
         FriendsListComponentUi friendsListComponentUi,
         CommandLockoutService commandLockoutService,
         WorldService worldService, 
-        NetworkCommandManager networkCommandManager,
+        NetworkRequestManager networkRequestManager,
         SelectionManager selectionManager)
     {
         _friendsListComponentUi = friendsListComponentUi;
         _commandLockoutService = commandLockoutService;
         _worldService = worldService;
-        _networkCommandManager = networkCommandManager;
+        _networkRequestManager = networkRequestManager;
         _selectionManager = selectionManager;
         
         _worldsListFilter = new ListFilter<string>(worldService.WorldNames, FilterWorld);

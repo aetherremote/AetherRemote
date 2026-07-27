@@ -2,7 +2,6 @@ using System.Numerics;
 using AetherRemoteClient.UI.Style;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface;
 
 namespace AetherRemoteClient.UI.Views.Possession;
 
@@ -24,6 +23,7 @@ public partial class PossessionView
 
     private void DrawContent()
     {
+        /*
         SharedUserInterfaces.ContentBox("PossessionFeedback", AetherRemoteColors.PanelColor, true, () =>
         {   
             SharedUserInterfaces.MediumText("(BETA) Possession");
@@ -116,6 +116,7 @@ public partial class PossessionView
                 }
             }
         });
+        */
     }
 
     private void DrawWarning()

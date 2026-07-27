@@ -12,8 +12,8 @@ using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Domain.Network.Hypnosis;
-using AetherRemoteCommon.Domain.Network.HypnosisStop;
+using AetherRemoteCommon.Network.Domain;
+using AetherRemoteCommon.Network.Domain.Payloads;
 using Dalamud.Bindings.ImGui;
 using Newtonsoft.Json;
 
@@ -274,37 +274,29 @@ public partial class HypnosisView
     /// <summary>
     ///     Sends a hypnosis request
     /// </summary>
-    private async void SendHypnosis()
+    private async Task SendHypnosis()
     {
-        try
-        {
-            var data = GetHypnosisDataFromUi();
-            var request = new HypnosisRequest(_selectionManager.GetSelectedFriendCodes(), data);
-            var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.Hypnosis, request).ConfigureAwait(false);
+        var targets = _selectionManager.GetSelectedFriendCodes();
+        if (targets.Count is 0)
+            return;
         
-            ActionResponseParser.Parse("Hypnosis", response, []); // TODO: Fix []
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Error($"[HypnosisViewUiController.SendHypnosis] {e}");
-        }
+        _commandLockoutService.Lock();
+        var payload = new HypnosisPayload(GetHypnosisDataFromUi());
+        await _networkRequestManager.Send<HypnosisPayload, NoPayload>(targets, HubMethod.Hypnosis, payload).ConfigureAwait(false);
     }
 
     /// <summary>
     ///     Sends a hypnosis request specifically to stop a spiral
     /// </summary>
-    private async void StopHypnosis()
+    private async Task StopHypnosis()
     {
-        try
-        {
-            var request = new HypnosisStopRequest(_selectionManager.GetSelectedFriendCodes());
-            var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.HypnosisStop, request).ConfigureAwait(false);
-            ActionResponseParser.Parse("Hypnosis Stop", response, []); // TODO: Fix []
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Error($"[HypnosisViewUiController.StopHypnosis] {e}");
-        }
+        var targets = _selectionManager.GetSelectedFriendCodes();
+        if (targets.Count is 0)
+            return;
+        
+        _commandLockoutService.Lock();
+        var payload = new HypnosisStopPayload();
+        await _networkRequestManager.Send<HypnosisStopPayload, NoPayload>(targets, HubMethod.HypnosisStop, payload).ConfigureAwait(false);
     }
 
     /// <summary>

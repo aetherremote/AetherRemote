@@ -1,8 +1,7 @@
-using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Domain.Network.BodySwap;
-using AetherRemoteCommon.Domain.Network.Transform;
-using AetherRemoteCommon.Domain.Network.Twinning;
+using AetherRemoteCommon.Network.Domain;
+using AetherRemoteCommon.Network.Domain.Payloads;
+using AetherRemoteCommon.Network.Enums;
 using Microsoft.AspNetCore.SignalR;
 
 namespace AetherRemoteServer.SignalR.Hubs;
@@ -10,29 +9,29 @@ namespace AetherRemoteServer.SignalR.Hubs;
 public partial class PrimaryHub
 {
     [HubMethodName(HubMethod.BodySwap)]
-    public async Task<ActionResponse> BodySwap(BodySwapRequest request)
+    public async Task<Response<BodySwapResponse>> BodySwap(Request<BodySwapPayload> request)
     {
-        if (request.LockCode is not null)
-            return new ActionResponse(ActionResponseEc.Disabled, []);
+        if (request.Payload.LockCode is not null)
+            return new Response<BodySwapResponse>(ResponseStatus.Disabled, []);
         
-        return await requestHandler.HandleBodySwap(FriendCode, request, Clients);
+        return await requestHandler.BodySwapHandler.Execute(FriendCode, request, Clients);
     }
     
     [HubMethodName(HubMethod.Transform)]
-    public async Task<ActionResponse> Transform(TransformRequest request)
+    public async Task<Response<NoPayload>> Transform(Request<TransformationPayload> request)
     {
-        if (request.LockCode is not null)
-            return new ActionResponse(ActionResponseEc.Disabled, []);
+        if (request.Payload.LockCode is not null)
+            return new Response<NoPayload>(ResponseStatus.Disabled, []);
         
-        return await requestHandler.HandleTransform(FriendCode, request, Clients);
+        return await requestHandler.TransformationHandler.Execute(FriendCode, request, Clients);
     }
 
     [HubMethodName(HubMethod.Twinning)]
-    public async Task<ActionResponse> Twinning(TwinningRequest request)
+    public async Task<Response<NoPayload>> Twinning(Request<TwinningPayload> request)
     {
-        if (request.LockCode is not null)
-            return new ActionResponse(ActionResponseEc.Disabled, []);
+        if (request.Payload.LockCode is not null)
+            return new Response<NoPayload>(ResponseStatus.Disabled, []);
         
-        return await requestHandler.HandleTwinning(FriendCode, request, Clients);
+        return await requestHandler.TwinningHandler.Execute(FriendCode, request, Clients);
     }
 }

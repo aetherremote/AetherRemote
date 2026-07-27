@@ -21,7 +21,7 @@ public partial class TransformationsView : IDisposable, IView
     private readonly NetworkService _networkService;
     private readonly StatusService _statusService;
     private readonly CharacterTransformationManager _characterTransformationManager;
-    private readonly NetworkCommandManager _networkCommandManager;
+    private readonly NetworkRequestManager _networkRequestManager;
     private readonly SelectionManager _selectionManager;
     
     public TransformationsView(
@@ -32,7 +32,7 @@ public partial class TransformationsView : IDisposable, IView
         NetworkService networkService,
         StatusService statusService,
         CharacterTransformationManager characterTransformationManager,
-        NetworkCommandManager networkCommandManager, 
+        NetworkRequestManager networkRequestManager, 
         SelectionManager selectionManager)
     {
         _friendsListComponentUi = friendsListComponentUi;
@@ -42,7 +42,7 @@ public partial class TransformationsView : IDisposable, IView
         _networkService = networkService;
         _statusService = statusService;
         _characterTransformationManager = characterTransformationManager;
-        _networkCommandManager = networkCommandManager;
+        _networkRequestManager = networkRequestManager;
         _selectionManager = selectionManager;
     }
     

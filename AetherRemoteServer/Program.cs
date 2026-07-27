@@ -4,12 +4,12 @@ using AetherRemoteServer.Domain;
 using AetherRemoteServer.Domain.Kestrel;
 using AetherRemoteServer.Managers;
 using AetherRemoteServer.Services;
-using AetherRemoteServer.Services.Database;
 using AetherRemoteServer.SignalR.Handlers;
 using AetherRemoteServer.SignalR.Hubs;
 using MessagePack;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
+using DatabaseInfrastructure = AetherRemoteServer.Infrastructure.Database.DatabaseInfrastructure;
 
 namespace AetherRemoteServer;
 
@@ -41,17 +41,38 @@ public class Program
             .AddMessagePackProtocol(options => options.SerializerOptions = MessagePackSerializerOptions.Standard.WithSecurity(MessagePackSecurity.UntrustedData));
         builder.Services.AddSingleton(configuration);
 
+        // Infrastructure
+        builder.Services.AddSingleton<DatabaseInfrastructure>();
+        
         // Services
-        builder.Services.AddSingleton<DatabaseService>();
-        builder.Services.AddSingleton<PresenceService>();
+        builder.Services.AddSingleton<PermissionsService>();
         builder.Services.AddSingleton<RequestLoggingService>();
+        builder.Services.AddSingleton<SessionService>();
         
         // Managers
-        builder.Services.AddSingleton<ForwardedRequestManager>();
         builder.Services.AddSingleton<PossessionManager>();
-
-        // Handles
-        builder.Services.AddSingleton<RequestHandler>();
+        builder.Services.AddSingleton<RelayManager>();
+        
+        // Handler Base
+        builder.Services.AddSingleton<AddFriendHandler>();
+        builder.Services.AddSingleton<BodySwapHandler>();
+        builder.Services.AddSingleton<CustomizePlusHandler>();
+        builder.Services.AddSingleton<EmoteHandler>();
+        builder.Services.AddSingleton<HonorificHandler>();
+        builder.Services.AddSingleton<HypnosisHandler>();
+        builder.Services.AddSingleton<HypnosisStopHandler>();
+        builder.Services.AddSingleton<InitializeSessionHandler>();
+        builder.Services.AddSingleton<MoodlesHandler>();
+        builder.Services.AddSingleton<RemoveFriendHandler>();
+        builder.Services.AddSingleton<SpeakHandler>();
+        builder.Services.AddSingleton<TerminateSessionHandler>();
+        builder.Services.AddSingleton<TransformationHandler>();
+        builder.Services.AddSingleton<TwinningHandler>();
+        builder.Services.AddSingleton<UpdateFriendHandler>();
+        builder.Services.AddSingleton<UpdateGlobalPermissionsHandler>();
+        
+        // Handler Aggregate
+        builder.Services.AddSingleton<AggregateRequestHandler>();
 
         // Finalize
         var app = builder.Build();

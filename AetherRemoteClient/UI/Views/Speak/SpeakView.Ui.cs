@@ -134,8 +134,7 @@ public partial class SpeakView
                 if (shouldSendMessage is false)
                     return;
                 
-                _commandLockoutService.Lock();
-                SendMessage();
+                _ = SendMessage().ConfigureAwait(false);
             }
         });
 

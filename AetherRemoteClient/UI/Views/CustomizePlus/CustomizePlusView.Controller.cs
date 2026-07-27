@@ -7,6 +7,9 @@ using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.CustomizePlus;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
+using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.Network.Domain;
+using AetherRemoteCommon.Network.Domain.Payloads;
 
 namespace AetherRemoteClient.UI.Views.CustomizePlus;
 
@@ -156,8 +159,14 @@ public partial class CustomizePlusView
             ApplyModeMerge => CustomizeApplyMode.Merge,
             _ => CustomizeApplyMode.Default
         };
+
+        var targets = _selectionManager.GetSelectedFriendCodes();
+        if (targets.Count is 0)
+            return;
         
-        await _networkCommandManager.SendCustomize(_selectionManager.GetSelectedFriendCodes(), bytes, applyMode).ConfigureAwait(false);
+        _commandLockoutService.Lock();
+        var payload = new CustomizePlusPayload(bytes, applyMode);
+        await _networkRequestManager.Send<CustomizePlusPayload, NoPayload>(targets, HubMethod.CustomizePlus, payload).ConfigureAwait(false);
     }
     
     private void OnIpcReady(object? sender, EventArgs e)

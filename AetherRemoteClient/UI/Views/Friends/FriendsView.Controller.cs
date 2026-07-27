@@ -3,11 +3,10 @@ using System.Threading.Tasks;
 using AetherRemoteClient.Domain;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain;
-using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Domain.Network.RemoveFriend;
-using AetherRemoteCommon.Domain.Network.UpdateFriend;
-using AetherRemoteCommon.Domain.Network.UpdateGlobalPermissions;
+using AetherRemoteCommon.Network.Domain.Commands;
+using AetherRemoteCommon.Network.Enums;
+using AetherRemoteCommon.Network.Enums.ErrorCodes;
 
 namespace AetherRemoteClient.UI.Views.Friends;
 
@@ -42,8 +41,8 @@ public partial class FriendsView
     {
         var resolved = GlobalPermissions.To(_global);
         var request = new UpdateGlobalPermissionsRequest(resolved);
-        var response = await _networkService.InvokeAsync<ActionResponseEc>(HubMethod.UpdateGlobalPermissions, request).ConfigureAwait(false);
-        if (response is not ActionResponseEc.Success)
+        var response = await _networkService.InvokeAsync<UpdateGlobalPermissionsResponse>(HubMethod.UpdateGlobalPermissions, request).ConfigureAwait(false);
+        if (response.Status is not ResponseStatus.Success)
         {
             NotificationHelper.Error("Updating Global Permissions Failed", "This should never happen, report this to a developer.");
             Plugin.Log.Warning("[FriendsViewUiController.SaveGlobalPermissions] Unsuccessful");

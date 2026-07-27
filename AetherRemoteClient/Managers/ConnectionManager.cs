@@ -4,7 +4,8 @@ using AetherRemoteClient.Domain;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Services.Configuration;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Domain.Network.GetAccountData;
+using AetherRemoteCommon.Network.Domain.Commands;
+using AetherRemoteCommon.Network.Enums.ErrorCodes;
 
 namespace AetherRemoteClient.Managers;
 
@@ -39,8 +40,8 @@ public class ConnectionManager(
         networkService.Reconnected += OnReconnected;
         networkService.Reconnecting += OnReconnecting;
         
-        var request = new GetAccountDataRequest(characterName, characterWorld);
-        var response = await networkService.InvokeAsync<GetAccountDataResponse>(HubMethod.GetAccountData, request).ConfigureAwait(false);
+        var request = new InitializeSessionRequest(characterName, characterWorld);
+        var response = await networkService.InvokeAsync<InitializeSessionResponse>(HubMethod.InitializeSession, request).ConfigureAwait(false);
         if (response.Result is not GetAccountDataEc.Success)
         {
             Plugin.Log.Fatal($"[ConnectionManager.TryConnectToServerAsync] Failed to get account data {response.Result}");

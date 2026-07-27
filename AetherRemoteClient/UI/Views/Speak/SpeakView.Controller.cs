@@ -1,8 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using AetherRemoteClient.Domain;
 using AetherRemoteCommon;
 using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.Network.Domain;
+using AetherRemoteCommon.Network.Domain.Payloads;
 using AetherRemoteCommon.Util;
 using Dalamud.Game.ClientState.Objects.Types;
 using FFXIVClientStructs.FFXIV.Client.Game.Character;
@@ -63,26 +67,25 @@ public partial class SpeakView
     /// <summary>
     ///     Handles the "send message" button from the Ui
     /// </summary>
-    private async void SendMessage()
+    private async Task SendMessage()
     {
-        try
-        {
-            if (_message.Length < Constraints.Speak.MessageMin)
-                return;
+        if (_message.Length < Constraints.Speak.MessageMin)
+            return;
 
-            var extra = _channelSelect switch
-            {
-                ChatChannel.Tell => $"{_characterName}@{_worldName}",
-                ChatChannel.Linkshell or ChatChannel.CrossWorldLinkshell => (_linkshellSelection + 1).ToString(),
-                _ => null
-            };
-
-            await _networkCommandManager.SendSpeak(_selectionManager.GetSelectedFriendCodes(), _message, _channelSelect, extra).ConfigureAwait(false);
-        }
-        catch (Exception e)
+        var extra = _channelSelect switch
         {
-            Plugin.Log.Warning($"Unable to send message, {e.Message}");
-        }
+            ChatChannel.Tell => $"{_characterName}@{_worldName}",
+            ChatChannel.Linkshell or ChatChannel.CrossWorldLinkshell => (_linkshellSelection + 1).ToString(),
+            _ => null
+        };
+
+        var targets = _selectionManager.GetSelectedFriendCodes();
+        if (targets.Count is 0)
+            return;
+        
+        _commandLockoutService.Lock();
+        var payload = new SpeakPayload(_message, _channelSelect, extra);
+        await _networkRequestManager.Send<SpeakPayload, NoPayload>(targets, HubMethod.Speak, payload).ConfigureAwait(false);
     }
 
     private List<string> GetFriendsLackingPermissions()

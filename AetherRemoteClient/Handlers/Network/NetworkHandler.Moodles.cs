@@ -1,11 +1,10 @@
 using System.Threading.Tasks;
-using AetherRemoteClient.Services;
 using AetherRemoteClient.Services.Dependencies;
 using AetherRemoteCommon.Domain;
-using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
-using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Domain.Network.Moodles;
+using AetherRemoteCommon.Network.Domain;
+using AetherRemoteCommon.Network.Domain.Payloads;
+using AetherRemoteCommon.Network.Enums;
 
 namespace AetherRemoteClient.Handlers.Network;
 
@@ -13,25 +12,23 @@ public partial class NetworkHandler
 {
     private static readonly ResolvedPermissions MoodlesPermissions = new(PrimaryPermissions.Moodles, SpeakPermissions.None, ElevatedPermissions.None);
     
-    private async Task<ActionResult<Unit>> HandleMoodles(MoodlesCommand request)
+    private async Task<RoutedResponse<NoPayload>> HandleMoodles(RoutedRequest<MoodlesPayload> request)
     {
         Plugin.Log.Verbose($"{request}");
         
-        var sender = TryGetFriendWithCorrectPermissions("Moodles", request.SenderFriendCode, MoodlesPermissions);
-        if (sender.Result is not ActionResultEc.Success)
-            return ActionResultBuilder.Fail(sender.Result);
+        if (_friendsListService.Get(request.SenderFriendCode) is not { } sender)
+            return new RoutedResponse<NoPayload>(RoutedResponseStatus.NotFriends);
+
+        if (GetValidationError("Moodles", sender, MoodlesPermissions) is { } error)
+            return new RoutedResponse<NoPayload>(error);
         
-        if (sender.Value is not { } friend)
-            return ActionResultBuilder.Fail(ActionResultEc.ValueNotSet);
-        
-        // Attempt to apply the Moodle
-        if (await _moodlesService.ApplyMoodle(request.Info).ConfigureAwait(false))
+        if (await _moodlesService.ApplyMoodle(request.Payload.Info).ConfigureAwait(false))
         {
-            _logService.Custom($"{friend.NoteOrFriendCode} applied {MoodlesService.RemoveTagsFromTitle(request.Info.Title)} to you");
-            return ActionResultBuilder.Ok();
+            _logService.Custom($"{sender.NoteOrFriendCode} applied {MoodlesService.RemoveTagsFromTitle(request.Payload.Info.Title)} to you");
+            return new RoutedResponse<NoPayload>(RoutedResponseStatus.Success);
         }
 
-        _logService.Custom($"{friend.NoteOrFriendCode} tried to apply a Moodle to you but an error occurred");
-        return ActionResultBuilder.Fail(ActionResultEc.Unknown);
+        _logService.Custom($"{sender.NoteOrFriendCode} tried to apply a Moodle to you but an error occurred");
+        return new RoutedResponse<NoPayload>(RoutedResponseStatus.Unknown);
     }
 }

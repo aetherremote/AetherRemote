@@ -1,14 +1,15 @@
-using AetherRemoteCommon.Domain.Network.SyncPermissions;
+using AetherRemoteCommon.Network.Domain;
+using AetherRemoteCommon.Network.Domain.Payloads;
 
 namespace AetherRemoteClient.Handlers.Network;
 
 public partial class NetworkHandler
 {
-    private void HandleSyncPermissions(SyncPermissionsCommand command)
+    private void HandleSyncPermissions(Message<SyncPermissionsPayload> message)
     {
-        if (_friendsListService.Get(command.SenderFriendCode) is not { } friend)
+        if (_friendsListService.Get(message.SenderFriendCode) is not { } friend)
             return;
         
-        friend.PermissionsGrantedByFriend = command.PermissionsGrantedBySender;
+        friend.PermissionsGrantedByFriend = message.Payload.PermissionsGrantedBySender;
     }
 }

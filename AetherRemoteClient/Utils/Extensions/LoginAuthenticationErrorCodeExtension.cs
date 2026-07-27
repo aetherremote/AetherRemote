@@ -1,21 +1,20 @@
 using AetherRemoteClient.Domain.Enums;
-using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Network.Enums.ErrorCodes;
 
 namespace AetherRemoteClient.Utils.Extensions;
 
 public static class LoginAuthenticationErrorCodeExtension
 {
-    extension(LoginAuthenticationErrorCode errorCode)
+    extension(GetTokenEc errorCode)
     {
-        /// <summary> Converts the <see cref="LoginAuthenticationErrorCode"/> to domain <see cref="ArAuthAuthenticationErrorCode"/> </summary>
         public ArAuthAuthenticationErrorCode ToArAuthAuthenticationErrorCode()
         {
             var translated = errorCode switch
             {
-                LoginAuthenticationErrorCode.Uninitialized => ArAuthAuthenticationErrorCode.Uninitialized,
-                LoginAuthenticationErrorCode.VersionMismatch => ArAuthAuthenticationErrorCode.VersionMismatch,
-                LoginAuthenticationErrorCode.UnknownSecret => ArAuthAuthenticationErrorCode.UnknownSecret,
-                LoginAuthenticationErrorCode.Unknown => ArAuthAuthenticationErrorCode.Unknown,
+                GetTokenEc.Uninitialized => ArAuthAuthenticationErrorCode.Uninitialized,
+                GetTokenEc.VersionMismatch => ArAuthAuthenticationErrorCode.VersionMismatch,
+                GetTokenEc.UnknownSecret => ArAuthAuthenticationErrorCode.UnknownSecret,
+                GetTokenEc.Unknown => ArAuthAuthenticationErrorCode.Unknown,
                 _ => ArAuthAuthenticationErrorCode.UnboundScope
             };
             

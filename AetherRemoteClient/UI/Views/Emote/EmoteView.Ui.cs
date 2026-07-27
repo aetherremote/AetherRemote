@@ -80,9 +80,8 @@ public partial class EmoteView
                 // If the button is not pressed, exit
                 if (ImGui.Button("Send", new Vector2(width, 0)) is false)
                     return;
-
-                _commandLockoutService.Lock();
-                _ = Send();
+                
+                _ = Send().ConfigureAwait(false);
             }
         });
 

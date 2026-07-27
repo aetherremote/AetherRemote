@@ -1,11 +1,10 @@
-using System;
 using System.Threading.Tasks;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain;
-using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
-using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Domain.Network.HypnosisStop;
+using AetherRemoteCommon.Network.Domain;
+using AetherRemoteCommon.Network.Domain.Payloads;
+using AetherRemoteCommon.Network.Enums;
 
 namespace AetherRemoteClient.Handlers.Network;
 
@@ -13,31 +12,29 @@ public partial class NetworkHandler
 {
     private static readonly ResolvedPermissions HypnosisStopPermissions = new(PrimaryPermissions.Hypnosis, SpeakPermissions.None, ElevatedPermissions.None);
     
-    private async Task<ActionResult<Unit>> HandleHypnosisStop(HypnosisStopCommand request)
+    private async Task<RoutedResponse<NoPayload>> HandleHypnosisStop(RoutedRequest<HypnosisStopPayload> request)
     {
         Plugin.Log.Verbose($"{request}");
         
-        var sender = TryGetFriendWithCorrectPermissions("HypnosisStop", request.SenderFriendCode, HypnosisStopPermissions);
-        if (sender.Result is not ActionResultEc.Success)
-            return ActionResultBuilder.Fail(sender.Result);
-        
-        if (sender.Value is not { } friend)
-            return ActionResultBuilder.Fail(ActionResultEc.ValueNotSet);
+        if (_friendsListService.Get(request.SenderFriendCode) is not { } sender)
+            return new RoutedResponse<NoPayload>(RoutedResponseStatus.NotFriends);
 
+        if (GetValidationError("HypnosisStop", sender, HypnosisStopPermissions) is { } error)
+            return new RoutedResponse<NoPayload>(error);
+        
         // If they're not being hypnotized, No-Op
         if (_hypnosisManager.IsBeingHypnotized is false)
-            return ActionResultBuilder.Ok();
+            return new RoutedResponse<NoPayload>(RoutedResponseStatus.Success);
         
         // If they're the one who sent the hypnosis request in the first place
         if (_hypnosisManager.Hypnotist?.FriendCode == request.SenderFriendCode)
         {
-            await DalamudUtilities.RunOnFramework((Action)(() => _hypnosisManager.Wake())).ConfigureAwait(false);
-            _statusService.ClearHypnosis();
-            return ActionResultBuilder.Ok();
+            await DalamudUtilities.RunOnFramework(() => _hypnosisManager.Wake()).ConfigureAwait(false);
+            return new RoutedResponse<NoPayload>(RoutedResponseStatus.Success);
         }
 
         // Bounce their request
-        _logService.Custom($"Rejected hypnosis spiral from {friend.NoteOrFriendCode} because you're already being hypnotized");
-        return ActionResultBuilder.Fail(ActionResultEc.ClientBeingHypnotized);
+        _logService.Custom($"Rejected hypnosis spiral from {sender.NoteOrFriendCode} because you're already being hypnotized");
+        return new RoutedResponse<NoPayload>(RoutedResponseStatus.BeingHypnotized);
     }
 }

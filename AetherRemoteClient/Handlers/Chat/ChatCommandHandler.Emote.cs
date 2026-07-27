@@ -1,6 +1,9 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using AetherRemoteCommon.Domain.Network;
+using AetherRemoteCommon.Network.Domain;
+using AetherRemoteCommon.Network.Domain.Payloads;
 
 namespace AetherRemoteClient.Handlers.Chat;
 
@@ -40,7 +43,7 @@ public partial class ChatCommandHandler
         if (arguments.Length == 4)
             displayLogMessage = bool.TryParse(arguments[3], out var value) && value;
 
-        // Send
-        await _networkCommandManager.SendEmote(targets.ToList(), argsEmoteName, displayLogMessage).ConfigureAwait(false);
+        var payload = new EmotePayload(argsEmoteName, displayLogMessage);
+        await _networkRequestManager.Send<EmotePayload, NoPayload>(targets.ToList(), HubMethod.Emote, payload).ConfigureAwait(false);
     }
 }

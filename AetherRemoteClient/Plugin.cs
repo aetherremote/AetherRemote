@@ -11,7 +11,6 @@ using AetherRemoteClient.Hooks;
 using AetherRemoteClient.Infrastructure.Authentication;
 using AetherRemoteClient.Infrastructure.Database;
 using AetherRemoteClient.Managers;
-using AetherRemoteClient.Managers.Possession;
 using AetherRemoteClient.Services;
 using AetherRemoteClient.Services.Configuration;
 using AetherRemoteClient.Services.Dependencies;
@@ -117,8 +116,7 @@ public sealed class Plugin : IAsyncDalamudPlugin
         services.AddSingleton<DependencyManager>();
         services.AddSingleton<DtrManager>();
         services.AddSingleton<HypnosisManager>();
-        services.AddSingleton<NetworkCommandManager>();
-        services.AddSingleton<PossessionManager>();
+        services.AddSingleton<NetworkRequestManager>();
         services.AddSingleton<SelectionManager>();
         
         // Handlers
@@ -182,11 +180,8 @@ public sealed class Plugin : IAsyncDalamudPlugin
         // Managers
         _services.GetRequiredService<DependencyManager>();
         _services.GetRequiredService<HypnosisManager>();
-        _services.GetRequiredService<PossessionManager>();
         
         await SharedUserInterfaces.InitializeFonts().ConfigureAwait(false);
-        
-        ActionResponseParser.SanityCheck();
     }
     
     public async ValueTask DisposeAsync()

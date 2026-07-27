@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using AetherRemoteClient.Domain.Moodles;
-using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Domain.Network.Moodles;
+using AetherRemoteCommon.Network.Domain;
+using AetherRemoteCommon.Network.Domain.Payloads;
 using Dalamud.Interface.Textures;
 using Dalamud.Interface.Textures.TextureWraps;
 
@@ -53,41 +54,27 @@ public partial class MoodlesView
     /// <summary>
     ///     Refreshes the available moodles
     /// </summary>
-    private async void RefreshMoodles()
+    private async Task RefreshMoodles()
     {
-        try
-        {
-            // Reset index
-            _selectedMoodleIndex = -1;
+        // Reset index
+        _selectedMoodleIndex = -1;
             
-            // Request all the Moodles again
-            _moodles = await _moodlesService.GetMoodles().ConfigureAwait(false) ?? [];
-        }
-        catch (Exception)
-        {
-            // ignored
-        }
+        // Request all the Moodles again
+        _moodles = await _moodlesService.GetMoodles().ConfigureAwait(false) ?? [];
     }
 
-    private async void SendMoodle()
+    private async Task SendMoodle()
     {
-        try
-        {
-            if (_selectedMoodleIndex < 0)
-                return;
-            
-            _commandLockoutService.Lock();
-            
-            var moodle = FilteredMoodles[_selectedMoodleIndex];
-            var request = new MoodlesRequest(_selectionManager.GetSelectedFriendCodes(), moodle.Info);
-            var response = await _networkService.InvokeAsync<ActionResponse>(HubMethod.Moodles, request).ConfigureAwait(false);
-            
-            ActionResponseParser.Parse("Moodles", response, []); // TODO: Fix []
-        }
-        catch (Exception e)
-        {
-            Plugin.Log.Warning($"Failed to add moodle, {e.Message}");
-        }
+        if (_selectedMoodleIndex < 0)
+            return;
+        
+        var targets = _selectionManager.GetSelectedFriendCodes();
+        if (targets.Count is 0)
+            return;
+        
+        _commandLockoutService.Lock();
+        var payload = new MoodlesPayload(FilteredMoodles[_selectedMoodleIndex].Info);
+        await _networkRequestManager.Send<MoodlesPayload, NoPayload>(targets, HubMethod.Moodles, payload).ConfigureAwait(false);
     }
     
     /// <summary>
@@ -110,6 +97,6 @@ public partial class MoodlesView
     
     private void OnIpcReady(object? sender, EventArgs e)
     {
-        RefreshMoodles();
+        _ = RefreshMoodles().ConfigureAwait(false);
     }
 }

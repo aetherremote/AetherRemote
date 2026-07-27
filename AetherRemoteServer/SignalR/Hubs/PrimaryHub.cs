@@ -10,9 +10,10 @@ namespace AetherRemoteServer.SignalR.Hubs;
 public partial class PrimaryHub(
     // Services
     RequestLoggingService requestLoggingService,
+    SessionService sessionService,
     
     // Handler
-    RequestHandler requestHandler,
+    AggregateRequestHandler requestHandler,
 
     // Logger
     ILogger<PrimaryHub> logger) : Hub
@@ -25,10 +26,10 @@ public partial class PrimaryHub(
     /// <summary>
     ///     Handles when a client connects to the hub
     /// </summary>
-    public override async Task OnConnectedAsync()
+    public override Task OnConnectedAsync()
     {
-        await requestHandler.HandleOnlineStatusUpdate(FriendCode, true, Clients);
-        await base.OnConnectedAsync();
+        sessionService.UpdateConnectivityStatus(FriendCode, OnlineStatus.Online);
+        return base.OnConnectedAsync();
     }
 
     /// <summary>
@@ -36,8 +37,22 @@ public partial class PrimaryHub(
     /// </summary>
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        await requestHandler.HandleOnlineStatusUpdate(FriendCode, false, Clients);
-        await base.OnDisconnectedAsync(exception);
+        var friendCode = FriendCode;
+        var disconnectedConnectionId = Context.ConnectionId;
+        sessionService.UpdateConnectivityStatus(friendCode, OnlineStatus.Disconnected);
+
+        await Task.Delay(15 * 1000, Context.ConnectionAborted);
+
+        if (sessionService.GetSession(friendCode) is not { } session)
+            return;
+
+        if (session.ConnectionId != disconnectedConnectionId) // The connection id changed, which is partially handled by them being online, but this is good form
+            return;
+
+        if (session.OnlineStatus is OnlineStatus.Online) // They connected back in the meantime, safely ignore
+            return;
+        
+        _ = requestHandler.OnlineNotificationHandler.Notify(friendCode, false, Clients);
     }
 
     /// <summary>

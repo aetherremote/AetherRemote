@@ -47,7 +47,7 @@ public partial class MoodlesView
             ImGui.SameLine();
 
             if (SharedUserInterfaces.IconButton(FontAwesomeIcon.Sync, null, "Refresh Moodles"))
-               RefreshMoodles();
+               _ = RefreshMoodles().ConfigureAwait(false);
         });
         
         var headerHeight = ImGui.GetCursorPosY() - begin;
@@ -108,7 +108,7 @@ public partial class MoodlesView
                 else
                 {
                     if (ImGui.Button("Send Moodle", size))
-                        SendMoodle();
+                        _ = SendMoodle().ConfigureAwait(false);
                 }
             }
         });

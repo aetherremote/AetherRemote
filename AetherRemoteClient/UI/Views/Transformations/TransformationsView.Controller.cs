@@ -9,7 +9,9 @@ using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
 using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Domain.Network.BodySwap;
+using AetherRemoteCommon.Network.Domain;
+using AetherRemoteCommon.Network.Domain.Payloads;
+using AetherRemoteCommon.Network.Enums;
 
 namespace AetherRemoteClient.UI.Views.Transformations;
 
@@ -193,17 +195,17 @@ public partial class TransformationsView
         if (await _glamourerService.GetDesignAsync(_designSelectedId).ConfigureAwait(false) is not { } design)
             return;
         
-        // Send
-        await _networkCommandManager.SendTransformation(_selectionManager.GetSelectedFriendCodes(), design, GlamourerApplyFlags.All).ConfigureAwait(false);
+        var targets = _selectionManager.GetSelectedFriendCodes();
+        if (targets.Count is 0)
+            return;
+        
+        _commandLockoutService.Lock();
+        var payload = new TransformationPayload(design, GlamourerApplyFlags.All, null);
+        await _networkRequestManager.Send<TransformationPayload, NoPayload>(targets, HubMethod.Transform, payload).ConfigureAwait(false);
     }
     
     private async Task SendBodySwap()
     {
-        // Basic validation checks
-        if (_activeSessionService.CharacterName is not { } name ||
-            _activeSessionService.CharacterWorld is not { } world)
-            return;
-        
         // Build the attributes
         var attributes = CharacterAttributes.None;
         if (_swapGlamourerCustomization) attributes |= CharacterAttributes.GlamourerCustomization;
@@ -216,46 +218,36 @@ public partial class TransformationsView
         // Notification to help convey intent
         NotificationHelper.Info("Beginning Body Swap...", "You may need to wait up to 10 seconds for changes to take effect");
         
-        // Body swapping has a custom workflow for the time being
-        _commandLockoutService.Lock();
-        
-        // Request the server
-        var request = new BodySwapRequest(_selectionManager.GetSelectedFriendCodes(), name, world, attributes, null);
-        var response = await _networkService.InvokeAsync<BodySwapResponse>(HubMethod.BodySwap, request);
-        if (response.Result is not ActionResponseEc.Success)
-        {
-            ActionResponseParser.Parse("Body Swap", response, []); // TODO: Fix []
+        var targets = _selectionManager.GetSelectedFriendCodes();
+        if (targets.Count is 0)
             return;
-        }
         
-        // If the character we'd be body swapping into was null...
-        if (response.CharacterName is null || response.CharacterWorld is null)
-        {
-            // ...but we expected to get back a result by submitting our name in the body swap request...
-            if (request.SenderCharacterName is not null)
-            {
-                // ...exit and log the error
-                return;
-            }
-        }
-        else
-        {
-            // Otherwise just body swap into them
-            await _characterTransformationManager.ApplyFullScaleTransformation(response.CharacterName, response.CharacterWorld, request.SwapAttributes);
-         
-            // TODO: This is just a copy from the NetworkHandler
-            if ((attributes & CharacterAttributes.PenumbraMods) is CharacterAttributes.PenumbraMods)
-                _statusService.SetGlamourerPenumbra(Friend.Self);
+        // TODO: Always including self for now, I will decouple the transformation operations
+        //          This will also need to solve A, B, and C
         
-            if ((attributes & CharacterAttributes.CustomizePlus) is CharacterAttributes.CustomizePlus)
-                _statusService.SetCustomizePlus(Friend.Self);
+        _commandLockoutService.Lock();
+        var payload = new BodySwapPayload(attributes, true, null);
+        var response = await _networkRequestManager.Send<BodySwapPayload, BodySwapResponse>(targets, HubMethod.BodySwap, payload).ConfigureAwait(false);
+
+        if (response.Status is not ResponseStatus.Success)
+            return;
+
+        // TODO: A
+        if (response.Payload is not { } bodySwapResponse)
+            return;
+
+        // TODO: B
+        await _characterTransformationManager.ApplyFullScaleTransformation(bodySwapResponse.CharacterName, bodySwapResponse.CharacterWorld, attributes).ConfigureAwait(false);
         
-            if ((attributes & CharacterAttributes.Honorific) is CharacterAttributes.Honorific)
-                _statusService.SetHonorific(Friend.Self);
-        }
-            
-        // Process the results
-        ActionResponseParser.Parse("Body Swap", response, []); // TODO: Fix []
+        // TODO: C
+        if ((attributes & CharacterAttributes.PenumbraMods) is CharacterAttributes.PenumbraMods)
+            _statusService.SetGlamourerPenumbra(Friend.Self);
+        
+        if ((attributes & CharacterAttributes.CustomizePlus) is CharacterAttributes.CustomizePlus)
+            _statusService.SetCustomizePlus(Friend.Self);
+        
+        if ((attributes & CharacterAttributes.Honorific) is CharacterAttributes.Honorific)
+            _statusService.SetHonorific(Friend.Self);
     }
     
     private async Task SendTwinning()
@@ -277,8 +269,13 @@ public partial class TransformationsView
         // Notification to help convey intent
         NotificationHelper.Info("Beginning Twinning...", "You may need to wait up to 10 seconds for changes to take effect");
         
-        // Send
-        await _networkCommandManager.SendTwinning(_selectionManager.GetSelectedFriendCodes(), name, world, attributes).ConfigureAwait(false);
+        var targets = _selectionManager.GetSelectedFriendCodes();
+        if (targets.Count is 0)
+            return;
+        
+        _commandLockoutService.Lock();
+        var payload = new TwinningPayload(name, world, attributes, null);
+        await _networkRequestManager.Send<TwinningPayload, NoPayload>(targets, HubMethod.Twinning, payload).ConfigureAwait(false);
     }
     
     /// <summary>

@@ -1,48 +1,41 @@
 using System.Threading.Tasks;
-using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain;
-using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Enums.Permissions;
-using AetherRemoteCommon.Domain.Network;
-using AetherRemoteCommon.Domain.Network.Transform;
+using AetherRemoteCommon.Network.Domain;
+using AetherRemoteCommon.Network.Domain.Payloads;
+using AetherRemoteCommon.Network.Enums;
 using AetherRemoteCommon.Util;
 
 namespace AetherRemoteClient.Handlers.Network;
 
 public partial class NetworkHandler
 {
-    private async Task<ActionResult<Unit>> HandleTransform(TransformCommand request)
+    private async Task<RoutedResponse<NoPayload>> HandleTransform(RoutedRequest<TransformationPayload> request)
     {
         Plugin.Log.Verbose($"{request}");
         
-        // Setup permissions
-        var primary = request.GlamourerApplyType.ToPrimaryPermission();
-        var elevated = request.LockCode is null 
+        if (_friendsListService.Get(request.SenderFriendCode) is not { } sender)
+            return new RoutedResponse<NoPayload>(RoutedResponseStatus.NotFriends);
+        
+        var primary = request.Payload.GlamourerApplyType.ToPrimaryPermission();
+        var elevated = request.Payload.LockCode is null 
             ? ElevatedPermissions.None 
             : ElevatedPermissions.PermanentTransformation;
         
-        // Build permissions
         var permissions = new ResolvedPermissions(primary, SpeakPermissions.None, elevated);
         
-        var sender = TryGetFriendWithCorrectPermissions("Transform", request.SenderFriendCode, permissions);
-        if (sender.Result is not ActionResultEc.Success)
-            return ActionResultBuilder.Fail(sender.Result);
-        
-        if (sender.Value is not { } friend)
-            return ActionResultBuilder.Fail(ActionResultEc.ValueNotSet);
-        
-        // Try to apply the transformation
-        var result = await _characterTransformationManager.ApplyTransformation(request.GlamourerData, request.GlamourerApplyType).ConfigureAwait(false);
-        if (result is false)
+        if (GetValidationError("CustomizePlus", sender, permissions) is { } error)
+            return new RoutedResponse<NoPayload>(error);
+
+        if (await _characterTransformationManager.ApplyTransformation(
+                request.Payload.GlamourerData,
+                request.Payload.GlamourerApplyType).ConfigureAwait(false) is false)
         {
-            NotificationHelper.Warning("Something went wrong", $"{friend.NoteOrFriendCode} tried to transform you, but an error occurred. Type /xllog in chat to find out more.");
-            _logService.Custom($"{friend.NoteOrFriendCode} tried to transform you, but an internal error occured");
-            return ActionResultBuilder.Fail(ActionResultEc.ClientPluginDependency);
+            return new RoutedResponse<NoPayload>(RoutedResponseStatus.RuntimeError);
         }
-        
-        // Log the success
-        _statusService.SetGlamourerPenumbra(friend);
-        _logService.Custom($"{friend.NoteOrFriendCode} transformed you");
-        return ActionResultBuilder.Ok();
+
+        _statusService.SetGlamourerPenumbra(sender);
+        _logService.Custom($"{sender.NoteOrFriendCode} transformed you");
+        return new RoutedResponse<NoPayload>(RoutedResponseStatus.Success);
     }
 }

@@ -1,10 +1,7 @@
 using System.Numerics;
-using AetherRemoteClient.Domain.Enums;
 using AetherRemoteClient.UI.Style;
 using AetherRemoteClient.Utils;
 using Dalamud.Bindings.ImGui;
-using Dalamud.Interface;
-using Dalamud.Interface.Colors;
 
 namespace AetherRemoteClient.UI.Views.Login;
 
@@ -42,12 +39,10 @@ public partial class LoginView
             }
             
             ImGui.SameLine();
-
-            var disable = _networkService.State is not ConnectionState.Disconnected;
-            if (disable) ImGui.BeginDisabled();
+            
+            // TODO: Make more clear feedback as to the state of the connection
             if (ImGui.Button("Connect"))
                 _ = Connect().ConfigureAwait(false);
-            if (disable) ImGui.EndDisabled();
             
             ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(4, 0));
             ImGui.TextUnformatted("Need a secret? Join the");

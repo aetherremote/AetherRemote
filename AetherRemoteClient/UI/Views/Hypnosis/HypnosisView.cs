@@ -15,18 +15,18 @@ public partial class HypnosisView : IDisposable, IView
     // Injected
     private readonly FriendsListComponentUi _friendsListComponentUi;
     private readonly CommandLockoutService _commandLockoutService;
-    private readonly NetworkService _networkService;
+    private readonly NetworkRequestManager _networkRequestManager;
     private readonly SelectionManager _selectionManager;
     
     public HypnosisView(
         FriendsListComponentUi friendsListComponentUi,
         CommandLockoutService commandLockoutService,
-        NetworkService networkService,
+        NetworkRequestManager networkRequestManager,
         SelectionManager selectionManager)
     {
         _friendsListComponentUi = friendsListComponentUi;
         _commandLockoutService = commandLockoutService;
-        _networkService = networkService;
+        _networkRequestManager = networkRequestManager;
         _selectionManager = selectionManager;
         
         _spiralRefreshCooldown.AutoReset = false;
