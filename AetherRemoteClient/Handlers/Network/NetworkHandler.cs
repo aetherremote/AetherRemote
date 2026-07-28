@@ -127,21 +127,6 @@ public partial class NetworkHandler : IDisposable
         return null;
     }
     
-    /// <summary>
-    ///     Shared between Body Swap & Twinning
-    /// </summary>
-    private void UpdateStatusServicePostBodySwapOrTwinning(Friend applier, CharacterAttributes attributes)
-    {
-        if ((attributes & CharacterAttributes.PenumbraMods) is CharacterAttributes.PenumbraMods)
-            _statusService.SetGlamourerPenumbra(applier);
-        
-        if ((attributes & CharacterAttributes.CustomizePlus) is CharacterAttributes.CustomizePlus)
-            _statusService.SetCustomizePlus(applier);
-        
-        if ((attributes & CharacterAttributes.Honorific) is CharacterAttributes.Honorific)
-            _statusService.SetHonorific(applier);
-    }
-    
     public void Dispose()
     {
         foreach (var handler in _handlers)

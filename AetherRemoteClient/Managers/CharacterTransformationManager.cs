@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using AetherRemoteClient.Domain;
 using AetherRemoteClient.Domain.Honorific;
+using AetherRemoteClient.Services;
 using AetherRemoteClient.Services.Dependencies;
 using AetherRemoteClient.Utils;
 using AetherRemoteCommon.Domain.Enums;
@@ -15,7 +17,8 @@ public class CharacterTransformationManager(
     GlamourerService glamourerService, 
     HonorificService honorificService, 
     MoodlesService moodlesService, 
-    PenumbraService penumbraService) : IDisposable
+    PenumbraService penumbraService,
+    StatusService statusService) : IDisposable
 {
     // Control how long the plugin should wait before initiating a transformation, useful for clients with high network latency
     private const int TransformationDelayInMilliseconds = 3000;
@@ -29,7 +32,7 @@ public class CharacterTransformationManager(
     /// <summary>
     ///     Applies a glamourer code to the local player
     /// </summary>
-    public async Task<bool> ApplyTransformation(string glamourerCode, GlamourerApplyFlags applyFlags)
+    public async Task<bool> ApplyTransformation(string glamourerCode, GlamourerApplyFlags applyFlags, Friend senderFriend)
     {
         if (GlamourerService.ConvertGlamourerBase64StringToJObject(glamourerCode) is not { } glamourerCodeAsComponents)
         {
@@ -37,13 +40,13 @@ public class CharacterTransformationManager(
             return false;
         }
         
-        return await ApplyTransformation(glamourerCodeAsComponents, applyFlags).ConfigureAwait(false);
+        return await ApplyTransformation(glamourerCodeAsComponents, applyFlags, senderFriend).ConfigureAwait(false);
     }
     
     /// <summary>
     ///     Applies glamourer components to the local player
     /// </summary>
-    public async Task<bool> ApplyTransformation(JObject glamourerJObject, GlamourerApplyFlags applyFlags)
+    public async Task<bool> ApplyTransformation(JObject glamourerJObject, GlamourerApplyFlags applyFlags, Friend senderFriend)
     {
         if (await DalamudUtilities.TryGetLocalPlayer().ConfigureAwait(false) is not { } localPlayer)
         {
@@ -62,14 +65,18 @@ public class CharacterTransformationManager(
             Plugin.Log.Error("[CharacterTransformationManager.ApplyTransformation] Could not properly sanitize advanced dyes");
             return false;
         }
-        
-        return await glamourerService.ApplyDesignAsync(glamourerDesignComponentsSanitized, applyFlags, localPlayer.ObjectIndex).ConfigureAwait(false);
+
+        if (await glamourerService.ApplyDesignAsync(glamourerDesignComponentsSanitized, applyFlags, localPlayer.ObjectIndex).ConfigureAwait(false) is false)
+            return false;
+
+        statusService.SetGlamourerPenumbra(senderFriend);
+        return true;
     }
     
     /// <summary>
     ///     Transforms the local character into target character
     /// </summary>
-    public async Task<bool> ApplyFullScaleTransformation(string characterName, string characterWorld, CharacterAttributes characterAttributes)
+    public async Task<bool> ApplyFullScaleTransformation(string characterName, string characterWorld, CharacterAttributes characterAttributes, Friend senderFriend)
     {
         if (await TryRemoveExistingMods().ConfigureAwait(false) is false)
         {
@@ -99,6 +106,15 @@ public class CharacterTransformationManager(
             return false;
         }
 
+        if ((characterAttributes & CharacterAttributes.PenumbraMods) is CharacterAttributes.PenumbraMods)
+            statusService.SetGlamourerPenumbra(senderFriend);
+        
+        if ((characterAttributes & CharacterAttributes.CustomizePlus) is CharacterAttributes.CustomizePlus)
+            statusService.SetCustomizePlus(senderFriend);
+        
+        if ((characterAttributes & CharacterAttributes.Honorific) is CharacterAttributes.Honorific)
+            statusService.SetHonorific(senderFriend);
+        
         return true;
     }
 

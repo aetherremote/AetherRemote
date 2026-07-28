@@ -30,13 +30,11 @@ public partial class NetworkHandler
         if (await _characterTransformationManager.ApplyFullScaleTransformation(
                 request.Payload.CharacterName,
                 request.Payload.CharacterWorld,
-                request.Payload.SwapAttributes).ConfigureAwait(false) is false)
+                request.Payload.SwapAttributes,
+                sender).ConfigureAwait(false) is false)
         {
             return new RoutedResponse<NoPayload>(RoutedResponseStatus.RuntimeError);
         }
-        
-        // Set the Statuses of everything we applied
-        UpdateStatusServicePostBodySwapOrTwinning(sender, request.Payload.SwapAttributes);
         
         // Log Success
         _logService.Custom($"{sender.NoteOrFriendCode} swapped your body with {request.Payload.CharacterName}'s");

@@ -216,32 +216,17 @@ public partial class TransformationsView
         // Notification to help convey intent
         NotificationHelper.Info("Beginning Body Swap...", "You may need to wait up to 10 seconds for changes to take effect");
         
-        // TODO: Always including self for now, I will decouple the transformation operations
-        //          This will also need to solve A, B, and C
-        
         _commandLockoutService.Lock();
         var payload = new BodySwapPayload(attributes, true, null);
         var response = await _networkRequestManager.Send<BodySwapPayload, BodySwapResponse>(targets, HubMethod.BodySwap, payload).ConfigureAwait(false);
 
         if (response.Status is not ResponseStatus.Success)
             return;
-
-        // TODO: A
+        
         if (response.Payload is not { } bodySwapResponse)
             return;
-
-        // TODO: B
-        await _characterTransformationManager.ApplyFullScaleTransformation(bodySwapResponse.CharacterName, bodySwapResponse.CharacterWorld, attributes).ConfigureAwait(false);
         
-        // TODO: C
-        if ((attributes & CharacterAttributes.PenumbraMods) is CharacterAttributes.PenumbraMods)
-            _statusService.SetGlamourerPenumbra(Friend.Self);
-        
-        if ((attributes & CharacterAttributes.CustomizePlus) is CharacterAttributes.CustomizePlus)
-            _statusService.SetCustomizePlus(Friend.Self);
-        
-        if ((attributes & CharacterAttributes.Honorific) is CharacterAttributes.Honorific)
-            _statusService.SetHonorific(Friend.Self);
+        await _characterTransformationManager.ApplyFullScaleTransformation(bodySwapResponse.CharacterName, bodySwapResponse.CharacterWorld, attributes, Friend.Self).ConfigureAwait(false);
     }
     
     private async Task SendTwinning()
@@ -288,16 +273,7 @@ public partial class TransformationsView
         if (response.Payload is not { } mimicryResponse)
             return;
         
-        await _characterTransformationManager.ApplyFullScaleTransformation(mimicryResponse.CharacterName, mimicryResponse.CharacterWorld, attributes).ConfigureAwait(false);
-        
-        if ((attributes & CharacterAttributes.PenumbraMods) is CharacterAttributes.PenumbraMods)
-            _statusService.SetGlamourerPenumbra(Friend.Self);
-        
-        if ((attributes & CharacterAttributes.CustomizePlus) is CharacterAttributes.CustomizePlus)
-            _statusService.SetCustomizePlus(Friend.Self);
-        
-        if ((attributes & CharacterAttributes.Honorific) is CharacterAttributes.Honorific)
-            _statusService.SetHonorific(Friend.Self);
+        await _characterTransformationManager.ApplyFullScaleTransformation(mimicryResponse.CharacterName, mimicryResponse.CharacterWorld, attributes, Friend.Self).ConfigureAwait(false);
     }
 
     private CharacterAttributes BuildAttributes()

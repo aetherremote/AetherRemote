@@ -29,12 +29,12 @@ public partial class NetworkHandler
 
         if (await _characterTransformationManager.ApplyTransformation(
                 request.Payload.GlamourerData,
-                request.Payload.GlamourerApplyType).ConfigureAwait(false) is false)
+                request.Payload.GlamourerApplyType,
+                sender).ConfigureAwait(false) is false)
         {
             return new RoutedResponse<NoPayload>(RoutedResponseStatus.RuntimeError);
         }
-
-        _statusService.SetGlamourerPenumbra(sender);
+        
         _logService.Custom($"{sender.NoteOrFriendCode} transformed you");
         return new RoutedResponse<NoPayload>(RoutedResponseStatus.Success);
     }
