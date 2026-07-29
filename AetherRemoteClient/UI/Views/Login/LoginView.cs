@@ -15,18 +15,18 @@ public partial class LoginView : IDisposable, IView
     // Injected
     private readonly ActiveSessionService _activeSessionService;
     private readonly ConfigurationService _configurationService;
-    private readonly NetworkService _networkService;
+    private readonly ViewService _viewService;
     private readonly ConnectionManager _connectionManager;
     
     public LoginView(
         ActiveSessionService activeSessionService,
         ConfigurationService configurationService,
-        NetworkService networkService,
+        ViewService viewService,
         ConnectionManager connectionManager)
     {
         _activeSessionService = activeSessionService;
         _configurationService = configurationService;
-        _networkService = networkService;
+        _viewService = viewService;
         _connectionManager = connectionManager;
     }
     

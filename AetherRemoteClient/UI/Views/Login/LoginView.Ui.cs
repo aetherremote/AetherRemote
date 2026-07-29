@@ -1,3 +1,4 @@
+using System;
 using System.Numerics;
 using AetherRemoteClient.UI.Style;
 using AetherRemoteClient.Utils;
@@ -40,9 +41,11 @@ public partial class LoginView
             
             ImGui.SameLine();
             
-            // TODO: Make more clear feedback as to the state of the connection
+            var disable = DateTime.UtcNow < _connectAttemptDisabledUntil;
+            if (disable) ImGui.BeginDisabled();
             if (ImGui.Button("Connect"))
                 _ = Connect().ConfigureAwait(false);
+            if (disable) ImGui.EndDisabled();
             
             ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(4, 0));
             ImGui.TextUnformatted("Need a secret? Join the");
@@ -59,8 +62,19 @@ public partial class LoginView
 
         SharedUserInterfaces.ContentBox2("ConfigurationUpdateNotice", AetherRemoteColors.PanelColor, true, () =>
         {
-            SharedUserInterfaces.MediumText("Configurations and Secrets");
-            ImGui.TextWrapped("There have been significant changes to configurations and secrets in AR. You can find the changes in the Settings tab.");
+            SharedUserInterfaces.MediumText("Need to Enter your Secret?");
+            
+            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, new Vector2(4, 0));
+            ImGui.TextUnformatted("Click");
+            ImGui.SameLine();
+            ImGui.PushStyleColor(ImGuiCol.Text, AetherRemoteColors.DiscordBlue);
+            var size = ImGui.CalcTextSize("here");
+            if (ImGui.Selectable("here", false, ImGuiSelectableFlags.None, size))
+                NavigateToSecretSettings();
+            ImGui.PopStyleColor();
+            ImGui.SameLine();
+            ImGui.TextUnformatted("and follow the instructions in the \"Secrets\" tab.");
+            ImGui.PopStyleVar();
         });
         
         ImGui.EndChild();

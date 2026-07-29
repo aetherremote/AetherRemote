@@ -44,6 +44,12 @@
           "Microsoft.IdentityModel.Tokens": "8.19.1"
         }
       },
+      "Microsoft.NET.ILLink.Tasks": {
+        "type": "Direct",
+        "requested": "[10.0.10, )",
+        "resolved": "10.0.10",
+        "contentHash": "f5VCIE7AJpd5YvzNTeMGVzQIgyE9tX+AreTYwQF+REbu+DZo/2Ae+jNSwhPEYrVz6RRkd7y8ubXjk6Nn6Ka+Cg=="
+      },
       "Penumbra.Api": {
         "type": "Direct",
         "requested": "[5.15.1, )",
@@ -360,7 +366,7 @@
         }
       }
     },
-    "net10.0-windows7.0/win-x64": {
+    "net10.0-windows7.0/linux-x64": {
       "HarfBuzzSharp.NativeAssets.Linux": {
         "type": "Transitive",
         "resolved": "8.3.1.3",

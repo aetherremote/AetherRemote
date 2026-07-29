@@ -52,6 +52,7 @@ public partial class PrimaryHub(
         if (session.OnlineStatus is OnlineStatus.Online) // They connected back in the meantime, safely ignore
             return;
         
+        sessionService.EndSession(friendCode);
         _ = requestHandler.OnlineNotificationHandler.Notify(friendCode, false, Clients);
     }
 

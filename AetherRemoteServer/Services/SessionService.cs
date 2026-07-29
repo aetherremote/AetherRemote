@@ -50,8 +50,11 @@ public class SessionService
         if (_sessions.TryGetValue(friendCode, out var session) is false)
             return;
 
+        if (session.ConnectionId != connectionId)
+            return;
+
         session.OnlineStatus = status;
-        session.ConnectionId = connectionId ?? session.ConnectionId;
+        session.ConnectionId = connectionId;
     }
 
     /// <summary>

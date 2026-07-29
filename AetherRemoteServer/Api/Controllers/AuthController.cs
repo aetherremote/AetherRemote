@@ -17,7 +17,7 @@ namespace AetherRemoteServer.Api.Controllers;
 public class AuthController(Configuration config, DatabaseInfrastructure database) : ControllerBase
 {
     // Const
-    private static readonly Version ExpectedVersion = new(2, 10, 3, 0);
+    private static readonly Version ExpectedVersion = new(2, 10, 3, 1);
     
     // Instantiated
     private readonly SymmetricSecurityKey _key = new(Encoding.UTF8.GetBytes(config.SigningKey));
