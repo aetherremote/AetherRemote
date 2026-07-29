@@ -23,8 +23,8 @@ public class NetworkService : IAsyncDisposable
 {
     
 #if DEBUG
-    // private const string HubUrl = "https://localhost:5006/primaryHub"; // Local
-    private const string HubUrl = "https://foxitsvc.com:5017/primaryHub"; // Beta
+    private const string HubUrl = "https://localhost:5006/primaryHub"; // Local
+    // private const string HubUrl = "https://foxitsvc.com:5017/primaryHub"; // Beta
     // private const string HubUrl = "https://foxitsvc.com:5006/primaryHub"; // Prod
 #else
     private const string HubUrl = "https://foxitsvc.com:5006/primaryHub";
@@ -59,8 +59,8 @@ public class NetworkService : IAsyncDisposable
     };
     
     public IDisposable Listen<T>(string name, Action<T> handler) => _connection.On(name, handler);
-    public IDisposable Listen<T, TU>(string name, Func<RoutedRequest<T>, RoutedResponse<TU>> handler) => _connection.On(name, handler);
-    public IDisposable ListenAsync<T, TU>(string name, Func<RoutedRequest<T>, Task<RoutedResponse<TU>>> handler) => _connection.On(name, handler);
+    public IDisposable Listen<T, Tu>(string name, Func<RoutedRequest<T>, RoutedResponse<Tu>> handler) => _connection.On(name, handler);
+    public IDisposable ListenAsync<T, Tu>(string name, Func<RoutedRequest<T>, Task<RoutedResponse<Tu>>> handler) => _connection.On(name, handler);
     
     /// <summary> <inheritdoc cref="NetworkService"/> </summary>
     public NetworkService(AuthenticationInfrastructure authenticationInfrastructure)
@@ -147,7 +147,7 @@ public class NetworkService : IAsyncDisposable
     /// <summary> Attempts to disconnect from the SignalR server </summary>
     public async Task DisconnectFromServerAsync()
     {
-        if (_connection.State is not HubConnectionState.Disconnected) return;
+        if (_connection.State is HubConnectionState.Disconnected) return;
         
         try
         {

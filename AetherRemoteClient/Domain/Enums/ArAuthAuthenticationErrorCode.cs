@@ -1,4 +1,4 @@
-using AetherRemoteCommon.Domain.Enums;
+using AetherRemoteCommon.Network.Enums.ErrorCodes;
 
 namespace AetherRemoteClient.Domain.Enums;
 
@@ -7,13 +7,16 @@ namespace AetherRemoteClient.Domain.Enums;
 /// </summary>
 public enum ArAuthAuthenticationErrorCode
 {
-    /// <summary> <inheritdoc cref="LoginAuthenticationErrorCode.Uninitialized"/> </summary>
+    /// <inheritdoc cref="GetTokenEc.Uninitialized"/>
     Uninitialized,
     
-    /// <summary> <inheritdoc cref="LoginAuthenticationErrorCode.VersionMismatch"/> </summary>
+    /// <inheritdoc cref="GetTokenEc.Unknown"/>
+    Unknown,
+    
+    /// <summary> The client attempted to connect with an incompatible version of the client plugin </summary>
     VersionMismatch,
     
-    /// <summary> <inheritdoc cref="LoginAuthenticationErrorCode.UnknownSecret"/> </summary>
+    /// <summary> The client attempted to connect with a secret that did not correspond to a valid or active secret </summary>
     UnknownSecret,
     
     /// <summary> The authentication could not be reached </summary>
@@ -25,9 +28,6 @@ public enum ArAuthAuthenticationErrorCode
     /// <summary> The token returned was invalid or malformed in some way </summary>
     InvalidOrMalformedToken,
     
-    /// <summary> <inheritdoc cref="LoginAuthenticationErrorCode.Unknown"/> </summary>
-    Unknown,
-    
-    /// <summary> A value in <inheritdoc cref="LoginAuthenticationErrorCode"/> was not properly mapped to <inheritdoc cref="ArAuthAuthenticationErrorCode"/> </summary>
+    /// <summary> A value in <see cref="GetTokenEc"/> was not properly mapped to these values </summary>
     UnboundScope
 }

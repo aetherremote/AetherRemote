@@ -196,12 +196,13 @@ public partial class CustomizePlusWrapper
     /// </summary>
     public string? GetIpcProfile(IPlayerCharacter targetCharacter)
     {
+        const string emptyJson = "{}";
+        
         try
         {
-            if (GetProfile(targetCharacter) is not { } profile)
-                return "{}"; // Return {} here since this will be used as an empty JSON object
-            
-            return JsonConvert.SerializeObject(_ipcCharacterProfile.FromFullProfile(profile), SerializerSettings);
+            return GetProfile(targetCharacter) is { } profile
+                ? JsonConvert.SerializeObject(_ipcCharacterProfile.FromFullProfile(profile), SerializerSettings)
+                : emptyJson;
         }
         catch (Exception e)
         {

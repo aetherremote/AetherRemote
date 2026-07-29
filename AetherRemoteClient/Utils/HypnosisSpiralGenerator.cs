@@ -41,7 +41,7 @@ public static class HypnosisSpiralGenerator
         // Generate the points
         var path = new SKPath();
         var size = CalculateMinimumSpiralImageSize(ImGui.GetIO().DisplaySize);
-        var width = (thickness / SpiralThicknessRatio) * (1f / arms) * (arms % 2 == 0 ? -1 : 1);
+        var width = thickness / SpiralThicknessRatio * (1f / arms) * (arms % 2 == 0 ? -1 : 1);
         for (var arm = 0; arm < arms; arm++)
         {
             path.MoveTo(size, size);

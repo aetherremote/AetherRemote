@@ -435,7 +435,7 @@ public class GlamourerService : IExternalPlugin, IDisposable
                 case StateFinalizationType.RevertAutomation:
                 case StateFinalizationType.Reapply:
                 case StateFinalizationType.ReapplyAutomation:
-                    LocalPlayerResetOrReapply?.Invoke(this, new GlamourerStateChangedEventArgs(stateFinalizationType));
+                    LocalPlayerResetOrReapply?.Invoke(this, new GlamourerStateChangedEventArgs());
                     break;
                 
                 case StateFinalizationType.ModelChange:

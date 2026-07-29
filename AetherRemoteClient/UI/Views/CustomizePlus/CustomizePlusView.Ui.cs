@@ -135,7 +135,7 @@ public partial class CustomizePlusView
             // Leaf node, that contains the actual content
             else
             {
-                if (_selectedProfileId == node.Content?.Guid)
+                if (_selectedProfileId == node.Content?.Id)
                 {
                     ImGui.PushStyleColor(ImGuiCol.Header, AetherRemoteColors.PrimaryColor);
                     ImGui.Selectable(node.Name, true);
@@ -145,7 +145,7 @@ public partial class CustomizePlusView
                 {
                     if (ImGui.Selectable(node.Name))
                         if (node.Content is { } profile)
-                            _selectedProfileId = profile.Guid;
+                            _selectedProfileId = profile.Id;
                 }
             }
         }

@@ -80,7 +80,7 @@ public partial class CustomizePlusWrapper
         ///     Returns all the current profiles in Customize+
         /// </summary>
         /// <returns></returns>
-        public List<object> GetProfiles() => _profiles().Cast<object>().ToList();
+        public List<object> GetProfiles() => [.. _profiles().Cast<object>()];
         
         /// <summary>
         ///     Returns the result of adding a character to a profile

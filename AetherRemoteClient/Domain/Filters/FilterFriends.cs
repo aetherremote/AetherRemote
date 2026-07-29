@@ -18,11 +18,11 @@ public class FilterFriends(Func<IReadOnlyList<Friend>> source)
     /// </summary>
     public IReadOnlyList<Friend> List => _list;
     private List<Friend> _list = [];
-    
+
     /// <summary>
     ///     The sorting mode to use
     /// </summary>
-    public FilterSortMode SortMode = FilterSortMode.Alphabetically;
+    public FilterSortMode SortMode { get; set; } = FilterSortMode.Alphabetically;
 
     /// <summary>
     ///     Updates the search term for filtering and refreshes the list
@@ -53,11 +53,11 @@ public class FilterFriends(Func<IReadOnlyList<Friend>> source)
         {
             case FilterSortMode.Alphabetically:
             default:
-                _list = list.OrderBy(friend => friend.NoteOrFriendCode).ToList();
+                _list = [.. list.OrderBy(friend => friend.NoteOrFriendCode)];
                 break;
             
             case FilterSortMode.Recency:
-                _list = list.OrderByDescending(friend => friend.LastInteractedWith).ToList();
+                _list = [.. list.OrderByDescending(friend => friend.LastInteractedWith)];
                 break;
         }
     }

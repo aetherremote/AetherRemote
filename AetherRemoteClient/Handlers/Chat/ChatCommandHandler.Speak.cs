@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
@@ -39,7 +38,7 @@ public partial class ChatCommandHandler
         string? extra;
 
         // Tells need extra attention because they look like "tell My Name@My Homeworld"
-        if (argsChannel.StartsWith('t') || argsChannel.StartsWith("tell"))
+        if (argsChannel.StartsWith('t') || argsChannel.StartsWith("tell", StringComparison.OrdinalIgnoreCase))
         {
             channel = ChatChannel.Tell;
             try
@@ -53,7 +52,7 @@ public partial class ChatCommandHandler
                 return;
             }
         }
-        else if (argsChannel.StartsWith("ls") || argsChannel.StartsWith("linkshell"))
+        else if (argsChannel.StartsWith("ls") || argsChannel.StartsWith("linkshell", StringComparison.OrdinalIgnoreCase))
         {
             channel = ChatChannel.Linkshell;
             try
@@ -67,7 +66,7 @@ public partial class ChatCommandHandler
                 return;
             }
         }
-        else if (argsChannel.StartsWith("cwl") || argsChannel.StartsWith("cwlinkshell"))
+        else if (argsChannel.StartsWith("cwl") || argsChannel.StartsWith("cwlinkshell", StringComparison.OrdinalIgnoreCase))
         {
             channel = ChatChannel.CrossWorldLinkshell;
             try
@@ -109,6 +108,6 @@ public partial class ChatCommandHandler
         }
         
         var payload = new SpeakPayload(argsMessage, channel, extra);
-        await _networkRequestManager.Send<SpeakPayload, NoPayload>(targets.ToList(), HubMethod.Speak, payload).ConfigureAwait(false);
+        await _networkRequestManager.Send<SpeakPayload, NoPayload>([.. targets], HubMethod.Speak, payload).ConfigureAwait(false);
     }
 }

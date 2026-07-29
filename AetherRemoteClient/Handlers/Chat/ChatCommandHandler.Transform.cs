@@ -1,5 +1,4 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using AetherRemoteCommon.Domain.Enums;
 using AetherRemoteCommon.Domain.Network;
@@ -47,7 +46,7 @@ public partial class ChatCommandHandler
             };
 
         var payload = new TransformationPayload(design, applyType, null);
-        await _networkRequestManager.Send<TransformationPayload, NoPayload>(targets.ToList(), HubMethod.Transform, payload).ConfigureAwait(false);
+        await _networkRequestManager.Send<TransformationPayload, NoPayload>([.. targets], HubMethod.Transform, payload).ConfigureAwait(false);
     }
     
     private async Task<string?> TryGetDesignByName(string designName)
@@ -62,7 +61,7 @@ public partial class ChatCommandHandler
         var designId = Guid.Empty;
         foreach (var designEntry in designs)
         {
-            if (designEntry.Name.Equals(designName) is false)
+            if (designEntry.Name.Equals(designName, StringComparison.Ordinal) is false)
                 continue;
 
             designId = designEntry.Id;
@@ -77,6 +76,7 @@ public partial class ChatCommandHandler
         }
         
         // Get the design
+        // ReSharper disable once InvertIf
         if (await _glamourerService.GetDesignAsync(designId).ConfigureAwait(false) is not { } design)
         {
             SendChatMessage("Internal error occurred, please type /xllog to learn more");

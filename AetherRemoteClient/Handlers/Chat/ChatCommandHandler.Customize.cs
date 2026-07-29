@@ -60,7 +60,7 @@ public partial class ChatCommandHandler
             if (profile.Name.Equals(profileName) is false)
                 continue;
 
-            profileId = profile.Guid;
+            profileId = profile.Id;
             break;
         }
         

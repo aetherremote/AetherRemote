@@ -20,8 +20,8 @@ public class ReconnectRetryPolicy : IRetryPolicy
         TimeSpan.FromSeconds(256)
     ];
     
-    public TimeSpan? NextRetryDelay(RetryContext context)
+    public TimeSpan? NextRetryDelay(RetryContext retryContext)
     {
-        return context.PreviousRetryCount >= Delays.Length ? Delays[^1] : Delays[context.PreviousRetryCount];
+        return retryContext.PreviousRetryCount >= Delays.Length ? Delays[^1] : Delays[retryContext.PreviousRetryCount];
     }
 }

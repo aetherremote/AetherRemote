@@ -9,7 +9,7 @@ namespace AetherRemoteClient.Services;
 /// </summary>
 public class LogService
 {
-    public readonly List<InternalLog> Logs = [];
+    public List<InternalLog> Logs { get; } = [];
 
     /// <summary>
     ///     Logs a command rejection due to safe mode 
@@ -20,34 +20,6 @@ public class LogService
         {
             TimeStamp = DateTime.Now,
             Message = $"Rejected {operation} action from {sender} because you are in safe mode"
-        };
-        
-        Logs.Add(log);
-    }
-
-    /// <summary>
-    ///     Logs a command rejection due to not being friended
-    /// </summary>
-    public void NotFriends(string operation, string sender)
-    {
-        var log = new InternalLog
-        {
-            TimeStamp = DateTime.Now,
-            Message = $"Rejected {operation} action from {sender} because you are not friends"
-        };
-        
-        Logs.Add(log);
-    }
-
-    /// <summary>
-    ///     Logs a command rejection due to overriding it locally
-    /// </summary>
-    public void Override(string operation, string sender)
-    {
-        var log = new InternalLog
-        {
-            TimeStamp = DateTime.Now,
-            Message = $"Rejected {operation} action from {sender} because you are overriding it locally"
         };
         
         Logs.Add(log);
@@ -76,20 +48,6 @@ public class LogService
         {
             TimeStamp = DateTime.Now,
             Message = $"Rejected {operation} action from {sender} because they send invalid data"
-        };
-        
-        Logs.Add(log);
-    }
-    
-    /// <summary>
-    ///     Logs a command rejection due to invalid data
-    /// </summary>
-    public void MissingLocalBody(string operation, string sender)
-    {
-        var log = new InternalLog
-        {
-            TimeStamp = DateTime.Now,
-            Message = $"Unable to process {operation} action from {sender} because you lack a local body"
         };
         
         Logs.Add(log);

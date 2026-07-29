@@ -7,7 +7,6 @@ using AetherRemoteClient.Domain;
 using AetherRemoteClient.UI.Style;
 using Dalamud.Bindings.ImGui;
 using Dalamud.Interface;
-using Dalamud.Interface.Colors;
 using Dalamud.Interface.ManagedFontAtlas;
 
 namespace AetherRemoteClient.Utils;
@@ -23,19 +22,18 @@ public static class SharedUserInterfaces
         ImGuiWindowFlags.NoResize;
 
     private const ImGuiWindowFlags ComboWithFilterFlags = PopupWindowFlags | ImGuiWindowFlags.ChildWindow;
-    
-    public const int MassiveFontSize = 300;
+
+    private const int MassiveFontSize = 300;
     public static ImFontPtr MassiveFont { get; private set; }
     private static IFontHandle? _massiveFont;
     
     private static readonly SafeFontConfig DefaultFontConfig = new() { SizePx = MassiveFontSize };
-    
-    public const int BigFontSize = 38;
+
+    private const int BigFontSize = 38;
     private static IFontHandle? _bigFont;
 
-    public const int MediumFontSize = 24;
-    public static ImFontPtr MediumFont { get; private set; }
-    public static IFontHandle? _mediumFont;
+    private const int MediumFontSize = 24;
+    private static IFontHandle? _mediumFont;
     
     /// <summary>
     ///     Draws a tool tip for the last hovered ImGui component
@@ -47,18 +45,6 @@ public static class SharedUserInterfaces
             return;
 
         ImGui.SetTooltip(tip);
-    }
-
-    /// <summary>
-    ///     Draws a tool tip for the last hovered ImGui component
-    /// </summary>
-    /// <param name="tips"></param>
-    public static void Tooltip(string[] tips)
-    {
-        if (ImGui.IsItemHovered() is false)
-            return;
-        
-        ImGui.SetTooltip(string.Join(Environment.NewLine, tips));
     }
 
     /// <summary>
@@ -95,38 +81,6 @@ public static class SharedUserInterfaces
     }
 
     /// <summary>
-    ///     For use with creating buttons in a toggleable state
-    /// </summary>
-    /// <param name="icon"></param>
-    /// <param name="size"></param>
-    /// <param name="tooltip"></param>
-    /// <param name="selected"></param>
-    /// <returns></returns>
-    public static bool IconOptionButton(FontAwesomeIcon icon, Vector2 size, string tooltip, bool selected)
-    {
-        ImGui.PushFont(UiBuilder.IconFont);
-        
-        bool result;
-        if (selected)
-        {
-            ImGui.PushStyleColor(ImGuiCol.Button, AetherRemoteColors.PrimaryColor);
-            result = ImGui.Button(icon.ToIconString(), size);
-            ImGui.PopStyleColor();
-        }
-        else
-        {
-            result = ImGui.Button(icon.ToIconString(), size);
-        }
-        
-        ImGui.PopFont();
-        
-        if (ImGui.IsItemHovered())
-            ImGui.SetTooltip(tooltip);
-        
-        return result;
-    }
-
-    /// <summary>
     ///     Draws text using the medium font with optional color.
     /// </summary>
     public static void MediumText(string text, Vector4? color = null)
@@ -139,30 +93,6 @@ public static class SharedUserInterfaces
             ImGui.TextColored(color.Value, text);
 
         _mediumFont?.Pop();
-    }
-
-    public static void MediumSelectableText(string text, string? tooltip = null, Vector4? color = null)
-    {
-        _mediumFont?.Push();
-
-        if (color is null)
-        {
-            ImGui.Selectable(text, false, ImGuiSelectableFlags.None, ImGui.CalcTextSize(text));
-        }
-        else
-        {
-            ImGui.PushStyleColor(ImGuiCol.Text, ImGuiColors.ParsedGreen);
-            ImGui.Selectable(text, false, ImGuiSelectableFlags.None, ImGui.CalcTextSize(text));
-            ImGui.PopStyleColor();
-        }
-        
-        _mediumFont?.Pop();
-        
-        if (tooltip is null)
-            return;
-        
-        if (ImGui.IsItemHovered())
-            ImGui.SetTooltip(tooltip);
     }
 
     /// <summary>
@@ -180,7 +110,7 @@ public static class SharedUserInterfaces
     /// <summary>
     ///     Draws centered text
     /// </summary>
-    public static void TextCentered(string text, float windowWidth)
+    private static void TextCentered(string text, float windowWidth)
     {
         ImGui.SetCursorPosX((windowWidth - ImGui.CalcTextSize(text).X) * 0.5f);
         ImGui.TextUnformatted(text);
@@ -212,8 +142,6 @@ public static class SharedUserInterfaces
         _bigFont?.Pop();
     }
     
-    public static void PushMassiveFont() => _massiveFont?.Push();
-    public static void PopMassiveFont() => _massiveFont?.Pop();
     public static void PushBigFont() => _bigFont?.Push();
     public static void PopBigFont() => _bigFont?.Pop();
     public static void PushMediumFont() => _mediumFont?.Push();
@@ -378,10 +306,6 @@ public static class SharedUserInterfaces
         {
             toolkit.OnPreBuild(preBuild =>
             {
-                MediumFont = dalamudFontDirectory is null
-                    ? preBuild.AddDalamudDefaultFont(MediumFontSize)
-                    : preBuild.AddFontFromFile(dalamudFontDirectory, DefaultFontConfig);
-                
                 preBuild.AddDalamudDefaultFont(MediumFontSize);
             });
         });

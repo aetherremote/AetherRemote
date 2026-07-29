@@ -18,22 +18,5 @@ public class TipService
     /// <summary>
     ///     The current tip to be displayed
     /// </summary>
-    public string CurrentTip = Tips[Random.Next(0, Tips.Length)];
-
-    private int _lastTipIndex;
-
-    /// <summary>
-    ///     Get a random tip that wasn't the last one
-    /// </summary>
-    public void NextTip()
-    {
-        var next = Random.Next(0, Tips.Length);
-        while (next == _lastTipIndex)
-        {
-            next = Random.Next(0, Tips.Length);
-        }
-
-        _lastTipIndex = next;
-        CurrentTip = Tips[next];
-    }
+    public readonly string CurrentTip = Tips[Random.Next(0, Tips.Length)];
 }
