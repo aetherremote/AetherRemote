@@ -31,6 +31,7 @@ public partial class FriendsView
             DrawGlobalPermissionButton("Moodles", offPosition, onPosition, ref _global.MoodlesValue);
             DrawGlobalPermissionButton("Penumbra Mods", offPosition, onPosition, ref _global.PenumbraModsValue);
             DrawGlobalPermissionButton("Twinning", offPosition, onPosition, ref _global.TwinningValue);
+            DrawGlobalPermissionButton("Mimicry", offPosition, onPosition, ref _global.MimicryValue);
         });
         
         SharedUserInterfaces.ContentBox("PermissionsGlobalSpeak", AetherRemoteColors.PanelColor, true, () =>
@@ -77,7 +78,6 @@ public partial class FriendsView
             ImGui.TextUnformatted("On");
             ImGui.Separator();
             
-            // DrawGlobalPermissionButton("Permanent Transformations", offPosition, onPosition, ref _global.PermanentTransformationValue);
             DrawGlobalPermissionButton("Possession", offPosition, onPosition, ref _global.PossessionValue);
         });
         

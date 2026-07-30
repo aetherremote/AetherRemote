@@ -24,6 +24,7 @@ public class IndividualPermissions
     public PermissionValue MoodlesValue = PermissionValue.Inherit;
     public PermissionValue PenumbraModsValue = PermissionValue.Inherit;
     public PermissionValue TwinningValue = PermissionValue.Inherit;
+    public PermissionValue MimicryValue = PermissionValue.Inherit;
     
     // Speak Permissions
     public PermissionValue AllianceValue = PermissionValue.Inherit;
@@ -85,6 +86,7 @@ public class IndividualPermissions
             MoodlesValue == other.MoodlesValue &&
             PenumbraModsValue == other.PenumbraModsValue &&
             TwinningValue == other.TwinningValue &&
+            MimicryValue == other.MimicryValue &&
 
             // Speak Permissions
             AllianceValue == other.AllianceValue &&
@@ -124,6 +126,7 @@ public class IndividualPermissions
             MoodlesValue = ResolveFlag(PrimaryPermissions.Moodles, permissions.PrimaryAllow, permissions.PrimaryDeny),
             PenumbraModsValue = ResolveFlag(PrimaryPermissions.Mods, permissions.PrimaryAllow, permissions.PrimaryDeny),
             TwinningValue = ResolveFlag(PrimaryPermissions.Twinning, permissions.PrimaryAllow, permissions.PrimaryDeny),
+            MimicryValue = ResolveFlag(PrimaryPermissions.Mimicry, permissions.PrimaryAllow, permissions.PrimaryDeny),
 
             // Speak Permissions
             AllianceValue = ResolveFlag(SpeakPermissions.Alliance, permissions.SpeakAllow, permissions.SpeakDeny),
@@ -192,6 +195,7 @@ public class IndividualPermissions
         Apply(PrimaryPermissions.Moodles, permissions.MoodlesValue, ref primaryAllowMask, ref primaryDenyMask);
         Apply(PrimaryPermissions.Mods, permissions.PenumbraModsValue, ref primaryAllowMask, ref primaryDenyMask);
         Apply(PrimaryPermissions.Twinning, permissions.TwinningValue, ref primaryAllowMask, ref primaryDenyMask);
+        Apply(PrimaryPermissions.Mimicry, permissions.MimicryValue, ref primaryAllowMask, ref primaryDenyMask);
         
         // Speak Permissions
         Apply(SpeakPermissions.Alliance, permissions.AllianceValue, ref speakAllowMask, ref speakDenyMask);

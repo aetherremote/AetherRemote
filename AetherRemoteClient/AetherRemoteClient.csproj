@@ -4,7 +4,7 @@
     <PropertyGroup>
         <Authors>Mora</Authors>
         <Company>Mora-XIV</Company>
-        <Version>2.10.3.1</Version>
+        <Version>2.10.3.2</Version>
         <Description>XIV Plugin</Description>
         <Copyright>(C)Mora 2024 - 26</Copyright>
         <PackageProjectUrl>https://github.com/aetherremote/AetherRemote</PackageProjectUrl>
@@ -28,9 +28,9 @@
 
     <ItemGroup>
         <PackageReference Include="Glamourer.Api" Version="2.8.2" />
-        <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.9" />
-        <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.9" />
-        <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.19.1" />
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.10" />
+        <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.10" />
+        <PackageReference Include="Microsoft.IdentityModel.JsonWebTokens" Version="8.22.0" />
         <PackageReference Include="Penumbra.Api" Version="5.15.1" />
         <PackageReference Update="DalamudPackager" Version="15.0.0" />
         <PackageReference Include="Svg.Skia" Version="5.1.1" />

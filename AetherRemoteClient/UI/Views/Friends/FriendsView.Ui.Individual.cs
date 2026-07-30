@@ -89,6 +89,7 @@ public partial class FriendsView
             DrawIndividualPermissionRow("Moodles", denyPosition, inheritPosition, allowPosition, ref _individual.MoodlesValue);
             DrawIndividualPermissionRow("Penumbra Mods", denyPosition, inheritPosition, allowPosition, ref _individual.PenumbraModsValue);
             DrawIndividualPermissionRow("Twinning", denyPosition, inheritPosition, allowPosition, ref _individual.TwinningValue);
+            DrawIndividualPermissionRow("Mimicry", denyPosition, inheritPosition, allowPosition, ref _individual.MimicryValue);
         });
         
         SharedUserInterfaces.ContentBox("PermissionsIndividualSpeak", AetherRemoteColors.PanelColor, true, () =>
@@ -137,7 +138,6 @@ public partial class FriendsView
             ImGui.TextUnformatted("Allow");
             ImGui.Separator();
             
-            // DrawIndividualPermissionButton("Permanent Transformations", denyPosition, inheritPosition, allowPosition, ref _individual.PermanentTransformationValue);
             DrawIndividualPermissionRow("Possession", denyPosition, inheritPosition, allowPosition, ref _individual.PossessionValue);
         });
         

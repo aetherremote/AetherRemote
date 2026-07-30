@@ -134,8 +134,27 @@ public partial class TransformationsView
                 if ((friend.PermissionsGrantedByFriend.Primary & PrimaryPermissions.Glamourer) is not PrimaryPermissions.Glamourer)
                     return true;
             
-            if (_mode == TransformationMode.Transform)
-                continue; // Transform only deals with glamourer, so we can skip
+            switch (_mode)
+            {
+                case TransformationMode.BodySwap:
+                    if ((friend.PermissionsGrantedByFriend.Primary & PrimaryPermissions.BodySwap) is not PrimaryPermissions.BodySwap)
+                        return true;
+                    break;
+                
+                case TransformationMode.Twinning:
+                    if ((friend.PermissionsGrantedByFriend.Primary & PrimaryPermissions.Twinning) is not PrimaryPermissions.Twinning)
+                        return true;
+                    break;
+                
+                case TransformationMode.Mimicry:
+                    if ((friend.PermissionsGrantedByFriend.Primary & PrimaryPermissions.Mimicry) is not PrimaryPermissions.Mimicry)
+                        return true;
+                    break;
+                
+                case TransformationMode.Transform:
+                default:
+                    continue;
+            }
             
             if (_swapPenumbraMods)
                 if ((friend.PermissionsGrantedByFriend.Primary & PrimaryPermissions.Mods) is not PrimaryPermissions.Mods)

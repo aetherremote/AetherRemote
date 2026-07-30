@@ -20,6 +20,7 @@ public class GlobalPermissions
     public bool MoodlesValue;
     public bool PenumbraModsValue;
     public bool TwinningValue;
+    public bool MimicryValue;
     
     // Speak Permissions
     public bool AllianceValue;
@@ -59,6 +60,7 @@ public class GlobalPermissions
             MoodlesValue == other.MoodlesValue &&
             PenumbraModsValue == other.PenumbraModsValue &&
             TwinningValue == other.TwinningValue &&
+            MimicryValue == other.MimicryValue &&
 
             // Speak Permissions
             AllianceValue == other.AllianceValue &&
@@ -98,6 +100,7 @@ public class GlobalPermissions
             MoodlesValue = (permissions.Primary & PrimaryPermissions.Moodles) == PrimaryPermissions.Moodles,
             PenumbraModsValue = (permissions.Primary & PrimaryPermissions.Mods) == PrimaryPermissions.Mods,
             TwinningValue = (permissions.Primary & PrimaryPermissions.Twinning) == PrimaryPermissions.Twinning,
+            MimicryValue = (permissions.Primary & PrimaryPermissions.Mimicry) == PrimaryPermissions.Mimicry,
 
             // Speak Permissions
             AllianceValue = (permissions.Speak & SpeakPermissions.Alliance) == SpeakPermissions.Alliance,
@@ -159,6 +162,7 @@ public class GlobalPermissions
         if (permissions.MoodlesValue) primary |= PrimaryPermissions.Moodles;
         if (permissions.PenumbraModsValue) primary |= PrimaryPermissions.Mods;
         if (permissions.TwinningValue) primary |= PrimaryPermissions.Twinning;
+        if (permissions.MimicryValue) primary |= PrimaryPermissions.Mimicry;
 
         // Speak Permissions
         var speak = SpeakPermissions.None;
