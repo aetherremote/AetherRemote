@@ -28,6 +28,13 @@ public class Program
         
         // Create service builder
         var builder = WebApplication.CreateBuilder(args);
+        
+        // Logging configuration
+        builder.Logging.AddSimpleConsole(options =>
+        {
+            options.TimestampFormat = "yyyy-MM-dd HH:mm:ss.fff ";
+            options.SingleLine = true;
+        });
 
         // Configuration Authentication and Authorization
         ConfigureJwtAuthentication(builder.Services, configuration);
@@ -96,6 +103,8 @@ public class Program
         app.MapControllers();
 
         app.Run();
+        
+        Console.WriteLine("Shutdown complete. You may now close the window.");
     }
     
     private static void ConfigureKestrel(WebApplicationBuilder builder, Configuration configuration)
@@ -121,6 +130,8 @@ public class Program
                     listenOptions.UseHttps(certificate);
                 }
             });
+            
+            options.ListenLocalhost(configurations.InternalPort);
         });
     }
 
