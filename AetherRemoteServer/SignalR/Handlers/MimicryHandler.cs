@@ -29,7 +29,27 @@ public class MimicryHandler(
         }
         
         var responses = await relayManager.Relay<MimicryPayload, NoPayload>(senderFriendCode, Method, request, RequiredPermissions, clients);
-        return new Response<MimicryResponse>(ResponseStatus.Success, responses);
+
+        // This is just for good practice, we know both in the list and the dictionary these values are set
+        var targetFriendCode = request.TargetFriendCodes.First();
+        if (responses.TryGetValue(targetFriendCode, out var mimicryResponse) is false)
+        {
+            logger.LogWarning("{TargetFriendCode} mimicry target not found in responses", targetFriendCode);
+            return new Response<MimicryResponse>(ResponseStatus.BadRequest, []);
+        }
+        
+        // Return early here since the request succeeded but the client's response didn't
+        if (mimicryResponse is not RoutedResponseStatus.Success)
+            return new Response<MimicryResponse>(ResponseStatus.Success, responses);
+
+        if (sessionService.GetSession(targetFriendCode) is not { } session)
+        {
+            logger.LogWarning("{TargetFriendCode} went offline in the middle of a request", targetFriendCode);
+            return new Response<MimicryResponse>(ResponseStatus.TargetOffline, responses);
+        }
+        
+        var payload = new MimicryResponse(session.CharacterName, session.CharacterWorld);
+        return new Response<MimicryResponse>(ResponseStatus.Success, responses, payload);
     }
     
     private ResponseStatus? ValidateRequest(string senderFriendCode, Request<MimicryPayload> request)
