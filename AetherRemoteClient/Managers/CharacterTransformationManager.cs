@@ -60,13 +60,15 @@ public class CharacterTransformationManager(
             return false;
         }
         
+        /*
         if (GlamourerService.SanitizeGlamourerAdvancedDyes(glamourerDesignComponents, glamourerJObject) is not { } glamourerDesignComponentsSanitized)
         {
             Plugin.Log.Error("[CharacterTransformationManager.ApplyTransformation] Could not properly sanitize advanced dyes");
             return false;
         }
+        */
 
-        if (await glamourerService.ApplyDesignAsync(glamourerDesignComponentsSanitized, applyFlags, localPlayer.ObjectIndex).ConfigureAwait(false) is false)
+        if (await glamourerService.ApplyDesignAsync(glamourerJObject, applyFlags, localPlayer.ObjectIndex).ConfigureAwait(false) is false)
             return false;
 
         statusService.SetGlamourerPenumbra(senderFriend);
